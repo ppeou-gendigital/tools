@@ -68,7 +68,7 @@ Add a row here every time you create a new project. Replace `<user>/<repo>` with
 
 | Name | Description | Branch |
 | ---- | ----------- | ------ |
-| _(none yet)_ | | |
+| loopy | Chrome browser extension (Manifest V3) | [`tool/loopy`](../../tree/tool/loopy) |
 
 ### `poc/`
 
