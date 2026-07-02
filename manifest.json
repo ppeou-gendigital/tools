@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Loopy",
+  "version": "0.0.1",
+  "description": "TODO: describe what Loopy does.",
+  "action": {
+    "default_title": "Loopy",
+    "default_popup": "popup/popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["activeTab", "storage"]
+}

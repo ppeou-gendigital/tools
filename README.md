@@ -1,131 +1,66 @@
-# Tools
+# Loopy
 
-A personal collection of small, useful daily tools, apps, and proofs of concept.
+A Chrome browser extension. _(More details coming soon — this is an early scaffold.)_
 
-Instead of creating a new GitHub repo for every little project, this repo keeps them all together — but not in the usual monorepo way. **Each project lives on its own branch**, and `main` stays almost empty on purpose.
-
----
-
-## The convention
-
-Every project branch is named `<category>/<name>`.
-
-| Category   | Meaning                                                       | Example                    |
-| ---------- | ------------------------------------------------------------- | -------------------------- |
-| `poc/`     | Proof of concept — throwaway experiments                      | `poc/myReactApp1`          |
-| `tool/`    | Reusable tools / CLI utilities                                | `tool/xyz`                 |
-| `web/`     | Websites, landing pages, small web apps                       | `web/MyBio`                |
-| `script/`  | One-off scripts (bash, python, node)                          | `script/rename-photos`     |
-| `lib/`     | Reusable libraries / modules meant to be copied or vendored   | `lib/date-utils`           |
-| `doc/`     | Notes, cheatsheets, writeups                                  | `doc/kubernetes-cheatsheet`|
-
-Feel free to invent more categories — the only constraint enforced by `scripts/new-project.sh` is `^[a-z]+/[A-Za-z0-9._-]+$`.
+- **Manifest**: V3
+- **Stack**: Vanilla JS, no build step, no dependencies
+- **Status**: Skeleton — the popup can inspect the active tab and that's it
 
 ---
 
-## Quick start
+## Load it in Chrome (development)
 
-Create a new project branch from `main`:
+1. Open `chrome://extensions/`.
+2. Turn on **Developer mode** (toggle, top right).
+3. Click **Load unpacked** and pick this directory (`loopy/`).
+4. "Loopy" appears in your toolbar. Pin it for convenience.
 
-```bash
-scripts/new-project.sh tool/my-new-tool
-```
+After code changes:
 
-Create it in a separate directory so `main` stays checked out here:
+- **Popup / content changes** — close and reopen the popup (or press Cmd+R with the popup's DevTools open).
+- **`manifest.json` / `background.js` changes** — click the reload icon on the Loopy card in `chrome://extensions/`.
 
-```bash
-scripts/new-project.sh tool/my-new-tool --worktree
-# -> creates ../my-new-tool/ with the branch tool/my-new-tool checked out
-```
+Inspect what's happening:
 
-Create it and push to `origin` in one shot:
-
-```bash
-scripts/new-project.sh tool/my-new-tool --worktree --push
-```
-
-List everything you have:
-
-```bash
-scripts/list-projects.sh
-```
-
-Work on an existing project without leaving `main`:
-
-```bash
-git worktree add ../my-new-tool tool/my-new-tool
-```
-
-See [`docs/WORKTREES.md`](docs/WORKTREES.md) for more on worktrees.
+- **Popup**: right-click the Loopy toolbar icon -> **Inspect popup**.
+- **Service worker**: `chrome://extensions/` -> Loopy -> **Inspect views: service worker**.
 
 ---
 
-## Project Index
+## Structure
 
-Add a row here every time you create a new project. Replace `<user>/<repo>` with the actual GitHub path once the remote is set up.
+```
+loopy/
+├── manifest.json        # MV3 manifest
+├── background.js        # service worker (event-driven, no DOM)
+├── popup/
+│   ├── popup.html       # toolbar popup UI
+│   ├── popup.css
+│   └── popup.js
+├── README.md
+├── LICENSE
+└── .gitignore
+```
 
-### `tool/`
+Add later, as needed:
 
-| Name | Description | Branch |
-| ---- | ----------- | ------ |
-| _(none yet)_ | | |
-
-### `poc/`
-
-| Name | Description | Branch |
-| ---- | ----------- | ------ |
-| _(none yet)_ | | |
-
-### `web/`
-
-| Name | Description | Branch |
-| ---- | ----------- | ------ |
-| _(none yet)_ | | |
-
-### `script/`
-
-| Name | Description | Branch |
-| ---- | ----------- | ------ |
-| _(none yet)_ | | |
-
-### `lib/`
-
-| Name | Description | Branch |
-| ---- | ----------- | ------ |
-| _(none yet)_ | | |
-
-### `doc/`
-
-| Name | Description | Branch |
-| ---- | ----------- | ------ |
-| _(none yet)_ | | |
-
-> Tip: `scripts/list-projects.sh` prints branches grouped by category if you ever want to regenerate this index.
+- `content.js` + a `content_scripts` entry in `manifest.json` — code that runs inside web pages.
+- `options/` + `options_page` field — a full-page settings UI.
+- `icons/` (16, 32, 48, 128 px PNGs) + `icons` / `action.default_icon` fields — until you add these, Chrome uses a default puzzle-piece icon.
 
 ---
 
-## Rules (read these before you shoot yourself in the foot)
+## Permissions
 
-Because each project branch has its own, unrelated file tree, this repo does not behave like a normal one. Follow these rules:
+The manifest currently declares:
 
-1. **Never `git merge` one project branch into another** (or into `main`). Doing so will fuse two unrelated projects into an unrecoverable mess. If you need code from one project in another, copy the files by hand or extract them into a `lib/<name>` branch that you vendor.
-2. **Pull Requests stay within a single project.** A feature branch like `tool/xyz-feature` should target `tool/xyz`, never `main`.
-3. **`main` only holds scaffolding** — this README, `.gitignore`, `LICENSE`, and `scripts/`. Nothing else lands here.
-4. **Scaffolding changes do not auto-propagate.** If you update `.gitignore` on `main`, existing project branches keep the old one. Cherry-pick if you want the update everywhere.
-5. **CI belongs on the project branch**, not on `main`. `main` has no code to build or test.
+- `activeTab` — grants access to the current tab's `url` / `title` when the user invokes the extension. No permission prompt.
+- `storage` — for `chrome.storage.local` / `chrome.storage.sync`. No permission prompt.
+
+Add new permissions to `manifest.json` -> `permissions` (or `host_permissions` for cross-origin fetches) as features land.
 
 ---
 
-## Layout of `main`
+## This branch
 
-```
-.
-├── README.md              # this file
-├── LICENSE                # MIT
-├── .gitignore             # common ignores (OS, editors, Node, Python, builds)
-├── scripts/
-│   ├── new-project.sh     # create a new <category>/<name> branch
-│   └── list-projects.sh   # list local + remote branches grouped by category
-└── docs/
-    └── WORKTREES.md       # how to use git worktree with this repo
-```
+`loopy` lives on the branch `tool/loopy` in the [`tools`](../tools) meta-repo. Do **not** merge this branch into `main` or any other project branch — see the meta-repo's README for the branch-per-project rules.
