@@ -9,6 +9,7 @@ import {
   AEM_ENVS,
   AEM_KINDS,
   AEM_ROLES,
+  kindHasLocalSdk,
   kindHasOrigin,
   kindHasRepo,
 } from '@/lib/prefs'
@@ -59,6 +60,9 @@ function toDraft(entry) {
   }
 }
 
+// `local-sdk` reuses the same draft field names as `eds-ue` (origin +
+// siteName + imsOrg + authorOrigin) so switching kinds preserves values.
+
 // Strip fields that don't apply to a given kind before persisting, so a
 // row that started as traditional and was flipped to eds-ue doesn't leave
 // a stale `origin` behind.
@@ -67,6 +71,15 @@ function toPersisted(draft) {
   const common = { id, kind, role, env, label }
   if (kindHasOrigin(kind)) {
     return { ...common, origin: draft.origin }
+  }
+  if (kindHasLocalSdk(kind)) {
+    return {
+      ...common,
+      origin: draft.origin,
+      siteName: draft.siteName,
+      imsOrg: draft.imsOrg,
+      authorOrigin: draft.authorOrigin,
+    }
   }
   if (kindHasRepo(kind)) {
     if (kind === 'eds-ue') {
@@ -104,6 +117,12 @@ function isValidUrl(v) {
 // hint at bad rows before they get filtered out at render time.
 function isDraftValid(draft) {
   if (kindHasOrigin(draft.kind)) return isValidUrl(draft.origin)
+  if (kindHasLocalSdk(draft.kind)) {
+    if (!isValidUrl(draft.origin)) return false
+    if (!isValidUrl(draft.authorOrigin)) return false
+    if (!draft.siteName.trim() || !draft.imsOrg.trim()) return false
+    return true
+  }
   if (kindHasRepo(draft.kind)) {
     if (!draft.owner.trim() || !draft.repo.trim()) return false
     if (draft.kind === 'eds-ue') {
@@ -287,6 +306,55 @@ function DomainRow({ row, onChange, onRemove }) {
             spellCheck={false}
             autoComplete="off"
           />
+        </div>
+      )}
+
+      {kindHasLocalSdk(row.kind) && (
+        <div className={styles.edsGrid}>
+          <div className={cx(styles.field, styles.fieldFull)}>
+            <Label htmlFor={`origin-${row.id}`}>Origin</Label>
+            <Input
+              id={`origin-${row.id}`}
+              type="url"
+              value={row.origin}
+              onChange={(e) => onChange({ origin: e.target.value })}
+              placeholder="http://localhost:4502"
+              spellCheck={false}
+              autoComplete="off"
+            />
+          </div>
+          <div className={cx(styles.field, styles.fieldFull)}>
+            <Label htmlFor={`author-origin-${row.id}`}>Author origin</Label>
+            <Input
+              id={`author-origin-${row.id}`}
+              type="url"
+              value={row.authorOrigin}
+              onChange={(e) => onChange({ authorOrigin: e.target.value })}
+              placeholder="https://author-p12345-e67890.adobeaemcloud.com"
+              spellCheck={false}
+              autoComplete="off"
+            />
+          </div>
+          <div className={styles.field}>
+            <Label htmlFor={`site-name-${row.id}`}>Site name</Label>
+            <Input
+              id={`site-name-${row.id}`}
+              value={row.siteName}
+              onChange={(e) => onChange({ siteName: e.target.value })}
+              placeholder="lifelock-eds-ue"
+              autoComplete="off"
+            />
+          </div>
+          <div className={styles.field}>
+            <Label htmlFor={`ims-org-${row.id}`}>IMS org</Label>
+            <Input
+              id={`ims-org-${row.id}`}
+              value={row.imsOrg}
+              onChange={(e) => onChange({ imsOrg: e.target.value })}
+              placeholder="symantec"
+              autoComplete="off"
+            />
+          </div>
         </div>
       )}
 

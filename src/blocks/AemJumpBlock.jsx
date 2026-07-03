@@ -31,7 +31,7 @@ import {
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { buildAemLinks, parseAemUrl } from '@/lib/aemLinks'
-import { kindHasOrigin } from '@/lib/prefs'
+import { getRebaseOrigin } from '@/lib/prefs'
 import { useAemDomains } from '@/providers/AemDomainsProvider'
 import { isExtension } from '@/env'
 import { cx } from '@/lib/cx'
@@ -135,7 +135,7 @@ export function AemJumpBlock({
   inputId,
 }) {
   const isSource = variant === 'source'
-  const origin = domain && kindHasOrigin(domain.kind) ? domain.origin : null
+  const origin = getRebaseOrigin(domain)
 
   const { domains } = useAemDomains()
 
@@ -144,21 +144,67 @@ export function AemJumpBlock({
     [variant, origin, url],
   )
 
-  // If the effective URL's content path lives under a configured eds-ue
-  // site, hand the matched domain's raw metadata (imsOrg + authorOrigin)
-  // to buildAemLinks. All URL-shape decisions (Cloud shell vs. traditional
-  // paths, localhost SDK canvas host, etc.) live in aemLinks.js.
+  // Match the effective URL against configured domains to decide whether
+  // buildAemLinks should produce a Universal Editor jump (and, for a
+  // local-SDK origin, use traditional-style paths).
+  //
+  //   1. `local-sdk` match by origin — the input is a paired localhost SDK
+  //      row. `ueHost` comes from the sibling HTTPS-side `local-sdk` row
+  //      (same siteName + imsOrg + authorOrigin); if no HTTPS peer is
+  //      configured we fall back to the matched row's own host.
+  //   2. `eds-ue` match by siteName — the existing Cloud-shell case.
+  //
+  // Everything else about URL shaping (Cloud shell vs. traditional paths,
+  // canvas host, etc.) is driven by these options inside aemLinks.js.
   const edsUeOptions = useMemo(() => {
     const trimmed = (effectiveUrl ?? '').trim()
     if (!trimmed) return null
-    let sn
+
+    let parsedOrigin = null
+    let siteName = null
     try {
-      sn = parseAemUrl(trimmed).siteName
+      const u = new URL(trimmed)
+      parsedOrigin = u.origin
+      siteName = parseAemUrl(u).siteName
     } catch {
       return null
     }
-    if (!sn) return null
-    const target = sn.toLowerCase()
+
+    if (parsedOrigin) {
+      const sdk = domains.find(
+        (d) =>
+          d.kind === 'local-sdk' &&
+          d.origin === parsedOrigin &&
+          d.imsOrg &&
+          d.authorOrigin,
+      )
+      if (sdk) {
+        const httpsPeer = domains.find(
+          (d) =>
+            d.kind === 'local-sdk' &&
+            d.siteName === sdk.siteName &&
+            d.imsOrg === sdk.imsOrg &&
+            d.authorOrigin === sdk.authorOrigin &&
+            typeof d.origin === 'string' &&
+            d.origin.startsWith('https:'),
+        )
+        let ueHost = null
+        try {
+          ueHost = new URL((httpsPeer ?? sdk).origin).host
+        } catch {
+          ueHost = null
+        }
+        return {
+          imsOrg: sdk.imsOrg,
+          authorOrigin: sdk.authorOrigin,
+          ueHost,
+          noShell: true,
+        }
+      }
+    }
+
+    if (!siteName) return null
+    const target = siteName.toLowerCase()
     const match = domains.find(
       (d) =>
         d.kind === 'eds-ue' &&

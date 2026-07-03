@@ -12,7 +12,7 @@ const FONT_DEFAULT = 16
 
 // AEM Jump domain enums. Kept together so Settings selects, the block
 // header chips, and the normalizer all agree on the allowed values.
-export const AEM_KINDS = ['traditional', 'cloud', 'eds-da', 'eds-ue']
+export const AEM_KINDS = ['traditional', 'cloud', 'eds-da', 'eds-ue', 'local-sdk']
 export const AEM_ROLES = [
   'author',
   'publisher',
@@ -61,6 +61,28 @@ export function kindHasOrigin(kind) {
 
 export function kindHasRepo(kind) {
   return kind === 'eds-da' || kind === 'eds-ue'
+}
+
+// Local AEM SDK: a `localhost`-style Cloud author that runs traditional-style
+// paths (no `/ui#/aem/` shell). Carries the eds-ue link inline so a pasted
+// SDK URL can produce a Universal Editor jump back to the Cloud author host.
+export function kindHasLocalSdk(kind) {
+  return kind === 'local-sdk'
+}
+
+// The origin an AemJumpBlock should rebase the source URL onto for a given
+// domain. Different kinds store this address under different keys:
+//   - traditional / cloud / local-sdk -> `origin`
+//   - eds-ue                          -> `authorOrigin` (the Cloud author
+//                                        hosting the UE SPA + Sites shell)
+//   - eds-da                          -> null (no jump-block support yet)
+export function getRebaseOrigin(domain) {
+  if (!domain) return null
+  if (kindHasOrigin(domain.kind) || kindHasLocalSdk(domain.kind)) {
+    return domain.origin || null
+  }
+  if (domain.kind === 'eds-ue') return domain.authorOrigin || null
+  return null
 }
 
 function safeString(v, fallback = '') {
@@ -124,6 +146,23 @@ function normalizeDomainEntry(raw) {
       label,
       visible,
       origin: normalizeOrigin(raw.origin),
+    }
+  }
+
+  if (kindHasLocalSdk(kind)) {
+    return {
+      id,
+      kind,
+      role,
+      env,
+      label,
+      visible,
+      origin: normalizeOrigin(raw.origin),
+      // Same lower-cased match key as the eds-ue kind, so the block can
+      // pair localhost:4502 and localhost:14502 rows by `siteName`.
+      siteName: safeString(raw.siteName).trim().toLowerCase(),
+      imsOrg: safeString(raw.imsOrg).trim(),
+      authorOrigin: normalizeOrigin(raw.authorOrigin),
     }
   }
 
@@ -191,6 +230,14 @@ function isParseableUrl(v) {
 export function isDomainRenderable(entry) {
   if (!entry || typeof entry !== 'object') return false
   if (kindHasOrigin(entry.kind)) return isParseableUrl(entry.origin)
+  if (kindHasLocalSdk(entry.kind)) {
+    if (!isParseableUrl(entry.origin)) return false
+    if (!isParseableUrl(entry.authorOrigin)) return false
+    // siteName + imsOrg carry the UE flag; without them the SDK entry
+    // can't produce a Universal Editor jump.
+    if (!entry.siteName || !entry.imsOrg) return false
+    return true
+  }
   if (kindHasRepo(entry.kind)) {
     if (!entry.owner || !entry.repo) return false
     if (entry.kind === 'eds-ue') {

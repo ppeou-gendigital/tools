@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Info, Settings as SettingsIcon, Sparkles } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { AemJumpBlock } from '@/blocks/AemJumpBlock'
@@ -6,29 +6,61 @@ import { ManageEnvironmentsBlock } from '@/blocks/ManageEnvironmentsBlock'
 import { Deck, Slide } from '@/blocks/Deck'
 import { useAemDomains } from '@/providers/AemDomainsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
-import { isDomainRenderable, kindHasRepo } from '@/lib/prefs'
+import { isDomainRenderable } from '@/lib/prefs'
+import { asyncStorage } from '@/lib/storage'
 import { cx } from '@/lib/cx'
 import styles from './AemJump.module.scss'
 
 const EXAMPLE_URL =
   'https://qa-webauthor.np.nortonlifelock.com/editor.html/content/norton/language-masters/en/home.html'
 
+// Local-only cache of the last URL typed into the source card. Not synced
+// via PrefsSync — this is scratch state per browser, not a preference.
+const URL_STORAGE_KEY = 'loopy.aemJumpUrl'
+const URL_WRITE_DEBOUNCE_MS = 300
+
 export function AemJump() {
   const { goSettingsAemEnvironments } = useNavigation()
   const { domains, setDomains } = useAemDomains()
   const [url, setUrl] = useState(EXAMPLE_URL)
+  const [urlReady, setUrlReady] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
+
+  // Hydrate from storage on mount. Falls through to EXAMPLE_URL on
+  // first-time users or unreadable storage.
+  useEffect(() => {
+    let mounted = true
+    asyncStorage.getItem(URL_STORAGE_KEY).then((stored) => {
+      if (!mounted) return
+      if (typeof stored === 'string' && stored.trim()) setUrl(stored)
+      setUrlReady(true)
+    })
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  // Debounced persist so per-keystroke edits don't spam chrome.storage.
+  // Gated on `urlReady` so the initial default doesn't clobber the stored
+  // value before hydration finishes.
+  useEffect(() => {
+    if (!urlReady) return
+    const t = setTimeout(() => {
+      asyncStorage.setItem(URL_STORAGE_KEY, url)
+    }, URL_WRITE_DEBOUNCE_MS)
+    return () => clearTimeout(t)
+  }, [url, urlReady])
 
   // Renderable = has enough data to jump. Visibility is a separate,
   // user-controlled filter driven by the Manage slide at the end of the
   // deck; drafts stay edit-only in Settings.
   const renderable = domains.filter(isDomainRenderable)
   const visible = renderable.filter((d) => d.visible !== false)
-  // eds-da / eds-ue are stored + validated but their link builders don't
-  // exist yet. Show a short placeholder for each so users know their
-  // Settings edits landed.
-  const edsPending = visible.filter((d) => kindHasRepo(d.kind))
-  const jumpBlocks = visible.filter((d) => !kindHasRepo(d.kind))
+  // Rows that can rebase get a real AemJumpBlock. eds-da has only
+  // owner/repo/ref (no origin) so it stays on the placeholder track
+  // until its link builders land.
+  const jumpBlocks = visible.filter((d) => d.kind !== 'eds-da')
+  const edsPending = visible.filter((d) => d.kind === 'eds-da')
 
   return (
     <div className={styles.page}>
@@ -103,15 +135,11 @@ export function AemJump() {
   )
 }
 
+// Only reached for kinds that don't yet have a jump-block renderer.
+// Today that's just `eds-da` (owner/repo/ref only, no origin to rebase to).
 function EdsPlaceholderCard({ domain }) {
-  const subtitle =
-    domain.kind === 'eds-ue'
-      ? `${domain.owner}/${domain.repo}@${domain.ref} · UE @ ${domain.authorOrigin}`
-      : `${domain.owner}/${domain.repo}@${domain.ref}`
-  const note =
-    domain.kind === 'eds-ue'
-      ? `Flag active: /content/${domain.siteName} → UE @${domain.imsOrg}. The Universal Editor icon shows up in the source block when a URL matches this site.`
-      : 'EDS jump icons are coming in a follow-up.'
+  const subtitle = `${domain.owner}/${domain.repo}@${domain.ref}`
+  const note = 'EDS jump icons are coming in a follow-up.'
   return (
     <section className={styles.placeholder} aria-label={domain.label}>
       <div className={styles.placeholderHead}>

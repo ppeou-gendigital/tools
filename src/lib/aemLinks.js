@@ -74,16 +74,6 @@ function isCloudHost(hostname) {
   return /\.adobeaemcloud\.com$/i.test(hostname)
 }
 
-// The AEM Cloud SDK runs as a local Author but does NOT expose the
-// `/ui#/aem/` Unified Shell — URLs are traditional-style
-// (`/sites.html/...`, `/editor.html/...`). We only accept the sslProxy
-// pair `4502` (HTTP) / `14502` (HTTPS).
-function isLocalSdkHost(u) {
-  return (
-    u.hostname === 'localhost' && (u.port === '4502' || u.port === '14502')
-  )
-}
-
 // Walk WRAPPERS, `?item=/content/...`, and `#/content/...` (CRXDE style)
 // looking for something that smells like a JCR path. Takes a URL-like
 // duck-typed object so it can accept both a real URL and a synthetic one
@@ -302,16 +292,14 @@ function enrichContext(parsed) {
 }
 
 // Callers hand over the raw matched-domain metadata (`options.imsOrg` +
-// `options.authorOrigin`) and this helper derives the concrete UE fields
-// (`ueOrigin` = where the UE SPA lives, `ueHost` = the canvas target).
-// When no options are provided we fall back to whatever the parser
+// `options.authorOrigin`) and this helper wires them into the enriched
+// context: `ueOrigin` (where the UE SPA lives) becomes the Cloud author,
+// and `ueHost` (the canvas target) comes from the caller too — the
+// AemJumpBlock resolves it from a paired `local-sdk` row when the input
+// is a localhost SDK URL, otherwise it falls back to the Cloud author's
+// own hostname. When no options are provided we keep whatever the parser
 // recovered from a UE-shaped input URL, so a self-signaling UE URL still
 // round-trips without any domain config.
-//
-// Local SDK special case: `localhost:4502` / `localhost:14502` inputs get
-// `ueHost = 'localhost:14502'` (HTTPS side of the sslProxy pair) while
-// `ueOrigin` stays on the Cloud author. Every other builder still uses
-// the parsed origin, so local dev tooling links stay on localhost.
 function compose(parse, ...builders) {
   return (urlString, options = {}) => {
     const u = urlString instanceof URL ? urlString : new URL(urlString)
@@ -324,12 +312,14 @@ function compose(parse, ...builders) {
     if (options.imsOrg && options.authorOrigin) {
       imsOrg = options.imsOrg
       ueOrigin = options.authorOrigin
-      try {
-        ueHost = isLocalSdkHost(u)
-          ? 'localhost:14502'
-          : new URL(options.authorOrigin).hostname
-      } catch {
-        ueHost = null
+      if (options.ueHost) {
+        ueHost = options.ueHost
+      } else {
+        try {
+          ueHost = new URL(options.authorOrigin).hostname
+        } catch {
+          ueHost = null
+        }
       }
     }
 
@@ -514,12 +504,13 @@ export const buildAemLinksForEdsUe = compose(
   buildPackmgr,
 )
 
-// Local Cloud SDK variant of eds-ue: the input URL is a `localhost:4502`
-// (or `:14502`) instance running the SDK, which uses TRADITIONAL-style
-// paths (no `/ui#/aem/` shell). UE still lives on the Cloud author host
-// (rebased via `options.ueOrigin`) but canvases the HTTPS-side localhost
-// via `options.ueHost=localhost:14502`. Felix + classic admin tools
-// stay in the pipeline because the SDK exposes them.
+// Local Cloud SDK variant of eds-ue: the input URL comes from a `local-sdk`
+// domain (typically `localhost:4502` HTTP + `localhost:14502` HTTPS pair)
+// running the AEM Cloud SDK, which uses TRADITIONAL-style paths (no
+// `/ui#/aem/` shell). UE still lives on the Cloud author host (rebased
+// via `options.authorOrigin`) but canvases the HTTPS-side localhost via
+// `options.ueHost`. Felix + classic admin tools stay in the pipeline
+// because the SDK exposes them locally.
 export const buildAemLinksForEdsUeLocal = compose(
   parseAemUrlForTraditional,
   // shell-aware (shell = '', so no wrapping) — UE replaces classic editor
@@ -587,15 +578,16 @@ export const buildAemLinksForTraditional = compose(
  * ---------------------------------------------------------------------- */
 
 // Route order:
-//   1. eds-ue local — eds-ue signal AND localhost:4502/14502 SDK host
-//                     (traditional-style paths, UE rebased to Cloud author)
+//   1. eds-ue local — eds-ue signal AND `options.noShell` (matched
+//                     `local-sdk` domain: traditional-style paths, UE
+//                     rebased to Cloud author)
 //   2. eds-ue       — eds-ue signal on any other host (Cloud shell paths)
 //   3. cloud        — any `*.adobeaemcloud.com` host that isn't eds-ue
 //   4. traditional  — everything else
 //
 // eds-ue signal fires when either:
 //   - options.imsOrg + options.authorOrigin are injected (matched eds-ue
-//     domain), OR
+//     or local-sdk domain), OR
 //   - the URL itself is a UE fragment
 //     `#/@<imsOrg>/aem/universal-editor/canvas/<host>/...`
 export function buildAemLinks(urlString, options) {
@@ -604,7 +596,7 @@ export function buildAemLinks(urlString, options) {
     !!(options?.imsOrg && options?.authorOrigin) ||
     (isCloudHost(u.hostname) && UE_HASH_RE.test(u.hash || ''))
   if (isEdsUe) {
-    return isLocalSdkHost(u)
+    return options?.noShell
       ? buildAemLinksForEdsUeLocal(u, options)
       : buildAemLinksForEdsUe(u, options)
   }
