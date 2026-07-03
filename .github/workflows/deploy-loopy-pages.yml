@@ -1,8 +1,8 @@
-name: Deploy web build to GitHub Pages
+name: Deploy loopy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [tool/loopy]
   workflow_dispatch:
 
 permissions:
