@@ -74,6 +74,16 @@ function isCloudHost(hostname) {
   return /\.adobeaemcloud\.com$/i.test(hostname)
 }
 
+// The AEM Cloud SDK runs as a local Author but does NOT expose the
+// `/ui#/aem/` Unified Shell — URLs are traditional-style
+// (`/sites.html/...`, `/editor.html/...`). We only accept the sslProxy
+// pair `4502` (HTTP) / `14502` (HTTPS).
+function isLocalSdkHost(u) {
+  return (
+    u.hostname === 'localhost' && (u.port === '4502' || u.port === '14502')
+  )
+}
+
 // Walk WRAPPERS, `?item=/content/...`, and `#/content/...` (CRXDE style)
 // looking for something that smells like a JCR path. Takes a URL-like
 // duck-typed object so it can accept both a real URL and a synthetic one
@@ -291,19 +301,39 @@ function enrichContext(parsed) {
   return { ...parsed, isDam, q, h, disableQ }
 }
 
-// `options.imsOrg` / `options.ueHost` let the caller inject Universal
-// Editor metadata read from a matched eds-ue domain. Values from the
-// options bag win over anything the parser recovered from the URL, so a
-// UE-shaped input URL still works when no domain config is present.
+// Callers hand over the raw matched-domain metadata (`options.imsOrg` +
+// `options.authorOrigin`) and this helper derives the concrete UE fields
+// (`ueOrigin` = where the UE SPA lives, `ueHost` = the canvas target).
+// When no options are provided we fall back to whatever the parser
+// recovered from a UE-shaped input URL, so a self-signaling UE URL still
+// round-trips without any domain config.
+//
+// Local SDK special case: `localhost:4502` / `localhost:14502` inputs get
+// `ueHost = 'localhost:14502'` (HTTPS side of the sslProxy pair) while
+// `ueOrigin` stays on the Cloud author. Every other builder still uses
+// the parsed origin, so local dev tooling links stay on localhost.
 function compose(parse, ...builders) {
   return (urlString, options = {}) => {
-    const parsed = parse(urlString)
+    const u = urlString instanceof URL ? urlString : new URL(urlString)
+    const parsed = parse(u)
     if (!parsed.origin) return { parsed, links: {} }
-    const merged = {
-      ...parsed,
-      imsOrg: options.imsOrg ?? parsed.imsOrg,
-      ueHost: options.ueHost ?? parsed.ueHost,
+
+    let imsOrg = parsed.imsOrg
+    let ueOrigin = parsed.origin
+    let ueHost = parsed.ueHost
+    if (options.imsOrg && options.authorOrigin) {
+      imsOrg = options.imsOrg
+      ueOrigin = options.authorOrigin
+      try {
+        ueHost = isLocalSdkHost(u)
+          ? 'localhost:14502'
+          : new URL(options.authorOrigin).hostname
+      } catch {
+        ueHost = null
+      }
     }
+
+    const merged = { ...parsed, imsOrg, ueHost, ueOrigin }
     const ctx = enrichContext(merged)
     const links = builders.reduce(
       (acc, build) => Object.assign(acc, build(ctx)),
@@ -326,8 +356,10 @@ const buildEditor = ({ origin, resourcePath, isDam, shell, q, h }) => ({
 
 // Cloud-only. Emits a link only when the caller (or the input URL) has
 // established `imsOrg` + `ueHost` — otherwise the URL would be nonsense.
+// `ueOrigin` defaults to the parsed URL's origin, but the caller can
+// override it (e.g. localhost SDK input -> Cloud author origin).
 const buildUniversalEditor = ({
-  origin,
+  ueOrigin,
   resourcePath,
   isDam,
   imsOrg,
@@ -335,7 +367,7 @@ const buildUniversalEditor = ({
 }) => ({
   universalEditor:
     imsOrg && ueHost && resourcePath && !isDam
-      ? `${origin}/ui#/@${imsOrg}/aem/universal-editor/canvas/${ueHost}${resourcePath}.html`
+      ? `${ueOrigin}/ui#/@${imsOrg}/aem/universal-editor/canvas/${ueHost}${resourcePath}.html`
       : null,
 })
 
@@ -482,6 +514,43 @@ export const buildAemLinksForEdsUe = compose(
   buildPackmgr,
 )
 
+// Local Cloud SDK variant of eds-ue: the input URL is a `localhost:4502`
+// (or `:14502`) instance running the SDK, which uses TRADITIONAL-style
+// paths (no `/ui#/aem/` shell). UE still lives on the Cloud author host
+// (rebased via `options.ueOrigin`) but canvases the HTTPS-side localhost
+// via `options.ueHost=localhost:14502`. Felix + classic admin tools
+// stay in the pipeline because the SDK exposes them.
+export const buildAemLinksForEdsUeLocal = compose(
+  parseAemUrlForTraditional,
+  // shell-aware (shell = '', so no wrapping) — UE replaces classic editor
+  buildUniversalEditor,
+  buildProperties,
+  buildSites,
+  buildSitesRoot,
+  buildDam,
+  buildDamRoot,
+  buildAssetDetails,
+  buildI18n,
+  buildQueryBuilder,
+  buildUsers,
+  // raw
+  buildPreview,
+  buildDisable,
+  buildCrx,
+  buildPackmgr,
+  // Felix + classic UI + welcome — SDK has these locally
+  buildSystemConsole,
+  buildOsgiConsole,
+  buildBundles,
+  buildJmx,
+  buildLogsStatus,
+  buildLogsConfig,
+  buildSiteAdmin,
+  buildWelcome,
+  buildMiscadmin,
+  buildUsersClassic,
+)
+
 export const buildAemLinksForTraditional = compose(
   parseAemUrlForTraditional,
   // shell-aware (shell = '', so no wrapping)
@@ -518,17 +587,27 @@ export const buildAemLinksForTraditional = compose(
  * ---------------------------------------------------------------------- */
 
 // Route order:
-//   1. eds-ue     — matched eds-ue domain (options.imsOrg + options.ueHost)
-//                   OR the URL itself is a UE fragment
-//                   `#/@<imsOrg>/aem/universal-editor/canvas/<host>/...`
-//   2. cloud      — any `*.adobeaemcloud.com` host that isn't eds-ue
-//   3. traditional — everything else
+//   1. eds-ue local — eds-ue signal AND localhost:4502/14502 SDK host
+//                     (traditional-style paths, UE rebased to Cloud author)
+//   2. eds-ue       — eds-ue signal on any other host (Cloud shell paths)
+//   3. cloud        — any `*.adobeaemcloud.com` host that isn't eds-ue
+//   4. traditional  — everything else
+//
+// eds-ue signal fires when either:
+//   - options.imsOrg + options.authorOrigin are injected (matched eds-ue
+//     domain), OR
+//   - the URL itself is a UE fragment
+//     `#/@<imsOrg>/aem/universal-editor/canvas/<host>/...`
 export function buildAemLinks(urlString, options) {
   const u = urlString instanceof URL ? urlString : new URL(urlString)
   const isEdsUe =
-    !!(options?.imsOrg && options?.ueHost) ||
+    !!(options?.imsOrg && options?.authorOrigin) ||
     (isCloudHost(u.hostname) && UE_HASH_RE.test(u.hash || ''))
-  if (isEdsUe) return buildAemLinksForEdsUe(u, options)
+  if (isEdsUe) {
+    return isLocalSdkHost(u)
+      ? buildAemLinksForEdsUeLocal(u, options)
+      : buildAemLinksForEdsUe(u, options)
+  }
   return isCloudHost(u.hostname)
     ? buildAemLinksForCloud(u, options)
     : buildAemLinksForTraditional(u, options)

@@ -145,8 +145,9 @@ export function AemJumpBlock({
   )
 
   // If the effective URL's content path lives under a configured eds-ue
-  // site, capture that domain's UE metadata so buildAemLinks can emit a
-  // `universalEditor` link even when the input isn't already a UE URL.
+  // site, hand the matched domain's raw metadata (imsOrg + authorOrigin)
+  // to buildAemLinks. All URL-shape decisions (Cloud shell vs. traditional
+  // paths, localhost SDK canvas host, etc.) live in aemLinks.js.
   const edsUeOptions = useMemo(() => {
     const trimmed = (effectiveUrl ?? '').trim()
     if (!trimmed) return null
@@ -166,14 +167,7 @@ export function AemJumpBlock({
         d.authorOrigin,
     )
     if (!match) return null
-    try {
-      return {
-        imsOrg: match.imsOrg,
-        ueHost: new URL(match.authorOrigin).hostname,
-      }
-    } catch {
-      return null
-    }
+    return { imsOrg: match.imsOrg, authorOrigin: match.authorOrigin }
   }, [effectiveUrl, domains])
 
   const result = useMemo(() => {
