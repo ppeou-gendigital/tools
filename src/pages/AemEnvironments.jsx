@@ -54,6 +54,8 @@ function toDraft(entry) {
     repo: entry.repo ?? '',
     ref: entry.ref ?? 'main',
     authorOrigin: entry.authorOrigin ?? '',
+    siteName: entry.siteName ?? '',
+    imsOrg: entry.imsOrg ?? '',
   }
 }
 
@@ -74,6 +76,8 @@ function toPersisted(draft) {
         repo: draft.repo,
         ref: draft.ref,
         authorOrigin: draft.authorOrigin,
+        siteName: draft.siteName,
+        imsOrg: draft.imsOrg,
       }
     }
     return {
@@ -102,7 +106,10 @@ function isDraftValid(draft) {
   if (kindHasOrigin(draft.kind)) return isValidUrl(draft.origin)
   if (kindHasRepo(draft.kind)) {
     if (!draft.owner.trim() || !draft.repo.trim()) return false
-    if (draft.kind === 'eds-ue' && !isValidUrl(draft.authorOrigin)) return false
+    if (draft.kind === 'eds-ue') {
+      if (!isValidUrl(draft.authorOrigin)) return false
+      if (!draft.siteName.trim() || !draft.imsOrg.trim()) return false
+    }
     return true
   }
   return false
@@ -316,18 +323,40 @@ function DomainRow({ row, onChange, onRemove }) {
             />
           </div>
           {row.kind === 'eds-ue' && (
-            <div className={cx(styles.field, styles.fieldFull)}>
-              <Label htmlFor={`author-origin-${row.id}`}>Author origin</Label>
-              <Input
-                id={`author-origin-${row.id}`}
-                type="url"
-                value={row.authorOrigin}
-                onChange={(e) => onChange({ authorOrigin: e.target.value })}
-                placeholder="https://author-p12345-e67890.adobeaemcloud.com"
-                spellCheck={false}
-                autoComplete="off"
-              />
-            </div>
+            <>
+              <div className={cx(styles.field, styles.fieldFull)}>
+                <Label htmlFor={`author-origin-${row.id}`}>Author origin</Label>
+                <Input
+                  id={`author-origin-${row.id}`}
+                  type="url"
+                  value={row.authorOrigin}
+                  onChange={(e) => onChange({ authorOrigin: e.target.value })}
+                  placeholder="https://author-p12345-e67890.adobeaemcloud.com"
+                  spellCheck={false}
+                  autoComplete="off"
+                />
+              </div>
+              <div className={styles.field}>
+                <Label htmlFor={`site-name-${row.id}`}>Site name</Label>
+                <Input
+                  id={`site-name-${row.id}`}
+                  value={row.siteName}
+                  onChange={(e) => onChange({ siteName: e.target.value })}
+                  placeholder="lifelock-eds-ue"
+                  autoComplete="off"
+                />
+              </div>
+              <div className={styles.field}>
+                <Label htmlFor={`ims-org-${row.id}`}>IMS org</Label>
+                <Input
+                  id={`ims-org-${row.id}`}
+                  value={row.imsOrg}
+                  onChange={(e) => onChange({ imsOrg: e.target.value })}
+                  placeholder="symantec"
+                  autoComplete="off"
+                />
+              </div>
+            </>
           )}
         </div>
       )}

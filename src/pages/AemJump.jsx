@@ -108,6 +108,10 @@ function EdsPlaceholderCard({ domain }) {
     domain.kind === 'eds-ue'
       ? `${domain.owner}/${domain.repo}@${domain.ref} · UE @ ${domain.authorOrigin}`
       : `${domain.owner}/${domain.repo}@${domain.ref}`
+  const note =
+    domain.kind === 'eds-ue'
+      ? `Flag active: /content/${domain.siteName} → UE @${domain.imsOrg}. The Universal Editor icon shows up in the source block when a URL matches this site.`
+      : 'EDS jump icons are coming in a follow-up.'
   return (
     <section className={styles.placeholder} aria-label={domain.label}>
       <div className={styles.placeholderHead}>
@@ -116,9 +120,7 @@ function EdsPlaceholderCard({ domain }) {
         <span className={styles.placeholderChip}>{domain.kind}</span>
       </div>
       <p className={styles.placeholderSub}>{subtitle}</p>
-      <p className={styles.placeholderNote}>
-        EDS jump icons are coming in a follow-up.
-      </p>
+      <p className={styles.placeholderNote}>{note}</p>
     </section>
   )
 }

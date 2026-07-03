@@ -143,6 +143,13 @@ function normalizeDomainEntry(raw) {
         repo,
         ref,
         authorOrigin: normalizeOrigin(raw.authorOrigin),
+        // Site name matches the first segment under `/content/`, e.g.
+        // `lifelock-eds-ue`. Lower-cased so a case-insensitive URL match
+        // (Cloud is case-sensitive but users type inconsistently) works.
+        siteName: safeString(raw.siteName).trim().toLowerCase(),
+        // Adobe IMS org shortname, the `@symantec` slug that shows up in
+        // Universal Editor URLs.
+        imsOrg: safeString(raw.imsOrg).trim(),
       }
     }
     return { id, kind, role, env, label, visible, owner, repo, ref }
@@ -186,8 +193,11 @@ export function isDomainRenderable(entry) {
   if (kindHasOrigin(entry.kind)) return isParseableUrl(entry.origin)
   if (kindHasRepo(entry.kind)) {
     if (!entry.owner || !entry.repo) return false
-    if (entry.kind === 'eds-ue' && !isParseableUrl(entry.authorOrigin)) {
-      return false
+    if (entry.kind === 'eds-ue') {
+      if (!isParseableUrl(entry.authorOrigin)) return false
+      // siteName + imsOrg are the flag that makes the UE link resolvable.
+      // Without them the entry is a draft and the Jump page skips it.
+      if (!entry.siteName || !entry.imsOrg) return false
     }
     return true
   }

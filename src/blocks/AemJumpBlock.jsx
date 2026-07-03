@@ -30,8 +30,9 @@ import {
 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
-import { buildAemLinks } from '@/lib/aemLinks'
+import { buildAemLinks, parseAemUrl } from '@/lib/aemLinks'
 import { kindHasOrigin } from '@/lib/prefs'
+import { useAemDomains } from '@/providers/AemDomainsProvider'
 import { isExtension } from '@/env'
 import { cx } from '@/lib/cx'
 import styles from './AemJumpBlock.module.scss'
@@ -57,6 +58,7 @@ const GROUP_CLASS = {
 //   admin    - dev / ops consoles           (crx / osgi / logs / packmgr / jmx / query builder)
 const LINK_ROWS = [
   { key: 'editor', label: 'Editor', icon: PencilLine, group: 'page' },
+  { key: 'universalEditor', label: 'Universal Editor', icon: PencilLine, group: 'page' },
   { key: 'preview', label: 'Preview', icon: Eye, group: 'page' },
   { key: 'disable', label: 'Disabled (wcmmode)', icon: MonitorPlay, group: 'page' },
   { key: 'properties', label: 'Page Properties', icon: FileSliders, group: 'page' },
@@ -135,16 +137,53 @@ export function AemJumpBlock({
   const isSource = variant === 'source'
   const origin = domain && kindHasOrigin(domain.kind) ? domain.origin : null
 
+  const { domains } = useAemDomains()
+
   const effectiveUrl = useMemo(
     () => computeUrl({ variant, origin, url }),
     [variant, origin, url],
   )
 
+  // If the effective URL's content path lives under a configured eds-ue
+  // site, capture that domain's UE metadata so buildAemLinks can emit a
+  // `universalEditor` link even when the input isn't already a UE URL.
+  const edsUeOptions = useMemo(() => {
+    const trimmed = (effectiveUrl ?? '').trim()
+    if (!trimmed) return null
+    let sn
+    try {
+      sn = parseAemUrl(trimmed).siteName
+    } catch {
+      return null
+    }
+    if (!sn) return null
+    const target = sn.toLowerCase()
+    const match = domains.find(
+      (d) =>
+        d.kind === 'eds-ue' &&
+        d.siteName === target &&
+        d.imsOrg &&
+        d.authorOrigin,
+    )
+    if (!match) return null
+    try {
+      return {
+        imsOrg: match.imsOrg,
+        ueHost: new URL(match.authorOrigin).hostname,
+      }
+    } catch {
+      return null
+    }
+  }, [effectiveUrl, domains])
+
   const result = useMemo(() => {
     const trimmed = (effectiveUrl ?? '').trim()
     if (!trimmed) return { parsed: null, links: {}, error: null }
     try {
-      return { ...buildAemLinks(trimmed), error: null }
+      return {
+        ...buildAemLinks(trimmed, edsUeOptions ?? undefined),
+        error: null,
+      }
     } catch (err) {
       return {
         parsed: null,
@@ -152,7 +191,7 @@ export function AemJumpBlock({
         error: err instanceof Error ? err.message : 'Invalid URL',
       }
     }
-  }, [effectiveUrl])
+  }, [effectiveUrl, edsUeOptions])
 
   const availableLinks = LINK_ROWS.filter(({ key }) => !!result.links[key])
 

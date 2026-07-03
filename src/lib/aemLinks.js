@@ -211,17 +211,34 @@ export function parseAemUrlForTraditional(urlString) {
     hash,
     flavor: 'traditional',
     shell: '',
+    imsOrg: null,
+    ueHost: null,
   }
 }
+
+// Universal Editor fragment: `#/@<imsOrg>/aem/universal-editor/canvas/<host>[/<resourcePath>]`
+const UE_HASH_RE = /^#\/@([^/]+)\/aem\/universal-editor\/canvas\/([^/]+)(\/.+)?$/
 
 export function parseAemUrlForCloud(urlString) {
   const u = urlString instanceof URL ? urlString : new URL(urlString)
 
-  // Cloud author lives inside a SPA shell at `/ui`, with the real AEM
-  // console path in the fragment prefixed by `/aem/`. Everything else
-  // (query params, inner hashes) is folded into that fragment string.
+  // Cloud author lives inside a SPA shell at `/ui`. The real AEM console
+  // path can appear in two fragment shapes:
+  //   - `#/aem/<console>.html/<resourcePath>` — the standard sites/editor route
+  //   - `#/@<imsOrg>/aem/universal-editor/canvas/<host>/<resourcePath>` — UE
+  // We normalize both into `{ pathname, searchParams, hash }` and feed the
+  // existing traditional extractors. The UE case also captures `imsOrg` and
+  // `ueHost` so a round-trip UE link can be reconstructed.
+  let imsOrg = null
+  let ueHost = null
   let logical
-  if (u.hash.startsWith('#/aem/')) {
+
+  const ueMatch = u.hash.match(UE_HASH_RE)
+  if (ueMatch) {
+    imsOrg = ueMatch[1]
+    ueHost = ueMatch[2]
+    logical = splitCloudFragmentBody(ueMatch[3] || '/')
+  } else if (u.hash.startsWith('#/aem/')) {
     logical = splitCloudFragmentBody(u.hash.slice(5)) // drop "#/aem", keep leading "/"
   } else {
     // Non-shell Cloud URL (bare origin, or a raw /content/... render) —
@@ -247,6 +264,8 @@ export function parseAemUrlForCloud(urlString) {
     hash,
     flavor: 'cloud',
     shell: '/ui#/aem',
+    imsOrg,
+    ueHost,
   }
 }
 
@@ -272,16 +291,25 @@ function enrichContext(parsed) {
   return { ...parsed, isDam, q, h, disableQ }
 }
 
+// `options.imsOrg` / `options.ueHost` let the caller inject Universal
+// Editor metadata read from a matched eds-ue domain. Values from the
+// options bag win over anything the parser recovered from the URL, so a
+// UE-shaped input URL still works when no domain config is present.
 function compose(parse, ...builders) {
-  return (urlString) => {
+  return (urlString, options = {}) => {
     const parsed = parse(urlString)
     if (!parsed.origin) return { parsed, links: {} }
-    const ctx = enrichContext(parsed)
+    const merged = {
+      ...parsed,
+      imsOrg: options.imsOrg ?? parsed.imsOrg,
+      ueHost: options.ueHost ?? parsed.ueHost,
+    }
+    const ctx = enrichContext(merged)
     const links = builders.reduce(
       (acc, build) => Object.assign(acc, build(ctx)),
       {},
     )
-    return { parsed, links }
+    return { parsed: merged, links }
   }
 }
 
@@ -293,6 +321,21 @@ const buildEditor = ({ origin, resourcePath, isDam, shell, q, h }) => ({
   editor:
     resourcePath && !isDam
       ? `${origin}${shell}/editor.html${resourcePath}.html${q}${h}`
+      : null,
+})
+
+// Cloud-only. Emits a link only when the caller (or the input URL) has
+// established `imsOrg` + `ueHost` — otherwise the URL would be nonsense.
+const buildUniversalEditor = ({
+  origin,
+  resourcePath,
+  isDam,
+  imsOrg,
+  ueHost,
+}) => ({
+  universalEditor:
+    imsOrg && ueHost && resourcePath && !isDam
+      ? `${origin}/ui#/@${imsOrg}/aem/universal-editor/canvas/${ueHost}${resourcePath}.html`
       : null,
 })
 
@@ -414,6 +457,31 @@ export const buildAemLinksForCloud = compose(
   buildPackmgr,
 )
 
+// eds-ue is a Cloud author variant: same shell + admin consoles, but the
+// classic Page Editor is replaced by the Universal Editor. The dispatcher
+// routes here when either (a) the input URL is a UE fragment or (b) the
+// caller passes `options.imsOrg` + `options.ueHost` from a matched
+// eds-ue domain.
+export const buildAemLinksForEdsUe = compose(
+  parseAemUrlForCloud,
+  // shell-aware — UE replaces classic editor
+  buildUniversalEditor,
+  buildProperties,
+  buildSites,
+  buildSitesRoot,
+  buildDam,
+  buildDamRoot,
+  buildAssetDetails,
+  buildI18n,
+  buildQueryBuilder,
+  buildUsers,
+  // raw
+  buildPreview,
+  buildDisable,
+  buildCrx,
+  buildPackmgr,
+)
+
 export const buildAemLinksForTraditional = compose(
   parseAemUrlForTraditional,
   // shell-aware (shell = '', so no wrapping)
@@ -449,9 +517,19 @@ export const buildAemLinksForTraditional = compose(
  * Dispatcher
  * ---------------------------------------------------------------------- */
 
-export function buildAemLinks(urlString) {
+// Route order:
+//   1. eds-ue     — matched eds-ue domain (options.imsOrg + options.ueHost)
+//                   OR the URL itself is a UE fragment
+//                   `#/@<imsOrg>/aem/universal-editor/canvas/<host>/...`
+//   2. cloud      — any `*.adobeaemcloud.com` host that isn't eds-ue
+//   3. traditional — everything else
+export function buildAemLinks(urlString, options) {
   const u = urlString instanceof URL ? urlString : new URL(urlString)
+  const isEdsUe =
+    !!(options?.imsOrg && options?.ueHost) ||
+    (isCloudHost(u.hostname) && UE_HASH_RE.test(u.hash || ''))
+  if (isEdsUe) return buildAemLinksForEdsUe(u, options)
   return isCloudHost(u.hostname)
-    ? buildAemLinksForCloud(u)
-    : buildAemLinksForTraditional(u)
+    ? buildAemLinksForCloud(u, options)
+    : buildAemLinksForTraditional(u, options)
 }
