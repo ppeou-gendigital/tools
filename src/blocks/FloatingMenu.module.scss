@@ -20,9 +20,9 @@
   width: var(--fab-size);
   height: var(--fab-size);
   border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--fg);
+  border: none;
+  background: var(--fab-bg);
+  color: var(--fab-fg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -33,7 +33,7 @@
   transition: background 0.15s ease, box-shadow 0.15s ease;
 
   &:hover:not([data-dragging='true']) {
-    background: var(--muted);
+    background: var(--fab-bg-hover);
   }
 
   &:focus-visible {

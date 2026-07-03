@@ -10,7 +10,8 @@
     "build": "vite build --mode extension",
     "build:web": "vite build --mode web",
     "preview": "vite preview",
-    "lint": "eslint \"src/**/*.{js,jsx}\""
+    "lint": "eslint \"src/**/*.{js,jsx}\"",
+    "icons": "scripts/generate-icons.sh"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.109.0",
