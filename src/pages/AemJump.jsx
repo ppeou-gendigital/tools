@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { ArrowLeft, Settings as SettingsIcon, Sparkles } from 'lucide-react'
+import { Info, Settings as SettingsIcon, Sparkles } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { AemJumpBlock } from '@/blocks/AemJumpBlock'
+import { ManageEnvironmentsBlock } from '@/blocks/ManageEnvironmentsBlock'
 import { Deck, Slide } from '@/blocks/Deck'
 import { useAemDomains } from '@/providers/AemDomainsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
@@ -13,47 +14,57 @@ const EXAMPLE_URL =
   'https://qa-webauthor.np.nortonlifelock.com/editor.html/content/norton/language-masters/en/home.html'
 
 export function AemJump() {
-  const { goHome, goSettingsAemEnvironments } = useNavigation()
-  const { domains } = useAemDomains()
+  const { goSettingsAemEnvironments } = useNavigation()
+  const { domains, setDomains } = useAemDomains()
   const [url, setUrl] = useState(EXAMPLE_URL)
+  const [showInfo, setShowInfo] = useState(false)
 
+  // Renderable = has enough data to jump. Visibility is a separate,
+  // user-controlled filter driven by the Manage slide at the end of the
+  // deck; drafts stay edit-only in Settings.
   const renderable = domains.filter(isDomainRenderable)
+  const visible = renderable.filter((d) => d.visible !== false)
   // eds-da / eds-ue are stored + validated but their link builders don't
   // exist yet. Show a short placeholder for each so users know their
   // Settings edits landed.
-  const edsPending = renderable.filter((d) => kindHasRepo(d.kind))
-  const jumpBlocks = renderable.filter((d) => !kindHasRepo(d.kind))
+  const edsPending = visible.filter((d) => kindHasRepo(d.kind))
+  const jumpBlocks = visible.filter((d) => !kindHasRepo(d.kind))
 
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={goHome}
-          className={styles.back}
-        >
-          <ArrowLeft size={14} aria-hidden="true" />
-          Back
-        </Button>
-        <div className={styles.headerText}>
+        <div className={styles.headerRow}>
           <h1 className={styles.title}>AEM Jump</h1>
-          <p className={styles.subtitle}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowInfo((v) => !v)}
+            className={styles.iconBtn}
+            aria-label="About this page"
+            aria-expanded={showInfo}
+            aria-controls="aem-jump-info"
+            title="About"
+          >
+            <Info size={14} aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={goSettingsAemEnvironments}
+            className={styles.iconBtn}
+            aria-label="Manage AEM environments"
+            title="Manage environments"
+          >
+            <SettingsIcon size={14} aria-hidden="true" />
+          </Button>
+        </div>
+        {showInfo && (
+          <p id="aem-jump-info" className={styles.subtitle}>
             Paste an AEM URL to jump between Editor, Sites, DAM, CRX/DE and
             admin consoles. Configured domains rebase the same URL onto
             other environments.
           </p>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={goSettingsAemEnvironments}
-          className={styles.settingsBtn}
-          aria-label="Manage AEM environments"
-          title="Manage environments"
-        >
-          <SettingsIcon size={14} aria-hidden="true" />
-        </Button>
+        )}
       </header>
 
       <div className={cx('is-fluid-width', styles.deckWrap)}>
@@ -78,6 +89,14 @@ export function AemJump() {
               <EdsPlaceholderCard domain={d} />
             </Slide>
           ))}
+
+          <Slide span={11} spanMd={6} spanLg={5} spanXl={4}>
+            <ManageEnvironmentsBlock
+              domains={renderable}
+              onChange={setDomains}
+              onOpenSettings={goSettingsAemEnvironments}
+            />
+          </Slide>
         </Deck>
       </div>
     </div>

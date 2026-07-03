@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useId, useMemo, useState } from 'react'
 import {
   Activity,
   Boxes,
@@ -11,6 +11,7 @@ import {
   Home,
   Image,
   Images,
+  Info,
   Languages,
   LayoutGrid,
   LayoutList,
@@ -29,40 +30,56 @@ import {
 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
-import { Label } from '@/molecules/Label'
 import { buildAemLinks } from '@/lib/aemLinks'
 import { kindHasOrigin } from '@/lib/prefs'
 import { isExtension } from '@/env'
 import { cx } from '@/lib/cx'
 import styles from './AemJumpBlock.module.scss'
 
+// Group -> CSS-module class. Kept out of the row table so LINK_ROWS stays
+// declarative; each anchor gets both this class and the base `.toolBtn`.
+const GROUP_CLASS = {
+  page: styles.groupPage,
+  project: styles.groupProject,
+  aem: styles.groupAem,
+  admin: styles.groupAdmin,
+}
+
 // Icons + labels for the Jump-to grid. Kept alongside the block so the
 // URL/link-builder layer (src/lib/aemLinks.js) stays presentation-free.
+//
+// `group` buckets a tool into one of four visual categories so the icon
+// grid gains a quick color legend. Tokens live in src/tokens/_tokens.scss
+// under --jump-{page,project,aem,admin} with light/dark variants.
+//   page     - page-scoped author tools     (editor / preview / properties / asset details)
+//   project  - project/site scoped consoles (Sites / DAM)
+//   aem      - AEM app-level surfaces       (welcome / i18n / users / miscadmin / site admin)
+//   admin    - dev / ops consoles           (crx / osgi / logs / packmgr / jmx / query builder)
 const LINK_ROWS = [
-  { key: 'editor', label: 'Editor', icon: PencilLine },
-  { key: 'preview', label: 'Preview', icon: Eye },
-  { key: 'disable', label: 'Disabled (wcmmode)', icon: MonitorPlay },
-  { key: 'properties', label: 'Page Properties', icon: FileSliders },
-  { key: 'sites', label: 'Sites Console (item)', icon: LayoutList },
-  { key: 'sitesRoot', label: 'Sites Console (root)', icon: FolderTree },
-  { key: 'dam', label: 'Assets (folder)', icon: FolderOpen },
-  { key: 'damRoot', label: 'Assets (root)', icon: Images },
-  { key: 'assetDetails', label: 'Asset Details', icon: Image },
-  { key: 'crx', label: 'CRX / DE', icon: Braces },
-  { key: 'packmgr', label: 'Package Manager', icon: Package },
-  { key: 'systemConsole', label: 'System Console', icon: Wrench },
-  { key: 'osgiConsole', label: 'OSGi Config', icon: SlidersHorizontal },
-  { key: 'siteAdmin', label: 'Site Admin (classic)', icon: LayoutGrid },
-  { key: 'welcome', label: 'Welcome / Start', icon: Home },
-  { key: 'i18n', label: 'i18n Translator', icon: Languages },
-  { key: 'queryBuilder', label: 'Query Builder', icon: Search },
-  { key: 'bundles', label: 'Bundles', icon: Boxes },
-  { key: 'jmx', label: 'JMX', icon: Activity },
-  { key: 'logsStatus', label: 'Logs (dump)', icon: ScrollText },
-  { key: 'logsConfig', label: 'Logs (config)', icon: Settings2 },
-  { key: 'miscadmin', label: 'Miscadmin', icon: Shield },
-  { key: 'users', label: 'Users (Touch)', icon: Users },
-  { key: 'usersClassic', label: 'Users (Classic)', icon: UserCog },
+  { key: 'editor', label: 'Editor', icon: PencilLine, group: 'page' },
+  { key: 'preview', label: 'Preview', icon: Eye, group: 'page' },
+  { key: 'disable', label: 'Disabled (wcmmode)', icon: MonitorPlay, group: 'page' },
+  { key: 'properties', label: 'Page Properties', icon: FileSliders, group: 'page' },
+  { key: 'sites', label: 'Sites Console (item)', icon: LayoutList, group: 'project' },
+  { key: 'sitesRoot', label: 'Sites Console (root)', icon: FolderTree, group: 'project' },
+  { key: 'dam', label: 'Assets (folder)', icon: FolderOpen, group: 'project' },
+  { key: 'damRoot', label: 'Assets (root)', icon: Images, group: 'project' },
+  { key: 'assetDetails', label: 'Asset Details', icon: Image, group: 'page' },
+  { key: 'crx', label: 'CRX / DE', icon: Braces, group: 'admin' },
+  { key: 'packmgr', label: 'Package Manager', icon: Package, group: 'admin' },
+  { key: 'systemConsole', label: 'System Console', icon: Wrench, group: 'admin' },
+  { key: 'osgiConsole', label: 'OSGi Config', icon: SlidersHorizontal, group: 'admin' },
+  { key: 'siteAdmin', label: 'Site Admin (classic)', icon: LayoutGrid, group: 'aem' },
+  { key: 'welcome', label: 'Welcome / Start', icon: Home, group: 'aem' },
+  { key: 'i18n', label: 'i18n Translator', icon: Languages, group: 'aem' },
+  { key: 'queryBuilder', label: 'Query Builder', icon: Search, group: 'admin' },
+  { key: 'bundles', label: 'Bundles', icon: Boxes, group: 'admin' },
+  { key: 'jmx', label: 'JMX', icon: Activity, group: 'admin' },
+  { key: 'logsStatus', label: 'Logs (dump)', icon: ScrollText, group: 'admin' },
+  { key: 'logsConfig', label: 'Logs (config)', icon: Settings2, group: 'admin' },
+  { key: 'miscadmin', label: 'Miscadmin', icon: Shield, group: 'aem' },
+  { key: 'users', label: 'Users (Touch)', icon: Users, group: 'aem' },
+  { key: 'usersClassic', label: 'Users (Classic)', icon: UserCog, group: 'aem' },
 ]
 
 const PARSED_ROWS = [
@@ -151,38 +168,46 @@ export function AemJumpBlock({
   }
 
   const fieldId = inputId ?? 'aem-jump-url'
+  const infoId = useId()
+  const [showInfo, setShowInfo] = useState(false)
 
   return (
     <section className={styles.block} aria-label={isSource ? 'Source URL' : domain?.label}>
       {!isSource && domain && (
         <header className={styles.blockHeader}>
-          <h2 className={styles.blockTitle}>{domain.label}</h2>
-          <div className={styles.chips}>
-            <span className={cx(styles.chip, styles.chipKind)}>{domain.kind}</span>
-            <span className={styles.chip}>{domain.role}</span>
-            <span className={styles.chip}>{domain.env}</span>
+          <div className={styles.blockTitleRow}>
+            <h2 className={styles.blockTitle}>{domain.label}</h2>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowInfo((v) => !v)}
+              className={styles.infoBtn}
+              aria-label="About this environment"
+              aria-expanded={showInfo}
+              aria-controls={infoId}
+              title="About"
+            >
+              <Info size={14} aria-hidden="true" />
+            </Button>
           </div>
-          {origin && <p className={styles.originLine}>{origin}</p>}
+          {showInfo && (
+            <div id={infoId} className={styles.blockInfo}>
+              <div className={styles.chips}>
+                <span className={cx(styles.chip, styles.chipKind)}>
+                  {domain.kind}
+                </span>
+                <span className={styles.chip}>{domain.role}</span>
+                <span className={styles.chip}>{domain.env}</span>
+              </div>
+              {origin && <p className={styles.originLine}>{origin}</p>}
+            </div>
+          )}
         </header>
       )}
 
       {isSource && (
         <div className={styles.field}>
-          <div className={styles.labelRow}>
-            <Label htmlFor={fieldId}>AEM URL</Label>
-            {canUseCurrentTab && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleUseCurrentTab}
-                className={styles.currentTabBtn}
-              >
-                <Focus size={12} aria-hidden="true" />
-                Use current tab
-              </Button>
-            )}
-          </div>
           <Input
             id={fieldId}
             type="url"
@@ -191,7 +216,21 @@ export function AemJumpBlock({
             placeholder="https://author.example.com/editor.html/content/..."
             spellCheck={false}
             autoComplete="off"
+            aria-label="AEM URL"
+            className={styles.fieldInput}
           />
+          {canUseCurrentTab && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleUseCurrentTab}
+              className={styles.currentTabBtn}
+            >
+              <Focus size={12} aria-hidden="true" />
+              Use current tab
+            </Button>
+          )}
         </div>
       )}
 
@@ -209,12 +248,13 @@ export function AemJumpBlock({
             <p className={styles.muted}>No links available for this URL.</p>
           ) : (
             <ul className={styles.tools}>
-              {availableLinks.map(({ key, label, icon: Icon }) => {
+              {availableLinks.map(({ key, label, icon: Icon, group }) => {
                 const href = result.links[key]
                 return (
                   <li key={key} className={styles.toolItem}>
                     <a
-                      className={styles.toolBtn}
+                      className={cx(styles.toolBtn, GROUP_CLASS[group])}
+                      data-group={group}
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"

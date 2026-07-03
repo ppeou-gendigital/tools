@@ -6,6 +6,7 @@ import { DeckTestItem } from '@/patterns/DeckTestItem'
 import { DevBadgeItem } from '@/patterns/DevBadgeItem'
 import { FontSizeRow } from '@/patterns/FontSizeRow'
 import { ProfileItem } from '@/patterns/ProfileItem'
+import { ProjectSiteItem } from '@/patterns/ProjectSiteItem'
 import { SettingsItem } from '@/patterns/SettingsItem'
 import { SignOutItem } from '@/patterns/SignOutItem'
 import { ThemeItem } from '@/patterns/ThemeItem'
@@ -28,6 +29,7 @@ export function MenuPanel({ corner, onClose }) {
       <Divider />
       <AemJumpItem onClose={onClose} />
       <DeckTestItem onClose={onClose} />
+      <ProjectSiteItem onClose={onClose} />
       <DevBadgeItem />
       <AboutRow version={VERSION} />
     </div>

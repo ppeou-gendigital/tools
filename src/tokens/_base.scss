@@ -1,6 +1,7 @@
 // The <html> element is the app's outermost surface. It owns the width and
 // height decision based on where we're rendering:
-//   - popup surface (Chrome extension) → capped at 400x600
+//   - popup surface (Chrome extension) → capped at 780x600 (Chrome's hard
+//     max for a browser-action popup is 800x600; we leave 20px of headroom)
 //   - web surface  → fill the viewport (100dvw x 100dvh)
 // Nothing below <html> should re-decide the width — <body>, #root, .shell
 // all just inherit 100% of their parent.
@@ -19,13 +20,13 @@ html[data-surface='web'] {
   height: 100dvh;
 }
 
-// Popup surface: lock the outer surface to 400x600 (or the viewport,
+// Popup surface: lock the outer surface to 780x600 (or the viewport,
 // whichever is smaller). In the real Chrome popup the viewport already IS
-// 400x600 so `min()` collapses to that exact size; in a browser preview
-// the caps kick in and the app frame stays at 400x600 pinned to the
+// 780x600 so `min()` collapses to that exact size; in a browser preview
+// the caps kick in and the app frame stays at 780x600 pinned to the
 // top-left of the page.
 html[data-surface='popup'] {
-  width: min(100dvw, 400px);
+  width: min(100dvw, 780px);
   height: min(100dvh, 600px);
   // Subtle outline so the frame stays visible in a browser preview even
   // when the page canvas is dark (Zen, dark-mode Firefox, …). In the real
@@ -49,4 +50,29 @@ a {
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+// Thin, themed scrollbars everywhere. Firefox uses the standard properties;
+// WebKit/Chromium needs the ::-webkit-scrollbar pseudo-elements.
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--border) 80%, transparent) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
 }

@@ -110,9 +110,21 @@ function normalizeDomainEntry(raw) {
   const env = pickEnum(raw.env, AEM_ENVS, AEM_ENV_DEFAULT)
   const id = safeString(raw.id) || genId()
   const label = safeString(raw.label)
+  // Default true: only the literal `false` hides the entry. Any missing /
+  // legacy / truthy value round-trips as visible so existing user rows
+  // stay visible after this field lands.
+  const visible = raw.visible !== false
 
   if (kindHasOrigin(kind)) {
-    return { id, kind, role, env, label, origin: normalizeOrigin(raw.origin) }
+    return {
+      id,
+      kind,
+      role,
+      env,
+      label,
+      visible,
+      origin: normalizeOrigin(raw.origin),
+    }
   }
 
   if (kindHasRepo(kind)) {
@@ -126,13 +138,14 @@ function normalizeDomainEntry(raw) {
         role,
         env,
         label,
+        visible,
         owner,
         repo,
         ref,
         authorOrigin: normalizeOrigin(raw.authorOrigin),
       }
     }
-    return { id, kind, role, env, label, owner, repo, ref }
+    return { id, kind, role, env, label, visible, owner, repo, ref }
   }
 
   return null

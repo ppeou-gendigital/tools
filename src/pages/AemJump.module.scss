@@ -8,10 +8,19 @@
 
 .header {
   padding-inline: var(--layout-pad);
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+// Title + inline icon-only actions (info / settings). The title takes
+// remaining space so the icons hug the right edge; the info toggle drops
+// its help copy underneath the row via a sibling `.subtitle` block.
+.headerRow {
+  display: flex;
+  align-items: center;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .deckWrap {
@@ -19,26 +28,15 @@
   min-height: 0;
 }
 
-.back {
-  color: var(--muted-fg);
-  font-size: var(--text-xs);
-
-  &:hover {
-    color: var(--fg);
-  }
-}
-
-.headerText {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
 .title {
+  flex: 1;
+  min-width: 0;
   font-size: var(--text-xl);
   font-weight: 600;
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .subtitle {
@@ -47,7 +45,7 @@
   margin: 0;
 }
 
-.settingsBtn {
+.iconBtn {
   color: var(--muted-fg);
 
   &:hover {
