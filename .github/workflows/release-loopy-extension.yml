@@ -1,0 +1,95 @@
+name: Release Loopy Chrome extension
+
+# Fires when we push a tag shaped like `loopy-v<major>.<minor>.<patch>` so
+# the loopy tool's releases stay scoped inside a multi-tool repo. `workflow_dispatch`
+# lets us cut a release from the Actions UI without touching git if needed.
+on:
+  push:
+    tags:
+      - 'loopy-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 0.1.0). Must match manifest.json.'
+        required: true
+
+permissions:
+  # `contents: write` is what `softprops/action-gh-release` needs to create
+  # the Release, upload the zip, and (on workflow_dispatch) create the tag.
+  contents: write
+
+concurrency:
+  group: loopy-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version from tag or input
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            # Strip the loopy-v prefix from refs/tags/loopy-v0.1.0 -> 0.1.0
+            VERSION="${GITHUB_REF_NAME#loopy-v}"
+          fi
+          if [ -z "$VERSION" ]; then
+            echo "Empty version" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION"
+
+      - name: Verify manifest.json matches version
+        # Chrome's Web Store keys the extension by manifest.version; a mismatch
+        # between the git tag and manifest silently ships the wrong version
+        # number, so we fail fast at build time.
+        run: |
+          MANIFEST_VERSION=$(node -p "require('./manifest.json').version")
+          if [ "$MANIFEST_VERSION" != "${{ steps.version.outputs.version }}" ]; then
+            echo "::error::manifest.json version ($MANIFEST_VERSION) doesn't match release version (${{ steps.version.outputs.version }}). Bump manifest.json before tagging."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build extension
+        run: npm run build
+        env:
+          # Same secrets as the Pages workflow — Supabase creds are compiled
+          # into the JS at build time via Vite's define step.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Zip dist/
+        run: |
+          # `cd dist` + `zip .` puts manifest.json, popup.html, icons/, etc.
+          # at the root of the archive. Chrome's "Load unpacked" expects that
+          # layout — a nested dist/ folder would break the install.
+          cd dist
+          zip -r "../loopy-v${{ steps.version.outputs.version }}.zip" .
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: loopy-v${{ steps.version.outputs.version }}.zip
+          name: Loopy v${{ steps.version.outputs.version }}
+          tag_name: loopy-v${{ steps.version.outputs.version }}
+          body: |
+            ## Install (developer mode)
+
+            1. Download `loopy-v${{ steps.version.outputs.version }}.zip` below.
+            2. Extract it to a folder somewhere permanent (Chrome loads the extension from disk, so don't delete the folder after install).
+            3. Open `chrome://extensions` in Chrome or Edge.
+            4. Toggle **Developer mode** on (top-right).
+            5. Click **Load unpacked** and select the extracted folder.
+
+            The violet Loopy icon should appear in your toolbar.

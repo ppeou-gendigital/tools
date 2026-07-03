@@ -72,5 +72,9 @@ temp/
 logs/
 *.log
 
+# Local extension zips produced by `cd dist && zip -r ../loopy-*.zip .`
+# outside of CI — never commit these.
+loopy-v*.zip
+
 # --- Local worktree scratch (in case you keep any inside the repo) ---
 worktrees/
