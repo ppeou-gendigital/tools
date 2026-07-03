@@ -5,6 +5,8 @@ import {
   Braces,
   Eye,
   FileSliders,
+  FlaskConical,
+  FlaskConicalOff,
   FolderOpen,
   FolderTree,
   Focus,
@@ -87,11 +89,71 @@ const LINK_ROWS = [
 const PARSED_ROWS = [
   { key: 'origin', label: 'Origin' },
   { key: 'flavor', label: 'Flavor' },
+  { key: 'mode', label: 'Mode' },
   { key: 'resourcePath', label: 'Resource path' },
   { key: 'siteName', label: 'Site name' },
   { key: 'urlParams', label: 'URL params' },
   { key: 'hash', label: 'Hash' },
 ]
+
+// Compact "most-used" strip rendered above JUMP TO on the source block.
+// Two of the entries are dynamic:
+//   - abToggle:   icon + label flip based on `parsed.abTestDisabled`.
+//   - editToggle: swaps between disabling (when currently in edit mode) and
+//                 opening the editor (when in preview/disabled), reusing
+//                 whatever the pipeline built for `disable` / `editor` /
+//                 `universalEditor`.
+// Entries with a null href are filtered out of the final list.
+function computeShortcuts({ parsed, links }) {
+  if (!parsed) return []
+
+  const abDisabled = parsed.abTestDisabled === true
+  const ab = {
+    key: 'abToggle',
+    label: abDisabled ? 'Enable A/B testing' : 'Disable A/B testing',
+    icon: abDisabled ? FlaskConicalOff : FlaskConical,
+    href: links.abToggle ?? null,
+    group: 'admin',
+  }
+
+  const inEdit = parsed.mode === 'edit'
+  const editHref = inEdit
+    ? links.disable
+    : (links.universalEditor ?? links.editor)
+  const edit = {
+    key: 'editToggle',
+    label: inEdit ? 'Switch to Disabled (wcmmode)' : 'Edit',
+    icon: inEdit ? MonitorPlay : PencilLine,
+    href: editHref ?? null,
+    group: 'page',
+  }
+
+  const staticRows = [
+    {
+      key: 'crx',
+      label: 'CRX / DE',
+      icon: Braces,
+      href: links.crx ?? null,
+      group: 'admin',
+    },
+    {
+      key: 'damRoot',
+      label: 'Assets (root)',
+      icon: Images,
+      href: links.damRoot ?? null,
+      group: 'project',
+    },
+    {
+      key: 'sitesRoot',
+      label: 'Sites Console (root)',
+      icon: FolderTree,
+      href: links.sitesRoot ?? null,
+      group: 'project',
+    },
+  ]
+
+  return [ab, ...staticRows, edit].filter((s) => !!s.href)
+}
 
 // Build the effective URL a block should feed into buildAemLinks.
 // - "source" variant: use the URL the user typed as-is.
@@ -234,6 +296,10 @@ export function AemJumpBlock({
   }, [effectiveUrl, edsUeOptions])
 
   const availableLinks = LINK_ROWS.filter(({ key }) => !!result.links[key])
+  const shortcuts = useMemo(
+    () => (isSource ? computeShortcuts(result) : []),
+    [isSource, result],
+  )
 
   const canUseCurrentTab =
     isSource &&
@@ -298,6 +364,28 @@ export function AemJumpBlock({
             aria-label="AEM URL"
             className={styles.fieldInput}
           />
+          {result.parsed && shortcuts.length > 0 && (
+            <ul
+              className={cx(styles.tools, styles.shortcutsInline)}
+              aria-label="Shortcuts"
+            >
+              {shortcuts.map(({ key, label, icon: Icon, href, group }) => (
+                <li key={key} className={styles.toolItem}>
+                  <a
+                    className={cx(styles.toolBtn, GROUP_CLASS[group])}
+                    data-group={group}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={label}
+                    aria-label={label}
+                  >
+                    <Icon size={16} aria-hidden="true" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
           {canUseCurrentTab && (
             <Button
               type="button"

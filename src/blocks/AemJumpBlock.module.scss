@@ -248,6 +248,25 @@
   }
 }
 
+// Inline shortcuts strip: a compact, natural-width flex row that sits on
+// the same line as the URL input. Overrides the base `.tools` grid so
+// the strip only takes as much horizontal space as its icons need,
+// leaving the input free to flex-grow. Icons are sized down to blend
+// with the input height without overpowering it.
+.shortcutsInline {
+  display: inline-flex;
+  grid-template-columns: none;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: var(--space-1);
+  align-self: center;
+
+  .toolBtn {
+    width: 1.75rem;
+    min-height: 1.75rem;
+  }
+}
+
 // Group tints. Ordered AFTER `.toolBtn` so equal-specificity source order
 // wins - each tinted button reads its group color at rest and on hover.
 // Hover also gently pulls the background toward the group hue via

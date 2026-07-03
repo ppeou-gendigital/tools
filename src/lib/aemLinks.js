@@ -194,6 +194,25 @@ function splitCloudFragmentBody(body) {
  * Parsers
  * ---------------------------------------------------------------------- */
 
+// "Current mode" heuristic used by the source block's quick-actions strip.
+//   edit     - editor.html wrapper OR UE fragment (canvas)
+//   disabled - has `wcmmode=disabled` in the effective query string
+//   preview  - anything else (bare content render, sites console, DAM, ...)
+// The wcmmode param is dropped later by `stripAemParams` so we compute the
+// flag on the raw URLSearchParams before the strip.
+function detectMode({ pathname, searchParams, isUe = false }) {
+  if (isUe) return 'edit'
+  if (pathname === '/editor.html' || pathname.startsWith('/editor.html/')) {
+    return 'edit'
+  }
+  if (searchParams.get('wcmmode') === 'disabled') return 'disabled'
+  return 'preview'
+}
+
+function detectAbTestDisabled(searchParams) {
+  return searchParams.get('mboxDisable') === '1'
+}
+
 export function parseAemUrlForTraditional(urlString) {
   const u = urlString instanceof URL ? urlString : new URL(urlString)
 
@@ -202,6 +221,8 @@ export function parseAemUrlForTraditional(urlString) {
   const siteName = extractSiteName(resourcePath)
   const urlParams = stripAemParams(u.searchParams)
   const hash = u.hash ? u.hash.slice(1) : ''
+  const mode = detectMode({ pathname: u.pathname, searchParams: u.searchParams })
+  const abTestDisabled = detectAbTestDisabled(u.searchParams)
 
   return {
     origin: u.origin,
@@ -213,6 +234,8 @@ export function parseAemUrlForTraditional(urlString) {
     shell: '',
     imsOrg: null,
     ueHost: null,
+    mode,
+    abTestDisabled,
   }
 }
 
@@ -255,6 +278,12 @@ export function parseAemUrlForCloud(urlString) {
   const siteName = extractSiteName(resourcePath)
   const urlParams = stripAemParams(logical.searchParams)
   const hash = logical.hash ? logical.hash.slice(1) : ''
+  const mode = detectMode({
+    pathname: logical.pathname,
+    searchParams: logical.searchParams,
+    isUe: !!ueMatch,
+  })
+  const abTestDisabled = detectAbTestDisabled(logical.searchParams)
 
   return {
     origin: u.origin,
@@ -266,6 +295,8 @@ export function parseAemUrlForCloud(urlString) {
     shell: '/ui#/aem',
     imsOrg,
     ueHost,
+    mode,
+    abTestDisabled,
   }
 }
 
@@ -428,6 +459,27 @@ const buildPackmgr = ({ origin }) => ({
   packmgr: `${origin}/crx/packmgr/index.jsp`,
 })
 
+// Adobe Target A/B kill-switch: emits a preview-shape URL (rendered
+// content, no console shell) with `mboxDisable=1` added or removed.
+// Basing this on the resource path means clicking it from an editor /
+// Cloud-shell URL still lands the user on the rendered page — which is
+// where Target's mbox.js actually reads the param.
+// Consumers pair this with `parsed.abTestDisabled` to pick the right
+// icon + label (Disable vs Enable) for a single toggle button.
+const buildAbToggle = ({ origin, resourcePath, isDam, urlParams, hash, mode }) => {
+  if (!resourcePath) return { abToggle: null }
+  const params = new URLSearchParams(urlParams || '')
+  if (params.get('mboxDisable') === '1') params.delete('mboxDisable')
+  else params.set('mboxDisable', '1')
+  // Preserve `wcmmode=disabled` when we came from a disabled URL so the
+  // toggle doesn't silently pop the user out of disabled mode.
+  if (mode === 'disabled') params.set('wcmmode', 'disabled')
+  const q = params.toString() ? `?${params.toString()}` : ''
+  const h = hash ? `#${hash}` : ''
+  const ext = isDam ? '' : '.html'
+  return { abToggle: `${origin}${resourcePath}${ext}${q}${h}` }
+}
+
 /* -------------------------------------------------------------------------
  * Traditional-only builders (never included in the Cloud pipeline)
  * ---------------------------------------------------------------------- */
@@ -477,6 +529,7 @@ export const buildAemLinksForCloud = compose(
   buildDisable,
   buildCrx,
   buildPackmgr,
+  buildAbToggle,
 )
 
 // eds-ue is a Cloud author variant: same shell + admin consoles, but the
@@ -502,6 +555,7 @@ export const buildAemLinksForEdsUe = compose(
   buildDisable,
   buildCrx,
   buildPackmgr,
+  buildAbToggle,
 )
 
 // Local Cloud SDK variant of eds-ue: the input URL comes from a `local-sdk`
@@ -529,6 +583,7 @@ export const buildAemLinksForEdsUeLocal = compose(
   buildDisable,
   buildCrx,
   buildPackmgr,
+  buildAbToggle,
   // Felix + classic UI + welcome — SDK has these locally
   buildSystemConsole,
   buildOsgiConsole,
@@ -560,6 +615,7 @@ export const buildAemLinksForTraditional = compose(
   buildDisable,
   buildCrx,
   buildPackmgr,
+  buildAbToggle,
   // traditional-only (Felix + classic UI + welcome)
   buildSystemConsole,
   buildOsgiConsole,
