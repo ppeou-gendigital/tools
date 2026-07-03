@@ -1,0 +1,106 @@
+@use 'mixins' as m;
+
+// ---------------------------------------------------------------------------
+// Responsive gutter / side padding.
+//
+// A single scale drives both the grid gap (--gutter) and the container inset
+// (--layout-pad), so gaps between columns match the container's side padding
+// at every breakpoint.
+// ---------------------------------------------------------------------------
+
+:root {
+  @include m.md {
+    --gutter: 1.5rem;
+    --layout-pad: 1.5rem;
+  }
+
+  @include m.lg {
+    --gutter: 1.5rem;
+    --layout-pad: 1.5rem;
+  }
+
+  @include m.xl {
+    --gutter: 2rem;
+    --layout-pad: 2rem;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Container width modifiers: .is-<static|fluid>-<width|bleed>
+//
+// static  = max-width locks to the LOWER BOUND of the current breakpoint
+//           range (fluid below MD since SM has no lower bound).
+// fluid   = always 100%, capped at 1440px.
+// width   = symmetric padding-inline: var(--layout-pad).
+// bleed   = no side padding.
+// ---------------------------------------------------------------------------
+
+.is-static-width,
+.is-static-bleed {
+  width: 100%;
+  margin-inline: auto;
+
+  // SM: no max-width (fluid). MD/LG/XL lock to the breakpoint boundary.
+  @include m.md { max-width: m.$bp-md; }
+  @include m.lg { max-width: m.$bp-lg; }
+  @include m.xl { max-width: m.$bp-xl; }
+}
+
+.is-fluid-width,
+.is-fluid-bleed {
+  width: 100%;
+  max-width: m.$bp-xl;
+  margin-inline: auto;
+}
+
+.is-static-width,
+.is-fluid-width {
+  padding-inline: var(--layout-pad);
+}
+
+// ---------------------------------------------------------------------------
+// .grid - 12-column CSS Grid with gap = current --gutter. Nesting is native:
+// dropping another .grid inside a .col starts a fresh grid context.
+// ---------------------------------------------------------------------------
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--gutter);
+}
+
+// ---------------------------------------------------------------------------
+// .col - CSS-variable API for span / start / end at each breakpoint.
+//
+// Public vars (all optional):
+//   --col-span,  --col-span-md,  --col-span-lg,  --col-span-xl
+//   --col-start, --col-start-md, --col-start-lg, --col-start-xl
+//   --col-end,   --col-end-md,   --col-end-lg,   --col-end-xl
+//
+// If --col-end is set at a given breakpoint, --col-span is ignored there
+// (native grid-column: start / end beats span).
+//
+// Internal --_cs / --_ce hold the resolved start/end at the active breakpoint;
+// grid-column reads them once so we don't repeat the declaration.
+// ---------------------------------------------------------------------------
+
+.col {
+  --_cs: var(--col-start, auto);
+  --_ce: var(--col-end, span var(--col-span, 12));
+  grid-column: var(--_cs) / var(--_ce);
+
+  @include m.md {
+    --_cs: var(--col-start-md, var(--col-start, auto));
+    --_ce: var(--col-end-md, var(--col-end, span var(--col-span-md, var(--col-span, 12))));
+  }
+
+  @include m.lg {
+    --_cs: var(--col-start-lg, var(--col-start-md, var(--col-start, auto)));
+    --_ce: var(--col-end-lg, var(--col-end-md, var(--col-end, span var(--col-span-lg, var(--col-span-md, var(--col-span, 12))))));
+  }
+
+  @include m.xl {
+    --_cs: var(--col-start-xl, var(--col-start-lg, var(--col-start-md, var(--col-start, auto))));
+    --_ce: var(--col-end-xl, var(--col-end-lg, var(--col-end-md, var(--col-end, span var(--col-span-xl, var(--col-span-lg, var(--col-span-md, var(--col-span, 12))))))));
+  }
+}

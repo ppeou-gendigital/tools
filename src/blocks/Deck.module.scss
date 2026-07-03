@@ -1,0 +1,89 @@
+@use 'tokens/mixins' as m;
+
+// ---------------------------------------------------------------------------
+// .deck - horizontal scroll-snap container.
+//
+// container-type: inline-size turns the deck into a size container so slides
+// can compute their width against the deck's visible width via 100cqi, not
+// against the scrolled track width (which grows with slide count).
+// ---------------------------------------------------------------------------
+
+.deck {
+  container-type: inline-size;
+  display: flex;
+  gap: var(--gutter);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  height: 100%;
+
+  // Breathing room between the slides and the horizontal scrollbar. The
+  // padding lives inside the scroll container, so slides (height: 100%)
+  // shrink to fit and the scrollbar sits below them.
+  padding-bottom: var(--space-3);
+
+  // Firefox / spec: thin bar + themed colors.
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+
+  // WebKit / Chromium: explicit sizes so the bar is thin cross-browser.
+  &::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--border) 70%, transparent);
+    border-radius: 999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--border);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// .slide - individual slide inside a deck.
+//
+// Width is `span` cols of a 12-col grid slice of the DECK's visible width,
+// gutters between cols included. Derivation:
+//   width = span * ((W - 11g)/12) + (span - 1) * g
+//         = (span * (W + g)) / 12 - g
+// where W = 100cqi (deck's visible inline size) and g = var(--gutter).
+//
+// Public CSS variables (all optional):
+//   --slide-span, --slide-span-md, --slide-span-lg, --slide-span-xl
+//
+// Default span is 12 (one slide fills the deck).
+// ---------------------------------------------------------------------------
+
+.slide {
+  --_span: var(--slide-span, 12);
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  height: 100%;
+  overflow-y: auto;
+
+  width: calc((var(--_span) * (100cqi + var(--gutter))) / 12 - var(--gutter));
+
+  @include m.md {
+    --_span: var(--slide-span-md, var(--slide-span, 12));
+  }
+
+  @include m.lg {
+    --_span: var(--slide-span-lg, var(--slide-span-md, var(--slide-span, 12)));
+  }
+
+  @include m.xl {
+    --_span: var(--slide-span-xl, var(--slide-span-lg, var(--slide-span-md, var(--slide-span, 12))));
+  }
+}

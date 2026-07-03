@@ -36,6 +36,7 @@ node_modules/
 .yarn-integrity
 .pnp.*
 dist/
+dist-web/
 build/
 out/
 .next/

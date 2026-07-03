@@ -1,0 +1,29 @@
+@use 'tokens/mixins' as m;
+
+.input {
+  @include m.focus-ring;
+
+  display: flex;
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius);
+  border: 1px solid var(--input);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: var(--text-sm);
+  transition: border-color 0.15s ease;
+
+  &::placeholder {
+    color: var(--muted-fg);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--ring);
+  }
+}

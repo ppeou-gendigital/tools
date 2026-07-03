@@ -1,0 +1,54 @@
+.wrap {
+  // Overlay layer that fully covers `.shell`. Because it's absolutely
+  // positioned with inset:0, it's the containing block for the FAB/panel
+  // and defines their coordinate system precisely - the .shell's rect.
+  // pointer-events:none lets clicks/drags on empty space fall through to
+  // the app beneath; the FAB and panel opt back in with pointer-events:auto.
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.fab {
+  // Absolute - pinned to the .wrap (== .shell) corners, not the browser
+  // viewport. This means in browser-preview popup mode the FAB stays
+  // inside the 400x600 frame instead of drifting to the browser edge.
+  position: absolute;
+  z-index: 1000;
+  pointer-events: auto;
+  width: var(--fab-size);
+  height: var(--fab-size);
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  box-shadow: var(--shadow);
+  touch-action: none;
+  padding: 0;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover:not([data-dragging='true']) {
+    background: var(--muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  &[data-dragging='true'] {
+    cursor: grabbing;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: none;
+  }
+
+  &[data-corner='top-left']     { top: var(--fab-corner-offset); left: var(--fab-corner-offset); }
+  &[data-corner='top-right']    { top: var(--fab-corner-offset); right: var(--fab-corner-offset); }
+  &[data-corner='bottom-left']  { bottom: var(--fab-corner-offset); left: var(--fab-corner-offset); }
+  &[data-corner='bottom-right'] { bottom: var(--fab-corner-offset); right: var(--fab-corner-offset); }
+}

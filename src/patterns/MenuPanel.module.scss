@@ -1,0 +1,35 @@
+.panel {
+  // Positioned relative to the FloatingMenu block's .wrap (which spans the
+  // shell). data-corner mirrors the FAB corner and offsets past the FAB by
+  // --fab-size + --fab-corner-offset + --fab-gap.
+  position: absolute;
+  z-index: 999;
+  pointer-events: auto;
+  min-width: 12rem;
+  max-width: 15rem;
+  background: var(--card);
+  color: var(--card-fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: var(--space-2);
+  display: grid;
+  gap: 2px;
+
+  &[data-corner='top-left'] {
+    top: calc(var(--fab-size) + var(--fab-corner-offset) + var(--fab-gap));
+    left: var(--fab-corner-offset);
+  }
+  &[data-corner='top-right'] {
+    top: calc(var(--fab-size) + var(--fab-corner-offset) + var(--fab-gap));
+    right: var(--fab-corner-offset);
+  }
+  &[data-corner='bottom-left'] {
+    bottom: calc(var(--fab-size) + var(--fab-corner-offset) + var(--fab-gap));
+    left: var(--fab-corner-offset);
+  }
+  &[data-corner='bottom-right'] {
+    bottom: calc(var(--fab-size) + var(--fab-corner-offset) + var(--fab-gap));
+    right: var(--fab-corner-offset);
+  }
+}

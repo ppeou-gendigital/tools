@@ -1,14 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Loopy",
-  "version": "0.0.1",
-  "description": "TODO: describe what Loopy does.",
+  "version": "0.1.0",
+  "description": "Loopy — React + Supabase Chrome extension",
   "action": {
     "default_title": "Loopy",
-    "default_popup": "popup/popup.html"
+    "default_popup": "popup.html"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
-  "permissions": ["activeTab", "storage"]
+  "permissions": ["activeTab", "storage"],
+  "host_permissions": ["https://*.supabase.co/*"]
 }

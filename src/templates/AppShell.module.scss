@@ -1,0 +1,24 @@
+// The shell is the app's fixed-size stage. Its size == the surface size
+// (defined on <html> via data-surface). Everything inside — including the
+// floating menu — positions itself relative to this box, not the browser
+// viewport. That means the FAB stays inside the app frame in both the
+// extension popup and the browser preview.
+.shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+// .main is a passive scroll region. It never controls width — width comes
+// from the surface (<html>) and from layout wrappers like `.is-fluid-width`
+// or `.is-static-width` used inside individual pages.
+.main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
