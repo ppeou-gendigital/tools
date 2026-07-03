@@ -1,4 +1,5 @@
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
+import { AemDomainsProvider } from '@/providers/AemDomainsProvider'
 import { AuthProvider } from '@/providers/AuthProvider'
 import { FabCornerProvider } from '@/providers/FabCornerProvider'
 import { FontSizeProvider } from '@/providers/FontSizeProvider'
@@ -11,6 +12,8 @@ import { Home } from '@/pages/Home'
 import { Profile } from '@/pages/Profile'
 import { DeckTest } from '@/pages/DeckTest'
 import { AemJump } from '@/pages/AemJump'
+import { Settings } from '@/pages/Settings'
+import { AemEnvironments } from '@/pages/AemEnvironments'
 import { queryClient } from '@/lib/queryClient'
 import { queryPersister } from '@/lib/queryPersister'
 
@@ -24,6 +27,8 @@ function Router() {
   if (route === 'profile') return <Profile />
   if (route === 'deck-test') return <DeckTest />
   if (route === 'aem-jump') return <AemJump />
+  if (route === 'settings') return <Settings />
+  if (route === 'settings-aem-environments') return <AemEnvironments />
   return <Home />
 }
 
@@ -40,16 +45,18 @@ export function App() {
       <ThemeProvider>
         <FontSizeProvider>
           <FabCornerProvider>
-            <AuthProvider>
-              <PrefsSync />
-              <NavigationProvider>
-                <AppShell>
-                  <AuthGate>
-                    <Router />
-                  </AuthGate>
-                </AppShell>
-              </NavigationProvider>
-            </AuthProvider>
+            <AemDomainsProvider>
+              <AuthProvider>
+                <PrefsSync />
+                <NavigationProvider>
+                  <AppShell>
+                    <AuthGate>
+                      <Router />
+                    </AuthGate>
+                  </AppShell>
+                </NavigationProvider>
+              </AuthProvider>
+            </AemDomainsProvider>
           </FabCornerProvider>
         </FontSizeProvider>
       </ThemeProvider>

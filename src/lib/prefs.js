@@ -1,4 +1,4 @@
-// Normalizers for the three user_data pref fields. Kept in one place so the
+// Normalizers for the user_data pref fields. Kept in one place so the
 // provider setters and PrefsSync agree on what a sane value looks like when
 // clamping remote / imported payloads.
 
@@ -9,6 +9,23 @@ const FONT_MIN = 12
 const FONT_MAX = 24
 const FONT_STEP = 2
 const FONT_DEFAULT = 16
+
+// AEM Jump domain enums. Kept together so Settings selects, the block
+// header chips, and the normalizer all agree on the allowed values.
+export const AEM_KINDS = ['traditional', 'cloud', 'eds-da', 'eds-ue']
+export const AEM_ROLES = [
+  'author',
+  'publisher',
+  'dispatcher',
+  'web-origin',
+  'vanity',
+]
+export const AEM_ENVS = ['local', 'dev', 'qa', 'stage', 'prod']
+
+const AEM_KIND_DEFAULT = 'traditional'
+const AEM_ROLE_DEFAULT = 'author'
+const AEM_ENV_DEFAULT = 'qa'
+const AEM_REF_DEFAULT = 'main'
 
 const DEFAULTS = {
   theme: 'system',
@@ -35,8 +52,142 @@ export function normalizeFontSize(v) {
   return Math.min(FONT_MAX, Math.max(FONT_MIN, snapped))
 }
 
-// Sanitize a (possibly untrusted / partial) remote payload before applying
-// it via the provider setters. Drops unknown keys and clamps bad values.
+// Kind-based capability probes. Iteration 1 only actually renders
+// trad/cloud, but the discriminated union is validated for every kind so
+// EDS entries survive a save/load round-trip untouched.
+export function kindHasOrigin(kind) {
+  return kind === 'traditional' || kind === 'cloud'
+}
+
+export function kindHasRepo(kind) {
+  return kind === 'eds-da' || kind === 'eds-ue'
+}
+
+function safeString(v, fallback = '') {
+  return typeof v === 'string' ? v : fallback
+}
+
+// Preserve whatever the user typed (empty OK; partial "https:/" OK) so
+// mid-typing in Settings doesn't get its entry dropped by the normalizer.
+// If the value is a syntactically-valid absolute URL we canonicalize it
+// to `.origin`; otherwise we return the raw trimmed string. Downstream
+// (`isDomainRenderable`) is responsible for deciding whether the entry
+// is actually usable.
+function normalizeOrigin(v) {
+  if (typeof v !== 'string') return ''
+  const trimmed = v.trim()
+  if (!trimmed) return ''
+  try {
+    return new URL(trimmed).origin
+  } catch {
+    return trimmed
+  }
+}
+
+function genId() {
+  if (typeof globalThis.crypto?.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID()
+  }
+  // Non-secure fallback for environments without crypto.randomUUID —
+  // fine here because these ids only need to be unique per user.
+  return `d_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`
+}
+
+function pickEnum(v, allowed, fallback) {
+  return allowed.includes(v) ? v : fallback
+}
+
+// Normalize a single AEM domain entry. Returns null only when the shape
+// is unrecoverable (non-object, or missing an `id`-derivable field). Any
+// partial per-kind field values are preserved as-is so a half-filled
+// Settings row survives a save/reload cycle; consumers use
+// `isDomainRenderable` to decide whether to actually render.
+function normalizeDomainEntry(raw) {
+  if (!raw || typeof raw !== 'object') return null
+
+  const kind = pickEnum(raw.kind, AEM_KINDS, AEM_KIND_DEFAULT)
+  const role = pickEnum(raw.role, AEM_ROLES, AEM_ROLE_DEFAULT)
+  const env = pickEnum(raw.env, AEM_ENVS, AEM_ENV_DEFAULT)
+  const id = safeString(raw.id) || genId()
+  const label = safeString(raw.label)
+
+  if (kindHasOrigin(kind)) {
+    return { id, kind, role, env, label, origin: normalizeOrigin(raw.origin) }
+  }
+
+  if (kindHasRepo(kind)) {
+    const owner = safeString(raw.owner).trim()
+    const repo = safeString(raw.repo).trim()
+    const ref = safeString(raw.ref).trim() || AEM_REF_DEFAULT
+    if (kind === 'eds-ue') {
+      return {
+        id,
+        kind,
+        role,
+        env,
+        label,
+        owner,
+        repo,
+        ref,
+        authorOrigin: normalizeOrigin(raw.authorOrigin),
+      }
+    }
+    return { id, kind, role, env, label, owner, repo, ref }
+  }
+
+  return null
+}
+
+export function normalizeAemDomains(list) {
+  if (!Array.isArray(list)) return []
+  const out = []
+  const seenIds = new Set()
+  for (const raw of list) {
+    const entry = normalizeDomainEntry(raw)
+    if (!entry) continue
+    // De-dupe ids in case a malformed payload repeats them; give the
+    // duplicate a fresh id rather than dropping the entry outright.
+    if (seenIds.has(entry.id)) entry.id = genId()
+    seenIds.add(entry.id)
+    out.push(entry)
+  }
+  return out
+}
+
+function isParseableUrl(v) {
+  if (typeof v !== 'string' || !v) return false
+  try {
+    new URL(v)
+    return true
+  } catch {
+    return false
+  }
+}
+
+// Answer "does this entry have enough filled in to render its jump block?"
+// Used by the AEM Jump page to skip drafts (mid-typing origins, empty
+// repo names, etc.) while still letting Settings display those drafts.
+// Keep in sync with the Settings validator.
+export function isDomainRenderable(entry) {
+  if (!entry || typeof entry !== 'object') return false
+  if (kindHasOrigin(entry.kind)) return isParseableUrl(entry.origin)
+  if (kindHasRepo(entry.kind)) {
+    if (!entry.owner || !entry.repo) return false
+    if (entry.kind === 'eds-ue' && !isParseableUrl(entry.authorOrigin)) {
+      return false
+    }
+    return true
+  }
+  return false
+}
+
+// Sanitize a (possibly untrusted / partial) remote prefs blob before
+// applying it via the provider setters. Drops unknown keys and clamps bad
+// values.
+//
+// Only the `data` column shape is normalized here. The AEM domain list
+// lives in its own `aem_domains` column on `user_data` and is handled by
+// `normalizeAemDomains` directly.
 export function normalizeRemotePrefs(remote) {
   return {
     theme: normalizeTheme(remote?.theme),

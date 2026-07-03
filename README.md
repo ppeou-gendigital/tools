@@ -183,14 +183,25 @@ That's it — sign up, check inbox for the code, paste it into the popup.
 
 ### 4. User preferences table (`user_data`)
 
-Backs the auto-sync layer. One row per user, holding a small JSON blob of
-local prefs (theme, fontSize, fabCorner). In **SQL Editor**, run:
+Backs the auto-sync layer. One row per user, with two independent JSONB
+columns:
+
+- `data` — the small prefs blob (`theme`, `fontSize`, `fabCorner`, `updatedAt`).
+- `aem_domains` — the AEM Jump domain list (array of normalized entries).
+
+Splitting keeps the two payloads legible in the SQL editor and lets us
+promote the domain list to a real column (indexable, queryable) later
+without touching the prefs shape. Both columns are still written together
+in a single upsert from the app.
+
+In **SQL Editor**, run:
 
 ```sql
 create table public.user_data (
-  id         uuid primary key references auth.users(id) on delete cascade,
-  data       jsonb        not null default '{}'::jsonb,
-  updated_at timestamptz  not null default now()
+  id          uuid primary key references auth.users(id) on delete cascade,
+  data        jsonb       not null default '{}'::jsonb,
+  aem_domains jsonb       not null default '[]'::jsonb,
+  updated_at  timestamptz not null default now()
 );
 
 alter table public.user_data enable row level security;
@@ -200,17 +211,34 @@ create policy "user_data self-insert" on public.user_data for insert with check 
 create policy "user_data self-update" on public.user_data for update using (auth.uid() = id) with check (auth.uid() = id);
 ```
 
-No trigger — the app upserts on first change, so rows only exist for users
-who have actually signed in and touched a pref.
+Row-scoped RLS covers both columns automatically; no per-column policy is
+needed. No trigger either — the app upserts on first change, so rows only
+exist for users who have actually signed in and touched a pref or added a
+domain.
+
+**Migration (only if you created `user_data` before the split)** — adds the
+new column, backfills from the old nested key, then strips the key:
+
+```sql
+alter table public.user_data
+  add column if not exists aem_domains jsonb not null default '[]'::jsonb;
+
+update public.user_data
+set aem_domains = coalesce(data -> 'aemDomains', '[]'::jsonb),
+    data        = data - 'aemDomains',
+    updated_at  = now()
+where data ? 'aemDomains';
+```
 
 **Auto-sync behavior** (see `src/providers/PrefsSync.jsx`):
 
-- **On sign-in** the app fetches `user_data` and applies the remote values
-  via the provider setters (remote wins). If there's no cloud row yet, the
-  current local values become the sync baseline.
-- **On any local change** (theme toggle, +/- font size, FAB corner drag) the
-  app upserts the new blob after a 500ms debounce (local wins during the
-  session). Rapid clicks coalesce into a single request.
+- **On sign-in** the app fetches the row (`data` + `aem_domains`) and applies
+  each column via its own provider setters (remote wins). If there's no
+  cloud row yet, the current local values become the sync baseline.
+- **On any local change** (theme toggle, +/- font size, FAB corner drag,
+  domain add/remove) the app upserts both columns together after a 500ms
+  debounce (local wins during the session). Rapid clicks coalesce into a
+  single request.
 
 Two guards prevent ping-pong: an "applying remote" flag skips the auto-push
 that would otherwise fire from the setter calls during a pull, and a

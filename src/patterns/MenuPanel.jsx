@@ -6,6 +6,7 @@ import { DeckTestItem } from '@/patterns/DeckTestItem'
 import { DevBadgeItem } from '@/patterns/DevBadgeItem'
 import { FontSizeRow } from '@/patterns/FontSizeRow'
 import { ProfileItem } from '@/patterns/ProfileItem'
+import { SettingsItem } from '@/patterns/SettingsItem'
 import { SignOutItem } from '@/patterns/SignOutItem'
 import { ThemeItem } from '@/patterns/ThemeItem'
 import styles from './MenuPanel.module.scss'
@@ -22,6 +23,7 @@ export function MenuPanel({ corner, onClose }) {
       <FontSizeRow />
       {signedIn && <Divider />}
       {signedIn && <ProfileItem onClose={onClose} />}
+      {signedIn && <SettingsItem onClose={onClose} />}
       {signedIn && <SignOutItem onClose={onClose} />}
       <Divider />
       <AemJumpItem onClose={onClose} />

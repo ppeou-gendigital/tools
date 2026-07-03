@@ -1,28 +1,41 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { useAemDomains } from '@/providers/AemDomainsProvider'
 import { useAuth } from '@/providers/AuthProvider'
 import { useFabCorner } from '@/providers/FabCornerProvider'
 import { useFontSize } from '@/providers/FontSizeProvider'
 import { useTheme } from '@/providers/ThemeProvider'
 import { fetchUserData, saveUserData } from '@/lib/userDataApi'
-import { normalizeRemotePrefs } from '@/lib/prefs'
+import { normalizeAemDomains, normalizeRemotePrefs } from '@/lib/prefs'
 
 // Wait this long after the last local change before firing an auto-push.
 // Coalesces bursts (e.g. multiple font-size clicks) into a single request.
 const PUSH_DEBOUNCE_MS = 500
+
+// Stable stringify for the domains array so prefsEqual can compare it
+// without a full deep-equal helper. Domain entries are shallow objects
+// with a fixed key set, so JSON order matches when the shape matches.
+function domainsKey(list) {
+  return JSON.stringify(list ?? [])
+}
 
 function prefsEqual(a, b) {
   if (!a || !b) return false
   return (
     a.theme === b.theme &&
     a.fontSize === b.fontSize &&
-    a.fabCorner === b.fabCorner
+    a.fabCorner === b.fabCorner &&
+    domainsKey(a.aemDomains) === domainsKey(b.aemDomains)
   )
 }
 
-// Two-way sync between the local providers (Theme / FontSize / FabCorner)
-// and the Supabase user_data row. Renders nothing; mount as a sibling once
-// inside AuthProvider.
+// Two-way sync between the local providers (Theme / FontSize / FabCorner /
+// AemDomains) and the Supabase user_data row. The row carries two
+// independent JSONB columns:
+//   data        - prefs blob: { theme, fontSize, fabCorner, updatedAt }
+//   aem_domains - AEM Jump domain list (array of normalized entries)
+// Both are always upserted together in one round-trip. Renders nothing;
+// mount as a sibling once inside AuthProvider.
 //
 //   Sign-in            -> pull remote and apply via setters (remote-wins).
 //   Local change       -> debounced push (local-wins during session).
@@ -32,14 +45,20 @@ function prefsEqual(a, b) {
 // Two guards prevent ping-pong:
 //   applyingRemoteRef: set while we're calling setters with pulled values,
 //                      so the "changed" effect won't push them right back.
-//   lastSyncedRef:     the last {theme, fontSize, fabCorner} we know matches
-//                      the cloud. Auto-push short-circuits if current === last.
+//   lastSyncedRef:     the last {theme, fontSize, fabCorner, aemDomains}
+//                      we know matches the cloud. Auto-push short-circuits
+//                      if current === last.
 export function PrefsSync() {
   const { user, loading: authLoading } = useAuth()
   const { theme, setTheme, ready: themeReady } = useTheme()
   const { size: fontSize, setSize: setFontSize, ready: fontReady } = useFontSize()
   const { corner: fabCorner, setCorner: setFabCorner, ready: fabReady } =
     useFabCorner()
+  const {
+    domains: aemDomains,
+    setDomains: setAemDomains,
+    ready: domainsReady,
+  } = useAemDomains()
   const queryClient = useQueryClient()
 
   const lastSyncedRef = useRef(null)
@@ -48,23 +67,38 @@ export function PrefsSync() {
   const initialPulledForUserRef = useRef(null)
 
   const userId = user?.id ?? null
-  const providersReady = themeReady && fontReady && fabReady
+  const providersReady = themeReady && fontReady && fabReady && domainsReady
 
+  // Apply a fetched row. Splits between the prefs blob (data column) and
+  // the domain list (aem_domains column) since they normalize independently.
   const applyRemote = useCallback(
-    (remote) => {
-      const safe = normalizeRemotePrefs(remote)
+    (row) => {
+      const safePrefs = normalizeRemotePrefs(row?.data)
+      const safeDomains = normalizeAemDomains(row?.aemDomains)
       applyingRemoteRef.current = true
-      if (safe.theme !== theme) setTheme(safe.theme)
-      if (safe.fontSize !== fontSize) setFontSize(safe.fontSize)
-      if (safe.fabCorner !== fabCorner) setFabCorner(safe.fabCorner)
-      lastSyncedRef.current = safe
+      if (safePrefs.theme !== theme) setTheme(safePrefs.theme)
+      if (safePrefs.fontSize !== fontSize) setFontSize(safePrefs.fontSize)
+      if (safePrefs.fabCorner !== fabCorner) setFabCorner(safePrefs.fabCorner)
+      if (domainsKey(safeDomains) !== domainsKey(aemDomains)) {
+        setAemDomains(safeDomains)
+      }
+      lastSyncedRef.current = { ...safePrefs, aemDomains: safeDomains }
       // Release the flag after the render commit finishes so the change
       // effect can observe the applied state without firing a push.
       queueMicrotask(() => {
         applyingRemoteRef.current = false
       })
     },
-    [theme, setTheme, fontSize, setFontSize, fabCorner, setFabCorner],
+    [
+      theme,
+      setTheme,
+      fontSize,
+      setFontSize,
+      fabCorner,
+      setFabCorner,
+      aemDomains,
+      setAemDomains,
+    ],
   )
 
   useEffect(() => {
@@ -93,12 +127,12 @@ export function PrefsSync() {
           queryFn: () => fetchUserData(userId),
         })
         if (cancelled) return
-        if (row?.data) {
-          applyRemote(row.data)
+        if (row) {
+          applyRemote(row)
         } else {
           // No cloud row yet: adopt current local as the baseline so the
           // next local change is what creates the row.
-          lastSyncedRef.current = { theme, fontSize, fabCorner }
+          lastSyncedRef.current = { theme, fontSize, fabCorner, aemDomains }
         }
       } catch (err) {
         if (cancelled) return
@@ -127,15 +161,23 @@ export function PrefsSync() {
     if (lastSyncedRef.current === null) return
     if (applyingRemoteRef.current) return
 
-    const current = { theme, fontSize, fabCorner }
+    const current = { theme, fontSize, fabCorner, aemDomains }
     if (prefsEqual(current, lastSyncedRef.current)) return
 
     if (pushTimerRef.current) clearTimeout(pushTimerRef.current)
     pushTimerRef.current = setTimeout(async () => {
       pushTimerRef.current = null
       try {
-        const payload = { ...current, updatedAt: new Date().toISOString() }
-        const row = await saveUserData(userId, payload)
+        const nextData = {
+          theme: current.theme,
+          fontSize: current.fontSize,
+          fabCorner: current.fabCorner,
+          updatedAt: new Date().toISOString(),
+        }
+        const row = await saveUserData(userId, {
+          data: nextData,
+          aemDomains: current.aemDomains,
+        })
         lastSyncedRef.current = current
         queryClient.setQueryData(['user_data', userId], row)
       } catch (err) {
@@ -149,7 +191,15 @@ export function PrefsSync() {
         pushTimerRef.current = null
       }
     }
-  }, [theme, fontSize, fabCorner, userId, providersReady, queryClient])
+  }, [
+    theme,
+    fontSize,
+    fabCorner,
+    aemDomains,
+    userId,
+    providersReady,
+    queryClient,
+  ])
 
   return null
 }

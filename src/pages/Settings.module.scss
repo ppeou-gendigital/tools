@@ -1,0 +1,121 @@
+.page {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.back {
+  flex-shrink: 0;
+  color: var(--muted-fg);
+  font-size: var(--text-xs);
+
+  &:hover {
+    color: var(--fg);
+  }
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  margin: 0;
+}
+
+.subtitle {
+  color: var(--muted-fg);
+  font-size: var(--text-xs);
+  margin: 0;
+}
+
+.cards {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.cardItem {
+  min-width: 0;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--fg) 4%, var(--card) 96%);
+    border-color: color-mix(in srgb, var(--fg) 20%, var(--border) 80%);
+  }
+
+  &:active {
+    transform: scale(0.995);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: color-mix(in srgb, var(--fg) 40%, var(--border) 60%);
+  }
+}
+
+.cardIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--fg) 6%, var(--card) 94%);
+  color: var(--fg);
+  flex-shrink: 0;
+}
+
+.cardBody {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cardTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.cardDescription {
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardChevron {
+  color: var(--muted-fg);
+  flex-shrink: 0;
+}

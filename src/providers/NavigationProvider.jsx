@@ -8,8 +8,15 @@ import {
 
 const NavigationContext = createContext(null)
 
-const ROUTES = ['home', 'profile', 'deck-test', 'aem-jump']
-const DEFAULT_ROUTE = 'home'
+const ROUTES = [
+  'home',
+  'profile',
+  'deck-test',
+  'aem-jump',
+  'settings',
+  'settings-aem-environments',
+]
+const DEFAULT_ROUTE = 'aem-jump'
 
 export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
   const [route, setRoute] = useState(
@@ -28,6 +35,8 @@ export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
       goProfile: () => navigate('profile'),
       goDeckTest: () => navigate('deck-test'),
       goAemJump: () => navigate('aem-jump'),
+      goSettings: () => navigate('settings'),
+      goSettingsAemEnvironments: () => navigate('settings-aem-environments'),
     }),
     [route, navigate],
   )
