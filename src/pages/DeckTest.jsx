@@ -8,13 +8,13 @@ import styles from './DeckTest.module.scss'
 const SLIDES = [1, 2, 3, 4, 5]
 
 export function DeckTest() {
-  const { goHome } = useNavigation()
+  const { goBack, previousRouteLabel } = useNavigation()
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <Button variant="ghost" size="sm" onClick={goHome} className={styles.back}>
+        <Button variant="ghost" size="sm" onClick={goBack} className={styles.back}>
           <ArrowLeft size={14} aria-hidden="true" />
-          Back
+          {previousRouteLabel ?? 'Back'}
         </Button>
         <div className={styles.headerText}>
           <h1 className={styles.title}>Deck test</h1>

@@ -109,7 +109,7 @@ function isDraftValid(draft) {
 }
 
 export function AemEnvironments() {
-  const { goSettings } = useNavigation()
+  const { goBack, previousRouteLabel } = useNavigation()
   const { domains, setDomains, ready } = useAemDomains()
 
   // Drafts live inside the provider array; edits go through setDomains
@@ -148,11 +148,11 @@ export function AemEnvironments() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={goSettings}
+          onClick={goBack}
           className={styles.back}
         >
           <ArrowLeft size={14} aria-hidden="true" />
-          Settings
+          {previousRouteLabel ?? 'Back'}
         </Button>
         <div className={styles.headerText}>
           <h1 className={styles.title}>AEM Environments</h1>

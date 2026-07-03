@@ -12,7 +12,7 @@ import styles from './Profile.module.scss'
 
 export function Profile() {
   const { user } = useAuth()
-  const { goHome } = useNavigation()
+  const { goBack, previousRouteLabel } = useNavigation()
   const queryClient = useQueryClient()
 
   const profileQuery = useQuery({
@@ -88,11 +88,11 @@ export function Profile() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={goHome}
+          onClick={goBack}
           className={styles.back}
         >
           <ArrowLeft size={14} aria-hidden="true" />
-          Back
+          {previousRouteLabel ?? 'Back'}
         </Button>
         <h1 className={styles.title}>Profile</h1>
       </div>

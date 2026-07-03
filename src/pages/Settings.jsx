@@ -8,7 +8,8 @@ import styles from './Settings.module.scss'
 // depth to the FAB menu. Each sub-page owns its own back button which
 // returns here rather than jumping straight home.
 export function Settings() {
-  const { goHome, goSettingsAemEnvironments } = useNavigation()
+  const { goBack, previousRouteLabel, goSettingsAemEnvironments } =
+    useNavigation()
 
   return (
     <div className={styles.page}>
@@ -16,11 +17,11 @@ export function Settings() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={goHome}
+          onClick={goBack}
           className={styles.back}
         >
           <ArrowLeft size={14} aria-hidden="true" />
-          Home
+          {previousRouteLabel ?? 'Back'}
         </Button>
         <div className={styles.headerText}>
           <h1 className={styles.title}>Settings</h1>
