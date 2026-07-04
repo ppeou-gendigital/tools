@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Info, Settings as SettingsIcon, Sparkles } from 'lucide-react'
+import {
+  HardDriveDownload,
+  HardDriveUpload,
+  Info,
+  Router,
+  Settings as SettingsIcon,
+  Sparkles,
+} from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { AemJumpBlock } from '@/blocks/AemJumpBlock'
 import { ManageEnvironmentsBlock } from '@/blocks/ManageEnvironmentsBlock'
@@ -14,6 +21,27 @@ import styles from './AemJump.module.scss'
 
 const EXAMPLE_URL =
   'https://qa-webauthor.np.nortonlifelock.com/editor.html/content/norton/language-masters/en/home.html'
+
+// Header-level quick launchers for common local AEM developer endpoints.
+// Rendered as `<a target="_blank">` so cmd-click / middle-click open in a
+// background tab natively — a plain button would swallow that behaviour.
+const LOCAL_SHORTCUTS = [
+  {
+    href: 'http://localhost:4502',
+    label: 'AEM Author (localhost:4502)',
+    icon: HardDriveDownload,
+  },
+  {
+    href: 'https://localhost:14502',
+    label: 'AEM Author HTTPS (localhost:14502)',
+    icon: Router,
+  },
+  {
+    href: 'https://localhost:14500/ping',
+    label: 'Dispatcher ping (localhost:14500)',
+    icon: HardDriveUpload,
+  },
+]
 
 // Web-only cache of the last URL typed into the source card. The extension
 // popup never touches storage for this — it always seeds from the active
@@ -88,6 +116,19 @@ export function AemJump() {
       <header className={styles.header}>
         <div className={styles.headerRow}>
           <h1 className={styles.title}>AEM Jump</h1>
+          {LOCAL_SHORTCUTS.map(({ href, label, icon: Icon }) => (
+            <a
+              key={href}
+              className={styles.shortcut}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={label}
+              aria-label={label}
+            >
+              <Icon size={14} aria-hidden="true" />
+            </a>
+          ))}
           <Button
             variant="ghost"
             size="sm"

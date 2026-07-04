@@ -3,7 +3,6 @@ import {
   Activity,
   Boxes,
   Braces,
-  Broccoli,
   Eye,
   FileSliders,
   FlaskConical,
@@ -17,6 +16,7 @@ import {
   Languages,
   LayoutGrid,
   LayoutList,
+  MapPinCheck,
   MonitorPlay,
   Package,
   PencilLine,
@@ -354,7 +354,7 @@ export function AemJumpBlock({
               aria-label="Use current tab URL"
               title="Use current tab URL"
             >
-              <Broccoli size={16} aria-hidden="true" />
+              <MapPinCheck size={16} aria-hidden="true" />
             </Button>
           )}
           <Input

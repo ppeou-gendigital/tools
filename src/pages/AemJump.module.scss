@@ -53,6 +53,32 @@
   }
 }
 
+// Header-level anchor shortcuts (localhost quick-launchers). Styled to
+// match the visual weight of the ghost `Button` icons next to them so the
+// header reads as one uniform strip of actions. Using an anchor (rather
+// than an onClick button) preserves native modifier-click behaviour —
+// cmd-click and middle-click open in a background tab.
+.shortcut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+  color: var(--muted-fg);
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--fg);
+    background: var(--accent);
+    outline: none;
+  }
+}
+
 // Placeholder card for eds-da / eds-ue entries. Kept intentionally
 // low-weight (muted background, no icon grid) so it reads as "coming
 // soon" rather than as a broken block.
