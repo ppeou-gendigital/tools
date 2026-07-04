@@ -34,6 +34,28 @@
 
 export const MAX_PATHS_PER_DOMAIN = 200
 
+// Human-friendly relative timestamp for the visited-URLs UI. Falls back
+// to a locale date once the delta exceeds a week, and to an em-dash when
+// the value is missing or unparseable. Shared between the full Visited
+// URLs page and the inline strip on the AEM Jump source card so the two
+// surfaces read the same way.
+export function formatWhen(iso) {
+  if (!iso) return '—'
+  const t = Date.parse(iso)
+  if (!Number.isFinite(t)) return '—'
+  const d = new Date(t)
+  const now = Date.now()
+  const delta = now - t
+  const minute = 60_000
+  const hour = 60 * minute
+  const day = 24 * hour
+  if (delta < minute) return 'just now'
+  if (delta < hour) return `${Math.floor(delta / minute)}m ago`
+  if (delta < day) return `${Math.floor(delta / hour)}h ago`
+  if (delta < 7 * day) return `${Math.floor(delta / day)}d ago`
+  return d.toLocaleDateString()
+}
+
 function safeString(v) {
   return typeof v === 'string' ? v : ''
 }

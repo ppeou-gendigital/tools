@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, Filter, History, Server } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Filter, Server } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { useNavigation } from '@/providers/NavigationProvider'
 import styles from './Settings.module.scss'
@@ -13,7 +13,6 @@ export function Settings() {
     previousRouteLabel,
     goSettingsAemEnvironments,
     goSettingsTrackedHosts,
-    goVisitedUrls,
   } = useNavigation()
 
   return (
@@ -46,12 +45,6 @@ export function Settings() {
           title="Tracked hosts"
           description="Wildcard rules that decide which tabs get recorded to your visit history."
           onClick={goSettingsTrackedHosts}
-        />
-        <SettingsCard
-          icon={History}
-          title="Visited URLs"
-          description="Browse pages you've opened on your tracked hosts."
-          onClick={goVisitedUrls}
         />
       </ul>
     </div>

@@ -16,6 +16,7 @@ import { useAemDomains } from '@/providers/AemDomainsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { useVisitedUrls } from '@/providers/VisitedUrlsProvider'
 import { getRebaseOrigin } from '@/lib/prefs'
+import { formatWhen } from '@/lib/visitedUrls'
 import { cx } from '@/lib/cx'
 import { isExtension } from '@/env'
 import styles from './VisitedUrls.module.scss'
@@ -46,23 +47,6 @@ function buildDomainMeta(domains) {
     }
   }
   return meta
-}
-
-function formatWhen(iso) {
-  if (!iso) return '—'
-  const t = Date.parse(iso)
-  if (!Number.isFinite(t)) return '—'
-  const d = new Date(t)
-  const now = Date.now()
-  const delta = now - t
-  const minute = 60_000
-  const hour = 60 * minute
-  const day = 24 * hour
-  if (delta < minute) return 'just now'
-  if (delta < hour) return `${Math.floor(delta / minute)}m ago`
-  if (delta < day) return `${Math.floor(delta / hour)}h ago`
-  if (delta < 7 * day) return `${Math.floor(delta / day)}d ago`
-  return d.toLocaleDateString()
 }
 
 // Substring search over title + path so users can find a specific page

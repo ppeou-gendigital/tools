@@ -6,6 +6,7 @@ import { AemJumpItem } from '@/patterns/AemJumpItem'
 import { AppearanceRow } from '@/patterns/AppearanceRow'
 import { DevBadgeItem } from '@/patterns/DevBadgeItem'
 import { ProjectSiteItem } from '@/patterns/ProjectSiteItem'
+import { VisitedUrlsItem } from '@/patterns/VisitedUrlsItem'
 import styles from './MenuPanel.module.scss'
 
 const VERSION = '0.1.0'
@@ -21,6 +22,7 @@ export function MenuPanel({ corner, onClose }) {
       {signedIn && <AccountRow onClose={onClose} />}
       <Divider />
       <AemJumpItem onClose={onClose} />
+      <VisitedUrlsItem onClose={onClose} />
       <ProjectSiteItem onClose={onClose} />
       <DevBadgeItem />
       <AboutRow version={VERSION} />

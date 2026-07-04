@@ -310,3 +310,120 @@
     border-color: color-mix(in srgb, var(--jump-admin) 40%, var(--border));
   }
 }
+
+// Visited URLs section. Mirrors `.parsedDetails` structure so both
+// collapsible sections share the chevron + summary styling — only the
+// list body differs. The summary reuses `.parsedSummary` at the JSX
+// layer, so we only need list/row styles here.
+.visitedDetails {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.visitedCount {
+  margin-left: auto;
+  padding: 0 var(--space-1);
+  min-width: 1.25rem;
+  height: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--muted-fg);
+  background: var(--muted);
+  border-radius: var(--radius-sm);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.visitedList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-1);
+  // Cap the section so a busy domain (up to 25 rows here) doesn't
+  // push everything below it off-screen. Scrolling inside keeps the
+  // rest of the card reachable.
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+.visitedRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+
+  &:hover,
+  &:focus-within {
+    background: var(--muted);
+    border-color: color-mix(in srgb, var(--border) 60%, var(--fg) 20%);
+  }
+}
+
+.visitedLink {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  color: var(--fg);
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    color: var(--fg);
+  }
+}
+
+.visitedTitle {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.visitedPath {
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.visitedWhen {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+  white-space: nowrap;
+}
+
+// "View all N visits →" escape hatch out to the dedicated page. Styled
+// as a text button rather than a full Button molecule to keep the
+// section visually contained.
+.visitedMore {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--fg);
+    outline: none;
+    text-decoration: underline;
+  }
+}

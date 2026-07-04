@@ -35,10 +35,19 @@ import { Input } from '@/molecules/Input'
 import { buildAemLinks, parseAemUrl } from '@/lib/aemLinks'
 import { readActiveTabUrl } from '@/lib/activeTab'
 import { getRebaseOrigin } from '@/lib/prefs'
+import { formatWhen } from '@/lib/visitedUrls'
 import { useAemDomains } from '@/providers/AemDomainsProvider'
+import { useNavigation } from '@/providers/NavigationProvider'
+import { useVisitedUrls } from '@/providers/VisitedUrlsProvider'
 import { isExtension } from '@/env'
 import { cx } from '@/lib/cx'
 import styles from './AemJumpBlock.module.scss'
+
+// How many visited rows to render inline on the source card before we
+// fall back to a "View all" link out to the full Visited URLs page.
+// Kept intentionally small so the source card doesn't turn into a
+// history browser — the dedicated page is a click away.
+const VISITED_INLINE_LIMIT = 25
 
 // Group -> CSS-module class. Kept out of the row table so LINK_ROWS stays
 // declarative; each anchor gets both this class and the base `.toolBtn`.
@@ -292,6 +301,52 @@ export function AemJumpBlock({
     [isSource, result],
   )
 
+  // Visited URLs for the hostname currently in the input. Source-card
+  // only: rebase cards already point at a specific env, so their
+  // "history" would just be the source card duplicated N times.
+  //
+  // Hostname is derived from result.parsed.origin (populated whenever
+  // the input parses cleanly) rather than result.parsed.host so we
+  // match how the storage bucket keys are shaped in
+  // normalizeVisitedByDomain (URL.hostname, lower-cased).
+  const { byDomain } = useVisitedUrls()
+  const { goVisitedUrls } = useNavigation()
+  const visited = useMemo(() => {
+    if (!isSource) return { rows: [], total: 0 }
+    const originStr = result.parsed?.origin
+    if (!originStr) return { rows: [], total: 0 }
+    let hostname
+    try {
+      hostname = new URL(originStr).hostname.toLowerCase()
+    } catch {
+      return { rows: [], total: 0 }
+    }
+    const bucket = byDomain[hostname]
+    const paths =
+      bucket?.paths &&
+      typeof bucket.paths === 'object' &&
+      !Array.isArray(bucket.paths)
+        ? bucket.paths
+        : null
+    if (!paths) return { rows: [], total: 0 }
+    const entries = Object.entries(paths).map(([path, value]) => ({
+      path,
+      ...value,
+    }))
+    entries.sort((a, b) => {
+      const at = a.lastVisitedAt ?? ''
+      const bt = b.lastVisitedAt ?? ''
+      if (at === bt) return a.path < b.path ? -1 : a.path > b.path ? 1 : 0
+      return at < bt ? 1 : -1
+    })
+    return {
+      rows: entries.slice(0, VISITED_INLINE_LIMIT),
+      total: entries.length,
+      hostname,
+      origin: originStr,
+    }
+  }, [isSource, result.parsed, byDomain])
+
   const canUseCurrentTab =
     isSource &&
     isExtension() &&
@@ -456,6 +511,50 @@ export function AemJumpBlock({
               </div>
             ))}
           </dl>
+        </details>
+      )}
+
+      {isSource && result.parsed && visited.rows.length > 0 && (
+        <details className={styles.visitedDetails}>
+          <summary className={styles.parsedSummary}>
+            <span>Visited URLs</span>
+            <span className={styles.visitedCount}>{visited.total}</span>
+          </summary>
+          <ul className={styles.visitedList}>
+            {visited.rows.map((entry) => {
+              const href = `${visited.origin}${entry.path}`
+              return (
+                <li key={entry.path} className={styles.visitedRow}>
+                  <a
+                    className={styles.visitedLink}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`Open ${href}`}
+                  >
+                    <span className={styles.visitedTitle}>
+                      {entry.title || (
+                        <span className={styles.muted}>(no title)</span>
+                      )}
+                    </span>
+                    <span className={styles.visitedPath}>{entry.path}</span>
+                  </a>
+                  <span className={styles.visitedWhen}>
+                    {formatWhen(entry.lastVisitedAt)}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+          {visited.total > visited.rows.length && (
+            <button
+              type="button"
+              className={styles.visitedMore}
+              onClick={goVisitedUrls}
+            >
+              View all {visited.total} visits →
+            </button>
+          )}
         </details>
       )}
     </section>
