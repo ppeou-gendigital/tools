@@ -6,50 +6,71 @@ import { ManageEnvironmentsBlock } from '@/blocks/ManageEnvironmentsBlock'
 import { Deck, Slide } from '@/blocks/Deck'
 import { useAemDomains } from '@/providers/AemDomainsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { isExtension } from '@/env'
+import { isJumpableUrl, readActiveTabUrl } from '@/lib/activeTab'
 import { isDomainRenderable } from '@/lib/prefs'
-import { asyncStorage } from '@/lib/storage'
 import { cx } from '@/lib/cx'
 import styles from './AemJump.module.scss'
 
 const EXAMPLE_URL =
   'https://qa-webauthor.np.nortonlifelock.com/editor.html/content/norton/language-masters/en/home.html'
 
-// Local-only cache of the last URL typed into the source card. Not synced
-// via PrefsSync — this is scratch state per browser, not a preference.
+// Web-only cache of the last URL typed into the source card. The extension
+// popup never touches storage for this — it always seeds from the active
+// tab on open, so there's nothing to remember.
 const URL_STORAGE_KEY = 'loopy.aemJumpUrl'
 const URL_WRITE_DEBOUNCE_MS = 300
+
+function readInitialWebUrl() {
+  try {
+    const stored = globalThis.localStorage?.getItem(URL_STORAGE_KEY)
+    if (typeof stored === 'string' && stored.trim()) return stored
+  } catch {
+    // localStorage can throw in private mode / sandboxed iframes.
+  }
+  return EXAMPLE_URL
+}
 
 export function AemJump() {
   const { goSettingsAemEnvironments } = useNavigation()
   const { domains, setDomains } = useAemDomains()
-  const [url, setUrl] = useState(EXAMPLE_URL)
-  const [urlReady, setUrlReady] = useState(false)
+  // Two very different seed strategies depending on surface:
+  //   - Extension popup: start empty, then fill from the active tab in the
+  //     effect below. No storage involved on either side.
+  //   - Web surface: fill synchronously from localStorage (or the example
+  //     URL) so the input renders correctly on the first paint, no flash.
+  const [url, setUrl] = useState(() =>
+    isExtension() ? '' : readInitialWebUrl(),
+  )
   const [showInfo, setShowInfo] = useState(false)
 
-  // Hydrate from storage on mount. Falls through to EXAMPLE_URL on
-  // first-time users or unreadable storage.
+  // Extension: seed once on open from the active tab. Skipped entirely on
+  // the web surface (no `chrome.tabs`, and the state is already hydrated).
   useEffect(() => {
+    if (!isExtension()) return
     let mounted = true
-    asyncStorage.getItem(URL_STORAGE_KEY).then((stored) => {
+    readActiveTabUrl().then((tabUrl) => {
       if (!mounted) return
-      if (typeof stored === 'string' && stored.trim()) setUrl(stored)
-      setUrlReady(true)
+      setUrl(isJumpableUrl(tabUrl) ? tabUrl : '')
     })
     return () => {
       mounted = false
     }
   }, [])
 
-  // Debounced persist so per-keystroke edits don't spam chrome.storage.
-  // Gated on `urlReady` so the initial default doesn't clobber the stored
-  // value before hydration finishes.
+  // Web: debounced persist to localStorage so the URL survives a page
+  // refresh. Extension never persists — the tab drives the seed instead.
   useEffect(() => {
-    if (!urlReady) return
+    if (isExtension()) return
     const t = setTimeout(() => {
-      asyncStorage.setItem(URL_STORAGE_KEY, url)
+      try {
+        globalThis.localStorage?.setItem(URL_STORAGE_KEY, url)
+      } catch {
+        // ignore quota / private-mode errors
+      }
     }, URL_WRITE_DEBOUNCE_MS)
     return () => clearTimeout(t)
-  }, [url, urlReady])
+  }, [url])
 
   // Renderable = has enough data to jump. Visibility is a separate,
   // user-controlled filter driven by the Manage slide at the end of the

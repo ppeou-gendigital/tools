@@ -79,9 +79,10 @@
   word-break: break-all;
 }
 
-// Source URL row: the URL input and the optional "Use current tab" button
-// on a single line. The input grabs remaining space via flex:1 and wraps
-// the button to a new line if the slide gets very narrow.
+// Source URL row: an optional "use current tab" icon button sits as a
+// leading affix, followed by the URL input, followed by the inline
+// shortcuts strip once the URL parses. The button stays a fixed square
+// so the input can flex-grow freely.
 .field {
   display: flex;
   align-items: center;
@@ -96,9 +97,8 @@
 }
 
 .currentTabBtn {
+  flex: 0 0 auto;
   color: var(--muted-fg);
-  font-size: var(--text-xs);
-  gap: var(--space-1);
 
   &:hover {
     color: var(--fg);

@@ -2,11 +2,17 @@
   <!--
     Loopy extension icon.
 
-    Filled violet circle (Tailwind Violet 500, matching --fab-bg in
-    src/tokens/_tokens.scss) with the lucide `Repeat` glyph in white on top.
-    The glyph is rendered inside a nested 24-unit coordinate space via
+    Filled violet circle (Tailwind Violet 500, matching the `fab-bg` token
+    in src/tokens/_tokens.scss) with the lucide `Repeat` glyph in white on
+    top. The glyph is rendered inside a nested 24-unit coordinate space via
     transform="translate scale" so the original lucide path data stays
     verbatim and easy to swap for another icon later.
+
+    IMPORTANT: Keep this comment free of consecutive hyphens. XML forbids
+    "\u002d\u002d" inside comments, and macOS `qlmanage` will silently
+    rasterize the resulting XML parse error page into your PNG instead of
+    the icon. If you must reference a CSS custom property here, spell it
+    like `fab-bg` or `(dash dash)fab-bg`.
 
     To regenerate PNG assets after editing this file, run:
       npm run icons

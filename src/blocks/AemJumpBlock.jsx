@@ -3,13 +3,13 @@ import {
   Activity,
   Boxes,
   Braces,
+  Broccoli,
   Eye,
   FileSliders,
   FlaskConical,
   FlaskConicalOff,
   FolderOpen,
   FolderTree,
-  Focus,
   Home,
   Image,
   Images,
@@ -33,6 +33,7 @@ import {
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { buildAemLinks, parseAemUrl } from '@/lib/aemLinks'
+import { readActiveTabUrl } from '@/lib/activeTab'
 import { getRebaseOrigin } from '@/lib/prefs'
 import { useAemDomains } from '@/providers/AemDomainsProvider'
 import { isExtension } from '@/env'
@@ -169,16 +170,6 @@ function computeUrl({ variant, origin, url }) {
     return `${origin}${src.pathname}${src.search}${src.hash}`
   } catch {
     return `${origin}/`
-  }
-}
-
-async function readActiveTabUrl() {
-  try {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
-    return tabs?.[0]?.url ?? null
-  } catch (err) {
-    console.warn('[loopy] could not read active tab:', err?.message ?? err)
-    return null
   }
 }
 
@@ -353,6 +344,19 @@ export function AemJumpBlock({
 
       {isSource && (
         <div className={styles.field}>
+          {canUseCurrentTab && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={handleUseCurrentTab}
+              className={styles.currentTabBtn}
+              aria-label="Use current tab URL"
+              title="Use current tab URL"
+            >
+              <Broccoli size={16} aria-hidden="true" />
+            </Button>
+          )}
           <Input
             id={fieldId}
             type="url"
@@ -385,18 +389,6 @@ export function AemJumpBlock({
                 </li>
               ))}
             </ul>
-          )}
-          {canUseCurrentTab && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleUseCurrentTab}
-              className={styles.currentTabBtn}
-            >
-              <Focus size={12} aria-hidden="true" />
-              Use current tab
-            </Button>
           )}
         </div>
       )}

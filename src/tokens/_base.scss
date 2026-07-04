@@ -20,14 +20,15 @@ html[data-surface='web'] {
   height: 100dvh;
 }
 
-// Popup surface: lock the outer surface to 780x600 (or the viewport,
-// whichever is smaller). In the real Chrome popup the viewport already IS
-// 780x600 so `min()` collapses to that exact size; in a browser preview
-// the caps kick in and the app frame stays at 780x600 pinned to the
-// top-left of the page.
+// Popup surface: lock the outer surface to a fixed 780x600. A Chrome
+// browser-action popup sizes to fit its content (capped at 800x600), so
+// giving <html> an explicit pixel size is what actually drives the popup
+// window's dimensions. Using viewport units (`100dvw`/`100dvh`) resolves
+// to 0 before layout has a stage to measure against — the popup then
+// collapses to a blank sliver even though the React tree mounted.
 html[data-surface='popup'] {
-  width: min(100dvw, 780px);
-  height: min(100dvh, 600px);
+  width: 780px;
+  height: 600px;
   // Subtle outline so the frame stays visible in a browser preview even
   // when the page canvas is dark (Zen, dark-mode Firefox, …). In the real
   // Chrome popup this is invisible because there's nothing outside html.
