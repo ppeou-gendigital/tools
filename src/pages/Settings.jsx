@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, Server } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Filter, History, Server } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { useNavigation } from '@/providers/NavigationProvider'
 import styles from './Settings.module.scss'
@@ -8,8 +8,13 @@ import styles from './Settings.module.scss'
 // depth to the FAB menu. Each sub-page owns its own back button which
 // returns here rather than jumping straight home.
 export function Settings() {
-  const { goBack, previousRouteLabel, goSettingsAemEnvironments } =
-    useNavigation()
+  const {
+    goBack,
+    previousRouteLabel,
+    goSettingsAemEnvironments,
+    goSettingsTrackedHosts,
+    goVisitedUrls,
+  } = useNavigation()
 
   return (
     <div className={styles.page}>
@@ -35,6 +40,18 @@ export function Settings() {
           title="AEM Environments"
           description="Manage the AEM domains that power the AEM Jump page."
           onClick={goSettingsAemEnvironments}
+        />
+        <SettingsCard
+          icon={Filter}
+          title="Tracked hosts"
+          description="Wildcard rules that decide which tabs get recorded to your visit history."
+          onClick={goSettingsTrackedHosts}
+        />
+        <SettingsCard
+          icon={History}
+          title="Visited URLs"
+          description="Browse pages you've opened on your tracked hosts."
+          onClick={goVisitedUrls}
         />
       </ul>
     </div>

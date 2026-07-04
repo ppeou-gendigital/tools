@@ -183,25 +183,27 @@ That's it — sign up, check inbox for the code, paste it into the popup.
 
 ### 4. User preferences table (`user_data`)
 
-Backs the auto-sync layer. One row per user, with two independent JSONB
+Backs the auto-sync layer. One row per user, with three independent JSONB
 columns:
 
 - `data` — the small prefs blob (`theme`, `fontSize`, `fabCorner`, `updatedAt`).
 - `aem_domains` — the AEM Jump domain list (array of normalized entries).
+- `tracked_hostnames` — the visit-capture rule set (JSONB **object keyed by pattern**, `{ [pattern]: { id, mode } }`; see the [Tracked hostnames](#tracked-hostnames) section).
 
-Splitting keeps the two payloads legible in the SQL editor and lets us
-promote the domain list to a real column (indexable, queryable) later
-without touching the prefs shape. Both columns are still written together
+Splitting keeps the payloads legible in the SQL editor and lets us
+promote any of them to a real column (indexable, queryable) later
+without touching the others. All three columns are still written together
 in a single upsert from the app.
 
 In **SQL Editor**, run:
 
 ```sql
 create table public.user_data (
-  id          uuid primary key references auth.users(id) on delete cascade,
-  data        jsonb       not null default '{}'::jsonb,
-  aem_domains jsonb       not null default '[]'::jsonb,
-  updated_at  timestamptz not null default now()
+  id                uuid        primary key references auth.users(id) on delete cascade,
+  data              jsonb       not null default '{}'::jsonb,
+  aem_domains       jsonb       not null default '[]'::jsonb,
+  tracked_hostnames jsonb       not null default '{}'::jsonb,
+  updated_at        timestamptz not null default now()
 );
 
 alter table public.user_data enable row level security;
@@ -211,13 +213,30 @@ create policy "user_data self-insert" on public.user_data for insert with check 
 create policy "user_data self-update" on public.user_data for update using (auth.uid() = id) with check (auth.uid() = id);
 ```
 
-Row-scoped RLS covers both columns automatically; no per-column policy is
+Row-scoped RLS covers all columns automatically; no per-column policy is
 needed. No trigger either — the app upserts on first change, so rows only
-exist for users who have actually signed in and touched a pref or added a
-domain.
+exist for users who have actually signed in and touched a pref, added a
+domain, or added a tracked-host rule.
 
-**Migration (only if you created `user_data` before the split)** — adds the
-new column, backfills from the old nested key, then strips the key:
+**Migration for `tracked_hostnames`** — single idempotent snippet that safely upgrades any prior state: adds the column if missing (created with the object default), swaps the default to `'{}'::jsonb` if the column already existed with the earlier array default, and converts any legacy array-shaped rows to the object shape. Re-runnable at any time.
+
+```sql
+alter table public.user_data
+  add column if not exists tracked_hostnames jsonb not null default '{}'::jsonb;
+
+alter table public.user_data
+  alter column tracked_hostnames set default '{}'::jsonb;
+
+update public.user_data
+set tracked_hostnames = '{}'::jsonb,
+    updated_at        = now()
+where jsonb_typeof(tracked_hostnames) = 'array';
+```
+
+The client normalizer accepts both array and object shapes on read, so this migration is technically optional for existing rows (an array row would get overwritten as `{}` on next push), but running it makes the DB canonical immediately.
+
+**Migration (only if you created `user_data` before the aem_domains split)** — adds
+that column, backfills from the old nested key, then strips the key:
 
 ```sql
 alter table public.user_data
@@ -232,20 +251,168 @@ where data ? 'aemDomains';
 
 **Auto-sync behavior** (see `src/providers/PrefsSync.jsx`):
 
-- **On sign-in** the app fetches the row (`data` + `aem_domains`) and applies
-  each column via its own provider setters (remote wins). If there's no
-  cloud row yet, the current local values become the sync baseline.
+- **On sign-in** the app fetches the row (`data` + `aem_domains` + `tracked_hostnames`)
+  and applies each column via its own provider setters (remote wins). If
+  there's no cloud row yet, the current local values become the sync baseline.
 - **On any local change** (theme toggle, +/- font size, FAB corner drag,
-  domain add/remove) the app upserts both columns together after a 500ms
-  debounce (local wins during the session). Rapid clicks coalesce into a
-  single request.
+  AEM domain add/remove, tracked-host rule edit) the app upserts all three
+  columns together after a 500ms debounce (local wins during the session).
+  Rapid clicks coalesce into a single request.
 
 Two guards prevent ping-pong: an "applying remote" flag skips the auto-push
 that would otherwise fire from the setter calls during a pull, and a
 `lastSynced` ref short-circuits the push effect when the current values
 already match the cloud.
 
-### 5. Dev auto-login (optional)
+### 5. Visited URLs table (`user_visits`)
+
+Backs the [Visited URLs page](src/pages/VisitedUrls.jsx). One row per
+`(user_id, domain)` pair, `paths` is a **jsonb object keyed by path**
+(the path string is the key; the value carries the per-visit metadata).
+Splitting by domain keeps each upsert small — a single new visit
+uploads only the one domain's row, not the whole history — and lets a
+"clear this domain" action drop a single row. Storing paths in an
+object (rather than an array) eliminates duplicates at the
+data-structure level and makes cross-device merges an O(1) key lookup
+instead of a scan.
+
+In **SQL Editor**, run:
+
+```sql
+create table public.user_visits (
+  user_id     uuid        not null references auth.users(id) on delete cascade,
+  domain      text        not null,
+  paths       jsonb       not null default '{}'::jsonb,
+  updated_at  timestamptz not null default now(),
+  primary key (user_id, domain)
+);
+
+alter table public.user_visits enable row level security;
+
+create policy "user_visits self-read"
+  on public.user_visits for select using (auth.uid() = user_id);
+create policy "user_visits self-insert"
+  on public.user_visits for insert with check (auth.uid() = user_id);
+create policy "user_visits self-update"
+  on public.user_visits for update
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "user_visits self-delete"
+  on public.user_visits for delete using (auth.uid() = user_id);
+
+create index if not exists user_visits_user_domain_idx
+  on public.user_visits (user_id, domain);
+
+-- Cap per-row footprint. Client also enforces this before upsert.
+-- Matches MAX_PATHS_PER_DOMAIN in src/lib/visitedUrls.js.
+--
+-- Implemented as a trigger, not a CHECK constraint: jsonb_object_keys
+-- is set-returning and can't be used inline in a CHECK expression.
+create or replace function public.enforce_user_visits_paths_cap()
+returns trigger language plpgsql as $$
+begin
+  if jsonb_typeof(new.paths) <> 'object' then
+    raise exception 'user_visits.paths must be a jsonb object (got %)',
+      jsonb_typeof(new.paths);
+  end if;
+  if (select count(*) from jsonb_object_keys(new.paths)) > 200 then
+    raise exception 'user_visits.paths exceeds 200 keys';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists user_visits_paths_cap_trg on public.user_visits;
+create trigger user_visits_paths_cap_trg
+  before insert or update on public.user_visits
+  for each row execute function public.enforce_user_visits_paths_cap();
+```
+
+**Migration from the legacy array shape** — if the table was created
+with the earlier `paths jsonb default '[]'` layout and the
+`user_visits_paths_cap` CHECK constraint, the cleanest cutover is to
+drop existing rows (the extension repopulates from live captures) and
+swap the constraint for the trigger above:
+
+```sql
+truncate public.user_visits;
+
+alter table public.user_visits
+  drop constraint if exists user_visits_paths_cap;
+
+alter table public.user_visits
+  alter column paths set default '{}'::jsonb;
+
+-- Then re-run the create-or-replace function + create-trigger block
+-- from the setup SQL above.
+```
+
+The extension performs a matching one-shot local wipe on the next SW
+boot (keyed by `loopy.visitsSchemaVersion === 2` in
+`chrome.storage.local`), so no client-side migration code is needed —
+old array-shaped payloads are simply discarded and the new object
+shape is rebuilt from fresh captures.
+
+**`domain`** stores the hostname (lowercased, e.g. `qa-webauthor.np.nortonlifelock.com`) so it matches what `new URL(url).hostname` returns and what we test against the [tracked hostnames](#tracked-hostnames) rule set.
+
+**`paths`** shape — an object keyed by the path string (see [`src/lib/visitedUrls.js`](src/lib/visitedUrls.js)):
+
+```jsonc
+{
+  "/editor.html/content/norton/…?search": {
+    "title": "Editor - Norton Home",
+    "matchedDomainId": "d_abc123",
+    "firstVisitedAt": "2026-07-03T20:00:00Z",
+    "lastVisitedAt":  "2026-07-03T20:15:00Z",
+    "visitCount": 3
+  },
+  "/another/page": { … }
+}
+```
+
+**Capture flow** (extension only; the web build has no `chrome.tabs`):
+
+1. `background.js` subscribes to `chrome.webNavigation.onCompleted` and `chrome.webNavigation.onHistoryStateUpdated` (with `chrome.tabs.onUpdated` as a safety-net) so it sees the real URL — including SPA `pushState` navigations that never touch `chrome.tabs.url`.
+2. It reads the [tracked-hostnames](#tracked-hostnames) rule list from `chrome.storage.local` (cached in worker memory as a compiled `{ includes, excludes }` regex set; invalidated via `chrome.storage.onChanged` when the list changes) and calls `matchTabToTrackedHost(url, rules)`.
+3. On a matching hostname (at least one include hit and no exclude hit), it merges the visit into the domain's bucket in `loopy.visitedByDomain` — dedup is an O(1) `paths[path]` lookup, bumps `visitCount` + `lastVisitedAt`, evicts the oldest when the bucket exceeds 200 keys.
+4. `VisitedUrlsProvider` mirrors the same key via `chrome.storage.onChanged`, so an open popup reflects background writes live.
+5. Sync to Supabase is owned by the service worker (`chrome.alarms`-driven: a ~1s debounced push after each capture, plus a 5-minute periodic heartbeat). Each dirty domain goes through a per-domain **compare-and-swap** (`upsertDomainWithMerge`): read the current row, union its paths object with local via `mergePathObjects`, and write back conditionally on the row's `updated_at`. Two devices simultaneously adding different paths to the same domain converge to a row containing both, with at most one retry.
+
+Fragments (`#…`) are stripped before storage — they're UI state (editor panel, scroll target) and would spam the list with near-duplicates.
+
+The AEM domain list is **not** consulted for capture. It stays exclusively behind the AEM Jump feature; users who want a bare hostname captured (without also configuring a full AEM Jump entry) add it as a tracked-host rule instead. The Visited URLs page still uses the AEM list opportunistically to give recognized hostnames a nicer label in the section header, but a match there isn't required for capture.
+
+## Tracked hostnames
+
+Capture is governed by an explicit rule set stored in `chrome.storage.local` under `loopy.trackedHostnames` and mirrored to `user_data.tracked_hostnames`. The rule set is a **JSONB object keyed by the (canonicalized) pattern**; each value carries the rule's `id` and `mode`:
+
+```jsonc
+{
+  "*.norton.*":    { "id": "h_abc", "mode": "include" },
+  "ping.norton.*": { "id": "h_def", "mode": "exclude" }
+}
+```
+
+Storing rules keyed by pattern is the same trick as the [`user_visits.paths`](src/lib/visitedUrls.js) refactor: duplicates are impossible by construction, cross-device merges collapse to `{ ...remote, ...local }`, and same-pattern-both-modes (which would always skip and is nonsensical) is blocked at the storage layer. The `id` field survives inside each value because `user_visits.paths[*].matchedDomainId` references it — editing a pattern in the UI keeps the same `id` so previously-captured visits stay linked to the (renamed) rule.
+
+`mode` is `include` or `exclude`. A hostname is captured when it matches **at least one include** rule and **no exclude** rule. An empty include set disables capture entirely.
+
+**Wildcard syntax**: patterns are simple globs with `*` matching one or more non-`.` characters — i.e. exactly one DNS label. Patterns are case-insensitive and anchored to the full hostname.
+
+| Pattern            | `lifelock.norton.com` | `norton.com` | `ping.norton.com` | `deep.foo.norton.com` |
+| ------------------ | :-------------------: | :----------: | :---------------: | :-------------------: |
+| `*.norton.*`       | match                 | —            | match             | —                     |
+| `norton.*`         | —                     | match        | —                 | —                     |
+| `*.*.norton.*`     | —                     | —            | —                 | match                 |
+
+**Managing rules**: open the popup, go to **Settings → Tracked hosts**. The page has an inline **Test a hostname** box (paste a hostname or full URL to see whether the current rules would capture it), and an **Import from AEM domains** button that seeds one exact-match include rule per unique hostname in your AEM Jump list — the fast onboarding path for users who upgrade from a build where capture was AEM-driven.
+
+The editor keeps a small **draft list** of rows in local state so that partially-typed patterns can exist as blank rows without polluting the persisted object. Only rows whose pattern passes the normalizer (`canonicalizePattern` + `isValidPattern`) get committed to the store on each edit. Blank rows survive until you either finish typing or delete them.
+
+Not supported in v1: `**` (multi-label wildcards) or full regex. The single-`*` glob covers the current use case; extend later if needed.
+
+**Legacy array shape**: the module's normalizer (`normalizeTrackedHostnames`) still accepts the previous `[{ id, pattern, mode }]` array form and upgrades it to the object shape on read. Any local storage or server row that predates the object cutover will be silently normalized on next load.
+
+### 6. Dev auto-login (optional)
 
 Skip the OTP UI during development. Uses Supabase's built-in **Test OTP** feature, so no fake accounts or mocked sessions — it's the real OTP flow against a whitelisted email that Supabase accepts a static code for.
 
@@ -270,6 +437,9 @@ The manifest declares:
 
 - `activeTab` — access to the current tab's `url` / `title` when the user invokes the extension. No permission prompt.
 - `storage` — for `chrome.storage.local` (session persistence).
+- `tabs` — used by [`background.js`](background.js) to read `tab.url` and `tab.title` from `chrome.tabs.query`. Prompts the user on first install because the browser considers `tab.url` sensitive across all tabs.
+- `webNavigation` — used by [`background.js`](background.js) to record visits whose hostname matches the user's AEM domain list. `chrome.webNavigation.onCompleted` and `chrome.webNavigation.onHistoryStateUpdated` fire with the *actual* navigated URL (including SPA `pushState` updates), unlike `chrome.tabs.onUpdated` which only exposes the last committed HTTP navigation. AEM's authoring UI rewrites the address bar via `pushState` — without `webNavigation`, we'd miss almost every intra-authoring navigation.
+- `scripting` — used by [`src/lib/activeTab.js`](src/lib/activeTab.js) to inject a one-line `() => window.location.href` into the active tab as a fallback when `tab.url` is a stale bare origin. Same pushState problem, but from the popup's side: the AEM Jump input needs the URL the user actually sees, and `tabs.query` reports the pre-pushState URL.
 - `host_permissions: ["https://*.supabase.co/*"]` — required for the popup to call Supabase's Auth and REST endpoints.
 
 Add more later in [`manifest.json`](manifest.json) as features land.

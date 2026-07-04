@@ -6,6 +6,8 @@ import { FontSizeProvider } from '@/providers/FontSizeProvider'
 import { NavigationProvider, useNavigation } from '@/providers/NavigationProvider'
 import { PrefsSync } from '@/providers/PrefsSync'
 import { ThemeProvider } from '@/providers/ThemeProvider'
+import { TrackedHostnamesProvider } from '@/providers/TrackedHostnamesProvider'
+import { VisitedUrlsProvider } from '@/providers/VisitedUrlsProvider'
 import { AppShell } from '@/templates/AppShell'
 import { AuthGate } from '@/blocks/AuthGate'
 import { Home } from '@/pages/Home'
@@ -14,6 +16,8 @@ import { DeckTest } from '@/pages/DeckTest'
 import { AemJump } from '@/pages/AemJump'
 import { Settings } from '@/pages/Settings'
 import { AemEnvironments } from '@/pages/AemEnvironments'
+import { TrackedHosts } from '@/pages/TrackedHosts'
+import { VisitedUrls } from '@/pages/VisitedUrls'
 import { queryClient } from '@/lib/queryClient'
 import { queryPersister } from '@/lib/queryPersister'
 
@@ -27,8 +31,10 @@ function Router() {
   if (route === 'profile') return <Profile />
   if (route === 'deck-test') return <DeckTest />
   if (route === 'aem-jump') return <AemJump />
+  if (route === 'visited-urls') return <VisitedUrls />
   if (route === 'settings') return <Settings />
   if (route === 'settings-aem-environments') return <AemEnvironments />
+  if (route === 'settings-tracked-hosts') return <TrackedHosts />
   return <Home />
 }
 
@@ -46,16 +52,20 @@ export function App() {
         <FontSizeProvider>
           <FabCornerProvider>
             <AemDomainsProvider>
-              <AuthProvider>
-                <PrefsSync />
-                <NavigationProvider>
-                  <AppShell>
-                    <AuthGate>
-                      <Router />
-                    </AuthGate>
-                  </AppShell>
-                </NavigationProvider>
-              </AuthProvider>
+              <TrackedHostnamesProvider>
+                <VisitedUrlsProvider>
+                  <AuthProvider>
+                    <PrefsSync />
+                    <NavigationProvider>
+                      <AppShell>
+                        <AuthGate>
+                          <Router />
+                        </AuthGate>
+                      </AppShell>
+                    </NavigationProvider>
+                  </AuthProvider>
+                </VisitedUrlsProvider>
+              </TrackedHostnamesProvider>
             </AemDomainsProvider>
           </FabCornerProvider>
         </FontSizeProvider>

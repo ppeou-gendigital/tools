@@ -300,7 +300,18 @@ export function AemJumpBlock({
 
   async function handleUseCurrentTab() {
     const next = await readActiveTabUrl()
-    if (next && onUrlChange) onUrlChange(next)
+    if (next && onUrlChange) {
+      onUrlChange(next)
+      // Reveal the resource path (end of the URL) instead of the origin —
+      // the input is narrow and defaults to scrollLeft=0, which looks
+      // like the URL was truncated at the host.
+      requestAnimationFrame(() => {
+        const el = document.getElementById(fieldId)
+        if (el instanceof HTMLInputElement) {
+          el.scrollLeft = el.scrollWidth
+        }
+      })
+    }
   }
 
   const fieldId = inputId ?? 'aem-jump-url'

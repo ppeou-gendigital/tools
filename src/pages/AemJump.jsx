@@ -74,12 +74,28 @@ export function AemJump() {
 
   // Extension: seed once on open from the active tab. Skipped entirely on
   // the web surface (no `chrome.tabs`, and the state is already hydrated).
+  //
+  // After seeding, scroll the input horizontally so the resource path (the
+  // interesting part) is visible instead of just the origin. The input is
+  // narrow (400px popup) and text inputs default to scrollLeft=0, so a
+  // long URL like https://<host>/content/... otherwise looks truncated at
+  // the origin — a common source of "did it pick up my URL?" confusion.
   useEffect(() => {
     if (!isExtension()) return
     let mounted = true
     readActiveTabUrl().then((tabUrl) => {
       if (!mounted) return
-      setUrl(isJumpableUrl(tabUrl) ? tabUrl : '')
+      const next = isJumpableUrl(tabUrl) ? tabUrl : ''
+      setUrl(next)
+      if (!next) return
+      // Wait a frame for React to commit the new value into the DOM
+      // before we reach for the input.
+      requestAnimationFrame(() => {
+        const el = document.getElementById('aem-jump-url')
+        if (el instanceof HTMLInputElement) {
+          el.scrollLeft = el.scrollWidth
+        }
+      })
     })
     return () => {
       mounted = false

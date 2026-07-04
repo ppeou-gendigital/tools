@@ -23,6 +23,13 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "permissions": ["activeTab", "storage"],
+  "permissions": [
+    "activeTab",
+    "alarms",
+    "storage",
+    "tabs",
+    "scripting",
+    "webNavigation"
+  ],
   "host_permissions": ["https://*.supabase.co/*"]
 }

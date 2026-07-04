@@ -13,8 +13,10 @@ const ROUTES = [
   'profile',
   'deck-test',
   'aem-jump',
+  'visited-urls',
   'settings',
   'settings-aem-environments',
+  'settings-tracked-hosts',
 ]
 const DEFAULT_ROUTE = 'aem-jump'
 
@@ -24,8 +26,10 @@ const ROUTE_LABELS = {
   profile: 'Profile',
   'deck-test': 'Deck test',
   'aem-jump': 'AEM Jump',
+  'visited-urls': 'Visited URLs',
   settings: 'Settings',
   'settings-aem-environments': 'AEM Environments',
+  'settings-tracked-hosts': 'Tracked hosts',
 }
 
 // Logical parent for each route. Used when the history stack is empty
@@ -37,8 +41,10 @@ const PARENT_ROUTE = {
   profile: 'home',
   'deck-test': 'home',
   'aem-jump': 'home',
+  'visited-urls': 'home',
   settings: 'home',
   'settings-aem-environments': 'settings',
+  'settings-tracked-hosts': 'settings',
 }
 
 // Cap on stored history depth. This is a menu-driven single-window app; a
@@ -102,8 +108,10 @@ export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
       goProfile: () => navigate('profile'),
       goDeckTest: () => navigate('deck-test'),
       goAemJump: () => navigate('aem-jump'),
+      goVisitedUrls: () => navigate('visited-urls'),
       goSettings: () => navigate('settings'),
       goSettingsAemEnvironments: () => navigate('settings-aem-environments'),
+      goSettingsTrackedHosts: () => navigate('settings-tracked-hosts'),
     }
   }, [stack, navigate, goBack])
 
