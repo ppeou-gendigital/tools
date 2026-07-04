@@ -1,0 +1,77 @@
+// Portal-hosted modal that overlays the entire popup surface. Rendered
+// via createPortal into <body>, so it escapes any stacking context set by
+// the deck or FAB layers. `position: fixed` snaps to the popup viewport
+// (which is a fixed 780x600 in extension mode, or 100dvw x 100dvh in web
+// mode — either way `inset: 0` fills it).
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, #000 55%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 620px;
+  max-height: 88%;
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closeBtn {
+  flex-shrink: 0;
+  color: var(--muted-fg);
+
+  &:hover {
+    color: var(--fg);
+  }
+}
+
+// Body is the only scrollable region inside the dialog so a very tall
+// eds-ue form stays contained without pushing the footer out of view.
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border);
+  background: var(--card);
+}

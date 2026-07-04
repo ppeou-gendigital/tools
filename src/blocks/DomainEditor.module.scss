@@ -1,0 +1,49 @@
+// Kind-aware AEM domain form. Renders as a vertical stack of field groups
+// with the enum selects (kind / role / env) laid out as a 3-column strip.
+// Kept purely presentational so the same block powers the modal today and
+// any future inline editor tomorrow.
+.editor {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.fieldFull {
+  grid-column: 1 / -1;
+}
+
+// Kind / Role / Env strip: three equal columns, collapse to a stacked
+// column at very narrow widths.
+.selects {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+// Per-kind field grid (used by local-sdk and eds-* kinds). Keeps
+// three-across on wider surfaces; anything marked fieldFull spans the row.
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.select {
+  height: 2rem;
+  padding: 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+
+  &:focus-visible {
+    outline: none;
+    border-color: color-mix(in srgb, var(--fg) 40%, var(--border) 60%);
+  }
+}
