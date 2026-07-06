@@ -16,6 +16,8 @@ import { Settings } from '@/pages/Settings'
 import { VaultSettings } from '@/pages/VaultSettings'
 import { Credentials } from '@/pages/Credentials'
 import { CredentialEdit } from '@/pages/CredentialEdit'
+import { CreditCards } from '@/pages/CreditCards'
+import { CreditCardEdit } from '@/pages/CreditCardEdit'
 import { VaultUnlock } from '@/pages/VaultUnlock'
 import { queryClient } from '@/lib/queryClient'
 import { queryPersister } from '@/lib/queryPersister'
@@ -29,7 +31,14 @@ const APP_VERSION = '0.1.0'
 // setup wizard. The locked-but-set-up case is handled by the overlay
 // (see `<VaultUnlockOverlay />`) and per-page locked placeholders, so
 // we don't route-swap for it.
-const VAULT_ROUTES = new Set(['credentials', 'credential-new', 'credential-edit'])
+const VAULT_ROUTES = new Set([
+  'credentials',
+  'credential-new',
+  'credential-edit',
+  'credit-cards',
+  'credit-card-new',
+  'credit-card-edit',
+])
 
 function Router() {
   const { route } = useNavigation()
@@ -46,6 +55,9 @@ function Router() {
   if (route === 'credentials') return <Credentials />
   if (route === 'credential-new') return <CredentialEdit />
   if (route === 'credential-edit') return <CredentialEdit />
+  if (route === 'credit-cards') return <CreditCards />
+  if (route === 'credit-card-new') return <CreditCardEdit />
+  if (route === 'credit-card-edit') return <CreditCardEdit />
   return <Home />
 }
 

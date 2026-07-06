@@ -5,6 +5,7 @@ import { AboutRow } from '@/patterns/AboutRow'
 import { AccountRow } from '@/patterns/AccountRow'
 import { AppearanceRow } from '@/patterns/AppearanceRow'
 import { CredentialsItem } from '@/patterns/CredentialsItem'
+import { CreditCardsItem } from '@/patterns/CreditCardsItem'
 import { UnlockVaultItem } from '@/patterns/UnlockVaultItem'
 import { DeckDemoItem } from '@/patterns/DeckDemoItem'
 import { DevBadgeItem } from '@/patterns/DevBadgeItem'
@@ -29,6 +30,7 @@ export function MenuPanel({ corner, onClose }) {
       {signedIn && <AccountRow onClose={onClose} />}
       <Divider />
       {signedIn && <CredentialsItem onClose={onClose} />}
+      {signedIn && <CreditCardsItem onClose={onClose} />}
       {showUnlock && <UnlockVaultItem onClose={onClose} />}
       <DeckDemoItem onClose={onClose} />
       <DevBadgeItem />

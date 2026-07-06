@@ -17,6 +17,9 @@ const ROUTES = [
   'credentials',
   'credential-new',
   'credential-edit',
+  'credit-cards',
+  'credit-card-new',
+  'credit-card-edit',
 ]
 const DEFAULT_ROUTE = 'home'
 
@@ -30,6 +33,9 @@ const ROUTE_LABELS = {
   credentials: 'Credentials',
   'credential-new': 'New credential',
   'credential-edit': 'Edit credential',
+  'credit-cards': 'Credit cards',
+  'credit-card-new': 'New card',
+  'credit-card-edit': 'Edit card',
 }
 
 // Logical parent for each route. Used when the history stack is empty
@@ -45,6 +51,9 @@ const PARENT_ROUTE = {
   credentials: 'home',
   'credential-new': 'credentials',
   'credential-edit': 'credentials',
+  'credit-cards': 'home',
+  'credit-card-new': 'credit-cards',
+  'credit-card-edit': 'credit-cards',
 }
 
 // Cap on stored history depth. This is a menu-driven single-window app; a
@@ -118,6 +127,10 @@ export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
       goCredentialNew: (extra) => navigate('credential-new', extra ?? undefined),
       goCredentialEdit: (id, extra) =>
         navigate('credential-edit', { id, ...(extra ?? {}) }),
+      goCreditCards: () => navigate('credit-cards'),
+      goCreditCardNew: (extra) => navigate('credit-card-new', extra ?? undefined),
+      goCreditCardEdit: (id, extra) =>
+        navigate('credit-card-edit', { id, ...(extra ?? {}) }),
     }
   }, [stack, navigate, goBack])
 

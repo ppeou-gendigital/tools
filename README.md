@@ -335,7 +335,53 @@ create policy "credentials self-delete" on public.credentials for delete using (
 
 Use this table as the template when you add another vault-backed feature: same `ciphertext` / `iv` columns, same self-RLS policies, whatever plaintext columns your feature needs for indexing.
 
-### 3. Session caching + auto-lock
+### 3. Second consumer: the `credit_cards` table + RLS
+
+Credit cards use the exact same shape as credentials, with one twist: the plaintext `display_name` is **optional**. The card name is the only field the user is allowed to leak into the DB — everything else (number, expiry, CVV, cardholder, issuer, ZIP, PIN, notes) lives inside the encrypted blob. When the user leaves the name blank we compute an `Issuer •••• last 4` label client-side after decrypt, so nothing extra ends up in Postgres.
+
+In **SQL Editor**, run:
+
+```sql
+create table public.credit_cards (
+  id            uuid        primary key default gen_random_uuid(),
+  user_id       uuid        not null references auth.users(id) on delete cascade,
+  display_name  text        not null default '',
+  ciphertext    text        not null,
+  iv            text        not null,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+create index credit_cards_user_updated_idx
+  on public.credit_cards (user_id, updated_at desc);
+
+alter table public.credit_cards enable row level security;
+
+create policy "credit_cards self-read"   on public.credit_cards for select using (auth.uid() = user_id);
+create policy "credit_cards self-insert" on public.credit_cards for insert with check (auth.uid() = user_id);
+create policy "credit_cards self-update" on public.credit_cards for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "credit_cards self-delete" on public.credit_cards for delete using (auth.uid() = user_id);
+```
+
+The encrypted plaintext is a JSON blob:
+
+```json
+{
+  "cardholderName": "Ada Lovelace",
+  "cardNumber": "4242424242424242",
+  "expMonth": "12",
+  "expYear": "2029",
+  "cvv": "123",
+  "issuerBank": "Chase",
+  "billingZip": "94103",
+  "pin": "",
+  "notes": "..."
+}
+```
+
+Card brand (Visa/Mastercard/Amex/etc.) is derived from `cardNumber` at render time in [src/lib/cardUtils.js](src/lib/cardUtils.js), so it never has to be stored.
+
+### 4. Session caching + auto-lock
 
 Typing the master passphrase every time the popup opens gets old fast. To keep the security model intact while cutting friction, the vault caches the passphrase in **session-scoped** browser storage: `chrome.storage.session` in the extension (shared between the popup and the MV3 service worker) and `sessionStorage` on the web build. Both tiers clear on browser close, so nothing survives a full quit.
 
@@ -343,9 +389,9 @@ The cached passphrase re-derives the same non-extractable AES key on next popup 
 
 An **idle timeout** locks the vault after a configurable window of user inactivity (`pointerdown` / `keydown` / `visibilitychange` count as activity). The list of options and the default live in [src/lib/vaultIdleOptions.js](src/lib/vaultIdleOptions.js). The current selection is stored on `user_data.data.vault.idleTimeoutMs` (see the JSON above) so it syncs across devices, and can be changed from **Settings → Vault**.
 
-Anything that ends the vault session — manual lock, sign-out, auth switch, browser close, or the timeout firing — clears the session cache, drops the in-memory `CryptoKey`, and evicts any decrypted data (currently the credentials query; future vault-backed queries should follow the same pattern) from React Query, so no plaintext lingers.
+Anything that ends the vault session — manual lock, sign-out, auth switch, browser close, or the timeout firing — clears the session cache, drops the in-memory `CryptoKey`, and evicts any decrypted data (`credentials` and `credit_cards` queries today; future vault-backed queries should follow the same pattern) from React Query, so no plaintext lingers.
 
-### 4. Auto-capture (extension only)
+### 5. Auto-capture (extension only)
 
 The **Capture** button on the Credentials list reads the username / password fields from the active tab and routes you into the credential edit form pre-filled with what it found — you always review and Save yourself, nothing is written silently.
 

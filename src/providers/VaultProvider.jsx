@@ -274,6 +274,7 @@ export function VaultProvider({ children }) {
     keyRef.current = null
     failedAttemptsRef.current = 0
     queryClient.removeQueries({ queryKey: ['credentials', userId] })
+    queryClient.removeQueries({ queryKey: ['credit_cards', userId] })
     setStatus(metaRef.current ? STATUS.LOCKED : STATUS.NEEDS_SETUP)
     setError(null)
     // Fire-and-forget; the storage write is not on the render path.
