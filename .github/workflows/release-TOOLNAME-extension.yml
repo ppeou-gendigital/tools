@@ -1,12 +1,12 @@
-name: Release Loopy Chrome extension
+name: Release TOOLNAME Chrome extension
 
-# Fires when we push a tag shaped like `loopy-v<major>.<minor>.<patch>` so
-# the loopy tool's releases stay scoped inside a multi-tool repo. `workflow_dispatch`
+# Fires when we push a tag shaped like `TOOLNAME-v<major>.<minor>.<patch>` so
+# this tool's releases stay scoped inside a multi-tool repo. `workflow_dispatch`
 # lets us cut a release from the Actions UI without touching git if needed.
 on:
   push:
     tags:
-      - 'loopy-v*'
+      - 'TOOLNAME-v*'
   workflow_dispatch:
     inputs:
       version:
@@ -19,7 +19,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: loopy-release-${{ github.ref }}
+  group: TOOLNAME-release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -34,8 +34,8 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             VERSION="${{ inputs.version }}"
           else
-            # Strip the loopy-v prefix from refs/tags/loopy-v0.1.0 -> 0.1.0
-            VERSION="${GITHUB_REF_NAME#loopy-v}"
+            # Strip the TOOLNAME-v prefix from refs/tags/TOOLNAME-v0.1.0 -> 0.1.0
+            VERSION="${GITHUB_REF_NAME#TOOLNAME-v}"
           fi
           if [ -z "$VERSION" ]; then
             echo "Empty version" >&2
@@ -76,20 +76,18 @@ jobs:
           # at the root of the archive. Chrome's "Load unpacked" expects that
           # layout — a nested dist/ folder would break the install.
           cd dist
-          zip -r "../loopy-v${{ steps.version.outputs.version }}.zip" .
+          zip -r "../TOOLNAME-v${{ steps.version.outputs.version }}.zip" .
 
       - uses: softprops/action-gh-release@v2
         with:
-          files: loopy-v${{ steps.version.outputs.version }}.zip
-          name: Loopy v${{ steps.version.outputs.version }}
-          tag_name: loopy-v${{ steps.version.outputs.version }}
+          files: TOOLNAME-v${{ steps.version.outputs.version }}.zip
+          name: TOOLNAME v${{ steps.version.outputs.version }}
+          tag_name: TOOLNAME-v${{ steps.version.outputs.version }}
           body: |
             ## Install (developer mode)
 
-            1. Download `loopy-v${{ steps.version.outputs.version }}.zip` below.
+            1. Download `TOOLNAME-v${{ steps.version.outputs.version }}.zip` below.
             2. Extract it to a folder somewhere permanent (Chrome loads the extension from disk, so don't delete the folder after install).
             3. Open `chrome://extensions` in Chrome or Edge.
             4. Toggle **Developer mode** on (top-right).
             5. Click **Load unpacked** and select the extracted folder.
-
-            The violet Loopy icon should appear in your toolbar.

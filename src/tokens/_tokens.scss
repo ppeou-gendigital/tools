@@ -32,15 +32,13 @@
   --destructive: #ef4444;
   --destructive-fg: #fafafa;
 
-  // AEM Jump icon groups. Four categories at rest colors:
-  //   page     - page-scoped tools (editor, preview, properties, assets)
-  //   project  - project/site consoles (Sites, DAM)
-  //   aem      - AEM app-level surfaces (welcome, i18n, users, miscadmin)
-  //   admin    - developer / OSGi / logs / crx / package manager
-  --jump-page: #3b82f6;
-  --jump-project: #10b981;
-  --jump-aem: #f59e0b;
-  --jump-admin: #8b5cf6;
+  // Semantic accent groups. Use these when you need a small palette of
+  // categorical colors (e.g. tag chips, icon families). Rename freely for
+  // your tool.
+  --accent-1: #3b82f6;
+  --accent-2: #10b981;
+  --accent-3: #f59e0b;
+  --accent-4: #8b5cf6;
 
   --radius-sm: 4px;
   --radius: 8px;
@@ -126,10 +124,10 @@
 
   // Slightly lighter / less saturated in dark mode so the icons stay
   // legible against the near-black card background.
-  --jump-page: #60a5fa;
-  --jump-project: #34d399;
-  --jump-aem: #fbbf24;
-  --jump-admin: #a78bfa;
+  --accent-1: #60a5fa;
+  --accent-2: #34d399;
+  --accent-3: #fbbf24;
+  --accent-4: #a78bfa;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);

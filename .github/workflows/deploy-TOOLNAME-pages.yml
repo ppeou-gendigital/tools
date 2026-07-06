@@ -1,8 +1,8 @@
-name: Deploy loopy to GitHub Pages
+name: Deploy TOOLNAME to GitHub Pages
 
 on:
   push:
-    branches: [tool/loopy]
+    branches: [tool/TOOLNAME]
   workflow_dispatch:
 
 permissions:

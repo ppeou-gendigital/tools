@@ -1,40 +1,28 @@
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
-import { AemDomainsProvider } from '@/providers/AemDomainsProvider'
 import { AuthProvider } from '@/providers/AuthProvider'
 import { FabCornerProvider } from '@/providers/FabCornerProvider'
 import { FontSizeProvider } from '@/providers/FontSizeProvider'
 import { NavigationProvider, useNavigation } from '@/providers/NavigationProvider'
 import { PrefsSync } from '@/providers/PrefsSync'
 import { ThemeProvider } from '@/providers/ThemeProvider'
-import { TrackedHostnamesProvider } from '@/providers/TrackedHostnamesProvider'
-import { VisitedUrlsProvider } from '@/providers/VisitedUrlsProvider'
 import { AppShell } from '@/templates/AppShell'
 import { AuthGate } from '@/blocks/AuthGate'
 import { Home } from '@/pages/Home'
 import { Profile } from '@/pages/Profile'
-import { DeckTest } from '@/pages/DeckTest'
-import { AemJump } from '@/pages/AemJump'
+import { DeckDemo } from '@/pages/DeckDemo'
 import { Settings } from '@/pages/Settings'
-import { AemEnvironments } from '@/pages/AemEnvironments'
-import { TrackedHosts } from '@/pages/TrackedHosts'
-import { VisitedUrls } from '@/pages/VisitedUrls'
 import { queryClient } from '@/lib/queryClient'
 import { queryPersister } from '@/lib/queryPersister'
 
 // Bump this whenever the cached shape changes so stale entries get busted
-// on next popup open. Reads naturally from package.json in the future if
-// we start importing it.
+// on next popup open.
 const APP_VERSION = '0.1.0'
 
 function Router() {
   const { route } = useNavigation()
   if (route === 'profile') return <Profile />
-  if (route === 'deck-test') return <DeckTest />
-  if (route === 'aem-jump') return <AemJump />
-  if (route === 'visited-urls') return <VisitedUrls />
+  if (route === 'deck-demo') return <DeckDemo />
   if (route === 'settings') return <Settings />
-  if (route === 'settings-aem-environments') return <AemEnvironments />
-  if (route === 'settings-tracked-hosts') return <TrackedHosts />
   return <Home />
 }
 
@@ -51,22 +39,16 @@ export function App() {
       <ThemeProvider>
         <FontSizeProvider>
           <FabCornerProvider>
-            <AemDomainsProvider>
-              <TrackedHostnamesProvider>
-                <VisitedUrlsProvider>
-                  <AuthProvider>
-                    <PrefsSync />
-                    <NavigationProvider>
-                      <AppShell>
-                        <AuthGate>
-                          <Router />
-                        </AuthGate>
-                      </AppShell>
-                    </NavigationProvider>
-                  </AuthProvider>
-                </VisitedUrlsProvider>
-              </TrackedHostnamesProvider>
-            </AemDomainsProvider>
+            <AuthProvider>
+              <PrefsSync />
+              <NavigationProvider>
+                <AppShell>
+                  <AuthGate>
+                    <Router />
+                  </AuthGate>
+                </AppShell>
+              </NavigationProvider>
+            </AuthProvider>
           </FabCornerProvider>
         </FontSizeProvider>
       </ThemeProvider>

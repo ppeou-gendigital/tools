@@ -77,7 +77,7 @@ export function SignInForm() {
             </span>
           </div>
           <CardTitle>
-            {step === 'email' ? 'Sign in to Loopy' : 'Check your email'}
+            {step === 'email' ? 'Sign in to TOOLNAME' : 'Check your email'}
           </CardTitle>
           <CardDescription>
             {step === 'email'

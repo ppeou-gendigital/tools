@@ -1,11 +1,26 @@
-# Loopy
+# TOOLNAME
 
 A Chrome extension **and** web app in one codebase. React (ES6, no TypeScript) + Vite + SCSS modules, with Supabase email-OTP auth and light/dark theming.
 
+This is the **template** branch. Full-featured reference implementation: see the [`tool/loopy`](../../tree/tool/loopy) branch.
+
 - **Manifest**: V3
-- **UI**: React 19, hand-rolled components in SCSS Modules (shadcn/ui used only as visual reference), Lucide icons
+- **UI**: React 19, hand-rolled components in SCSS Modules, Lucide icons
 - **Auth + storage**: [Supabase](https://supabase.com/) (Auth + Postgres) — free tier
 - **Build**: Vite + `@crxjs/vite-plugin`
+
+---
+
+## Spin up a new tool from this template
+
+1. From a clone of this repo:
+   ```bash
+   git checkout template/base
+   git checkout -b tool/foo
+   node scripts/init-tool.mjs --name foo
+   ```
+   The init script sweeps `foo` into `package.json`, `manifest.json`, `vite.config.js`, `index.html`, `popup.html`, and the GH Actions workflow filenames.
+2. Follow [TEMPLATE.md](TEMPLATE.md) for the remaining one-time steps (Supabase project, repo secrets, icon replacement).
 
 ---
 
@@ -33,17 +48,16 @@ A Chrome extension **and** web app in one codebase. React (ES6, no TypeScript) +
 2. Open `chrome://extensions/`.
 3. Turn on **Developer mode** (toggle, top right).
 4. Click **Load unpacked** and pick the `dist/` folder inside this repo.
-5. "Loopy" appears in your toolbar. Pin it for convenience.
 
 After code changes:
 
 - **Popup / React code** — CRXJS hot-reloads the popup; if it stalls, close and reopen it.
-- **`manifest.json` / `background.js`** — click the reload icon on the Loopy card in `chrome://extensions/`.
+- **`manifest.json` / `background.js`** — click the reload icon on the extension card in `chrome://extensions/`.
 
 Inspect:
 
-- **Popup**: right-click the Loopy toolbar icon → **Inspect popup**.
-- **Service worker**: `chrome://extensions/` → Loopy → **Inspect views: service worker**.
+- **Popup**: right-click the toolbar icon → **Inspect popup**.
+- **Service worker**: `chrome://extensions/` → your tool → **Inspect views: service worker**.
 
 ---
 
@@ -56,52 +70,63 @@ Inspect:
 | `npm run build`     | Production extension build → `dist/`                               |
 | `npm run build:web` | Production web build → `dist-web/`                                 |
 | `npm run lint`      | ESLint over `src/**/*.{js,jsx}`                                    |
+| `npm run icons`     | Rasterize `icons/tool.svg` into the four PNG sizes                 |
+| `npm run init`      | Rename the template to a new tool name (see below)                 |
 
 ---
 
 ## Project layout
 
 ```
-loopy/
+TOOLNAME/
 ├── manifest.json               # MV3 manifest (host permission for supabase.co)
-├── background.js               # MV3 service worker (event-driven)
+├── background.js               # MV3 service worker (minimal stub)
 ├── index.html                  # web entry
 ├── popup.html                  # extension popup entry (400x600 body)
 ├── vite.config.js              # single Vite config, mode = web | extension
 ├── src/
 │   ├── main.jsx                # bootstraps React into #root
 │   ├── App.jsx                 # providers + tiny in-memory router
-│   ├── env.js                  # isExtension(), env accessors
+│   ├── env.js                  # isExtension(), env accessors, dev auto-login
 │   ├── lib/
 │   │   ├── supabase.js         # createClient + storage adapter + PKCE
 │   │   ├── storage.js          # chrome.storage.local <-> localStorage
-│   │   └── cx.js               # className concatenator
+│   │   ├── cx.js               # className concatenator
+│   │   ├── queryClient.js      # React Query client
+│   │   ├── queryPersister.js   # Async storage persister
+│   │   ├── prefs.js            # normalizers for the user_data blob
+│   │   └── userDataApi.js      # fetch/upsert user_data row
 │   ├── providers/
 │   │   ├── AuthProvider.jsx    # session, requestOtp, verifyOtp, signOut
-│   │   └── ThemeProvider.jsx   # light | dark | system, persisted
-│   ├── components/
-│   │   ├── ui/                 # Button, Input, Label, Card + .module.scss
-│   │   ├── AppShell.jsx        # grid header/main/footer
-│   │   ├── AuthGate.jsx        # gates children behind a session
-│   │   ├── SignInForm.jsx      # email -> 6-digit OTP -> verify
-│   │   ├── ThemeToggle.jsx     # Sun/Moon/Monitor (lucide-react)
-│   │   └── UserMenu.jsx        # email + sign out
-│   ├── pages/
-│   │   ├── Home.jsx            # authed landing
-│   │   └── Profile.jsx         # reads/writes `profiles` table
-│   └── styles/
-│       ├── main.scss           # loads reset + tokens + base
+│   │   ├── ThemeProvider.jsx   # light | dark | system, persisted
+│   │   ├── FontSizeProvider.jsx
+│   │   ├── FabCornerProvider.jsx
+│   │   ├── NavigationProvider.jsx  # in-memory router (no react-router)
+│   │   └── PrefsSync.jsx       # two-way sync theme/fontSize/fabCorner to Supabase
+│   ├── molecules/              # Button, Input, Label, IconButton, MenuRow, Divider
+│   ├── patterns/               # Card, MenuPanel, AccountRow, AppearanceRow, AboutRow, DevBadgeItem, DeckDemoItem
+│   ├── blocks/                 # AuthGate, Deck, FloatingMenu, SignInForm
+│   ├── templates/AppShell.jsx  # grid header/main/footer
+│   ├── pages/                  # Home, Profile, Settings, DeckDemo
+│   ├── hooks/useCornerDrag.js  # FAB corner-drag + snap
+│   └── tokens/
+│       ├── main.scss           # loads reset + tokens + base + layout
 │       ├── _tokens.scss        # CSS vars for [data-theme="light"] and "dark"
 │       ├── _reset.scss
 │       ├── _mixins.scss        # focus-ring, stack, row
-│       └── _base.scss
+│       ├── _base.scss
+│       └── _layout.scss
+├── scripts/
+│   ├── generate-icons.mjs      # rasterize tool.svg -> 4 PNGs
+│   └── init-tool.mjs           # rename template placeholders to your tool name
+└── icons/tool.svg              # source SVG for the four PNG sizes
 ```
 
 ---
 
 ## Theming
 
-`ThemeProvider` writes `data-theme="light"` or `"dark"` on `<html>`. All tokens (colors, spacing, radii) live in [`src/styles/_tokens.scss`](src/styles/_tokens.scss) as CSS custom properties, so components reference `var(--fg)` etc. and never branch on theme.
+`ThemeProvider` writes `data-theme="light"` or `"dark"` on `<html>`. All tokens (colors, spacing, radii) live in [`src/tokens/_tokens.scss`](src/tokens/_tokens.scss) as CSS custom properties, so components reference `var(--fg)` etc. and never branch on theme.
 
 The three modes are **Light**, **Dark**, **System** (follows `prefers-color-scheme`). The preference is persisted via the same async storage adapter — `chrome.storage.local` in the extension, `localStorage` on the web.
 
@@ -118,18 +143,27 @@ Pages own their own reading inset via `.is-fluid-width` / `.is-static-width` wra
 
 ---
 
+## Layout primitives
+
+- **`AppShell`** ([src/templates/AppShell.jsx](src/templates/AppShell.jsx)) — grid header/main/footer that fills its parent.
+- **`FloatingMenu`** ([src/blocks/FloatingMenu.jsx](src/blocks/FloatingMenu.jsx)) — draggable FAB that snaps to the nearest corner. Position is persisted via `FabCornerProvider` and synced across devices via `PrefsSync`. Uses the [`useCornerDrag`](src/hooks/useCornerDrag.js) hook, which is reusable on any element.
+- **`MenuPanel`** ([src/patterns/MenuPanel.jsx](src/patterns/MenuPanel.jsx)) — the popover the FAB opens. Composes `AppearanceRow` (theme + font size), `AccountRow` (profile + settings + sign out), `DeckDemoItem`, `DevBadgeItem`, `AboutRow`. Add your tool's menu entries here.
+- **`Deck`** + **`Slide`** ([src/blocks/Deck.jsx](src/blocks/Deck.jsx)) — horizontal, snap-scrolling deck container with responsive column spans. See [`DeckDemo`](src/pages/DeckDemo.jsx) for a live example.
+
+---
+
 ## Supabase setup
 
 Create a project at https://supabase.com (free tier — 50k MAU / 500MB Postgres).
 
 ### 1. Configure email OTP (6-digit code, not magic-link)
 
-Loopy uses `signInWithOtp` + `verifyOtp` with `type: 'email'`. The default Supabase email template uses a `ConfirmationURL` — replace it with the OTP token.
+TOOLNAME uses `signInWithOtp` + `verifyOtp` with `type: 'email'`. The default Supabase email template uses a `ConfirmationURL` — replace it with the OTP token.
 
 - **Dashboard** → **Authentication** → **Email Templates** → **Magic Link**
 - Replace the body with something like:
   ```
-  Your Loopy login code is: {{ .Token }}
+  Your login code is: {{ .Token }}
   It expires in 60 minutes.
   ```
 - Save.
@@ -179,31 +213,19 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();
 ```
 
-That's it — sign up, check inbox for the code, paste it into the popup.
-
 ### 4. User preferences table (`user_data`)
 
-Backs the auto-sync layer. One row per user, with three independent JSONB
-columns:
+Backs the auto-sync layer in [PrefsSync.jsx](src/providers/PrefsSync.jsx). One row per user, with a single JSONB `data` column carrying the small prefs blob (`theme`, `fontSize`, `fabCorner`, `updatedAt`).
 
-- `data` — the small prefs blob (`theme`, `fontSize`, `fabCorner`, `updatedAt`).
-- `aem_domains` — the AEM Jump domain list (array of normalized entries).
-- `tracked_hostnames` — the visit-capture rule set (JSONB **object keyed by pattern**, `{ [pattern]: { id, mode } }`; see the [Tracked hostnames](#tracked-hostnames) section).
-
-Splitting keeps the payloads legible in the SQL editor and lets us
-promote any of them to a real column (indexable, queryable) later
-without touching the others. All three columns are still written together
-in a single upsert from the app.
+Add more JSONB columns as your tool grows (e.g. a synced list, a rules object). Keep each column's normalizer isolated so any single column can be promoted to a real table later without touching the others — the loopy branch does exactly that with three columns.
 
 In **SQL Editor**, run:
 
 ```sql
 create table public.user_data (
-  id                uuid        primary key references auth.users(id) on delete cascade,
-  data              jsonb       not null default '{}'::jsonb,
-  aem_domains       jsonb       not null default '[]'::jsonb,
-  tracked_hostnames jsonb       not null default '{}'::jsonb,
-  updated_at        timestamptz not null default now()
+  id          uuid        primary key references auth.users(id) on delete cascade,
+  data        jsonb       not null default '{}'::jsonb,
+  updated_at  timestamptz not null default now()
 );
 
 alter table public.user_data enable row level security;
@@ -213,211 +235,21 @@ create policy "user_data self-insert" on public.user_data for insert with check 
 create policy "user_data self-update" on public.user_data for update using (auth.uid() = id) with check (auth.uid() = id);
 ```
 
-Row-scoped RLS covers all columns automatically; no per-column policy is
-needed. No trigger either — the app upserts on first change, so rows only
-exist for users who have actually signed in and touched a pref, added a
-domain, or added a tracked-host rule.
+Row-scoped RLS covers all columns automatically. No trigger needed — the app upserts on first change, so rows only exist for users who have actually signed in and touched a pref.
 
-**Migration for `tracked_hostnames`** — single idempotent snippet that safely upgrades any prior state: adds the column if missing (created with the object default), swaps the default to `'{}'::jsonb` if the column already existed with the earlier array default, and converts any legacy array-shaped rows to the object shape. Re-runnable at any time.
+**Auto-sync behavior** (see [src/providers/PrefsSync.jsx](src/providers/PrefsSync.jsx)):
 
-```sql
-alter table public.user_data
-  add column if not exists tracked_hostnames jsonb not null default '{}'::jsonb;
+- **On sign-in** the app fetches the row and applies it via the provider setters (remote wins). If there's no cloud row yet, the current local values become the sync baseline.
+- **On any local change** (theme toggle, +/- font size, FAB corner drag) the app upserts after a 500ms debounce (local wins during the session). Rapid clicks coalesce into a single request.
 
-alter table public.user_data
-  alter column tracked_hostnames set default '{}'::jsonb;
+Two guards prevent ping-pong: an "applying remote" flag skips the auto-push that would otherwise fire from the setter calls during a pull, and a `lastSynced` ref short-circuits the push effect when the current values already match the cloud.
 
-update public.user_data
-set tracked_hostnames = '{}'::jsonb,
-    updated_at        = now()
-where jsonb_typeof(tracked_hostnames) = 'array';
-```
-
-The client normalizer accepts both array and object shapes on read, so this migration is technically optional for existing rows (an array row would get overwritten as `{}` on next push), but running it makes the DB canonical immediately.
-
-**Migration (only if you created `user_data` before the aem_domains split)** — adds
-that column, backfills from the old nested key, then strips the key:
-
-```sql
-alter table public.user_data
-  add column if not exists aem_domains jsonb not null default '[]'::jsonb;
-
-update public.user_data
-set aem_domains = coalesce(data -> 'aemDomains', '[]'::jsonb),
-    data        = data - 'aemDomains',
-    updated_at  = now()
-where data ? 'aemDomains';
-```
-
-**Auto-sync behavior** (see `src/providers/PrefsSync.jsx`):
-
-- **On sign-in** the app fetches the row (`data` + `aem_domains` + `tracked_hostnames`)
-  and applies each column via its own provider setters (remote wins). If
-  there's no cloud row yet, the current local values become the sync baseline.
-- **On any local change** (theme toggle, +/- font size, FAB corner drag,
-  AEM domain add/remove, tracked-host rule edit) the app upserts all three
-  columns together after a 500ms debounce (local wins during the session).
-  Rapid clicks coalesce into a single request.
-
-Two guards prevent ping-pong: an "applying remote" flag skips the auto-push
-that would otherwise fire from the setter calls during a pull, and a
-`lastSynced` ref short-circuits the push effect when the current values
-already match the cloud.
-
-### 5. Visited URLs table (`user_visits`)
-
-Backs the [Visited URLs page](src/pages/VisitedUrls.jsx). One row per
-`(user_id, domain)` pair, `paths` is a **jsonb object keyed by path**
-(the path string is the key; the value carries the per-visit metadata).
-Splitting by domain keeps each upsert small — a single new visit
-uploads only the one domain's row, not the whole history — and lets a
-"clear this domain" action drop a single row. Storing paths in an
-object (rather than an array) eliminates duplicates at the
-data-structure level and makes cross-device merges an O(1) key lookup
-instead of a scan.
-
-In **SQL Editor**, run:
-
-```sql
-create table public.user_visits (
-  user_id     uuid        not null references auth.users(id) on delete cascade,
-  domain      text        not null,
-  paths       jsonb       not null default '{}'::jsonb,
-  updated_at  timestamptz not null default now(),
-  primary key (user_id, domain)
-);
-
-alter table public.user_visits enable row level security;
-
-create policy "user_visits self-read"
-  on public.user_visits for select using (auth.uid() = user_id);
-create policy "user_visits self-insert"
-  on public.user_visits for insert with check (auth.uid() = user_id);
-create policy "user_visits self-update"
-  on public.user_visits for update
-  using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "user_visits self-delete"
-  on public.user_visits for delete using (auth.uid() = user_id);
-
-create index if not exists user_visits_user_domain_idx
-  on public.user_visits (user_id, domain);
-
--- Cap per-row footprint. Client also enforces this before upsert.
--- Matches MAX_PATHS_PER_DOMAIN in src/lib/visitedUrls.js.
---
--- Implemented as a trigger, not a CHECK constraint: jsonb_object_keys
--- is set-returning and can't be used inline in a CHECK expression.
-create or replace function public.enforce_user_visits_paths_cap()
-returns trigger language plpgsql as $$
-begin
-  if jsonb_typeof(new.paths) <> 'object' then
-    raise exception 'user_visits.paths must be a jsonb object (got %)',
-      jsonb_typeof(new.paths);
-  end if;
-  if (select count(*) from jsonb_object_keys(new.paths)) > 200 then
-    raise exception 'user_visits.paths exceeds 200 keys';
-  end if;
-  return new;
-end;
-$$;
-
-drop trigger if exists user_visits_paths_cap_trg on public.user_visits;
-create trigger user_visits_paths_cap_trg
-  before insert or update on public.user_visits
-  for each row execute function public.enforce_user_visits_paths_cap();
-```
-
-**Migration from the legacy array shape** — if the table was created
-with the earlier `paths jsonb default '[]'` layout and the
-`user_visits_paths_cap` CHECK constraint, the cleanest cutover is to
-drop existing rows (the extension repopulates from live captures) and
-swap the constraint for the trigger above:
-
-```sql
-truncate public.user_visits;
-
-alter table public.user_visits
-  drop constraint if exists user_visits_paths_cap;
-
-alter table public.user_visits
-  alter column paths set default '{}'::jsonb;
-
--- Then re-run the create-or-replace function + create-trigger block
--- from the setup SQL above.
-```
-
-The extension performs a matching one-shot local wipe on the next SW
-boot (keyed by `loopy.visitsSchemaVersion === 2` in
-`chrome.storage.local`), so no client-side migration code is needed —
-old array-shaped payloads are simply discarded and the new object
-shape is rebuilt from fresh captures.
-
-**`domain`** stores the hostname (lowercased, e.g. `qa-webauthor.np.nortonlifelock.com`) so it matches what `new URL(url).hostname` returns and what we test against the [tracked hostnames](#tracked-hostnames) rule set.
-
-**`paths`** shape — an object keyed by the path string (see [`src/lib/visitedUrls.js`](src/lib/visitedUrls.js)):
-
-```jsonc
-{
-  "/editor.html/content/norton/…?search": {
-    "title": "Editor - Norton Home",
-    "matchedDomainId": "d_abc123",
-    "firstVisitedAt": "2026-07-03T20:00:00Z",
-    "lastVisitedAt":  "2026-07-03T20:15:00Z",
-    "visitCount": 3
-  },
-  "/another/page": { … }
-}
-```
-
-**Capture flow** (extension only; the web build has no `chrome.tabs`):
-
-1. `background.js` subscribes to `chrome.webNavigation.onCompleted` and `chrome.webNavigation.onHistoryStateUpdated` (with `chrome.tabs.onUpdated` as a safety-net) so it sees the real URL — including SPA `pushState` navigations that never touch `chrome.tabs.url`.
-2. It reads the [tracked-hostnames](#tracked-hostnames) rule list from `chrome.storage.local` (cached in worker memory as a compiled `{ includes, excludes }` regex set; invalidated via `chrome.storage.onChanged` when the list changes) and calls `matchTabToTrackedHost(url, rules)`.
-3. On a matching hostname (at least one include hit and no exclude hit), it merges the visit into the domain's bucket in `loopy.visitedByDomain` — dedup is an O(1) `paths[path]` lookup, bumps `visitCount` + `lastVisitedAt`, evicts the oldest when the bucket exceeds 200 keys.
-4. `VisitedUrlsProvider` mirrors the same key via `chrome.storage.onChanged`, so an open popup reflects background writes live.
-5. Sync to Supabase is owned by the service worker (`chrome.alarms`-driven: a ~1s debounced push after each capture, plus a 5-minute periodic heartbeat). Each dirty domain goes through a per-domain **compare-and-swap** (`upsertDomainWithMerge`): read the current row, union its paths object with local via `mergePathObjects`, and write back conditionally on the row's `updated_at`. Two devices simultaneously adding different paths to the same domain converge to a row containing both, with at most one retry.
-
-Fragments (`#…`) are stripped before storage — they're UI state (editor panel, scroll target) and would spam the list with near-duplicates.
-
-The AEM domain list is **not** consulted for capture. It stays exclusively behind the AEM Jump feature; users who want a bare hostname captured (without also configuring a full AEM Jump entry) add it as a tracked-host rule instead. The Visited URLs page still uses the AEM list opportunistically to give recognized hostnames a nicer label in the section header, but a match there isn't required for capture.
-
-## Tracked hostnames
-
-Capture is governed by an explicit rule set stored in `chrome.storage.local` under `loopy.trackedHostnames` and mirrored to `user_data.tracked_hostnames`. The rule set is a **JSONB object keyed by the (canonicalized) pattern**; each value carries the rule's `id` and `mode`:
-
-```jsonc
-{
-  "*.norton.*":    { "id": "h_abc", "mode": "include" },
-  "ping.norton.*": { "id": "h_def", "mode": "exclude" }
-}
-```
-
-Storing rules keyed by pattern is the same trick as the [`user_visits.paths`](src/lib/visitedUrls.js) refactor: duplicates are impossible by construction, cross-device merges collapse to `{ ...remote, ...local }`, and same-pattern-both-modes (which would always skip and is nonsensical) is blocked at the storage layer. The `id` field survives inside each value because `user_visits.paths[*].matchedDomainId` references it — editing a pattern in the UI keeps the same `id` so previously-captured visits stay linked to the (renamed) rule.
-
-`mode` is `include` or `exclude`. A hostname is captured when it matches **at least one include** rule and **no exclude** rule. An empty include set disables capture entirely.
-
-**Wildcard syntax**: patterns are simple globs with `*` matching one or more non-`.` characters — i.e. exactly one DNS label. Patterns are case-insensitive and anchored to the full hostname.
-
-| Pattern            | `lifelock.norton.com` | `norton.com` | `ping.norton.com` | `deep.foo.norton.com` |
-| ------------------ | :-------------------: | :----------: | :---------------: | :-------------------: |
-| `*.norton.*`       | match                 | —            | match             | —                     |
-| `norton.*`         | —                     | match        | —                 | —                     |
-| `*.*.norton.*`     | —                     | —            | —                 | match                 |
-
-**Managing rules**: open the popup, go to **Settings → Tracked hosts**. The page has an inline **Test a hostname** box (paste a hostname or full URL to see whether the current rules would capture it), and an **Import from AEM domains** button that seeds one exact-match include rule per unique hostname in your AEM Jump list — the fast onboarding path for users who upgrade from a build where capture was AEM-driven.
-
-The editor keeps a small **draft list** of rows in local state so that partially-typed patterns can exist as blank rows without polluting the persisted object. Only rows whose pattern passes the normalizer (`canonicalizePattern` + `isValidPattern`) get committed to the store on each edit. Blank rows survive until you either finish typing or delete them.
-
-Not supported in v1: `**` (multi-label wildcards) or full regex. The single-`*` glob covers the current use case; extend later if needed.
-
-**Legacy array shape**: the module's normalizer (`normalizeTrackedHostnames`) still accepts the previous `[{ id, pattern, mode }]` array form and upgrades it to the object shape on read. Any local storage or server row that predates the object cutover will be silently normalized on next load.
-
-### 6. Dev auto-login (optional)
+### 5. Dev auto-login (optional)
 
 Skip the OTP UI during development. Uses Supabase's built-in **Test OTP** feature, so no fake accounts or mocked sessions — it's the real OTP flow against a whitelisted email that Supabase accepts a static code for.
 
-1. **Dashboard** → **Authentication** → **Advanced Settings** → **Test OTPs**. Add a row, e.g. `dev@example.com` → `123456`. Save. (Supabase will *not* send an email to this address; `verifyOtp` just accepts the static code.)
-2. Create the account once: run the app, enter the test email in the sign-in form, then enter the static code. This inserts the user in `auth.users` and fires the `on_auth_user_created` trigger, giving you a `profiles` row to develop against.
+1. **Dashboard** → **Authentication** → **Advanced Settings** → **Test OTPs**. Add a row, e.g. `dev@example.com` → `123456`. Save.
+2. Create the account once: run the app, enter the test email in the sign-in form, then enter the static code. This inserts the user in `auth.users` and fires the `on_auth_user_created` trigger, giving you a `profiles` row.
 3. Copy `.env` → `.env.local` (gitignored) and add:
    ```
    VITE_DEV_AUTOLOGIN_EMAIL=dev@example.com
@@ -425,9 +257,7 @@ Skip the OTP UI during development. Uses Supabase's built-in **Test OTP** featur
    ```
 4. Restart `npm run dev` / `npm run dev:ext`. Next reload you land straight on the Home page. A small **Dev** pill appears in the header so it's obvious the bypass is active.
 
-Only active in dev builds. `import.meta.env.DEV` is statically `false` in `npm run build` / `npm run build:web`, so the whole branch is tree-shaken out of `dist/` and `dist-web/` — the env vars can't ship to production even if you leave them in `.env.local`.
-
-To disable, remove the two vars from `.env.local` (or delete `.env.local`) and restart the dev server.
+Only active in dev builds. `import.meta.env.DEV` is statically `false` in `npm run build` / `npm run build:web`, so the whole branch is tree-shaken out of `dist/` and `dist-web/`.
 
 ---
 
@@ -435,45 +265,25 @@ To disable, remove the two vars from `.env.local` (or delete `.env.local`) and r
 
 The manifest declares:
 
-- `activeTab` — access to the current tab's `url` / `title` when the user invokes the extension. No permission prompt.
-- `storage` — for `chrome.storage.local` (session persistence).
-- `tabs` — used by [`background.js`](background.js) to read `tab.url` and `tab.title` from `chrome.tabs.query`. Prompts the user on first install because the browser considers `tab.url` sensitive across all tabs.
-- `webNavigation` — used by [`background.js`](background.js) to record visits whose hostname matches the user's AEM domain list. `chrome.webNavigation.onCompleted` and `chrome.webNavigation.onHistoryStateUpdated` fire with the *actual* navigated URL (including SPA `pushState` updates), unlike `chrome.tabs.onUpdated` which only exposes the last committed HTTP navigation. AEM's authoring UI rewrites the address bar via `pushState` — without `webNavigation`, we'd miss almost every intra-authoring navigation.
-- `scripting` — used by [`src/lib/activeTab.js`](src/lib/activeTab.js) to inject a one-line `() => window.location.href` into the active tab as a fallback when `tab.url` is a stale bare origin. Same pushState problem, but from the popup's side: the AEM Jump input needs the URL the user actually sees, and `tabs.query` reports the pre-pushState URL.
+- `storage` — for `chrome.storage.local` (session persistence, prefs).
 - `host_permissions: ["https://*.supabase.co/*"]` — required for the popup to call Supabase's Auth and REST endpoints.
 
-Add more later in [`manifest.json`](manifest.json) as features land.
-
----
-
-## What's intentionally missing (TODO)
-
-- Real icons — the extension currently uses Chrome's default puzzle-piece. Add `icons/16.png`, `32.png`, `48.png`, `128.png` in `public/icons/` and register them in `manifest.json` under `icons` and `action.default_icon`.
-- Options page (`options_page`) and content scripts.
-- Phone/SMS auth — not free on Supabase (requires paid Twilio-style provider).
+Add more as your tool needs them (`activeTab`, `tabs`, `scripting`, `webNavigation`, `alarms`, etc.) in [manifest.json](manifest.json). See the [`tool/loopy`](../../tree/tool/loopy) branch for a full-featured example.
 
 ---
 
 ## CI / GitHub Pages
 
-- **Workflow**: [`.github/workflows/deploy-loopy-pages.yml`](.github/workflows/deploy-loopy-pages.yml)
-- **Trigger**: push to `tool/loopy` (or manual `workflow_dispatch` from the Actions tab)
-- **Live URL**: https://ppeou-gendigital.github.io/tools/loopy/
-- **Build**: `npm run build:web` → `dist-web/loopy/` (nested so the uploaded artifact serves at `/tools/loopy/`)
+- **Workflow**: [`.github/workflows/deploy-TOOLNAME-pages.yml`](.github/workflows/deploy-TOOLNAME-pages.yml)
+- **Trigger**: push to `tool/TOOLNAME` (or manual `workflow_dispatch` from the Actions tab)
+- **Live URL**: `https://<user>.github.io/tools/TOOLNAME/`
+- **Build**: `npm run build:web` → `dist-web/TOOLNAME/` (nested so the uploaded artifact serves at `/tools/TOOLNAME/`)
 - **Repo secrets required** (Settings → Secrets and variables → Actions):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
 - **Repo Pages settings**: Settings → Pages → Source = **GitHub Actions**
 
-### Convention for other tool branches
-
-Each `tool/*` branch owns its own workflow at `.github/workflows/deploy-<tool>-pages.yml`, triggered only on pushes to its own branch. Branches never share workflow files — Actions evaluates workflows per-branch off the pushed commit.
-
-For a hypothetical new tool `tool/foo`, mirror the loopy setup:
-
-- Vite prod web build: `base: '/tools/foo/'`, `outDir: 'dist-web/foo'`
-- Workflow: `.github/workflows/deploy-foo-pages.yml` with `on: push: branches: [tool/foo]`
-- Live URL: `https://ppeou-gendigital.github.io/tools/foo/`
+`scripts/init-tool.mjs` renames both this workflow file and the release workflow to match your tool's name, plus updates the branch triggers.
 
 ### One Pages site per repo — important
 
@@ -482,11 +292,5 @@ A GitHub repo publishes exactly **one** Pages site. Every deploy to the `github-
 If two tools need Pages simultaneously, options in order of preference:
 
 1. Give the second tool its own dedicated GitHub repo (recommended long-term).
-2. Host the second tool on Vercel / Cloudflare Pages / Netlify (Supabase-backed apps work identically there).
+2. Host the second tool on Vercel / Cloudflare Pages / Netlify.
 3. Build a coordinator workflow that combines all tools' builds into one artifact (complex — not recommended unless the tool count grows).
-
----
-
-## This branch
-
-`loopy` lives on the branch `tool/loopy` in the [`tools`](../tools) meta-repo. Do **not** merge this branch into `main` or any other project branch — see the meta-repo's README for the branch-per-project rules.

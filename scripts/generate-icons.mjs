@@ -1,19 +1,13 @@
 #!/usr/bin/env node
 //
-// Rasterize icons/loopy.svg into the Chrome extension PNG sizes using
-// @resvg/resvg-js. This replaces an earlier `qlmanage`-based script that
-// silently produced garbage icons in two different ways:
-//   1. If the SVG had any XML issue, qlmanage rasterized the parser's
-//      error page instead.
-//   2. Even with a valid SVG, qlmanage renders SVGs as "document
-//      thumbnails" — small content on a white paper background — so the
-//      violet circle ended up in a tiny corner of a mostly-white canvas.
+// Rasterize icons/tool.svg into the Chrome extension PNG sizes using
+// @resvg/resvg-js. resvg reads `width`/`height`/`viewBox` faithfully and
+// produces true transparent PNGs at any target size, which is exactly
+// what Chrome extension icons need.
 //
-// resvg reads `width`/`height`/`viewBox` faithfully and produces true
-// transparent PNGs at any target size, which is exactly what Chrome
-// extension icons need.
+// Replace `icons/tool.svg` with your own SVG (keep the file name or
+// update SRC below), then run:
 //
-// Usage:
 //   npm run icons
 //   node scripts/generate-icons.mjs        # same
 //
@@ -26,7 +20,7 @@ import { Resvg } from '@resvg/resvg-js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
-const SRC = resolve(ROOT, 'icons/loopy.svg')
+const SRC = resolve(ROOT, 'icons/tool.svg')
 
 const SIZES = [16, 32, 48, 128]
 

@@ -1,8 +1,8 @@
 {
-  "name": "loopy",
+  "name": "toolname",
   "version": "0.1.0",
   "private": true,
-  "description": "Chrome extension + web app: React (ES6) + Supabase + SCSS",
+  "description": "Chrome extension + web app template: React (ES6) + Supabase + SCSS",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,8 @@
     "build:web": "vite build --mode web",
     "preview": "vite preview",
     "lint": "eslint \"src/**/*.{js,jsx}\"",
-    "icons": "node scripts/generate-icons.mjs"
+    "icons": "node scripts/generate-icons.mjs",
+    "init": "node scripts/init-tool.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.109.0",

@@ -8,28 +8,15 @@ import {
 
 const NavigationContext = createContext(null)
 
-const ROUTES = [
-  'home',
-  'profile',
-  'deck-test',
-  'aem-jump',
-  'visited-urls',
-  'settings',
-  'settings-aem-environments',
-  'settings-tracked-hosts',
-]
-const DEFAULT_ROUTE = 'aem-jump'
+const ROUTES = ['home', 'profile', 'deck-demo', 'settings']
+const DEFAULT_ROUTE = 'home'
 
 // Human labels used by page headers to render dynamic "back" text.
 const ROUTE_LABELS = {
   home: 'Home',
   profile: 'Profile',
-  'deck-test': 'Deck test',
-  'aem-jump': 'AEM Jump',
-  'visited-urls': 'Visited URLs',
+  'deck-demo': 'Deck demo',
   settings: 'Settings',
-  'settings-aem-environments': 'AEM Environments',
-  'settings-tracked-hosts': 'Tracked hosts',
 }
 
 // Logical parent for each route. Used when the history stack is empty
@@ -39,12 +26,8 @@ const ROUTE_LABELS = {
 const PARENT_ROUTE = {
   home: null,
   profile: 'home',
-  'deck-test': 'home',
-  'aem-jump': 'home',
-  'visited-urls': 'home',
+  'deck-demo': 'home',
   settings: 'home',
-  'settings-aem-environments': 'settings',
-  'settings-tracked-hosts': 'settings',
 }
 
 // Cap on stored history depth. This is a menu-driven single-window app; a
@@ -63,12 +46,8 @@ export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
   const navigate = useCallback((next) => {
     if (!ROUTES.includes(next)) return
     setStack((prev) => {
-      // No-op if we're already on that route (prevents the same page from
-      // being stacked twice when a menu item is clicked from itself).
       if (prev[prev.length - 1] === next) return prev
       const pushed = [...prev, next]
-      // Trim from the bottom once we exceed HISTORY_LIMIT so the newest
-      // entries always survive.
       return pushed.length > HISTORY_LIMIT
         ? pushed.slice(pushed.length - HISTORY_LIMIT)
         : pushed
@@ -80,10 +59,6 @@ export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
       if (prev.length > 1) {
         return prev.slice(0, -1)
       }
-      // History is empty (deep-link entry). Substitute the current route
-      // with its logical parent so the back button still does something
-      // meaningful. If the current route has no parent (e.g. Home), stay
-      // put — the caller is expected to hide the back button there.
       const current = prev[0]
       const parent = PARENT_ROUTE[current]
       return parent ? [parent] : prev
@@ -92,8 +67,6 @@ export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
 
   const value = useMemo(() => {
     const route = stack[stack.length - 1]
-    // Prefer the actual previous entry; fall back to the route's parent so
-    // deep-linked pages still render a "back" affordance to their parent.
     const previousRoute =
       stack.length > 1 ? stack[stack.length - 2] : PARENT_ROUTE[route] ?? null
 
@@ -106,12 +79,8 @@ export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
       goBack,
       goHome: () => navigate('home'),
       goProfile: () => navigate('profile'),
-      goDeckTest: () => navigate('deck-test'),
-      goAemJump: () => navigate('aem-jump'),
-      goVisitedUrls: () => navigate('visited-urls'),
+      goDeckDemo: () => navigate('deck-demo'),
       goSettings: () => navigate('settings'),
-      goSettingsAemEnvironments: () => navigate('settings-aem-environments'),
-      goSettingsTrackedHosts: () => navigate('settings-tracked-hosts'),
     }
   }, [stack, navigate, goBack])
 

@@ -1,19 +1,18 @@
-import { ArrowLeft, ChevronRight, Filter, Server } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { useNavigation } from '@/providers/NavigationProvider'
 import styles from './Settings.module.scss'
 
 // Settings page-group landing. Renders a card list of sub-pages so the
-// group can grow (profile prefs, sync controls, etc.) without adding
-// depth to the FAB menu. Each sub-page owns its own back button which
-// returns here rather than jumping straight home.
+// group can grow without adding depth to the FAB menu. Each sub-page
+// owns its own back button which returns here rather than jumping
+// straight home.
+//
+// Template: no sub-pages ship out of the box. Add your own by importing
+// an icon and calling `<SettingsCard ... />` below (and register the
+// route in NavigationProvider).
 export function Settings() {
-  const {
-    goBack,
-    previousRouteLabel,
-    goSettingsAemEnvironments,
-    goSettingsTrackedHosts,
-  } = useNavigation()
+  const { goBack, previousRouteLabel } = useNavigation()
 
   return (
     <div className={styles.page}>
@@ -29,28 +28,25 @@ export function Settings() {
         </Button>
         <div className={styles.headerText}>
           <h1 className={styles.title}>Settings</h1>
-          <p className={styles.subtitle}>Configure and personalize Loopy.</p>
+          <p className={styles.subtitle}>Add sub-pages here as your tool grows.</p>
         </div>
       </div>
 
       <ul className={styles.cards}>
+        {/* Example:
         <SettingsCard
           icon={Server}
-          title="AEM Environments"
-          description="Manage the AEM domains that power the AEM Jump page."
-          onClick={goSettingsAemEnvironments}
+          title="My section"
+          description="Describe the sub-page."
+          onClick={() => navigate('my-route')}
         />
-        <SettingsCard
-          icon={Filter}
-          title="Tracked hosts"
-          description="Wildcard rules that decide which tabs get recorded to your visit history."
-          onClick={goSettingsTrackedHosts}
-        />
+        */}
       </ul>
     </div>
   )
 }
 
+// eslint-disable-next-line no-unused-vars
 function SettingsCard({ icon: Icon, title, description, onClick }) {
   return (
     <li className={styles.cardItem}>
@@ -62,7 +58,6 @@ function SettingsCard({ icon: Icon, title, description, onClick }) {
           <span className={styles.cardTitle}>{title}</span>
           <span className={styles.cardDescription}>{description}</span>
         </span>
-        <ChevronRight size={16} aria-hidden="true" className={styles.cardChevron} />
       </button>
     </li>
   )

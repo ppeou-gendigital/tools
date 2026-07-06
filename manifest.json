@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Loopy",
+  "name": "TOOLNAME",
   "version": "0.1.0",
-  "description": "Loopy — React + Supabase Chrome extension",
+  "description": "TOOLNAME — React + Supabase Chrome extension",
   "action": {
-    "default_title": "Loopy",
+    "default_title": "TOOLNAME",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",
@@ -23,13 +23,6 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "permissions": [
-    "activeTab",
-    "alarms",
-    "storage",
-    "tabs",
-    "scripting",
-    "webNavigation"
-  ],
+  "permissions": ["storage"],
   "host_permissions": ["https://*.supabase.co/*"]
 }

@@ -14,6 +14,6 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     // chrome-extension:// popup anyway.
     detectSessionInUrl: false,
     flowType: 'pkce',
-    storageKey: 'loopy.auth',
+    storageKey: 'toolname.auth',
   },
 })

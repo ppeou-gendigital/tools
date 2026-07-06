@@ -13,12 +13,12 @@ export default defineConfig(({ command, mode }) => {
   const isBuild = command === 'build'
 
   return {
-    // Web PROD build is served from
-    // https://ppeou-gendigital.github.io/tools/loopy/, so every asset URL
-    // must be prefixed with the repo-and-tool subpath. Dev server
-    // (`npm run dev`) keeps '/' so http://localhost:5173/ works as before,
-    // and the extension build always resolves at the extension root.
-    base: !isExtension && isBuild ? '/tools/loopy/' : '/',
+    // Web PROD build is intended to be served from
+    // https://<user>.github.io/tools/TOOLNAME/, so every asset URL must
+    // be prefixed with the repo-and-tool subpath. Dev server (`npm run
+    // dev`) keeps '/' so http://localhost:5173/ works, and the extension
+    // build always resolves at the extension root.
+    base: !isExtension && isBuild ? '/tools/TOOLNAME/' : '/',
     plugins: [
       react(),
       ...(isExtension ? [crx({ manifest })] : []),
@@ -31,7 +31,7 @@ export default defineConfig(({ command, mode }) => {
     css: {
       preprocessorOptions: {
         scss: {
-          // Make `@use 'styles/mixins'` work anywhere in the tree.
+          // Make `@use 'tokens/mixins'` work anywhere in the tree.
           loadPaths: [resolve(__dirname, 'src')],
         },
       },
@@ -48,9 +48,9 @@ export default defineConfig(({ command, mode }) => {
         }
       : {
           // Nested so the uploaded Pages artifact serves at
-          // /tools/loopy/ (matching `base` above). The workflow uploads
+          // /tools/TOOLNAME/ (matching `base` above). The workflow uploads
           // the parent `dist-web/` folder as the site.
-          outDir: 'dist-web/loopy',
+          outDir: 'dist-web/TOOLNAME',
           emptyOutDir: true,
           rollupOptions: {
             input: {

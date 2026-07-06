@@ -3,11 +3,11 @@ import { Button } from '@/molecules/Button'
 import { Deck, Slide } from '@/blocks/Deck'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { cx } from '@/lib/cx'
-import styles from './DeckTest.module.scss'
+import styles from './DeckDemo.module.scss'
 
 const SLIDES = [1, 2, 3, 4, 5]
 
-export function DeckTest() {
+export function DeckDemo() {
   const { goBack, previousRouteLabel } = useNavigation()
   return (
     <div className={styles.page}>
@@ -17,7 +17,7 @@ export function DeckTest() {
           {previousRouteLabel ?? 'Back'}
         </Button>
         <div className={styles.headerText}>
-          <h1 className={styles.title}>Deck test</h1>
+          <h1 className={styles.title}>Deck demo</h1>
           <p className={styles.subtitle}>SM: 10 cols / MD: 5 / LG: 4 / XL: 3</p>
         </div>
       </header>
