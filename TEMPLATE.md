@@ -23,9 +23,9 @@ The renamer touches:
 - `manifest.json` — `name`, `description`, `action.default_title`
 - `vite.config.js` — `base: '/tools/foo/'` and `outDir: 'dist-web/foo'`
 - `index.html` / `popup.html` — `<title>`
-- `.github/workflows/deploy-TOOLNAME-pages.yml` → `deploy-foo-pages.yml` (updates branch trigger to `tool/foo`)
-- `.github/workflows/release-TOOLNAME-extension.yml` → `release-foo-extension.yml` (updates tag prefix to `foo-v*`)
-- Any remaining `TOOLNAME` / `toolname` in source files (storage keys, aria labels, console prefixes, About row name)
+- `.github/workflows/deploy-acceso-pages.yml` → `deploy-foo-pages.yml` (updates branch trigger to `tool/foo`)
+- `.github/workflows/release-acceso-extension.yml` → `release-foo-extension.yml` (updates tag prefix to `foo-v*`)
+- Any remaining `acceso` / `acceso` in source files (storage keys, aria labels, console prefixes, About row name)
 
 Verify with `git diff` before committing.
 

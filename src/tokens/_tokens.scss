@@ -74,11 +74,11 @@
   --fab-corner-offset: 1rem;
   --fab-gap: 0.5rem;
 
-  // FAB color. Violet 500/600 (Tailwind palette). The saturation carries
+  // FAB color. Rose 500/600 (Tailwind palette). The saturation carries
   // across both light and dark shells so we intentionally do NOT override
   // these under [data-theme='dark'] — one source of truth for both modes.
-  --fab-bg: #8b5cf6;
-  --fab-bg-hover: #7c3aed;
+  --fab-bg: #f43f5e;
+  --fab-bg-hover: #e11d48;
   --fab-fg: #ffffff;
 
   // Layout breakpoints (exposed for JS / inline calculations). SCSS media

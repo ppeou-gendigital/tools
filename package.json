@@ -1,5 +1,5 @@
 {
-  "name": "toolname",
+  "name": "acceso",
   "version": "0.1.0",
   "private": true,
   "description": "Chrome extension + web app template: React (ES6) + Supabase + SCSS",

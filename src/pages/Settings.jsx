@@ -1,18 +1,24 @@
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, KeyRound } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { useAuth } from '@/providers/AuthProvider'
+import { useVault } from '@/providers/VaultProvider'
+import { labelForIdleTimeoutMs } from '@/lib/vaultIdleOptions'
 import styles from './Settings.module.scss'
 
 // Settings page-group landing. Renders a card list of sub-pages so the
 // group can grow without adding depth to the FAB menu. Each sub-page
 // owns its own back button which returns here rather than jumping
 // straight home.
-//
-// Template: no sub-pages ship out of the box. Add your own by importing
-// an icon and calling `<SettingsCard ... />` below (and register the
-// route in NavigationProvider).
 export function Settings() {
-  const { goBack, previousRouteLabel } = useNavigation()
+  const { goBack, previousRouteLabel, goVaultSettings } = useNavigation()
+  const { user } = useAuth()
+  const vault = useVault()
+
+  // Only show the Vault card once the user is signed in AND has set
+  // up a vault at least once — before that the settings would apply
+  // to nothing.
+  const showVaultCard = !!user && !vault.needsSetup && !vault.isLoading
 
   return (
     <div className={styles.page}>
@@ -28,25 +34,28 @@ export function Settings() {
         </Button>
         <div className={styles.headerText}>
           <h1 className={styles.title}>Settings</h1>
-          <p className={styles.subtitle}>Add sub-pages here as your tool grows.</p>
+          <p className={styles.subtitle}>Manage your tool preferences.</p>
         </div>
       </div>
 
       <ul className={styles.cards}>
-        {/* Example:
-        <SettingsCard
-          icon={Server}
-          title="My section"
-          description="Describe the sub-page."
-          onClick={() => navigate('my-route')}
-        />
-        */}
+        {showVaultCard && (
+          <SettingsCard
+            icon={KeyRound}
+            title="Vault"
+            description={
+              vault.idleTimeoutMs
+                ? `Auto-lock after ${labelForIdleTimeoutMs(vault.idleTimeoutMs)} of inactivity.`
+                : 'Auto-lock and passphrase settings.'
+            }
+            onClick={goVaultSettings}
+          />
+        )}
       </ul>
     </div>
   )
 }
 
-// eslint-disable-next-line no-unused-vars
 function SettingsCard({ icon: Icon, title, description, onClick }) {
   return (
     <li className={styles.cardItem}>

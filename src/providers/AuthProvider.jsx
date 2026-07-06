@@ -71,21 +71,32 @@ export function AuthProvider({ children }) {
         })
         if (verErr) throw verErr
 
-        console.info('[toolname] dev auto-login succeeded')
+        console.info('[acceso] dev auto-login succeeded')
       } catch (err) {
-        console.warn('[toolname] dev auto-login failed:', err?.message ?? err)
+        console.warn('[acceso] dev auto-login failed:', err?.message ?? err)
       }
     })()
   }, [loading, session])
 
   // Step 1 of the OTP flow: ask Supabase to email a 6-digit code.
-  const requestOtp = useCallback(async (email) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true },
-    })
-    if (error) throw error
-  }, [])
+  //
+  // `shouldCreateUser` decides whether an unknown email is created on the fly
+  // (sign-up) or rejected (log-in). `displayName` is forwarded as auth
+  // user_metadata so it's captured atomically at signup; the persistent copy
+  // in public.profiles is written by finalizeSignup() after verifyOtp().
+  const requestOtp = useCallback(
+    async (email, { shouldCreateUser = false, displayName } = {}) => {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser,
+          data: displayName ? { display_name: displayName } : undefined,
+        },
+      })
+      if (error) throw error
+    },
+    [],
+  )
 
   // Step 2: verify the code the user typed in.
   const verifyOtp = useCallback(async (email, token) => {
@@ -96,6 +107,23 @@ export function AuthProvider({ children }) {
     })
     if (error) throw error
     return data
+  }, [])
+
+  // Post-signup: write display_name into public.profiles. The
+  // handle_new_user() trigger already created the row on user insert; this
+  // upsert only fills in the display name. Best-effort — callers should
+  // swallow errors so a profiles-write failure doesn't block sign-in.
+  const finalizeSignup = useCallback(async (userSession, displayName) => {
+    if (!userSession?.user?.id || !displayName) return
+    const { error } = await supabase.from('profiles').upsert(
+      {
+        id: userSession.user.id,
+        display_name: displayName,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'id' },
+    )
+    if (error) throw error
   }, [])
 
   const signOut = useCallback(async () => {
@@ -110,9 +138,10 @@ export function AuthProvider({ children }) {
       loading,
       requestOtp,
       verifyOtp,
+      finalizeSignup,
       signOut,
     }),
-    [session, loading, requestOtp, verifyOtp, signOut],
+    [session, loading, requestOtp, verifyOtp, finalizeSignup, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -8,7 +8,16 @@ import {
 
 const NavigationContext = createContext(null)
 
-const ROUTES = ['home', 'profile', 'deck-demo', 'settings']
+const ROUTES = [
+  'home',
+  'profile',
+  'deck-demo',
+  'settings',
+  'vault-settings',
+  'credentials',
+  'credential-new',
+  'credential-edit',
+]
 const DEFAULT_ROUTE = 'home'
 
 // Human labels used by page headers to render dynamic "back" text.
@@ -17,6 +26,10 @@ const ROUTE_LABELS = {
   profile: 'Profile',
   'deck-demo': 'Deck demo',
   settings: 'Settings',
+  'vault-settings': 'Vault',
+  credentials: 'Credentials',
+  'credential-new': 'New credential',
+  'credential-edit': 'Edit credential',
 }
 
 // Logical parent for each route. Used when the history stack is empty
@@ -28,6 +41,10 @@ const PARENT_ROUTE = {
   profile: 'home',
   'deck-demo': 'home',
   settings: 'home',
+  'vault-settings': 'settings',
+  credentials: 'home',
+  'credential-new': 'credentials',
+  'credential-edit': 'credentials',
 }
 
 // Cap on stored history depth. This is a menu-driven single-window app; a
@@ -35,19 +52,29 @@ const PARENT_ROUTE = {
 // cases from menu-jumping loops.
 const HISTORY_LIMIT = 10
 
+// Each stack entry is `{ route, params }`. Params carry route-scoped
+// state that lives *inside* the nav stack rather than in a page-level
+// useState — that way `goBack` and forward-nav both restore the right
+// context (e.g. which credential is being edited) without the page
+// component having to hydrate itself from an external store.
+function makeEntry(route, params = {}) {
+  return { route, params: params ?? {} }
+}
+
 export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
-  // The top of the stack is the current route. `navigate` pushes, `goBack`
-  // pops. Rendering derives everything from this single source of truth so
-  // dev-tools can inspect the whole nav history in one place.
   const [stack, setStack] = useState(() => [
-    ROUTES.includes(initial) ? initial : DEFAULT_ROUTE,
+    makeEntry(ROUTES.includes(initial) ? initial : DEFAULT_ROUTE),
   ])
 
-  const navigate = useCallback((next) => {
+  const navigate = useCallback((next, params) => {
     if (!ROUTES.includes(next)) return
     setStack((prev) => {
-      if (prev[prev.length - 1] === next) return prev
-      const pushed = [...prev, next]
+      const top = prev[prev.length - 1]
+      const nextEntry = makeEntry(next, params)
+      if (top?.route === next && shallowEqual(top.params, nextEntry.params)) {
+        return prev
+      }
+      const pushed = [...prev, nextEntry]
       return pushed.length > HISTORY_LIMIT
         ? pushed.slice(pushed.length - HISTORY_LIMIT)
         : pushed
@@ -60,20 +87,25 @@ export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
         return prev.slice(0, -1)
       }
       const current = prev[0]
-      const parent = PARENT_ROUTE[current]
-      return parent ? [parent] : prev
+      const parent = PARENT_ROUTE[current.route]
+      return parent ? [makeEntry(parent)] : prev
     })
   }, [])
 
   const value = useMemo(() => {
-    const route = stack[stack.length - 1]
-    const previousRoute =
-      stack.length > 1 ? stack[stack.length - 2] : PARENT_ROUTE[route] ?? null
+    const current = stack[stack.length - 1]
+    const previous =
+      stack.length > 1
+        ? stack[stack.length - 2]
+        : PARENT_ROUTE[current.route]
+          ? makeEntry(PARENT_ROUTE[current.route])
+          : null
 
     return {
-      route,
-      previousRoute,
-      previousRouteLabel: previousRoute ? ROUTE_LABELS[previousRoute] : null,
+      route: current.route,
+      params: current.params,
+      previousRoute: previous?.route ?? null,
+      previousRouteLabel: previous ? ROUTE_LABELS[previous.route] : null,
       history: stack,
       navigate,
       goBack,
@@ -81,6 +113,11 @@ export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
       goProfile: () => navigate('profile'),
       goDeckDemo: () => navigate('deck-demo'),
       goSettings: () => navigate('settings'),
+      goVaultSettings: () => navigate('vault-settings'),
+      goCredentials: () => navigate('credentials'),
+      goCredentialNew: (extra) => navigate('credential-new', extra ?? undefined),
+      goCredentialEdit: (id, extra) =>
+        navigate('credential-edit', { id, ...(extra ?? {}) }),
     }
   }, [stack, navigate, goBack])
 
@@ -97,4 +134,16 @@ export function useNavigation() {
     throw new Error('useNavigation must be used inside <NavigationProvider>')
   }
   return ctx
+}
+
+function shallowEqual(a, b) {
+  if (a === b) return true
+  if (!a || !b) return !a && !b
+  const aKeys = Object.keys(a)
+  const bKeys = Object.keys(b)
+  if (aKeys.length !== bKeys.length) return false
+  for (const k of aKeys) {
+    if (a[k] !== b[k]) return false
+  }
+  return true
 }

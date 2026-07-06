@@ -5,7 +5,7 @@ import { useFabCorner } from '@/providers/FabCornerProvider'
 import { useFontSize } from '@/providers/FontSizeProvider'
 import { useTheme } from '@/providers/ThemeProvider'
 import { fetchUserData, saveUserData } from '@/lib/userDataApi'
-import { normalizeRemotePrefs } from '@/lib/prefs'
+import { mergePrefsIntoData, normalizeRemotePrefs } from '@/lib/prefs'
 
 // Wait this long after the last local change before firing a push.
 // Coalesces bursts (e.g. multiple font-size clicks) into one request.
@@ -103,7 +103,7 @@ export function PrefsSync() {
       } catch (err) {
         if (cancelled) return
         initialPulledForUserRef.current = null
-        console.warn('[toolname] prefs auto-pull failed:', err?.message ?? err)
+        console.warn('[acceso] prefs auto-pull failed:', err?.message ?? err)
       }
     })()
 
@@ -132,17 +132,21 @@ export function PrefsSync() {
     pushTimerRef.current = setTimeout(async () => {
       pushTimerRef.current = null
       try {
-        const nextData = {
+        // Merge into the cached remote blob so a prefs write doesn't
+        // clobber sibling keys we don't own (e.g. `vault` set by
+        // VaultProvider). Falls back to just the prefs shape if we
+        // don't have a cached row yet.
+        const cached = queryClient.getQueryData(['user_data', userId])
+        const nextData = mergePrefsIntoData(cached?.data, {
           theme: current.theme,
           fontSize: current.fontSize,
           fabCorner: current.fabCorner,
-          updatedAt: new Date().toISOString(),
-        }
+        })
         const row = await saveUserData(userId, { data: nextData })
         lastSyncedRef.current = current
         queryClient.setQueryData(['user_data', userId], row)
       } catch (err) {
-        console.warn('[toolname] prefs auto-push failed:', err?.message ?? err)
+        console.warn('[acceso] prefs auto-push failed:', err?.message ?? err)
       }
     }, PUSH_DEBOUNCE_MS)
 

@@ -45,3 +45,31 @@ export function normalizeRemotePrefs(remote) {
     fabCorner: normalizeFabCorner(remote?.fabCorner),
   }
 }
+
+// Extract the vault meta subtree from a `user_data.data` blob. Kept
+// separate from normalizeRemotePrefs so a vault write never has to
+// re-run the prefs normalizer, and vice versa. Returns null when no
+// vault has been set up yet.
+export function extractVaultMeta(data) {
+  const vault = data?.vault
+  if (!vault) return null
+  const { salt, iterations, verifier } = vault
+  if (typeof salt !== 'string' || typeof iterations !== 'number') return null
+  if (!verifier || typeof verifier.ciphertext !== 'string' || typeof verifier.iv !== 'string') {
+    return null
+  }
+  return { salt, iterations, verifier }
+}
+
+// Merge a fresh prefs blob into the existing `user_data.data`, keeping
+// any keys we don't own (currently: `vault`). Used by PrefsSync so
+// writing a theme change doesn't clobber the vault metadata.
+export function mergePrefsIntoData(existingData, nextPrefs) {
+  return {
+    ...(existingData ?? {}),
+    theme: nextPrefs.theme,
+    fontSize: nextPrefs.fontSize,
+    fabCorner: nextPrefs.fabCorner,
+    updatedAt: nextPrefs.updatedAt ?? new Date().toISOString(),
+  }
+}

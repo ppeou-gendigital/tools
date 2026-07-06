@@ -1,4 +1,4 @@
-# TOOLNAME
+# acceso
 
 A Chrome extension **and** web app in one codebase. React (ES6, no TypeScript) + Vite + SCSS modules, with Supabase email-OTP auth and light/dark theming.
 
@@ -78,7 +78,7 @@ Inspect:
 ## Project layout
 
 ```
-TOOLNAME/
+acceso/
 ├── manifest.json               # MV3 manifest (host permission for supabase.co)
 ├── background.js               # MV3 service worker (minimal stub)
 ├── index.html                  # web entry
@@ -158,7 +158,7 @@ Create a project at https://supabase.com (free tier — 50k MAU / 500MB Postgres
 
 ### 1. Configure email OTP (6-digit code, not magic-link)
 
-TOOLNAME uses `signInWithOtp` + `verifyOtp` with `type: 'email'`. The default Supabase email template uses a `ConfirmationURL` — replace it with the OTP token.
+acceso uses `signInWithOtp` + `verifyOtp` with `type: 'email'`. The default Supabase email template uses a `ConfirmationURL` — replace it with the OTP token.
 
 - **Dashboard** → **Authentication** → **Email Templates** → **Magic Link**
 - Replace the body with something like:
@@ -237,6 +237,8 @@ create policy "user_data self-update" on public.user_data for update using (auth
 
 Row-scoped RLS covers all columns automatically. No trigger needed — the app upserts on first change, so rows only exist for users who have actually signed in and touched a pref.
 
+The `data` blob also carries the vault metadata (`vault.salt`, `vault.iterations`, `vault.verifier`) that powers the app-wide E2EE vault — see [Vault (app-wide E2EE)](#vault-app-wide-e2ee) below.
+
 **Auto-sync behavior** (see [src/providers/PrefsSync.jsx](src/providers/PrefsSync.jsx)):
 
 - **On sign-in** the app fetches the row and applies it via the provider setters (remote wins). If there's no cloud row yet, the current local values become the sync baseline.
@@ -261,23 +263,118 @@ Only active in dev builds. `import.meta.env.DEV` is statically `false` in `npm r
 
 ---
 
+## Vault (app-wide E2EE)
+
+The vault is the app's **general-purpose end-to-end encryption layer** — one master passphrase per user, used by every feature that needs to store sensitive data. The passphrase never leaves the device. All ciphertext is AES-GCM 256 with a key derived from that passphrase via PBKDF2-SHA-256; the derived `CryptoKey` is non-extractable and lives only in memory.
+
+Because the derivation is deterministic (passphrase + per-user salt → same 256-bit key on every device), the vault works transparently across the Chrome extension and the web app — sign in, enter the passphrase once, decrypt in memory. The same key protects every feature-specific table without any per-feature key management.
+
+**Extending the vault** is straightforward: any new feature that needs E2EE storage adds its own Postgres table (schema is per-feature) with `ciphertext text` + `iv text` columns, protects it with the same self-RLS pattern, and calls `vault.encryptRecord(...)` / `vault.decryptRecord(...)` from [`VaultProvider`](src/providers/VaultProvider.jsx). No new passphrase, no new setup step, no new unlock flow — the existing overlay, idle-lock, and session cache all cover it for free.
+
+**Credentials** is the first consumer of the vault and doubles as a worked example (see below). Future features (secure notes, encrypted files, saved sessions, etc.) plug into the same primitives.
+
+> **Warning**: if you forget the master passphrase, every encrypted feature is unrecoverable. There is no reset — that is the point of E2EE. See [src/providers/VaultProvider.jsx](src/providers/VaultProvider.jsx) and [src/lib/vaultCrypto.js](src/lib/vaultCrypto.js).
+
+### 1. Vault metadata (rides on `user_data.data`)
+
+No dedicated table for vault meta — it piggybacks on the existing `user_data` row's `data` JSONB blob:
+
+```json
+{
+  "theme": "system",
+  "fontSize": 16,
+  "fabCorner": "bottom-right",
+  "vault": {
+    "salt": "<base64 16 bytes>",
+    "iterations": 310000,
+    "verifier": { "ciphertext": "<base64>", "iv": "<base64>" },
+    "idleTimeoutMs": 900000
+  }
+}
+```
+
+The `verifier` is a small known constant encrypted with the derived key. On unlock the app decrypts it and checks it matches, which is how we distinguish a wrong passphrase from a network error without ever storing the passphrase.
+
+### 2. First consumer: the `credentials` table + RLS
+
+Credentials is the reference implementation for a vault-backed feature. Its schema has one plaintext column (`display_name`, so the DB can sort and filter without unlocking) and one encrypted blob (`ciphertext` + `iv`) that holds everything sensitive.
+
+In **SQL Editor**, run:
+
+```sql
+create table public.credentials (
+  id            uuid        primary key default gen_random_uuid(),
+  user_id       uuid        not null references auth.users(id) on delete cascade,
+  display_name  text        not null,
+  ciphertext    text        not null,
+  iv            text        not null,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+create index credentials_user_updated_idx
+  on public.credentials (user_id, updated_at desc);
+
+alter table public.credentials enable row level security;
+
+create policy "credentials self-read"   on public.credentials for select using (auth.uid() = user_id);
+create policy "credentials self-insert" on public.credentials for insert with check (auth.uid() = user_id);
+create policy "credentials self-update" on public.credentials for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "credentials self-delete" on public.credentials for delete using (auth.uid() = user_id);
+```
+
+`ciphertext` and `iv` are base64. The encrypted plaintext is a JSON blob:
+
+```json
+{
+  "urlOrApp": "https://gmail.com",
+  "accounts": [{ "username": "...", "password": "..." }],
+  "notes": "..."
+}
+```
+
+Use this table as the template when you add another vault-backed feature: same `ciphertext` / `iv` columns, same self-RLS policies, whatever plaintext columns your feature needs for indexing.
+
+### 3. Session caching + auto-lock
+
+Typing the master passphrase every time the popup opens gets old fast. To keep the security model intact while cutting friction, the vault caches the passphrase in **session-scoped** browser storage: `chrome.storage.session` in the extension (shared between the popup and the MV3 service worker) and `sessionStorage` on the web build. Both tiers clear on browser close, so nothing survives a full quit.
+
+The cached passphrase re-derives the same non-extractable AES key on next popup / tab load — the CryptoKey itself never leaves memory. See [src/lib/sessionStorage.js](src/lib/sessionStorage.js).
+
+An **idle timeout** locks the vault after a configurable window of user inactivity (`pointerdown` / `keydown` / `visibilitychange` count as activity). The list of options and the default live in [src/lib/vaultIdleOptions.js](src/lib/vaultIdleOptions.js). The current selection is stored on `user_data.data.vault.idleTimeoutMs` (see the JSON above) so it syncs across devices, and can be changed from **Settings → Vault**.
+
+Anything that ends the vault session — manual lock, sign-out, auth switch, browser close, or the timeout firing — clears the session cache, drops the in-memory `CryptoKey`, and evicts any decrypted data (currently the credentials query; future vault-backed queries should follow the same pattern) from React Query, so no plaintext lingers.
+
+### 4. Auto-capture (extension only)
+
+The **Capture** button on the Credentials list reads the username / password fields from the active tab and routes you into the credential edit form pre-filled with what it found — you always review and Save yourself, nothing is written silently.
+
+- **Smart merge (hostname-based):** the detected URL is matched by hostname against your existing entries. No match → new credential seeded with URL + user + pass; hostname match + same username → the matched account's password is replaced; hostname match + new username → a new account is appended to the existing entry.
+- **Nothing leaves the device:** the injected page scanner runs entirely in the target tab, and captured values travel through the same E2EE vault path as any manually-entered credential — the Credentials page never sees plaintext outside the user's session.
+- **Manifest permissions:** requires `activeTab` (temporary tab access granted by the popup click) and `scripting` (to inject the scanner) in [manifest.json](manifest.json). No broad host_permissions are added — the extension can only touch the tab you're actively on.
+- **Current limitations (v1):** single form per page, first visible password field, no iframe traversal, no two-step (email → next page → password) flows. See [src/lib/pageScanner.js](src/lib/pageScanner.js).
+
+---
+
 ## Permissions
 
 The manifest declares:
 
-- `storage` — for `chrome.storage.local` (session persistence, prefs).
+- `storage` — for `chrome.storage.local` / `chrome.storage.session` (prefs + session-scoped passphrase cache).
+- `activeTab` — grants temporary access to the current tab after a popup gesture, used by the Credentials **Capture** button.
+- `scripting` — required to inject the page scanner into the active tab (paired with `activeTab`).
 - `host_permissions: ["https://*.supabase.co/*"]` — required for the popup to call Supabase's Auth and REST endpoints.
 
-Add more as your tool needs them (`activeTab`, `tabs`, `scripting`, `webNavigation`, `alarms`, etc.) in [manifest.json](manifest.json). See the [`tool/loopy`](../../tree/tool/loopy) branch for a full-featured example.
+Add more as your tool needs them (`tabs`, `webNavigation`, `alarms`, etc.) in [manifest.json](manifest.json). See the [`tool/loopy`](../../tree/tool/loopy) branch for a full-featured example.
 
 ---
 
 ## CI / GitHub Pages
 
-- **Workflow**: [`.github/workflows/deploy-TOOLNAME-pages.yml`](.github/workflows/deploy-TOOLNAME-pages.yml)
-- **Trigger**: push to `tool/TOOLNAME` (or manual `workflow_dispatch` from the Actions tab)
-- **Live URL**: `https://<user>.github.io/tools/TOOLNAME/`
-- **Build**: `npm run build:web` → `dist-web/TOOLNAME/` (nested so the uploaded artifact serves at `/tools/TOOLNAME/`)
+- **Workflow**: [`.github/workflows/deploy-acceso-pages.yml`](.github/workflows/deploy-acceso-pages.yml)
+- **Trigger**: push to `tool/acceso` (or manual `workflow_dispatch` from the Actions tab)
+- **Live URL**: `https://<user>.github.io/tools/acceso/`
+- **Build**: `npm run build:web` → `dist-web/acceso/` (nested so the uploaded artifact serves at `/tools/acceso/`)
 - **Repo secrets required** (Settings → Secrets and variables → Actions):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`

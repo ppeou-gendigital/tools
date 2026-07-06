@@ -10,7 +10,7 @@ import { asyncStorage } from '@/lib/storage'
 
 const ThemeContext = createContext(null)
 
-const STORAGE_KEY = 'toolname.theme'
+const STORAGE_KEY = 'acceso.theme'
 const THEMES = ['light', 'dark', 'system']
 
 function resolveTheme(pref) {

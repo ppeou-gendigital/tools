@@ -10,7 +10,7 @@ import { asyncStorage } from '@/lib/storage'
 
 const FabCornerContext = createContext(null)
 
-const STORAGE_KEY = 'toolname.fabCorner'
+const STORAGE_KEY = 'acceso.fabCorner'
 const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
 const DEFAULT_CORNER = 'bottom-right'
 

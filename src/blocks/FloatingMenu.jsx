@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Repeat } from 'lucide-react'
+import { Fingerprint } from 'lucide-react'
 import { useCornerDrag } from '@/hooks/useCornerDrag'
 import { MenuPanel } from '@/patterns/MenuPanel'
 import styles from './FloatingMenu.module.scss'
@@ -49,7 +49,7 @@ export function FloatingMenu() {
         className={styles.fab}
         data-corner={corner}
         data-dragging={isDragging ? 'true' : undefined}
-        aria-label="TOOLNAME menu"
+        aria-label="Acceso menu"
         aria-haspopup="menu"
         aria-expanded={open}
         style={fabStyle}
@@ -57,7 +57,7 @@ export function FloatingMenu() {
         onPointerDown={handlePointerDown}
         onClick={handleClick}
       >
-        <Repeat size={20} aria-hidden="true" />
+        <Fingerprint size={20} aria-hidden="true" />
       </button>
       {open && !isDragging && (
         <MenuPanel corner={corner} onClose={() => setOpen(false)} />

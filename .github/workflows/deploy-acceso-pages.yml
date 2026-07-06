@@ -1,8 +1,8 @@
-name: Deploy TOOLNAME to GitHub Pages
+name: Deploy acceso to GitHub Pages
 
 on:
   push:
-    branches: [tool/TOOLNAME]
+    branches: [tool/acceso]
   workflow_dispatch:
 
 permissions:

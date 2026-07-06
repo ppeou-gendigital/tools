@@ -45,3 +45,26 @@ export async function saveUserData(userId, { data }) {
     updated_at: row.updated_at,
   }
 }
+
+// Persist a patch into the vault meta subtree of the shared
+// `user_data.data` blob. Reads the current row first so we don't stomp
+// prefs written by another tab, then shallow-merges the patch into
+// `data.vault`, then upserts the merged blob.
+//
+// Shallow-merging means setup() can pass { salt, iterations, verifier }
+// and VaultSettings can pass { idleTimeoutMs } without either
+// clobbering the other. Vault writes are rare (setup, passphrase
+// change, timeout preference), so the extra read is not on any hot
+// path.
+export async function saveVaultMeta(userId, patch) {
+  if (!userId) throw new Error('saveVaultMeta: userId is required')
+  const current = await fetchUserData(userId)
+  const nextData = {
+    ...(current?.data ?? {}),
+    vault: {
+      ...(current?.data?.vault ?? {}),
+      ...patch,
+    },
+  }
+  return saveUserData(userId, { data: nextData })
+}

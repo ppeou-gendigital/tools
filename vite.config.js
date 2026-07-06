@@ -14,11 +14,11 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     // Web PROD build is intended to be served from
-    // https://<user>.github.io/tools/TOOLNAME/, so every asset URL must
+    // https://<user>.github.io/tools/acceso/, so every asset URL must
     // be prefixed with the repo-and-tool subpath. Dev server (`npm run
     // dev`) keeps '/' so http://localhost:5173/ works, and the extension
     // build always resolves at the extension root.
-    base: !isExtension && isBuild ? '/tools/TOOLNAME/' : '/',
+    base: !isExtension && isBuild ? '/tools/acceso/' : '/',
     plugins: [
       react(),
       ...(isExtension ? [crx({ manifest })] : []),
@@ -48,9 +48,9 @@ export default defineConfig(({ command, mode }) => {
         }
       : {
           // Nested so the uploaded Pages artifact serves at
-          // /tools/TOOLNAME/ (matching `base` above). The workflow uploads
+          // /tools/acceso/ (matching `base` above). The workflow uploads
           // the parent `dist-web/` folder as the site.
-          outDir: 'dist-web/TOOLNAME',
+          outDir: 'dist-web/acceso',
           emptyOutDir: true,
           rollupOptions: {
             input: {
