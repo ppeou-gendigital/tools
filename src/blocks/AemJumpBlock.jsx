@@ -5,8 +5,6 @@ import {
   Braces,
   Eye,
   FileSliders,
-  FlaskConical,
-  FlaskConicalOff,
   FolderOpen,
   FolderTree,
   Home,
@@ -107,24 +105,15 @@ const PARSED_ROWS = [
 ]
 
 // Compact "most-used" strip rendered above JUMP TO on the source block.
-// Two of the entries are dynamic:
-//   - abToggle:   icon + label flip based on `parsed.abTestDisabled`.
-//   - editToggle: swaps between disabling (when currently in edit mode) and
-//                 opening the editor (when in preview/disabled), reusing
-//                 whatever the pipeline built for `disable` / `editor` /
-//                 `universalEditor`.
+// `editToggle` is dynamic: it swaps between disabling (when currently in
+// edit mode) and opening the editor (when in preview/disabled), reusing
+// whatever the pipeline built for `disable` / `editor` / `universalEditor`.
+// The A/B toggle lives in the header URL-params dropdown instead — it's
+// a param mutation, not a jump target, and belongs with the other
+// URL-mutating actions.
 // Entries with a null href are filtered out of the final list.
 function computeShortcuts({ parsed, links }) {
   if (!parsed) return []
-
-  const abDisabled = parsed.abTestDisabled === true
-  const ab = {
-    key: 'abToggle',
-    label: abDisabled ? 'Enable A/B testing' : 'Disable A/B testing',
-    icon: abDisabled ? FlaskConicalOff : FlaskConical,
-    href: links.abToggle ?? null,
-    group: 'admin',
-  }
 
   const inEdit = parsed.mode === 'edit'
   const editHref = inEdit
@@ -162,7 +151,7 @@ function computeShortcuts({ parsed, links }) {
     },
   ]
 
-  return [ab, ...staticRows, edit].filter((s) => !!s.href)
+  return [...staticRows, edit].filter((s) => !!s.href)
 }
 
 // Build the effective URL a block should feed into buildAemLinks.
