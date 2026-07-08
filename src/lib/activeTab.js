@@ -130,3 +130,25 @@ function urlDepth(u) {
 export function isJumpableUrl(url) {
   return typeof url === 'string' && /^https?:\/\//i.test(url)
 }
+
+// Navigate the active tab to `url`. Symmetric writer to `readActiveTabUrl`
+// above: uses the same tab-finding strategy so multi-window setups resolve
+// to the tab that spawned the popup. Returns true on success, false when
+// there's no chrome.tabs, no tab, or the update call rejects.
+//
+// Only http(s) targets are honored. chrome://, file://, etc. are refused
+// so a stray click can't yank the user out of a real tab into an internal
+// surface.
+export async function writeActiveTabUrl(url) {
+  if (typeof chrome === 'undefined' || !chrome?.tabs?.update) return false
+  if (!isJumpableUrl(url)) return false
+  const tab = await findActiveTab()
+  if (!tab?.id) return false
+  try {
+    await chrome.tabs.update(tab.id, { url })
+    return true
+  } catch (err) {
+    console.warn('[loopy] tabs.update failed:', err?.message ?? err)
+    return false
+  }
+}

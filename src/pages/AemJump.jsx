@@ -11,6 +11,7 @@ import { Button } from '@/molecules/Button'
 import { AemJumpBlock } from '@/blocks/AemJumpBlock'
 import { ManageEnvironmentsBlock } from '@/blocks/ManageEnvironmentsBlock'
 import { Deck, Slide } from '@/blocks/Deck'
+import { UrlParamsMenu } from '@/patterns/UrlParamsMenu'
 import { useAemDomains } from '@/providers/AemDomainsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { isExtension } from '@/env'
@@ -145,6 +146,7 @@ export function AemJump() {
               <Icon size={14} aria-hidden="true" />
             </a>
           ))}
+          <UrlParamsMenu url={url} onUrlChange={setUrl} />
           <Button
             variant="ghost"
             size="sm"
