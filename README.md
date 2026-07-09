@@ -183,12 +183,13 @@ That's it — sign up, check inbox for the code, paste it into the popup.
 
 ### 4. User preferences table (`user_data`)
 
-Backs the auto-sync layer. One row per user, with three independent JSONB
+Backs the auto-sync layer. One row per user, with four independent JSONB
 columns:
 
 - `data` — the small prefs blob (`theme`, `fontSize`, `fabCorner`, `updatedAt`).
 - `aem_domains` — the AEM Jump domain list (array of normalized entries).
 - `tracked_hostnames` — the visit-capture rule set (JSONB **object keyed by pattern**, `{ [pattern]: { id, mode } }`; see the [Tracked hostnames](#tracked-hostnames) section).
+- `pinned_sites` — the Site Tree page's user-curated pin list (sorted array of lowercase hostname strings).
 
 Splitting keeps the payloads legible in the SQL editor and lets us
 promote any of them to a real column (indexable, queryable) later
@@ -203,6 +204,7 @@ create table public.user_data (
   data              jsonb       not null default '{}'::jsonb,
   aem_domains       jsonb       not null default '[]'::jsonb,
   tracked_hostnames jsonb       not null default '{}'::jsonb,
+  pinned_sites      jsonb       not null default '[]'::jsonb,
   updated_at        timestamptz not null default now()
 );
 
@@ -234,6 +236,15 @@ where jsonb_typeof(tracked_hostnames) = 'array';
 ```
 
 The client normalizer accepts both array and object shapes on read, so this migration is technically optional for existing rows (an array row would get overwritten as `{}` on next push), but running it makes the DB canonical immediately.
+
+**Migration for `pinned_sites`** — single idempotent snippet that adds the column if missing. Safe to re-run.
+
+```sql
+alter table public.user_data
+  add column if not exists pinned_sites jsonb not null default '[]'::jsonb;
+```
+
+The client normalizer already sorts + lowercases + dedupes the array on every read/write, so existing junk (or a `null`) heals itself on the next push. No backfill needed.
 
 **Migration (only if you created `user_data` before the aem_domains split)** — adds
 that column, backfills from the old nested key, then strips the key:

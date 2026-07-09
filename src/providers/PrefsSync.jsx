@@ -4,12 +4,17 @@ import { useAemDomains } from '@/providers/AemDomainsProvider'
 import { useAuth } from '@/providers/AuthProvider'
 import { useFabCorner } from '@/providers/FabCornerProvider'
 import { useFontSize } from '@/providers/FontSizeProvider'
+import { usePinnedSites } from '@/providers/PinnedSitesProvider'
 import { useTheme } from '@/providers/ThemeProvider'
 import { useTrackedHostnames } from '@/providers/TrackedHostnamesProvider'
 import { useVisitedUrls } from '@/providers/VisitedUrlsProvider'
 import { fetchUserData, saveUserData } from '@/lib/userDataApi'
 import { fetchUserVisits, saveDomainVisits } from '@/lib/visitedUrlsApi'
 import { syncVisits } from '@/lib/visitsSync'
+import {
+  normalizePinnedSites,
+  stablePinnedKey,
+} from '@/lib/pinnedSites'
 import { normalizeAemDomains, normalizeRemotePrefs } from '@/lib/prefs'
 import {
   normalizeTrackedHostnames,
@@ -37,7 +42,8 @@ function prefsEqual(a, b) {
     a.fontSize === b.fontSize &&
     a.fabCorner === b.fabCorner &&
     listKey(a.aemDomains) === listKey(b.aemDomains) &&
-    stableHostsKey(a.trackedHostnames) === stableHostsKey(b.trackedHostnames)
+    stableHostsKey(a.trackedHostnames) === stableHostsKey(b.trackedHostnames) &&
+    stablePinnedKey(a.pinnedSites) === stablePinnedKey(b.pinnedSites)
   )
 }
 
@@ -80,6 +86,11 @@ export function PrefsSync() {
     setHosts: setTrackedHostnames,
     ready: trackedReady,
   } = useTrackedHostnames()
+  const {
+    pinned: pinnedSites,
+    setPinned: setPinnedSites,
+    ready: pinnedReady,
+  } = usePinnedSites()
   const { ready: visitsReady, byDomain: visitedByDomain } = useVisitedUrls()
   const queryClient = useQueryClient()
 
@@ -96,6 +107,7 @@ export function PrefsSync() {
     fabReady &&
     domainsReady &&
     trackedReady &&
+    pinnedReady &&
     visitsReady
 
   // Debug helper: expose sync internals + a manual push trigger to the
@@ -150,13 +162,15 @@ export function PrefsSync() {
   }, [userId, authLoading, providersReady, visitedByDomain])
 
   // Apply a fetched prefs row. Splits between the prefs blob (data column),
-  // the domain list (aem_domains column), and the tracked-hostnames list
-  // (tracked_hostnames column) since they normalize independently.
+  // the domain list (aem_domains column), the tracked-hostnames list
+  // (tracked_hostnames column), and the pinned-sites list (pinned_sites
+  // column) since they normalize independently.
   const applyRemotePrefs = useCallback(
     (row) => {
       const safePrefs = normalizeRemotePrefs(row?.data)
       const safeDomains = normalizeAemDomains(row?.aemDomains)
       const safeTracked = normalizeTrackedHostnames(row?.trackedHostnames)
+      const safePinned = normalizePinnedSites(row?.pinnedSites)
       applyingRemoteRef.current = true
       if (safePrefs.theme !== theme) setTheme(safePrefs.theme)
       if (safePrefs.fontSize !== fontSize) setFontSize(safePrefs.fontSize)
@@ -167,10 +181,14 @@ export function PrefsSync() {
       if (stableHostsKey(safeTracked) !== stableHostsKey(trackedHostnames)) {
         setTrackedHostnames(safeTracked)
       }
+      if (stablePinnedKey(safePinned) !== stablePinnedKey(pinnedSites)) {
+        setPinnedSites(safePinned)
+      }
       lastSyncedRef.current = {
         ...safePrefs,
         aemDomains: safeDomains,
         trackedHostnames: safeTracked,
+        pinnedSites: safePinned,
       }
       queueMicrotask(() => {
         applyingRemoteRef.current = false
@@ -187,6 +205,8 @@ export function PrefsSync() {
       setAemDomains,
       trackedHostnames,
       setTrackedHostnames,
+      pinnedSites,
+      setPinnedSites,
     ],
   )
 
@@ -228,6 +248,7 @@ export function PrefsSync() {
             fabCorner,
             aemDomains,
             trackedHostnames,
+            pinnedSites,
           }
         }
       } catch (err) {
@@ -269,7 +290,14 @@ export function PrefsSync() {
     if (lastSyncedRef.current === null) return
     if (applyingRemoteRef.current) return
 
-    const current = { theme, fontSize, fabCorner, aemDomains, trackedHostnames }
+    const current = {
+      theme,
+      fontSize,
+      fabCorner,
+      aemDomains,
+      trackedHostnames,
+      pinnedSites,
+    }
     if (prefsEqual(current, lastSyncedRef.current)) return
 
     if (pushTimerRef.current) clearTimeout(pushTimerRef.current)
@@ -286,6 +314,7 @@ export function PrefsSync() {
           data: nextData,
           aemDomains: current.aemDomains,
           trackedHostnames: current.trackedHostnames,
+          pinnedSites: current.pinnedSites,
         })
         lastSyncedRef.current = current
         queryClient.setQueryData(['user_data', userId], row)
@@ -306,6 +335,7 @@ export function PrefsSync() {
     fabCorner,
     aemDomains,
     trackedHostnames,
+    pinnedSites,
     userId,
     providersReady,
     queryClient,

@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react'
@@ -14,6 +15,7 @@ const ROUTES = [
   'deck-test',
   'aem-jump',
   'visited-urls',
+  'site-tree',
   'settings',
   'settings-aem-environments',
   'settings-tracked-hosts',
@@ -27,6 +29,7 @@ const ROUTE_LABELS = {
   'deck-test': 'Deck test',
   'aem-jump': 'AEM Jump',
   'visited-urls': 'Visited URLs',
+  'site-tree': 'Site tree',
   settings: 'Settings',
   'settings-aem-environments': 'AEM Environments',
   'settings-tracked-hosts': 'Tracked hosts',
@@ -42,6 +45,7 @@ const PARENT_ROUTE = {
   'deck-test': 'home',
   'aem-jump': 'home',
   'visited-urls': 'home',
+  'site-tree': 'home',
   settings: 'home',
   'settings-aem-environments': 'settings',
   'settings-tracked-hosts': 'settings',
@@ -52,13 +56,54 @@ const PARENT_ROUTE = {
 // cases from menu-jumping loops.
 const HISTORY_LIMIT = 10
 
-export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
+// localStorage key for the "resume where I left off" behavior. Only the
+// current (top-of-stack) route is persisted — the history stack itself is
+// intentionally ephemeral so a new popup session starts with a clean back
+// button. localStorage (rather than chrome.storage.local) keeps the read
+// synchronous so the initial paint lands on the right page without a
+// visible flash of the default route.
+const LAST_ROUTE_KEY = 'loopy.lastRoute'
+
+function readPersistedRoute() {
+  try {
+    const stored = globalThis.localStorage?.getItem(LAST_ROUTE_KEY)
+    if (typeof stored === 'string' && ROUTES.includes(stored)) return stored
+  } catch {
+    // localStorage can throw in private mode / sandboxed contexts.
+  }
+  return null
+}
+
+function writePersistedRoute(route) {
+  try {
+    globalThis.localStorage?.setItem(LAST_ROUTE_KEY, route)
+  } catch {
+    // ignore quota / private-mode errors
+  }
+}
+
+export function NavigationProvider({ children, initial }) {
   // The top of the stack is the current route. `navigate` pushes, `goBack`
   // pops. Rendering derives everything from this single source of truth so
   // dev-tools can inspect the whole nav history in one place.
-  const [stack, setStack] = useState(() => [
-    ROUTES.includes(initial) ? initial : DEFAULT_ROUTE,
-  ])
+  //
+  // Seed order:
+  //   1. `initial` prop, if provided and valid (test / deep-link overrides)
+  //   2. Persisted last-route from localStorage (resume-on-open)
+  //   3. DEFAULT_ROUTE
+  const [stack, setStack] = useState(() => {
+    if (initial && ROUTES.includes(initial)) return [initial]
+    return [readPersistedRoute() ?? DEFAULT_ROUTE]
+  })
+
+  // Persist the current route on every change so the next popup session
+  // reopens on the same page. Fires on the initial mount too, which is
+  // fine — it just re-writes whatever we seeded from and keeps the store
+  // self-healing if it ever contained an unknown value.
+  useEffect(() => {
+    const route = stack[stack.length - 1]
+    if (route) writePersistedRoute(route)
+  }, [stack])
 
   const navigate = useCallback((next) => {
     if (!ROUTES.includes(next)) return
@@ -109,6 +154,7 @@ export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
       goDeckTest: () => navigate('deck-test'),
       goAemJump: () => navigate('aem-jump'),
       goVisitedUrls: () => navigate('visited-urls'),
+      goSiteTree: () => navigate('site-tree'),
       goSettings: () => navigate('settings'),
       goSettingsAemEnvironments: () => navigate('settings-aem-environments'),
       goSettingsTrackedHosts: () => navigate('settings-tracked-hosts'),

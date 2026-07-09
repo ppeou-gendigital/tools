@@ -27,6 +27,13 @@ const PROMO_OPTIONS = [
     value: 'TV35',
   },
   {
+    id: 'set-webdefault',
+    label: 'promocode=WEBDEFAULT',
+    action: 'set',
+    key: 'promocode',
+    value: 'WEBDEFAULT',
+  },
+  {
     id: 'remove-promo',
     label: 'Remove promocode',
     action: 'remove',

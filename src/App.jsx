@@ -4,6 +4,7 @@ import { AuthProvider } from '@/providers/AuthProvider'
 import { FabCornerProvider } from '@/providers/FabCornerProvider'
 import { FontSizeProvider } from '@/providers/FontSizeProvider'
 import { NavigationProvider, useNavigation } from '@/providers/NavigationProvider'
+import { PinnedSitesProvider } from '@/providers/PinnedSitesProvider'
 import { PrefsSync } from '@/providers/PrefsSync'
 import { ThemeProvider } from '@/providers/ThemeProvider'
 import { TrackedHostnamesProvider } from '@/providers/TrackedHostnamesProvider'
@@ -16,6 +17,7 @@ import { DeckTest } from '@/pages/DeckTest'
 import { AemJump } from '@/pages/AemJump'
 import { Settings } from '@/pages/Settings'
 import { AemEnvironments } from '@/pages/AemEnvironments'
+import { SiteTree } from '@/pages/SiteTree'
 import { TrackedHosts } from '@/pages/TrackedHosts'
 import { VisitedUrls } from '@/pages/VisitedUrls'
 import { queryClient } from '@/lib/queryClient'
@@ -32,6 +34,7 @@ function Router() {
   if (route === 'deck-test') return <DeckTest />
   if (route === 'aem-jump') return <AemJump />
   if (route === 'visited-urls') return <VisitedUrls />
+  if (route === 'site-tree') return <SiteTree />
   if (route === 'settings') return <Settings />
   if (route === 'settings-aem-environments') return <AemEnvironments />
   if (route === 'settings-tracked-hosts') return <TrackedHosts />
@@ -53,18 +56,20 @@ export function App() {
           <FabCornerProvider>
             <AemDomainsProvider>
               <TrackedHostnamesProvider>
-                <VisitedUrlsProvider>
-                  <AuthProvider>
-                    <PrefsSync />
-                    <NavigationProvider>
-                      <AppShell>
-                        <AuthGate>
-                          <Router />
-                        </AuthGate>
-                      </AppShell>
-                    </NavigationProvider>
-                  </AuthProvider>
-                </VisitedUrlsProvider>
+                <PinnedSitesProvider>
+                  <VisitedUrlsProvider>
+                    <AuthProvider>
+                      <PrefsSync />
+                      <NavigationProvider>
+                        <AppShell>
+                          <AuthGate>
+                            <Router />
+                          </AuthGate>
+                        </AppShell>
+                      </NavigationProvider>
+                    </AuthProvider>
+                  </VisitedUrlsProvider>
+                </PinnedSitesProvider>
               </TrackedHostnamesProvider>
             </AemDomainsProvider>
           </FabCornerProvider>
