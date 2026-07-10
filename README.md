@@ -423,7 +423,92 @@ Not supported in v1: `**` (multi-label wildcards) or full regex. The single-`*` 
 
 **Legacy array shape**: the module's normalizer (`normalizeTrackedHostnames`) still accepts the previous `[{ id, pattern, mode }]` array form and upgrades it to the object shape on read. Any local storage or server row that predates the object cutover will be silently normalized on next load.
 
-### 6. Dev auto-login (optional)
+### 6. Favorites table (`user_favorites`)
+
+Backs the [Fav Links page](src/pages/FavLinks.jsx). One row per
+`(user_id, domain)` pair, `paths` is a **jsonb object keyed by
+path+search**. Modelled after `user_visits` so favorites can reuse the
+same per-domain CAS-merge sync pattern, but the per-favorite value is
+lighter — no visit counts, no first/last-visited timestamps, just the
+title captured at bookmark time and an `addedAt` stamp used for
+freshness sorting.
+
+In **SQL Editor**, run the block below. It's written to be safely re-runnable (`create table if not exists`, `drop policy if exists` before each `create policy`, and idempotent DDL for the index / function / trigger), so re-executing against a project where `user_favorites` is already provisioned is a no-op aside from replacing the RLS policies with the same definitions:
+
+```sql
+create table if not exists public.user_favorites (
+  user_id     uuid        not null references auth.users(id) on delete cascade,
+  domain      text        not null,
+  paths       jsonb       not null default '{}'::jsonb,
+  updated_at  timestamptz not null default now(),
+  primary key (user_id, domain)
+);
+
+alter table public.user_favorites enable row level security;
+
+drop policy if exists "user_favorites self-read"   on public.user_favorites;
+drop policy if exists "user_favorites self-insert" on public.user_favorites;
+drop policy if exists "user_favorites self-update" on public.user_favorites;
+drop policy if exists "user_favorites self-delete" on public.user_favorites;
+
+create policy "user_favorites self-read"
+  on public.user_favorites for select using (auth.uid() = user_id);
+create policy "user_favorites self-insert"
+  on public.user_favorites for insert with check (auth.uid() = user_id);
+create policy "user_favorites self-update"
+  on public.user_favorites for update
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "user_favorites self-delete"
+  on public.user_favorites for delete using (auth.uid() = user_id);
+
+create index if not exists user_favorites_user_domain_idx
+  on public.user_favorites (user_id, domain);
+
+-- Cap per-row footprint. Client also enforces this before upsert.
+-- Matches MAX_PATHS_PER_DOMAIN in src/lib/favorites.js.
+create or replace function public.enforce_user_favorites_paths_cap()
+returns trigger language plpgsql as $$
+begin
+  if jsonb_typeof(new.paths) <> 'object' then
+    raise exception 'user_favorites.paths must be a jsonb object (got %)',
+      jsonb_typeof(new.paths);
+  end if;
+  if (select count(*) from jsonb_object_keys(new.paths)) > 200 then
+    raise exception 'user_favorites.paths exceeds 200 keys';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists user_favorites_paths_cap_trg on public.user_favorites;
+create trigger user_favorites_paths_cap_trg
+  before insert or update on public.user_favorites
+  for each row execute function public.enforce_user_favorites_paths_cap();
+```
+
+**`paths`** shape — an object keyed by the path+search string (see [`src/lib/favorites.js`](src/lib/favorites.js)):
+
+```jsonc
+{
+  "/products/product-a": {
+    "title":   "Product A",
+    "addedAt": "2026-07-09T18:20:00Z"
+  },
+  "/blog/how-it-works?ref=nav": { … }
+}
+```
+
+**Bookmark flow** (extension only; the web build reads and displays but
+can't capture new favorites since it has no `chrome.tabs`):
+
+1. The Fav Links toolbar's bookmark button reads the current tab via [`readActiveTab`](src/lib/activeTab.js), which returns `{ url, title }` from `chrome.tabs.query` (with a `chrome.scripting.executeScript` fallback for SPA `pushState` URLs).
+2. The hostname is auto-added to [`tracked_hostnames`](#tracked-hostnames) as an `include` rule (via the same [`canonicalizePattern`](src/lib/trackedHostnames.js) recipe as **Track this site**) if it isn't already tracked, so future visits also flow into the Visited URLs / Site Tree feeds.
+3. The URL is added to `chrome.storage.local[loopy.favorites]` keyed by hostname + path+search. `FavoritesProvider` mirrors the key via `chrome.storage.onChanged` so an open popup reflects writes from other windows live.
+4. `PrefsSync` owns writes to Supabase for favorites (no service-worker involvement since bookmarking is user-triggered and low-volume): each dirty domain flows through a per-domain **compare-and-swap** ([`upsertDomainFavoritesWithMerge`](src/lib/favoritesApi.js)) so two devices bookmarking different URLs on the same domain converge to a row containing both. Local deletes propagate as row deletes.
+
+The Fav Links page renders one slide per domain (freshest-first) plus a trailing manage slide where the user can remove individual URLs or clear a whole domain in one shot. Removing the last favorite on a domain drops the whole row so the deck doesn't show an empty slide.
+
+### 7. Dev auto-login (optional)
 
 Skip the OTP UI during development. Uses Supabase's built-in **Test OTP** feature, so no fake accounts or mocked sessions — it's the real OTP flow against a whitelisted email that Supabase accepts a static code for.
 

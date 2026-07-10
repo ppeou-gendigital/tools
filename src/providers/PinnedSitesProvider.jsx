@@ -7,7 +7,10 @@ import {
   useState,
 } from 'react'
 import { asyncStorage } from '@/lib/storage'
-import { normalizePinnedSites } from '@/lib/pinnedSites'
+import {
+  movePinned as movePinnedInList,
+  normalizePinnedSites,
+} from '@/lib/pinnedSites'
 import { isExtension } from '@/env'
 
 const PinnedSitesContext = createContext(null)
@@ -69,16 +72,30 @@ export function PinnedSitesProvider({ children }) {
     await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(resolved ?? []))
   }, [])
 
+  // Add-or-remove. New pins land at the end of the array so the user's
+  // most recent pin action sits at the bottom of the Fav Links deck
+  // (feels less disruptive than reshuffling the whole list). Removing
+  // preserves the relative order of the survivors.
   const toggle = useCallback(
     async (host) => {
       const key = String(host ?? '').trim().toLowerCase()
       if (!key) return
       await setPinned((prev) => {
-        const set = new Set(prev)
-        if (set.has(key)) set.delete(key)
-        else set.add(key)
-        return [...set]
+        const idx = prev.indexOf(key)
+        if (idx === -1) return [...prev, key]
+        return prev.filter((h) => h !== key)
       })
+    },
+    [setPinned],
+  )
+
+  // Move a hostname up (-1) or down (+1) in the pinned order. No-op if
+  // the host isn't pinned or is already at the corresponding edge.
+  // Delegates to the pure movePinned helper so behavior is testable
+  // outside React.
+  const movePinned = useCallback(
+    async (host, direction) => {
+      await setPinned((prev) => movePinnedInList(prev, host, direction))
     },
     [setPinned],
   )
@@ -89,8 +106,8 @@ export function PinnedSitesProvider({ children }) {
   const pinnedSet = useMemo(() => new Set(pinned), [pinned])
 
   const value = useMemo(
-    () => ({ pinned, pinnedSet, setPinned, toggle, ready }),
-    [pinned, pinnedSet, setPinned, toggle, ready],
+    () => ({ pinned, pinnedSet, setPinned, toggle, movePinned, ready }),
+    [pinned, pinnedSet, setPinned, toggle, movePinned, ready],
   )
 
   return (

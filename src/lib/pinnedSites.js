@@ -1,14 +1,20 @@
 // Pure helpers for the "pinned sites" list — the user-curated subset of
-// hostnames that get a tree slide on the Site Tree page.
+// hostnames that get a slide on the Site Tree / Fav Links pages.
 //
 // Storage shape everywhere (chrome.storage.local, localStorage, Supabase
-// user_data.pinned_sites) is a sorted array of lowercase hostname strings:
+// user_data.pinned_sites) is an ordered array of lowercase hostname
+// strings:
 //
 //   ["confluence.corp.example.com", "jira.corp.example.com"]
 //
-// Sorted lexicographically so the on-disk representation is stable across
-// devices (no false-positive "dirty" states in the sync layer just because
-// two clients wrote the same set in different insertion orders).
+// The array order is meaningful — it drives the Fav Links deck slide
+// order. New pins append to the end; explicit reorder actions
+// (movePinned below) shuffle neighbors. Downstream pages that don't
+// care about order (e.g. Site Tree) re-sort on render.
+//
+// Since order carries user intent, the sync layer's stable-key digest
+// (see stablePinnedKey) is order-sensitive too: swapping two pins on
+// one device propagates to the other, and last-writer wins.
 
 function isValidHost(v) {
   if (typeof v !== 'string') return false
@@ -23,9 +29,14 @@ function toKey(v) {
   return String(v).trim().toLowerCase()
 }
 
-// Accept an array (canonical), a Set (in-memory), or unknown input; return
-// a sorted, deduped, lowercased array of valid hostnames. Anything junk is
-// dropped silently so a bad row can't crash the UI.
+// Accept an array (canonical), a Set (in-memory), or unknown input;
+// return a deduped, lowercased array of valid hostnames — preserving
+// input order. Anything junk is dropped silently so a bad row can't
+// crash the UI.
+//
+// Order preservation matters because Fav Links uses this array as the
+// deck slide order. Callers that want alphabetical (e.g. Site Tree's
+// manage list) sort a copy at render time.
 export function normalizePinnedSites(raw) {
   const source = normalizeToArray(raw)
   const seen = new Set()
@@ -37,8 +48,31 @@ export function normalizePinnedSites(raw) {
     seen.add(key)
     out.push(key)
   }
-  out.sort()
   return out
+}
+
+// Move a hostname up (-1) or down (+1) among the pinned list. Returns
+// a *new* array. Pure so React state comparisons stay simple, and so
+// tests can drive it without a component.
+//
+// No-ops:
+//   - host is not in the list -> list returned as-is
+//   - direction is 0 (or not ±1) -> list returned as-is
+//   - moving up from index 0 or down from the last index -> as-is
+export function movePinned(list, host, direction) {
+  const arr = normalizePinnedSites(list)
+  const key = toKey(host ?? '')
+  if (!key) return arr
+  const from = arr.indexOf(key)
+  if (from === -1) return arr
+  const delta = Math.sign(direction ?? 0)
+  if (delta === 0) return arr
+  const to = from + delta
+  if (to < 0 || to >= arr.length) return arr
+  const next = [...arr]
+  const [moved] = next.splice(from, 1)
+  next.splice(to, 0, moved)
+  return next
 }
 
 // Accept several shapes seen in the wild:
@@ -62,9 +96,11 @@ function normalizeToArray(raw) {
 }
 
 // Cheap deterministic key used by the sync layer to answer "did the
-// pinned-sites list change since the last remote pull?". Since
-// normalizePinnedSites already sorts + dedupes + lowercases, plain
-// JSON.stringify is a stable digest.
+// pinned-sites list change since the last remote pull?". Order-
+// sensitive: a reorder is a "change" and should propagate to the
+// cloud + other devices. Dedupe + lowercase happen inside
+// normalizePinnedSites so equivalent-but-differently-cased inputs
+// still collapse to the same key.
 export function stablePinnedKey(list) {
   return JSON.stringify(normalizePinnedSites(list))
 }

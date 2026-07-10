@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   ChevronDown,
   ChevronRight,
@@ -10,11 +10,11 @@ import {
 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Deck, Slide } from '@/blocks/Deck'
+import { PageShortcuts } from '@/patterns/PageShortcuts'
 import { useAemDomains } from '@/providers/AemDomainsProvider'
-import { useNavigation } from '@/providers/NavigationProvider'
 import { useVisitedUrls } from '@/providers/VisitedUrlsProvider'
 import { usePinnedSites } from '@/providers/PinnedSitesProvider'
-import { isJumpableUrl, readActiveTabUrl } from '@/lib/activeTab'
+import { useCurrentTabHost } from '@/hooks/useCurrentTabHost'
 import { getRebaseOrigin } from '@/lib/prefs'
 import { cx } from '@/lib/cx'
 import { isExtension } from '@/env'
@@ -478,6 +478,7 @@ export function SiteTree() {
           >
             <Info size={14} aria-hidden="true" />
           </Button>
+          <PageShortcuts current="site-tree" className={styles.iconBtn} />
         </div>
         {showInfo && (
           <p id="site-tree-info" className={styles.subtitle}>
@@ -530,33 +531,3 @@ export function SiteTree() {
   )
 }
 
-// Look up the hostname of the active browser tab. Extension-only: on the
-// web build there's no chrome.tabs, so we return null and the "current
-// tab" affordance simply doesn't render. Runs once on mount — the popup
-// is short-lived enough that we don't need to poll.
-//
-// isJumpableUrl (from activeTab.js) rejects chrome://, about:, file://,
-// etc. so we don't end up trying to "pin" an internal Chrome surface as
-// if it were a real host.
-function useCurrentTabHost() {
-  const [host, setHost] = useState(null)
-  useEffect(() => {
-    if (!isExtension()) return
-    let mounted = true
-    readActiveTabUrl().then((url) => {
-      if (!mounted) return
-      if (!isJumpableUrl(url)) return
-      try {
-        const parsed = new URL(url)
-        const hostname = parsed.hostname?.toLowerCase()
-        if (hostname) setHost(hostname)
-      } catch {
-        // Malformed URL — leave host null.
-      }
-    })
-    return () => {
-      mounted = false
-    }
-  }, [])
-  return host
-}

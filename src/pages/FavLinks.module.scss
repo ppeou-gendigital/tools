@@ -1,0 +1,462 @@
+// Layout mirrors SiteTree: header outside the fluid deck wrap, and the
+// deck itself given the remaining vertical space so slides scroll
+// internally while the deck scroll-snaps horizontally. Kept as a
+// separate stylesheet so the two pages can evolve independently
+// without dragging each other's tweaks along.
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--space-4) 0;
+  gap: var(--space-3);
+}
+
+.header {
+  padding-inline: var(--layout-pad);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subtitle {
+  color: var(--muted-fg);
+  font-size: var(--text-xs);
+  margin: 0;
+}
+
+.error {
+  color: var(--destructive, #b91c1c);
+}
+
+.iconBtn {
+  color: var(--muted-fg);
+
+  &:hover {
+    color: var(--fg);
+  }
+}
+
+.padded {
+  padding-inline: var(--layout-pad);
+}
+
+.muted {
+  color: var(--muted-fg);
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.deckWrap {
+  flex: 1;
+  min-height: 0;
+}
+
+// Slide chrome — one card per site + one manage card at the end. Same
+// visual language as SiteTree so the two pages read as a set.
+.slideBody {
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.slideHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--muted) 45%, var(--card));
+}
+
+.slideHeadIcon {
+  color: var(--muted-fg);
+  flex-shrink: 0;
+}
+
+.slideHeadText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.slideLabel {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slideHost {
+  font-size: var(--text-xs);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--muted-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slideCount {
+  color: var(--muted-fg);
+  font-size: var(--text-xs);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  flex-shrink: 0;
+}
+
+.slideScroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-2) var(--space-1);
+}
+
+// Per-domain body — a recursive tree of URL path segments. Visual
+// language matches SiteTree's TreeNode so a user who's used to that
+// page reads this one the same way. Depth-driven indent uses a CSS
+// var written by the JSX side.
+.treeRow {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 1.75rem;
+  padding-left: calc(var(--space-3) + var(--space-3) * var(--tree-depth, 0));
+  padding-right: var(--space-2);
+  border-radius: var(--radius-sm);
+
+  &:hover {
+    background: color-mix(in srgb, var(--muted) 30%, transparent);
+  }
+}
+
+.chevronBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted-fg);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+
+  &:hover {
+    color: var(--fg);
+    background: color-mix(in srgb, var(--fg) 8%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--fg) 40%, transparent);
+    outline-offset: -2px;
+  }
+}
+
+// Reserve the same footprint as .chevronBtn so leaf labels line up
+// under folder labels regardless of whether a chevron is present.
+.chevronSpacer {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.treeLink,
+.treePlain {
+  display: inline-flex;
+  align-items: baseline;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  padding: var(--space-1) 0;
+}
+
+.treeLink {
+  color: var(--fg);
+
+  &:hover .treeName {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--fg) 40%, transparent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+.treePlain {
+  color: var(--muted-fg);
+}
+
+.treeName {
+  font-size: var(--text-sm);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+// Per-row delete affordance inside the tree. Same visual weight as
+// the manage-slide delete button but sized to match .chevronBtn so
+// leaves and folders keep matching row heights.
+.treeDeleteBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted-fg);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  opacity: 0.55;
+
+  .treeRow:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    color: var(--fg);
+    background: color-mix(in srgb, var(--fg) 8%, transparent);
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--fg) 40%, transparent);
+    outline-offset: -2px;
+    opacity: 1;
+  }
+}
+
+// Wrapper for child rows. `display: contents` lets us style the
+// subtree as a group later (e.g. collapse animation) without adding
+// extra layout boxes between rows.
+.children {
+  display: contents;
+}
+
+// Manage-pins slide — vertical list of pin rows. Ported from the
+// SiteTree ManagePinsSlide styling so both surfaces read the same way
+// (pin toggle on the right, current-tab badge, muted "unpinned" tone).
+// Extra: pinned rows get up/down arrow buttons for reorder.
+.pickerList {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+// Grid: [pin-toggle] [text] [move-up?] [move-down?]. The two move
+// buttons only render for pinned rows; on unpinned rows their grid
+// tracks collapse to zero because the cells simply don't exist.
+// Putting the pin toggle first makes the pinned/unpinned state the
+// leftmost affordance so the user's eye lands on it immediately.
+.pickerRow {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+// Rows for hosts already pinned to the deck. Slight tint + a visible
+// border so the state is legible without hover interaction.
+.pickerRowPinned {
+  background: color-mix(in srgb, var(--muted) 35%, transparent);
+  border-color: var(--border);
+}
+
+// Row for the current browser tab's host (extension-only). Uses the
+// theme's focus/ring color so it stands out even against the pinned
+// tint.
+.pickerRowCurrent {
+  border-color: color-mix(in srgb, var(--fg) 30%, var(--border));
+}
+
+.currentBadge {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 0 var(--space-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted-fg);
+  font-size: 0.6875rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.pickerText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pickerLabel {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pickerHost {
+  font-size: var(--text-xs);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--muted-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Up/down arrow buttons for reordering pinned rows. Sized to match
+// .pinToggleBtn so the trailing controls form an even visual cluster.
+// `disabled` triggers the muted, non-interactive look — used when a
+// pin is already at the top or bottom of the list.
+.moveBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted-fg);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--fg);
+    background: color-mix(in srgb, var(--fg) 8%, transparent);
+    border-color: color-mix(in srgb, var(--fg) 20%, var(--border));
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--fg) 40%, transparent);
+    outline-offset: -2px;
+  }
+
+  &:disabled {
+    color: var(--muted-fg);
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+// Pin/unpin toggle. Uses the same look as .moveBtn so the toolbar
+// on the right end of each row reads as a coherent unit.
+.pinToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted-fg);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--fg);
+    background: color-mix(in srgb, var(--fg) 8%, transparent);
+    border-color: color-mix(in srgb, var(--fg) 20%, var(--border));
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--fg) 40%, transparent);
+    outline-offset: -2px;
+  }
+}
+
+.pinIconActive {
+  color: var(--fg);
+  flex-shrink: 0;
+}
+
+.pinIconInactive {
+  color: var(--muted-fg);
+  opacity: 0.55;
+  flex-shrink: 0;
+
+  .pinToggleBtn:hover & {
+    opacity: 1;
+  }
+}
+
+// Friendly note for slides that render before any favorites exist for
+// a domain. Matches the SiteTree emptyTree treatment.
+.emptyTree {
+  padding: var(--space-3) var(--space-4);
+
+  & code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: var(--text-xs);
+    padding: 0 var(--space-1);
+    background: color-mix(in srgb, var(--muted) 60%, transparent);
+    border-radius: var(--radius-sm);
+  }
+}
+
+// Empty state for the whole page — shown inside the manage slide when
+// zero favorites have been added yet.
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.emptyIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--fg) 6%, var(--card) 94%);
+  color: var(--muted-fg);
+}

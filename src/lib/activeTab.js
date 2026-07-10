@@ -26,29 +26,46 @@
 // either host access to the tab's origin or an `activeTab` grant (which
 // is implicit when the user clicks the toolbar icon).
 export async function readActiveTabUrl() {
+  const info = await readActiveTab()
+  return info?.url ?? null
+}
+
+// Read the active tab's URL *and* title. Same resolver logic as
+// readActiveTabUrl (which now delegates here) but the return value is
+// `{ url, title } | null` so callers who need the title — e.g. the
+// Fav Links bookmark action — don't have to make a second round-trip
+// or reach into chrome.tabs directly.
+//
+// Title comes from the tab record (`tab.title`). Chrome updates it
+// eagerly on navigation and title changes, so by the time the popup
+// opens we generally see the "real" title. When it's missing we return
+// an empty string rather than null so callers can treat it as an
+// optional label without a truthiness check.
+export async function readActiveTab() {
   if (typeof chrome === 'undefined' || !chrome?.tabs?.query) return null
 
   const tab = await findActiveTab()
   if (!tab) return null
 
+  const rawTitle = typeof tab.title === 'string' ? tab.title.trim() : ''
   const fromTabsApi = pickUrl(tab.url) ?? pickUrl(tab.pendingUrl)
   // If the tab record already includes a real path, trust it. Cheaper
   // than a scripting round-trip and avoids the permission surface where
   // possible.
   if (fromTabsApi && urlDepth(fromTabsApi) > 0) {
     console.debug('[loopy] active tab (from tabs.query):', fromTabsApi)
-    return fromTabsApi
+    return { url: fromTabsApi, title: rawTitle }
   }
 
   const fromPage = await readLocationFromPage(tab.id)
   if (fromPage) {
     console.debug('[loopy] active tab (from scripting):', fromPage)
-    return fromPage
+    return { url: fromPage, title: rawTitle }
   }
 
   // Last resort: whatever tabs.query gave us, even if bare.
   console.debug('[loopy] active tab (fallback bare url):', fromTabsApi)
-  return fromTabsApi
+  return fromTabsApi ? { url: fromTabsApi, title: rawTitle } : null
 }
 
 // Find the currently active tab across a couple of query strategies so

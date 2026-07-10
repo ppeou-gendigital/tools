@@ -5,6 +5,7 @@ import { AccountRow } from '@/patterns/AccountRow'
 import { AemJumpItem } from '@/patterns/AemJumpItem'
 import { AppearanceRow } from '@/patterns/AppearanceRow'
 import { DevBadgeItem } from '@/patterns/DevBadgeItem'
+import { FavLinksItem } from '@/patterns/FavLinksItem'
 import { ProjectSiteItem } from '@/patterns/ProjectSiteItem'
 import { SiteTreeItem } from '@/patterns/SiteTreeItem'
 import { TrackThisSiteItem } from '@/patterns/TrackThisSiteItem'
@@ -27,6 +28,7 @@ export function MenuPanel({ corner, onClose }) {
       <TrackThisSiteItem onClose={onClose} />
       <VisitedUrlsItem onClose={onClose} />
       <SiteTreeItem onClose={onClose} />
+      <FavLinksItem onClose={onClose} />
       <ProjectSiteItem onClose={onClose} />
       <DevBadgeItem />
       <AboutRow version={VERSION} />

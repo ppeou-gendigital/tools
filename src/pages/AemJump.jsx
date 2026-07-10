@@ -11,6 +11,7 @@ import { Button } from '@/molecules/Button'
 import { AemJumpBlock } from '@/blocks/AemJumpBlock'
 import { ManageEnvironmentsBlock } from '@/blocks/ManageEnvironmentsBlock'
 import { Deck, Slide } from '@/blocks/Deck'
+import { PageShortcuts } from '@/patterns/PageShortcuts'
 import { UrlParamsMenu } from '@/patterns/UrlParamsMenu'
 import { useAemDomains } from '@/providers/AemDomainsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
@@ -169,6 +170,7 @@ export function AemJump() {
           >
             <SettingsIcon size={14} aria-hidden="true" />
           </Button>
+          <PageShortcuts current="aem-jump" className={styles.iconBtn} />
         </div>
         {showInfo && (
           <p id="aem-jump-info" className={styles.subtitle}>

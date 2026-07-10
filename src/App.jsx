@@ -3,6 +3,7 @@ import { AemDomainsProvider } from '@/providers/AemDomainsProvider'
 import { AuthProvider } from '@/providers/AuthProvider'
 import { FabCornerProvider } from '@/providers/FabCornerProvider'
 import { FontSizeProvider } from '@/providers/FontSizeProvider'
+import { FavoritesProvider } from '@/providers/FavoritesProvider'
 import { NavigationProvider, useNavigation } from '@/providers/NavigationProvider'
 import { PinnedSitesProvider } from '@/providers/PinnedSitesProvider'
 import { PrefsSync } from '@/providers/PrefsSync'
@@ -15,6 +16,7 @@ import { Home } from '@/pages/Home'
 import { Profile } from '@/pages/Profile'
 import { DeckTest } from '@/pages/DeckTest'
 import { AemJump } from '@/pages/AemJump'
+import { FavLinks } from '@/pages/FavLinks'
 import { Settings } from '@/pages/Settings'
 import { AemEnvironments } from '@/pages/AemEnvironments'
 import { SiteTree } from '@/pages/SiteTree'
@@ -35,6 +37,7 @@ function Router() {
   if (route === 'aem-jump') return <AemJump />
   if (route === 'visited-urls') return <VisitedUrls />
   if (route === 'site-tree') return <SiteTree />
+  if (route === 'fav-links') return <FavLinks />
   if (route === 'settings') return <Settings />
   if (route === 'settings-aem-environments') return <AemEnvironments />
   if (route === 'settings-tracked-hosts') return <TrackedHosts />
@@ -58,16 +61,18 @@ export function App() {
               <TrackedHostnamesProvider>
                 <PinnedSitesProvider>
                   <VisitedUrlsProvider>
-                    <AuthProvider>
-                      <PrefsSync />
-                      <NavigationProvider>
-                        <AppShell>
-                          <AuthGate>
-                            <Router />
-                          </AuthGate>
-                        </AppShell>
-                      </NavigationProvider>
-                    </AuthProvider>
+                    <FavoritesProvider>
+                      <AuthProvider>
+                        <PrefsSync />
+                        <NavigationProvider>
+                          <AppShell>
+                            <AuthGate>
+                              <Router />
+                            </AuthGate>
+                          </AppShell>
+                        </NavigationProvider>
+                      </AuthProvider>
+                    </FavoritesProvider>
                   </VisitedUrlsProvider>
                 </PinnedSitesProvider>
               </TrackedHostnamesProvider>
