@@ -1,19 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  ArrowLeft,
   ChevronDown,
   ChevronRight,
   ExternalLink,
   Eraser,
   Globe,
   History,
+  Info,
   Search,
   Trash2,
 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
+import { PageShortcuts } from '@/patterns/PageShortcuts'
 import { useAemDomains } from '@/providers/AemDomainsProvider'
-import { useNavigation } from '@/providers/NavigationProvider'
 import { useVisitedUrls } from '@/providers/VisitedUrlsProvider'
 import { getRebaseOrigin } from '@/lib/prefs'
 import { formatWhen } from '@/lib/visitedUrls'
@@ -58,15 +58,39 @@ function matchesQuery(entry, needle) {
 }
 
 export function VisitedUrls() {
-  const { goBack, previousRouteLabel } = useNavigation()
   const { byDomain, clearAll, clearDomain, removePath, ready } =
     useVisitedUrls()
   const { domains } = useAemDomains()
 
   const [query, setQuery] = useState('')
+  const [showInfo, setShowInfo] = useState(false)
+  // Which hosts the user has manually collapsed. First-load defaults are
+  // seeded from `byDomain` inside an effect below — the user rarely wants
+  // 200 rows expanded at once, so we start collapsed with only the most
+  // recently active host open.
   const [collapsed, setCollapsed] = useState(() => new Set())
+  const collapseSeededRef = useRef(false)
 
   const domainMeta = useMemo(() => buildDomainMeta(domains), [domains])
+
+  // Seed the collapsed set on the first render that has data. Runs once
+  // per mount: subsequent visits or new hostnames don't override the
+  // user's manual state (that would be surprising every time a new
+  // domain appears mid-session). We can't compute this in `useState`'s
+  // initializer because the provider may hydrate asynchronously.
+  useEffect(() => {
+    if (collapseSeededRef.current) return
+    const entries = Object.entries(byDomain)
+    if (entries.length === 0) return
+    entries.sort(([, a], [, b]) => {
+      const at = a?.updatedAt ?? ''
+      const bt = b?.updatedAt ?? ''
+      return at < bt ? 1 : at > bt ? -1 : 0
+    })
+    // Keep the freshest section open, collapse the rest.
+    setCollapsed(new Set(entries.slice(1).map(([host]) => host)))
+    collapseSeededRef.current = true
+  }, [byDomain])
 
   // Section list: one per hostname, sorted by most-recent activity so the
   // freshest domain is at the top. Empty domains (no paths after filter)
@@ -146,61 +170,80 @@ export function VisitedUrls() {
     clearDomain(hostname)
   }
 
+  const searchActive = query.trim().length > 0
+
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={goBack}
-          className={styles.back}
-        >
-          <ArrowLeft size={14} aria-hidden="true" />
-          {previousRouteLabel ?? 'Back'}
-        </Button>
-        <div className={styles.headerText}>
-          <h1 className={styles.title}>Visited URLs</h1>
-          <p className={styles.subtitle}>
-            Pages you&apos;ve opened on your configured AEM domains. Updates
-            live in the background as you browse.
-          </p>
-        </div>
-        {!isEmpty && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClearAll}
-            className={styles.clearAllBtn}
-            title="Clear all visited URLs"
-          >
-            <Eraser size={14} aria-hidden="true" />
-            Clear all
-          </Button>
-        )}
-      </div>
-
-      {!isEmpty && (
-        <div className={styles.filters} role="search">
-          <div className={styles.searchField}>
-            <Search size={14} aria-hidden="true" className={styles.searchIcon} />
-            <Input
-              id="visited-search"
-              name="visited-search"
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search title or path…"
-              aria-label="Search visited URLs"
-              className={styles.searchInput}
-              spellCheck={false}
-              autoComplete="off"
+      {/* Sticky wrapper — title row and the search row pin to the top
+          of the scroll region as one bar. See the module.scss header
+          comment for the layout rationale. */}
+      <div className={styles.topbar}>
+        <header className={styles.header}>
+          <div className={styles.headerRow}>
+            <h1 className={styles.title}>Visited URLs</h1>
+            {!isEmpty && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearAll}
+                className={styles.clearAllBtn}
+                title="Clear all visited URLs"
+              >
+                <Eraser size={14} aria-hidden="true" />
+                Clear all
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowInfo((v) => !v)}
+              className={styles.iconBtn}
+              aria-label="About this page"
+              aria-expanded={showInfo}
+              aria-controls="visited-urls-info"
+              title="About"
+            >
+              <Info size={14} aria-hidden="true" />
+            </Button>
+            <PageShortcuts
+              current="visited-urls"
+              className={styles.iconBtn}
             />
           </div>
-          <div className={styles.count} aria-live="polite">
-            {query.trim() ? `${filteredTotal}/${totalPaths}` : totalPaths}
+          {showInfo && (
+            <p id="visited-urls-info" className={styles.subtitle}>
+              Live capture from your tracked hostnames.
+            </p>
+          )}
+        </header>
+
+        {!isEmpty && (
+          <div className={styles.filters} role="search">
+            <div className={styles.searchField}>
+              <Search
+                size={14}
+                aria-hidden="true"
+                className={styles.searchIcon}
+              />
+              <Input
+                id="visited-search"
+                name="visited-search"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search title or path…"
+                aria-label="Search visited URLs"
+                className={styles.searchInput}
+                spellCheck={false}
+                autoComplete="off"
+              />
+            </div>
+            <div className={styles.count} aria-live="polite">
+              {searchActive ? `${filteredTotal}/${totalPaths}` : totalPaths}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {!ready ? (
         <p className={styles.muted}>Loading…</p>
@@ -219,7 +262,12 @@ export function VisitedUrls() {
             const meta = domainMeta.get(hostname)
             const label = meta?.label ?? hostname
             const origin = meta?.origin ?? `https://${hostname}`
-            const isCollapsed = collapsed.has(hostname)
+            // While the user is searching, force sections open so hits
+            // don't disappear behind a stale collapsed state. Their
+            // manual collapse choices come back once the query clears.
+            const isCollapsed = searchActive
+              ? false
+              : collapsed.has(hostname)
             return (
               <li key={hostname} className={styles.section}>
                 <div className={styles.sectionHead}>

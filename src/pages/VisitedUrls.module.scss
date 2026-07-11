@@ -1,47 +1,82 @@
+// Single scroll container is the outer `.main` from AppShell — this
+// page grows to its natural size and pins its own title/search/host
+// headers with `position: sticky` so they stay reachable while the
+// list scrolls under them. See ./VisitedUrls.jsx for the wrapper
+// structure (topbar > header + filters, then sections).
 .page {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4);
-  height: 100%;
-  min-height: 0;
+  // Reserve room at the bottom for the floating menu FAB (position:
+  // absolute inside .shell). Without this the last section header
+  // sits directly under the purple button and is impossible to click.
+  padding-bottom: calc(
+    var(--fab-size) + var(--fab-corner-offset) + var(--fab-gap) +
+      var(--space-3)
+  );
 }
 
-.header {
+// Wrap for the sticky title + search stack. One sticky container is
+// simpler than nesting two sticky bars with hand-tuned `top` offsets,
+// and it means the section-header `top:` only has to clear a single
+// known landmark.
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+  margin-block: calc(var(--space-2) * -1);
+  background: var(--bg);
+  // Extend slightly past `.page`'s inline padding so scrolled rows
+  // don't peek under the sticky bar's rounded edges.
+  margin-inline: calc(var(--space-4) * -1);
+  padding-inline: var(--space-4);
 }
 
-.back {
-  flex-shrink: 0;
-  color: var(--muted-fg);
-  font-size: var(--text-xs);
-
-  &:hover {
-    color: var(--fg);
-  }
-}
-
-.headerText {
+// Header modeled on the AEM Jump / Site Tree pattern: a single row with
+// the title claiming remaining space so trailing icon buttons hug the
+// right edge, and long-form help copy dropping in as an optional
+// subtitle beneath via the Info toggle.
+.header {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   min-width: 0;
-  flex: 1;
 }
 
 .title {
+  flex: 1;
+  min-width: 0;
   font-size: var(--text-xl);
   font-weight: 600;
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .subtitle {
   color: var(--muted-fg);
   font-size: var(--text-xs);
   margin: 0;
+}
+
+.iconBtn {
+  color: var(--muted-fg);
+
+  &:hover {
+    color: var(--fg);
+  }
 }
 
 .clearAllBtn {
@@ -123,7 +158,7 @@
   color: var(--muted-fg);
 }
 
-// One vertical scroll region for the whole grouped list.
+// Plain flow list — scrolling is owned by the outer `.main` container.
 .sections {
   list-style: none;
   padding: 0;
@@ -131,25 +166,46 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
 }
 
+// No `overflow: hidden` anymore — that would clip the sticky section
+// header. Rounded outer edges are painted by the head/foot rules below.
 .section {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
-  overflow: hidden;
 }
 
 .sectionHead {
+  // Sticky under the topbar so the current host stays visible while
+  // scrolling through its (potentially 200-entry) list. `top` is a
+  // hand-tuned estimate of the topbar's typical height — a few px of
+  // slack is preferable to a computed value that would require a
+  // resize observer.
+  position: sticky;
+  top: 6.5rem;
+  z-index: 1;
+
   display: flex;
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-2) var(--space-2) 0;
   background: color-mix(in srgb, var(--muted) 45%, var(--card));
   border-bottom: 1px solid var(--border);
+
+  // Rounded top corners so the head paints inside `.section`'s
+  // border-radius cleanly without needing `overflow: hidden`.
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+
+  // Collapsed section = head with no path list below. Round the
+  // bottom too and drop the divider so it doesn't clash with the
+  // outer `.section` border.
+  &:last-child {
+    border-bottom-left-radius: var(--radius);
+    border-bottom-right-radius: var(--radius);
+    border-bottom: 0;
+  }
 }
 
 .sectionToggle {
@@ -219,6 +275,10 @@
 
   &:last-child {
     border-bottom: 0;
+    // Round the section's bottom edge to match `.section`'s outer
+    // radius now that we've dropped `overflow: hidden`.
+    border-bottom-left-radius: var(--radius);
+    border-bottom-right-radius: var(--radius);
   }
 
   &:hover {
