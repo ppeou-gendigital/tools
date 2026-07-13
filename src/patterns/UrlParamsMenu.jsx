@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { FlaskConical, FlaskConicalOff, TicketPercent } from 'lucide-react'
+import {
+  Activity,
+  FlaskConical,
+  FlaskConicalOff,
+  TicketPercent,
+} from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Divider } from '@/molecules/Divider'
 import { writeActiveTabUrl } from '@/lib/activeTab'
@@ -74,6 +79,24 @@ function computeAbState(url) {
   }
 }
 
+// Same shape as `computeAbState`, but for the Adobe Analytics debug
+// flag. AppMeasurement.js reads `analyticsDebug` on the rendered page,
+// so `buildAnalyticsToggle` swaps to the .html preview URL for us.
+// `debug === true` means analytics is currently suppressed.
+function computeAnalyticsState(url) {
+  if (typeof url !== 'string' || !url.trim()) return null
+  try {
+    const { parsed, links } = buildAemLinks(url)
+    if (!parsed || !links?.analyticsToggle) return null
+    return {
+      debug: parsed.analyticsDebug === true,
+      href: links.analyticsToggle,
+    }
+  } catch {
+    return null
+  }
+}
+
 function isParseableUrl(url) {
   if (typeof url !== 'string' || !url.trim()) return false
   try {
@@ -89,14 +112,17 @@ function isParseableUrl(url) {
 // `onUrlChange` call fans out to all cards without extra plumbing.
 //
 // Groups two kinds of URL-param edits under one menu:
-//   1. A/B testing toggle (moved here from the inline shortcuts strip so
-//      "things that mutate URL params" all live in one place).
+//   1. Diagnostic toggles — Analytics debug + A/B testing kill switch.
+//      Both live at the top since they're the most-used and both
+//      swap the URL to the .html preview shape so the flag lands on
+//      the rendered page.
 //   2. Promocode presets — set/replace/remove.
-export function UrlParamsMenu({ url, onUrlChange }) {
+export function UrlParamsMenu({ url, onUrlChange, className }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
   const disabled = !isParseableUrl(url)
   const ab = useMemo(() => computeAbState(url), [url])
+  const analytics = useMemo(() => computeAnalyticsState(url), [url])
 
   useEffect(() => {
     if (!open) return
@@ -135,13 +161,18 @@ export function UrlParamsMenu({ url, onUrlChange }) {
     commit(ab.href)
   }
 
+  function handleAnalyticsToggle() {
+    if (!analytics?.href) return
+    commit(analytics.href)
+  }
+
   return (
     <div ref={wrapRef} className={styles.wrap}>
       <Button
         variant="ghost"
         size="sm"
         onClick={() => setOpen((v) => !v)}
-        className={styles.trigger}
+        className={cx(styles.trigger, className)}
         aria-label="Edit URL parameters"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -153,31 +184,54 @@ export function UrlParamsMenu({ url, onUrlChange }) {
 
       {open && (
         <div role="menu" className={styles.menu} aria-label="URL parameters">
-          {ab && (
+          {(analytics || ab) && (
             <>
-              <button
-                type="button"
-                role="menuitem"
-                className={cx(styles.item, styles.itemWithIcon)}
-                onClick={handleAbToggle}
-              >
-                {ab.disabled ? (
-                  <FlaskConicalOff
+              {analytics && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={cx(styles.item, styles.itemWithIcon)}
+                  onClick={handleAnalyticsToggle}
+                >
+                  <Activity
                     size={14}
                     className={styles.itemIcon}
                     aria-hidden="true"
                   />
-                ) : (
-                  <FlaskConical
-                    size={14}
-                    className={styles.itemIcon}
-                    aria-hidden="true"
-                  />
-                )}
-                <span>
-                  {ab.disabled ? 'Enable A/B testing' : 'Disable A/B testing'}
-                </span>
-              </button>
+                  <span>
+                    {analytics.debug
+                      ? 'Enable Analytics'
+                      : 'Disable Analytics'}
+                  </span>
+                </button>
+              )}
+              {ab && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={cx(styles.item, styles.itemWithIcon)}
+                  onClick={handleAbToggle}
+                >
+                  {ab.disabled ? (
+                    <FlaskConicalOff
+                      size={14}
+                      className={styles.itemIcon}
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <FlaskConical
+                      size={14}
+                      className={styles.itemIcon}
+                      aria-hidden="true"
+                    />
+                  )}
+                  <span>
+                    {ab.disabled
+                      ? 'Enable A/B testing'
+                      : 'Disable A/B testing'}
+                  </span>
+                </button>
+              )}
               <Divider />
             </>
           )}

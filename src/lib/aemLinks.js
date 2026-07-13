@@ -213,6 +213,15 @@ function detectAbTestDisabled(searchParams) {
   return searchParams.get('mboxDisable') === '1'
 }
 
+// Adobe Analytics debug flag. Mirrors detectAbTestDisabled — the param
+// is emitted on the rendered page (AppMeasurement.js suppresses hits
+// when it's set) and consumers pair the flag with `analyticsToggle` to
+// pick the right label ("Disable Analytics" vs "Enable Analytics") on
+// a single toggle button.
+function detectAnalyticsDebug(searchParams) {
+  return searchParams.get('analyticsDebug') === '1'
+}
+
 export function parseAemUrlForTraditional(urlString) {
   const u = urlString instanceof URL ? urlString : new URL(urlString)
 
@@ -223,6 +232,7 @@ export function parseAemUrlForTraditional(urlString) {
   const hash = u.hash ? u.hash.slice(1) : ''
   const mode = detectMode({ pathname: u.pathname, searchParams: u.searchParams })
   const abTestDisabled = detectAbTestDisabled(u.searchParams)
+  const analyticsDebug = detectAnalyticsDebug(u.searchParams)
 
   return {
     origin: u.origin,
@@ -236,6 +246,7 @@ export function parseAemUrlForTraditional(urlString) {
     ueHost: null,
     mode,
     abTestDisabled,
+    analyticsDebug,
   }
 }
 
@@ -284,6 +295,7 @@ export function parseAemUrlForCloud(urlString) {
     isUe: !!ueMatch,
   })
   const abTestDisabled = detectAbTestDisabled(logical.searchParams)
+  const analyticsDebug = detectAnalyticsDebug(logical.searchParams)
 
   return {
     origin: u.origin,
@@ -297,6 +309,7 @@ export function parseAemUrlForCloud(urlString) {
     ueHost,
     mode,
     abTestDisabled,
+    analyticsDebug,
   }
 }
 
@@ -480,6 +493,24 @@ const buildAbToggle = ({ origin, resourcePath, isDam, urlParams, hash, mode }) =
   return { abToggle: `${origin}${resourcePath}${ext}${q}${h}` }
 }
 
+// Adobe Analytics debug flag toggle. Same shape as buildAbToggle — the
+// param is meaningful on the rendered page (AppMeasurement.js reads it
+// there and suppresses hits), so a click from an editor / Cloud-shell
+// URL lands the user on the .html preview with the param flipped.
+// Consumers pair this with `parsed.analyticsDebug` to render "Disable
+// Analytics" vs "Enable Analytics" on a single toggle button.
+const buildAnalyticsToggle = ({ origin, resourcePath, isDam, urlParams, hash, mode }) => {
+  if (!resourcePath) return { analyticsToggle: null }
+  const params = new URLSearchParams(urlParams || '')
+  if (params.get('analyticsDebug') === '1') params.delete('analyticsDebug')
+  else params.set('analyticsDebug', '1')
+  if (mode === 'disabled') params.set('wcmmode', 'disabled')
+  const q = params.toString() ? `?${params.toString()}` : ''
+  const h = hash ? `#${hash}` : ''
+  const ext = isDam ? '' : '.html'
+  return { analyticsToggle: `${origin}${resourcePath}${ext}${q}${h}` }
+}
+
 /* -------------------------------------------------------------------------
  * Traditional-only builders (never included in the Cloud pipeline)
  * ---------------------------------------------------------------------- */
@@ -530,6 +561,7 @@ export const buildAemLinksForCloud = compose(
   buildCrx,
   buildPackmgr,
   buildAbToggle,
+  buildAnalyticsToggle,
 )
 
 // eds-ue is a Cloud author variant: same shell + admin consoles, but the
@@ -556,6 +588,7 @@ export const buildAemLinksForEdsUe = compose(
   buildCrx,
   buildPackmgr,
   buildAbToggle,
+  buildAnalyticsToggle,
 )
 
 // Local Cloud SDK variant of eds-ue: the input URL comes from a `local-sdk`
@@ -584,6 +617,7 @@ export const buildAemLinksForEdsUeLocal = compose(
   buildCrx,
   buildPackmgr,
   buildAbToggle,
+  buildAnalyticsToggle,
   // Felix + classic UI + welcome — SDK has these locally
   buildSystemConsole,
   buildOsgiConsole,
@@ -616,6 +650,7 @@ export const buildAemLinksForTraditional = compose(
   buildCrx,
   buildPackmgr,
   buildAbToggle,
+  buildAnalyticsToggle,
   // traditional-only (Felix + classic UI + welcome)
   buildSystemConsole,
   buildOsgiConsole,

@@ -1,5 +1,7 @@
 import { ExternalLink, FolderTree, Star } from 'lucide-react'
 import { Button } from '@/molecules/Button'
+import { UrlParamsMenu } from '@/patterns/UrlParamsMenu'
+import { useCurrentTabUrl } from '@/hooks/useCurrentTabUrl'
 import { useNavigation } from '@/providers/NavigationProvider'
 import styles from './PageShortcuts.module.scss'
 
@@ -33,11 +35,20 @@ const SHORTCUTS = [
 // Rendered at the tail of the page's header row. The `.separator` uses
 // `margin-left: auto` so the whole group hugs the right edge — the
 // separator pipe becomes the visual boundary between the page's own
-// toolbar (on the left) and these cross-page nav links (on the right).
+// toolbar (on the left) and this right-hand cluster (on the right).
+//
+// The right-hand cluster is:
+//   1. UrlParamsMenu — one-click URL param edits (A/B, Analytics debug,
+//      promocode presets) targeting the active browser tab. Sits first
+//      because it's a tool the current page acts on, not navigation.
+//   2. Cross-page nav buttons — jump to sibling tool pages.
+//
+// AEM Jump has its own dedicated UrlParamsMenu bound to the source-card
+// input, so it doesn't render PageShortcuts and there's no duplication.
 export function PageShortcuts({ current, className }) {
   const nav = useNavigation()
+  const tabUrl = useCurrentTabUrl()
   const visible = SHORTCUTS.filter((s) => s.id !== current)
-  if (visible.length === 0) return null
   return (
     <>
       <span
@@ -46,6 +57,7 @@ export function PageShortcuts({ current, className }) {
         aria-orientation="vertical"
         className={styles.separator}
       />
+      <UrlParamsMenu url={tabUrl ?? ''} className={className} />
       {visible.map(({ id, label, icon: Icon, pick }) => (
         <Button
           key={id}
