@@ -73,17 +73,14 @@ All five should succeed on a fresh clone with a valid `.env`.
 
 ## 7. Deploy
 
-- **Web (GitHub Pages)**: push to `tool/foo` — the workflow at `.github/workflows/deploy-foo-pages.yml` builds and publishes to `/tools/foo/` on the repo's Pages site.
+- **Web (GitHub Pages)**: push to `tool/foo` — the workflow at `.github/workflows/deploy-foo-pages.yml` dual-builds this tool and its sibling(s), then publishes a combined artifact so `/tools/foo/` (and e.g. `/tools/loopy/`) stay live together.
 - **Extension (release)**: `git tag foo-v0.1.0 && git push --tags` — the release workflow builds `dist/`, zips it, and creates a GitHub Release with the zip attached.
 
-## Pages gotcha (READ THIS)
+## Pages coexistence (READ THIS)
 
-A GitHub repo publishes exactly **one** Pages site. Every deploy to the `github-pages` environment **replaces the entire site**. If `tool/loopy` deploys today and `tool/foo` deploys tomorrow, `/tools/loopy/` will 404 until loopy is redeployed.
+A GitHub repo publishes exactly **one** Pages site, and each deploy replaces the entire site. Coexistence works because every tool's Pages workflow builds **all** sibling tools into one artifact (`site/<tool>/` folders). Mirror that dual-build (or multi-build) pattern in every `deploy-*-pages.yml`, and add each `tool/<name>` branch to the `github-pages` environment's deployment branch policy.
 
-The `/tools/<tool>/` subpath convention gives us clean, stable URLs but does *not* enable coexistence. If two tools need Pages simultaneously, either:
-
-1. Give the second tool its own dedicated GitHub repo (recommended long-term).
-2. Host the second tool on Vercel / Cloudflare Pages / Netlify.
+If a tool should not share this site, give it its own dedicated GitHub repo (or host it on Vercel / Cloudflare Pages / Netlify).
 
 ## What to build next
 

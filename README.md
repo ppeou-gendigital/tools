@@ -419,21 +419,18 @@ Add more as your tool needs them (`tabs`, `webNavigation`, `alarms`, etc.) in [m
 
 - **Workflow**: [`.github/workflows/deploy-acceso-pages.yml`](.github/workflows/deploy-acceso-pages.yml)
 - **Trigger**: push to `tool/acceso` (or manual `workflow_dispatch` from the Actions tab)
-- **Live URL**: `https://<user>.github.io/tools/acceso/`
-- **Build**: `npm run build:web` → `dist-web/acceso/` (nested so the uploaded artifact serves at `/tools/acceso/`)
+- **Live URL**: `https://ppeou-gendigital.github.io/tools/acceso/`
+- **Build**: dual-build — this workflow builds `tool/acceso` and `tool/loopy`, then uploads a combined artifact (`site/acceso/` + `site/loopy/`) so both tools stay live on the one Pages site
 - **Repo secrets required** (Settings → Secrets and variables → Actions):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
 - **Repo Pages settings**: Settings → Pages → Source = **GitHub Actions**
+- **Deployment branch policy**: the `github-pages` environment must allow `tool/acceso` (and `tool/loopy`)
 
 `scripts/init-tool.mjs` renames both this workflow file and the release workflow to match your tool's name, plus updates the branch triggers.
 
-### One Pages site per repo — important
+### One Pages site per repo — dual-build coexistence
 
-A GitHub repo publishes exactly **one** Pages site. Every deploy to the `github-pages` environment **replaces the entire site**. If `tool/loopy` deploys today and `tool/foo` deploys tomorrow, `/tools/loopy/` will 404 until loopy is redeployed. The `/tools/<tool>/` subpath convention gives us clean, stable URLs but does *not* enable coexistence.
+A GitHub repo publishes exactly **one** Pages site, and each deploy replaces the entire site. To keep multiple tools live, each tool's Pages workflow checks out the sibling tool branch(es), builds every tool, and uploads a combined artifact (e.g. `site/loopy/` + `site/acceso/`). That yields stable URLs like `/tools/loopy/` and `/tools/acceso/` without one deploy wiping the other.
 
-If two tools need Pages simultaneously, options in order of preference:
-
-1. Give the second tool its own dedicated GitHub repo (recommended long-term).
-2. Host the second tool on Vercel / Cloudflare Pages / Netlify.
-3. Build a coordinator workflow that combines all tools' builds into one artifact (complex — not recommended unless the tool count grows).
+When adding a third tool, extend every Pages workflow's dual-build (now multi-build) to include the new branch, and add that branch to the `github-pages` deployment branch policy. For a long-term split, give the new tool its own repo instead.
