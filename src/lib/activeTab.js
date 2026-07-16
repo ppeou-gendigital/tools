@@ -32,9 +32,8 @@ export async function readActiveTabUrl() {
 
 // Read the active tab's URL *and* title. Same resolver logic as
 // readActiveTabUrl (which now delegates here) but the return value is
-// `{ url, title } | null` so callers who need the title — e.g. the
-// Fav Links bookmark action — don't have to make a second round-trip
-// or reach into chrome.tabs directly.
+// `{ url, title } | null` so callers who need the title don't have to
+// make a second round-trip or reach into chrome.tabs directly.
 //
 // Title comes from the tab record (`tab.title`). Chrome updates it
 // eagerly on navigation and title changes, so by the time the popup

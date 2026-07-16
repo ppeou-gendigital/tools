@@ -1,27 +1,25 @@
-// Pure helpers for the "pinned sites" list — the user-curated subset of
-// hostnames that get a slide on the Site Tree page.
+// Pure helpers for the Fav Links domain-order list — the user-curated
+// display sequence for domain groups on the Fav Links page.
 //
 // Storage shape everywhere (chrome.storage.local, localStorage, Supabase
-// user_data.pinned_sites) is an ordered array of lowercase hostname
+// user_data.favorites_order) is an ordered array of lowercase hostname
 // strings:
 //
 //   ["confluence.corp.example.com", "jira.corp.example.com"]
 //
-// The array order is meaningful — it drives the Site Tree deck slide
-// order. New pins append to the end; explicit reorder actions
-// (movePinned below) shuffle neighbors. Downstream pages that don't
-// care about order re-sort on render.
+// The array order is meaningful — it drives the Fav Links group order.
+// New entries append implicitly (i.e. any hostname in `byDomain` not
+// present in the order array falls to the bottom on render); explicit
+// reorder actions (moveFavoriteDomain below) shuffle neighbors.
 //
 // Since order carries user intent, the sync layer's stable-key digest
-// (see stablePinnedKey) is order-sensitive too: swapping two pins on
-// one device propagates to the other, and last-writer wins.
+// (see stableFavoritesOrderKey) is order-sensitive too: swapping two
+// domains on one device propagates to the other, and last-writer wins.
 
 function isValidHost(v) {
   if (typeof v !== 'string') return false
   const trimmed = v.trim()
   if (!trimmed) return false
-  // A hostname is anything that survives new URL() in http(s) form. We do
-  // a light regex check first to avoid throwing for obvious junk.
   return /^[a-z0-9.-]+$/i.test(trimmed)
 }
 
@@ -33,11 +31,7 @@ function toKey(v) {
 // return a deduped, lowercased array of valid hostnames — preserving
 // input order. Anything junk is dropped silently so a bad row can't
 // crash the UI.
-//
-// Order preservation matters because Site Tree uses this array as the
-// deck slide order. Callers that want alphabetical (e.g. Site Tree's
-// manage list) sort a copy at render time.
-export function normalizePinnedSites(raw) {
+export function normalizeFavoritesOrder(raw) {
   const source = normalizeToArray(raw)
   const seen = new Set()
   const out = []
@@ -51,16 +45,15 @@ export function normalizePinnedSites(raw) {
   return out
 }
 
-// Move a hostname up (-1) or down (+1) among the pinned list. Returns
-// a *new* array. Pure so React state comparisons stay simple, and so
-// tests can drive it without a component.
+// Move a hostname up (-1) or down (+1) among the domain-order list.
+// Returns a *new* array. Pure so React state comparisons stay simple.
 //
 // No-ops:
 //   - host is not in the list -> list returned as-is
 //   - direction is 0 (or not ±1) -> list returned as-is
 //   - moving up from index 0 or down from the last index -> as-is
-export function movePinned(list, host, direction) {
-  const arr = normalizePinnedSites(list)
+export function moveFavoriteDomain(list, host, direction) {
+  const arr = normalizeFavoritesOrder(list)
   const key = toKey(host ?? '')
   if (!key) return arr
   const from = arr.indexOf(key)
@@ -96,11 +89,9 @@ function normalizeToArray(raw) {
 }
 
 // Cheap deterministic key used by the sync layer to answer "did the
-// pinned-sites list change since the last remote pull?". Order-
-// sensitive: a reorder is a "change" and should propagate to the
-// cloud + other devices. Dedupe + lowercase happen inside
-// normalizePinnedSites so equivalent-but-differently-cased inputs
-// still collapse to the same key.
-export function stablePinnedKey(list) {
-  return JSON.stringify(normalizePinnedSites(list))
+// domain-order list change since the last remote pull?". Order-
+// sensitive: a reorder is a "change" and should propagate to the cloud
+// + other devices.
+export function stableFavoritesOrderKey(list) {
+  return JSON.stringify(normalizeFavoritesOrder(list))
 }

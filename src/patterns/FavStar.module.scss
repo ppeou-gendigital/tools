@@ -1,0 +1,22 @@
+// Slight tint on the active state so the filled star reads as
+// "saved" without relying on fill alone (accessibility + darker themes).
+.star {
+  color: var(--muted-fg);
+
+  &:hover:not(:disabled) {
+    color: var(--fg);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.active {
+  color: var(--accent, #f5b301);
+
+  &:hover:not(:disabled) {
+    color: var(--accent, #f5b301);
+  }
+}

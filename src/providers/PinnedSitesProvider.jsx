@@ -73,7 +73,7 @@ export function PinnedSitesProvider({ children }) {
   }, [])
 
   // Add-or-remove. New pins land at the end of the array so the user's
-  // most recent pin action sits at the bottom of the Fav Links deck
+  // most recent pin action sits at the bottom of the Site Tree deck
   // (feels less disruptive than reshuffling the whole list). Removing
   // preserves the relative order of the survivors.
   const toggle = useCallback(

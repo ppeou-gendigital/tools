@@ -139,7 +139,7 @@
 // indent uses a CSS var written by the JSX side.
 .treeRow {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
   gap: var(--space-1);
   min-height: 1.75rem;
@@ -150,6 +150,21 @@
   &:hover {
     background: color-mix(in srgb, var(--muted) 30%, transparent);
   }
+}
+
+// Trailing star column. Compact so the leaf label + variant badge get
+// the space they need. `treeFavSpacer` reserves the same width so
+// non-clickable rows (folders) stay column-aligned with clickable ones.
+.treeFav {
+  padding: 0;
+  min-width: 1.5rem;
+  height: 1.5rem;
+}
+
+.treeFavSpacer {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .chevronBtn {

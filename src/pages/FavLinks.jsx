@@ -1,210 +1,30 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDown,
   ArrowUp,
-  Bookmark,
   Check,
-  ChevronDown,
-  ChevronRight,
+  Eraser,
   Globe,
   Info,
-  Pin,
-  PinOff,
+  Pencil,
+  Search,
   Star,
+  Trash2,
   X,
 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
-import { Deck, Slide } from '@/blocks/Deck'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
 import { useAemDomains } from '@/providers/AemDomainsProvider'
 import { useFavorites } from '@/providers/FavoritesProvider'
-import { usePinnedSites } from '@/providers/PinnedSitesProvider'
-import { useTrackedHostnames } from '@/providers/TrackedHostnamesProvider'
-import { useCurrentTabHost } from '@/hooks/useCurrentTabHost'
-import { isJumpableUrl, readActiveTab } from '@/lib/activeTab'
+import { useFavoritesOrder } from '@/providers/FavoritesOrderProvider'
 import { getRebaseOrigin } from '@/lib/prefs'
-import {
-  canonicalizePattern,
-  isValidPattern,
-} from '@/lib/trackedHostnames'
 import { cx } from '@/lib/cx'
 import { isExtension } from '@/env'
 import styles from './FavLinks.module.scss'
 
-// Split a favorites paths object into a nested tree keyed by URL path
-// segments. Same shape as SiteTree.buildTree, minus the visit metadata:
-//
-//   {
-//     name:         'mysite.com',  // hostname at root; last segment elsewhere
-//     fullPath:     '/',           // pathname from origin (no query)
-//     bookmarked:   true|false,    // true when this exact path was favorited
-//     variantKeys:  [],            // paths[] keys collapsed into this leaf
-//                                  //   (>1 when query-string variants share
-//                                  //   a pathname; used for delete)
-//     children:     Map<string, Node>,
-//   }
-//
-// Query-string variants at the same pathname collapse to a single leaf.
-// Deleting a leaf drops every stored variant of that pathname — matches
-// the "url-path (without query-param) is good" UX ask.
-function buildFavTree(hostname, paths) {
-  const root = {
-    name: hostname,
-    fullPath: '/',
-    bookmarked: false,
-    variantKeys: [],
-    children: new Map(),
-  }
-  const entries =
-    paths && typeof paths === 'object' && !Array.isArray(paths)
-      ? Object.entries(paths)
-      : []
-  for (const [key] of entries) {
-    const qIdx = key.indexOf('?')
-    const pathname = qIdx === -1 ? key : key.slice(0, qIdx)
-    const segments = pathname.split('/').filter(Boolean)
-    let node = root
-    for (const seg of segments) {
-      let child = node.children.get(seg)
-      if (!child) {
-        const parentPath = node.fullPath === '/' ? '' : node.fullPath
-        child = {
-          name: seg,
-          fullPath: `${parentPath}/${seg}`,
-          bookmarked: false,
-          variantKeys: [],
-          children: new Map(),
-        }
-        node.children.set(seg, child)
-      }
-      node = child
-    }
-    node.bookmarked = true
-    node.variantKeys.push(key)
-  }
-  return root
-}
-
-function sortedChildren(node) {
-  return [...node.children.values()].sort((a, b) =>
-    a.name.localeCompare(b.name),
-  )
-}
-
-// Total number of bookmarked leaves in the tree — matches the flat count
-// the header used to show.
-function countBookmarked(root) {
-  let n = 0
-  const stack = [root]
-  while (stack.length) {
-    const cur = stack.pop()
-    if (cur.bookmarked) n += 1
-    for (const child of cur.children.values()) stack.push(child)
-  }
-  return n
-}
-
-// Recursive tree row. Depth drives the indent via a CSS var so the
-// SCSS side stays declarative. Nodes with children get a chevron
-// toggle; leaf nodes keep a spacer of the same width so labels line up
-// in a column. Bookmarked nodes render as a link (path-only, no title)
-// with a trailing delete button; intermediate folders are plain text.
-function FavTreeNode({
-  node,
-  hostname,
-  origin,
-  depth,
-  collapsed,
-  onToggle,
-  onRemove,
-}) {
-  const hasChildren = node.children.size > 0
-  const isCollapsed = hasChildren && collapsed.has(node.fullPath)
-  const clickable = node.bookmarked
-  const href = clickable ? `${origin}${node.fullPath}` : null
-
-  function handleRemove() {
-    for (const key of node.variantKeys) {
-      onRemove(hostname, key)
-    }
-  }
-
-  return (
-    <>
-      <div className={styles.treeRow} style={{ '--tree-depth': depth }}>
-        {hasChildren ? (
-          <button
-            type="button"
-            className={styles.chevronBtn}
-            onClick={() => onToggle(node.fullPath)}
-            aria-expanded={!isCollapsed}
-            aria-label={isCollapsed ? `Expand ${node.name}` : `Collapse ${node.name}`}
-          >
-            {isCollapsed ? (
-              <ChevronRight size={14} aria-hidden="true" />
-            ) : (
-              <ChevronDown size={14} aria-hidden="true" />
-            )}
-          </button>
-        ) : (
-          <span className={styles.chevronSpacer} aria-hidden="true" />
-        )}
-
-        {clickable ? (
-          <a
-            className={styles.treeLink}
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={href}
-          >
-            <span className={styles.treeName}>{node.name}</span>
-          </a>
-        ) : (
-          <span className={styles.treePlain}>
-            <span className={styles.treeName}>{node.name}</span>
-          </span>
-        )}
-
-        {clickable ? (
-          <button
-            type="button"
-            className={styles.treeDeleteBtn}
-            onClick={handleRemove}
-            aria-label={`Remove ${node.fullPath}`}
-            title="Remove favorite"
-          >
-            <X size={14} aria-hidden="true" />
-          </button>
-        ) : (
-          <span className={styles.chevronSpacer} aria-hidden="true" />
-        )}
-      </div>
-
-      {hasChildren && !isCollapsed && (
-        <div className={styles.children}>
-          {sortedChildren(node).map((child) => (
-            <FavTreeNode
-              key={child.fullPath}
-              node={child}
-              hostname={hostname}
-              origin={origin}
-              depth={depth + 1}
-              collapsed={collapsed}
-              onToggle={onToggle}
-              onRemove={onRemove}
-            />
-          ))}
-        </div>
-      )}
-    </>
-  )
-}
-
-// hostname -> { label, origin } lookup. AEM Jump entries opt-in a nicer
-// label + origin; everything else falls back to raw hostname +
-// https://<host>. Same shape as SiteTree so the two pages read the
-// same way for a user.
+// Build a lookup: hostname -> { label, origin } used for friendlier
+// group headers when the domain is a configured AEM environment.
+// Mirrors the buildDomainMeta helper on Site Tree.
 function buildDomainMeta(domains) {
   const meta = new Map()
   for (const d of domains ?? []) {
@@ -226,193 +46,307 @@ function buildDomainMeta(domains) {
   return meta
 }
 
-// A per-domain slide: header (label + hostname + count) and the
-// recursive tree body. Path-only labels — titles are intentionally
-// suppressed at this level; the visual grouping under shared prefixes
-// makes the working set of URLs read at a glance, and users who want
-// the title can hover the link (browser tooltip carries the href).
-function FavDomainSlide({ hostname, label, origin, bucket, onRemove }) {
-  const [collapsed, setCollapsed] = useState(() => new Set())
+// Parse a user-entered URL into the (hostname, path+search+hash) shape
+// the storage layer keys on. Returns null when the input isn't a real
+// http(s) URL so the caller can surface an inline error instead of
+// silently corrupting the store.
+function parseEditedUrl(input) {
+  const trimmed = String(input ?? '').trim()
+  if (!trimmed) return null
+  try {
+    const u = new URL(trimmed)
+    if (!/^https?:$/i.test(u.protocol)) return null
+    const hostname = u.hostname.toLowerCase()
+    if (!hostname) return null
+    const path = `${u.pathname || '/'}${u.search || ''}${u.hash || ''}`
+    return { hostname, path }
+  } catch {
+    return null
+  }
+}
 
-  const tree = useMemo(
-    () => buildFavTree(hostname, bucket?.paths),
-    [hostname, bucket?.paths],
-  )
-  const bookmarkedCount = countBookmarked(tree)
+// One favorited URL as a single-line grid row. Two visual states:
+//   - View: the whole row is an anchor so clicking anywhere opens the
+//     link in a new tab (matches Site Tree behavior). Hover reveals
+//     edit + remove buttons.
+//   - Edit: same grid slots, but title/URL become inputs and the
+//     hover buttons flip to save (Check) + cancel (X). Save on Enter,
+//     cancel on Escape.
+//
+// Both label spans carry a `title` HTML attribute so long values get a
+// browser-native hover tooltip.
+function FavRow({
+  hostname,
+  path,
+  entry,
+  origin,
+  canModify,
+  onRemove,
+  onUpdate,
+}) {
+  const fullUrl = `${origin}${path}`
+  const label = entry?.title?.trim() || '(untitled)'
 
-  function onToggle(fullPath) {
-    setCollapsed((prev) => {
-      const next = new Set(prev)
-      if (next.has(fullPath)) next.delete(fullPath)
-      else next.add(fullPath)
-      return next
+  const [isEditing, setIsEditing] = useState(false)
+  const [titleDraft, setTitleDraft] = useState(entry?.title ?? '')
+  const [urlDraft, setUrlDraft] = useState(fullUrl)
+  const [error, setError] = useState('')
+  const titleInputRef = useRef(null)
+
+  // Reset drafts whenever the underlying entry changes so a remote
+  // update (e.g. PrefsSync applying a pulled snapshot) doesn't leave
+  // a stale in-progress edit dangling.
+  useEffect(() => {
+    if (!isEditing) {
+      setTitleDraft(entry?.title ?? '')
+      setUrlDraft(fullUrl)
+    }
+  }, [entry?.title, fullUrl, isEditing])
+
+  // Focus the title on entering edit mode so the user can start typing
+  // immediately after clicking the pencil.
+  useEffect(() => {
+    if (isEditing) titleInputRef.current?.focus()
+  }, [isEditing])
+
+  function enterEdit(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    setTitleDraft(entry?.title ?? '')
+    setUrlDraft(fullUrl)
+    setError('')
+    setIsEditing(true)
+  }
+
+  function cancelEdit() {
+    setTitleDraft(entry?.title ?? '')
+    setUrlDraft(fullUrl)
+    setError('')
+    setIsEditing(false)
+  }
+
+  function saveEdit() {
+    const parsed = parseEditedUrl(urlDraft)
+    if (!parsed) {
+      setError('Enter a valid http(s) URL')
+      return
+    }
+    onUpdate(hostname, path, {
+      hostname: parsed.hostname,
+      path: parsed.path,
+      title: titleDraft.trim(),
     })
+    setError('')
+    setIsEditing(false)
+  }
+
+  function onKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      saveEdit()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      cancelEdit()
+    }
+  }
+
+  if (isEditing) {
+    return (
+      <div
+        className={cx(styles.row, styles.rowEditing)}
+        role="group"
+        aria-label="Edit favorite"
+      >
+        <input
+          ref={titleInputRef}
+          type="text"
+          className={cx(styles.rowInput, styles.rowTitle)}
+          value={titleDraft}
+          onChange={(e) => setTitleDraft(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder="Title"
+          aria-label="Title"
+        />
+        <input
+          type="url"
+          className={cx(styles.rowInput, styles.rowUrl)}
+          value={urlDraft}
+          onChange={(e) => setUrlDraft(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder="https://…"
+          aria-label="URL"
+          aria-invalid={!!error}
+          spellCheck={false}
+          autoCapitalize="off"
+          autoCorrect="off"
+        />
+        <span className={styles.rowActions}>
+          <button
+            type="button"
+            className={cx(styles.rowIconBtn, styles.rowSave)}
+            onClick={saveEdit}
+            aria-label="Save changes"
+            title="Save (Enter)"
+          >
+            <Check size={12} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className={styles.rowIconBtn}
+            onClick={cancelEdit}
+            aria-label="Cancel edit"
+            title="Cancel (Esc)"
+          >
+            <X size={12} aria-hidden="true" />
+          </button>
+        </span>
+        {error && (
+          <span className={styles.rowError} role="alert">
+            {error}
+          </span>
+        )}
+      </div>
+    )
   }
 
   return (
-    <div className={styles.slideBody}>
-      <div className={styles.slideHead}>
-        <Globe size={14} aria-hidden="true" className={styles.slideHeadIcon} />
-        <div className={styles.slideHeadText}>
-          <span className={styles.slideLabel}>{label}</span>
-          <span className={styles.slideHost}>{hostname}</span>
-        </div>
-        <span className={styles.slideCount}>
-          {bookmarkedCount === 1 ? '1 link' : `${bookmarkedCount} links`}
+    <a
+      className={styles.row}
+      href={fullUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={label}
+    >
+      <span className={styles.rowTitle} title={label}>
+        {label}
+      </span>
+      <span className={styles.rowUrl} title={fullUrl}>
+        {fullUrl}
+      </span>
+      {canModify && (
+        <span className={styles.rowActions}>
+          <button
+            type="button"
+            className={styles.rowIconBtn}
+            onClick={enterEdit}
+            aria-label="Edit favorite"
+            title="Edit"
+          >
+            <Pencil size={12} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className={styles.rowIconBtn}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onRemove(hostname, path)
+            }}
+            aria-label="Remove favorite"
+            title="Remove favorite"
+          >
+            <X size={12} aria-hidden="true" />
+          </button>
         </span>
-      </div>
-      <div className={styles.slideScroll}>
-        {bookmarkedCount === 0 ? (
-          <p className={cx(styles.muted, styles.emptyTree)}>
-            No favorites for <code>{hostname}</code> yet.
-          </p>
-        ) : (
-          <FavTreeNode
-            node={tree}
-            hostname={hostname}
-            origin={origin}
-            depth={0}
-            collapsed={collapsed}
-            onToggle={onToggle}
-            onRemove={onRemove}
-          />
-        )}
-      </div>
-    </div>
+      )}
+    </a>
   )
 }
 
-// The trailing "Manage pins" slide — the curation surface for the
-// Fav Links deck. Two responsibilities, matching the scoped-down UX:
-//
-//   1. Toggle whether a domain shows up as its own slide (pin/unpin).
-//      Unpinning does NOT delete favorites — the URLs stay in the
-//      store so re-pinning restores the slide with its history intact.
-//   2. Reorder pinned slides via up/down arrow buttons. Arrows only
-//      render for pinned rows and disable at their respective edges
-//      (top can't go up, bottom can't go down).
-//
-// Per-URL delete lives on the per-domain tree slide (X next to each
-// bookmarked leaf); domain-level bulk delete is intentionally not
-// exposed here — a user who wants to purge a domain unpins it, and
-// deletes URLs individually if they want the underlying store cleared.
-function ManagePinsSlide({
+// One domain group: sticky-ish header + rows. Header carries the
+// friendly label, hostname, count, reorder buttons, and a "clear this
+// domain" button. Rows come pre-filtered so the group is only rendered
+// when at least one row survives the search.
+function FavGroup({
+  hostname,
+  label,
+  origin,
   rows,
-  pinned,
-  currentHost,
-  onToggle,
-  onMove,
+  totalCount,
+  index,
+  lastIndex,
+  canModify,
+  onMoveUp,
+  onMoveDown,
+  onRemoveRow,
+  onUpdateRow,
+  onClearDomain,
 }) {
-  const isEmpty = rows.length === 0
+  const filteredCount = rows.length
+  const upDisabled = index === 0
+  const downDisabled = index === lastIndex
   return (
-    <div className={styles.slideBody}>
-      <div className={styles.slideHead}>
-        <Pin size={14} aria-hidden="true" className={styles.slideHeadIcon} />
-        <div className={styles.slideHeadText}>
-          <span className={styles.slideLabel}>Manage pins</span>
-          <span className={styles.slideHost}>
-            {isEmpty
-              ? 'no favorites yet'
-              : `${pinned.size} pinned / ${rows.length} total`}
-          </span>
+    <section className={styles.group} aria-label={label}>
+      <header className={styles.groupHead}>
+        <Globe
+          size={14}
+          aria-hidden="true"
+          className={styles.groupIcon}
+        />
+        <div className={styles.groupText}>
+          <span className={styles.groupLabel}>{label}</span>
+          <span className={styles.groupHost}>{hostname}</span>
         </div>
-      </div>
-      <div className={styles.slideScroll}>
-        {isEmpty ? (
-          <EmptyState />
-        ) : (
-          <ul className={styles.pickerList}>
-            {rows.map((row) => {
-              const isPinned = pinned.has(row.hostname)
-              const isCurrent = row.hostname === currentHost
-              const isFirst = row.pinnedIndex === 0
-              const isLast =
-                row.pinnedIndex !== -1 && row.pinnedIndex === row.pinnedTotal - 1
-              return (
-                <li key={row.hostname}>
-                  <div
-                    className={cx(
-                      styles.pickerRow,
-                      isPinned && styles.pickerRowPinned,
-                      isCurrent && styles.pickerRowCurrent,
-                    )}
-                  >
-                    <button
-                      type="button"
-                      className={styles.pinToggleBtn}
-                      onClick={() => onToggle(row.hostname)}
-                      aria-pressed={isPinned}
-                      title={isPinned ? 'Unpin from deck' : 'Pin to deck'}
-                    >
-                      {isPinned ? (
-                        <Pin
-                          size={14}
-                          aria-hidden="true"
-                          className={styles.pinIconActive}
-                        />
-                      ) : (
-                        <PinOff
-                          size={14}
-                          aria-hidden="true"
-                          className={styles.pinIconInactive}
-                        />
-                      )}
-                    </button>
-                    <span className={styles.pickerText}>
-                      <span className={styles.pickerLabel}>
-                        {row.label}
-                        {isCurrent && (
-                          <span
-                            className={styles.currentBadge}
-                            title="Current tab"
-                          >
-                            current
-                          </span>
-                        )}
-                      </span>
-                      <span className={styles.pickerHost}>
-                        {row.hostname}
-                        {row.count > 0 && (
-                          <>
-                            {' · '}
-                            {row.count === 1 ? '1 link' : `${row.count} links`}
-                          </>
-                        )}
-                        {row.count === 0 && ' · no favorites yet'}
-                      </span>
-                    </span>
-                    {isPinned && (
-                      <>
-                        <button
-                          type="button"
-                          className={styles.moveBtn}
-                          onClick={() => onMove(row.hostname, -1)}
-                          disabled={isFirst}
-                          aria-label={`Move ${row.hostname} up`}
-                          title={isFirst ? 'Already at top' : 'Move up'}
-                        >
-                          <ArrowUp size={14} aria-hidden="true" />
-                        </button>
-                        <button
-                          type="button"
-                          className={styles.moveBtn}
-                          onClick={() => onMove(row.hostname, 1)}
-                          disabled={isLast}
-                          aria-label={`Move ${row.hostname} down`}
-                          title={isLast ? 'Already at bottom' : 'Move down'}
-                        >
-                          <ArrowDown size={14} aria-hidden="true" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
-    </div>
+        <span className={styles.groupCount}>
+          {filteredCount === totalCount
+            ? totalCount === 1
+              ? '1 link'
+              : `${totalCount} links`
+            : `${filteredCount} / ${totalCount}`}
+        </span>
+        <div className={styles.groupActions}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onMoveUp(hostname)}
+            disabled={upDisabled}
+            aria-label={`Move ${label} up`}
+            title="Move up"
+            className={styles.iconBtn}
+          >
+            <ArrowUp size={14} aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onMoveDown(hostname)}
+            disabled={downDisabled}
+            aria-label={`Move ${label} down`}
+            title="Move down"
+            className={styles.iconBtn}
+          >
+            <ArrowDown size={14} aria-hidden="true" />
+          </Button>
+          {canModify && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onClearDomain(hostname)}
+              aria-label={`Remove all favorites for ${label}`}
+              title="Remove all favorites for this domain"
+              className={styles.iconBtn}
+            >
+              <Trash2 size={14} aria-hidden="true" />
+            </Button>
+          )}
+        </div>
+      </header>
+      <ul className={styles.rows}>
+        {rows.map(([path, entry]) => (
+          <li key={path}>
+            <FavRow
+              hostname={hostname}
+              path={path}
+              entry={entry}
+              origin={origin}
+              canModify={canModify}
+              onRemove={onRemoveRow}
+              onUpdate={onUpdateRow}
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
@@ -425,263 +359,241 @@ function EmptyState() {
       </div>
       <p className={styles.muted}>
         {inExtension
-          ? 'No favorites yet. Open a page you visit often and tap the bookmark icon above to save it here.'
-          : 'No favorites yet. Bookmarking runs inside the Chrome extension — sign in there to sync favorites into the web app.'}
+          ? 'No favorites yet. Click the star in any page toolbar to save the current tab, or star a URL on the Site Tree page.'
+          : 'No favorites yet. Saving runs inside the Chrome extension — sign in there to sync favorites into the web app.'}
       </p>
     </div>
   )
 }
 
+// Match a fav row against the search box. Case-insensitive substring
+// match against the row's title, the reconstructed full URL, the
+// group's friendly label (e.g. "EDS UE Stage"), and its hostname.
+// Including the group fields means typing part of a domain name (or a
+// configured AEM environment label) shows every favorite under that
+// domain — which matches how users think about the list.
+function rowMatchesQuery(query, entry, fullUrl, groupLabel, groupHost) {
+  if (!query) return true
+  const q = query.toLowerCase()
+  if ((entry?.title ?? '').toLowerCase().includes(q)) return true
+  if (fullUrl.toLowerCase().includes(q)) return true
+  if ((groupLabel ?? '').toLowerCase().includes(q)) return true
+  if ((groupHost ?? '').toLowerCase().includes(q)) return true
+  return false
+}
+
 export function FavLinks() {
   const {
     byDomain,
-    addFavorite,
     removeFavorite,
+    updateFavorite,
+    clearDomain,
+    clearAll,
     ready: favReady,
+    canModify,
   } = useFavorites()
-  const { domains } = useAemDomains()
-  const { hosts, setHosts } = useTrackedHostnames()
   const {
-    pinned,
-    pinnedSet,
-    toggle: togglePin,
-    movePinned,
-    ready: pinsReady,
-  } = usePinnedSites()
-  const currentHost = useCurrentTabHost()
+    order,
+    moveDomain,
+    ready: orderReady,
+  } = useFavoritesOrder()
+  const { domains } = useAemDomains()
+
+  const [query, setQuery] = useState('')
   const [showInfo, setShowInfo] = useState(false)
-  const [bookmarking, setBookmarking] = useState(false)
-  // Transient inline confirmation for the bookmark action. Held long
-  // enough to register the state change but short enough to feel snappy.
-  const [flash, setFlash] = useState(null)
 
   const domainMeta = useMemo(() => buildDomainMeta(domains), [domains])
 
-  // Every hostname the manage slide needs to think about. Union of:
-  //   - favorited domains       (from the byDomain store)
-  //   - pinned hostnames        (in case a pin exists without any favs
-  //                              yet — rare but possible cross-device)
-  //   - current tab's hostname  (so it can be pinned from here)
-  const allSites = useMemo(() => {
-    const seen = new Map()
-    function add(hostname, bucket) {
-      const key = hostname?.toLowerCase()
-      if (!key) return
-      if (seen.has(key)) return
-      const meta = domainMeta.get(key)
-      const paths =
-        bucket?.paths &&
-        typeof bucket.paths === 'object' &&
-        !Array.isArray(bucket.paths)
-          ? bucket.paths
-          : {}
-      seen.set(key, {
-        hostname: key,
-        bucket: bucket ?? null,
-        label: meta?.label ?? key,
-        origin: meta?.origin ?? `https://${key}`,
-        count: Object.keys(paths).length,
-      })
+  // Ordered list of hostnames to render.
+  //   1. Every hostname in `order` (in that sequence) that still has a
+  //      bucket in byDomain.
+  //   2. Any hostname in byDomain not yet in order, appended in
+  //      freshest-first (updatedAt desc) tiebreak so brand-new domains
+  //      show at the bottom without demanding an explicit reorder.
+  const orderedHostnames = useMemo(() => {
+    const seen = new Set()
+    const out = []
+    for (const host of order) {
+      if (!(host in byDomain)) continue
+      if (seen.has(host)) continue
+      seen.add(host)
+      out.push(host)
     }
-    for (const [h, b] of Object.entries(byDomain)) add(h, b)
-    for (const h of pinned) add(h, byDomain[h])
-    if (currentHost) add(currentHost, byDomain[currentHost])
-    return [...seen.values()]
-  }, [byDomain, domainMeta, pinned, currentHost])
+    const remaining = Object.keys(byDomain).filter((h) => !seen.has(h))
+    remaining.sort((a, b) => {
+      const at = byDomain[a]?.updatedAt ?? ''
+      const bt = byDomain[b]?.updatedAt ?? ''
+      if (at !== bt) return at < bt ? 1 : -1
+      return a.localeCompare(b)
+    })
+    for (const host of remaining) out.push(host)
+    return out
+  }, [order, byDomain])
 
-  // Deck slides — pinned domains only, in the user-specified pin order.
-  // Current tab (if pinned) gets promoted to the front so opening the
-  // page on a pinned site lands you on that site's slide immediately.
-  // Unpinned rows never reach the deck; their favorites live in the
-  // store until re-pinned.
-  const deckSites = useMemo(() => {
-    const bySite = new Map(allSites.map((s) => [s.hostname, s]))
-    const pinnedSites = pinned
-      .map((host) => bySite.get(host))
-      .filter(Boolean)
-    if (currentHost && pinnedSet.has(currentHost)) {
-      const idx = pinnedSites.findIndex((s) => s.hostname === currentHost)
-      if (idx > 0) {
-        const [current] = pinnedSites.splice(idx, 1)
-        pinnedSites.unshift(current)
-      }
-    }
-    return pinnedSites
-  }, [allSites, pinned, pinnedSet, currentHost])
+  // Filter rows per group by the search query. Groups whose rows all
+  // drop out are hidden so the page never shows an empty header. Each
+  // group's rows come out newest-first so recent favorites lead.
+  const visibleGroups = useMemo(() => {
+    const groups = []
+    for (const hostname of orderedHostnames) {
+      const bucket = byDomain[hostname]
+      const paths = bucket?.paths ?? {}
+      const totalCount = Object.keys(paths).length
+      if (totalCount === 0) continue
 
-  // Rows for the manage slide. Pinned domains keep their user order
-  // (annotated with pinnedIndex + pinnedTotal so the ManagePinsSlide
-  // can figure out which arrows to disable). Unpinned rows follow,
-  // sorted by hostname so the list has a stable secondary order.
-  const manageRows = useMemo(() => {
-    const bySite = new Map(allSites.map((s) => [s.hostname, s]))
-    const pinnedRows = pinned
-      .map((host, i) => {
-        const site = bySite.get(host)
-        if (!site) return null
-        return { ...site, pinnedIndex: i, pinnedTotal: pinned.length }
+      const meta = domainMeta.get(hostname)
+      const origin = meta?.origin ?? `https://${hostname}`
+      const label = meta?.label ?? hostname
+
+      const entries = Object.entries(paths).sort((a, b) => {
+        const at = a[1]?.addedAt ?? ''
+        const bt = b[1]?.addedAt ?? ''
+        if (at !== bt) return at < bt ? 1 : -1
+        return a[0].localeCompare(b[0])
       })
-      .filter(Boolean)
-    const unpinnedRows = allSites
-      .filter((s) => !pinnedSet.has(s.hostname))
-      .sort((a, b) => {
-        if (a.hostname === currentHost && b.hostname !== currentHost) return -1
-        if (b.hostname === currentHost && a.hostname !== currentHost) return 1
-        return a.hostname.localeCompare(b.hostname)
-      })
-      .map((s) => ({ ...s, pinnedIndex: -1, pinnedTotal: pinned.length }))
-    return [...pinnedRows, ...unpinnedRows]
-  }, [allSites, pinned, pinnedSet, currentHost])
 
-  // Bookmark the current tab. Three side effects:
-  //   1. Auto-track the domain (canonicalized include rule) if we don't
-  //      already track it — so future visits also flow into the
-  //      Visited URLs / Site Tree feeds without a separate opt-in.
-  //   2. Add the URL to favorites, keyed by hostname + path+search.
-  //   3. Auto-pin the domain if it isn't already. Without this, the
-  //      user clicks bookmark and nothing visibly happens (the deck
-  //      only shows pinned domains). Pinning here matches the intent:
-  //      "I bookmarked this — I want to see it in the deck."
-  async function handleBookmark() {
-    if (bookmarking) return
-    setBookmarking(true)
-    setFlash(null)
-    try {
-      const info = await readActiveTab()
-      if (!info || !isJumpableUrl(info.url)) {
-        setFlash({ kind: 'error', message: "Can't bookmark this tab." })
-        return
-      }
-      let hostname = ''
-      let path = ''
-      try {
-        const parsed = new URL(info.url)
-        hostname = parsed.hostname.toLowerCase()
-        path = `${parsed.pathname || '/'}${parsed.search || ''}`
-      } catch {
-        setFlash({ kind: 'error', message: "Couldn't parse this tab's URL." })
-        return
-      }
+      const rows = entries.filter(([path, entry]) =>
+        rowMatchesQuery(query, entry, `${origin}${path}`, label, hostname),
+      )
+      if (rows.length === 0) continue
 
-      // Auto-track the domain via the same recipe as TrackThisSiteItem
-      // so the two flows stay consistent (canonicalized pattern + valid
-      // check + id assignment happens inside setHosts).
-      const pattern = canonicalizePattern(info.url)
-      if (isValidPattern(pattern) && !hosts[pattern]) {
-        await setHosts((prev) => ({ ...prev, [pattern]: { mode: 'include' } }))
-      }
-
-      await addFavorite({
+      groups.push({
         hostname,
-        path,
-        title: info.title ?? '',
-        addedAt: new Date().toISOString(),
+        label,
+        origin,
+        totalCount,
+        rows,
       })
-      if (!pinnedSet.has(hostname)) {
-        await togglePin(hostname)
-      }
-      setFlash({ kind: 'ok', message: 'Bookmarked' })
-    } catch (err) {
-      console.warn('[loopy] bookmark failed:', err?.message ?? err)
-      setFlash({ kind: 'error', message: 'Bookmark failed' })
-    } finally {
-      setBookmarking(false)
-      // Clear the transient confirmation after a moment so it doesn't
-      // linger between actions.
-      setTimeout(() => setFlash(null), 1600)
     }
-  }
+    return groups
+  }, [orderedHostnames, byDomain, domainMeta, query])
 
-  const canBookmark = isExtension()
-  const ready = favReady && pinsReady
+  const ready = favReady && orderReady
+  const isEmpty = orderedHostnames.length === 0
+  const noMatches = !isEmpty && visibleGroups.length === 0
+
+  // Aggregate counts used by the confirm gate on "Clear all". Cheap to
+  // recompute on every render given the 200-per-domain cap.
+  const { totalDomains, totalPaths } = useMemo(() => {
+    let paths = 0
+    for (const host of orderedHostnames) {
+      paths += Object.keys(byDomain[host]?.paths ?? {}).length
+    }
+    return { totalDomains: orderedHostnames.length, totalPaths: paths }
+  }, [orderedHostnames, byDomain])
+
+  function handleClearAll() {
+    const ok = window.confirm(
+      `Clear all favorites? This removes ${totalPaths} ${
+        totalPaths === 1 ? 'entry' : 'entries'
+      } across ${totalDomains} ${totalDomains === 1 ? 'domain' : 'domains'}.`,
+    )
+    if (!ok) return
+    clearAll()
+  }
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <div className={styles.headerRow}>
-          <h1 className={styles.title}>Fav links</h1>
-          {canBookmark && (
+      {/* Sticky wrapper — title row and the search row pin to the top
+          of the scroll region as one bar. See the module.scss header
+          comment for the layout rationale. */}
+      <div className={styles.topbar}>
+        <header className={styles.header}>
+          <div className={styles.headerRow}>
+            <h1 className={styles.title}>Fav links</h1>
+            {!isEmpty && canModify && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearAll}
+                className={styles.clearAllBtn}
+                title="Clear all favorites"
+              >
+                <Eraser size={14} aria-hidden="true" />
+                Clear all
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleBookmark}
+              onClick={() => setShowInfo((v) => !v)}
               className={styles.iconBtn}
-              aria-label="Bookmark current tab"
-              title="Bookmark current tab"
-              disabled={bookmarking}
+              aria-label="About this page"
+              aria-expanded={showInfo}
+              aria-controls="fav-links-info"
+              title="About"
             >
-              {flash?.kind === 'ok' ? (
-                <Check size={14} aria-hidden="true" />
-              ) : (
-                <Bookmark size={14} aria-hidden="true" />
-              )}
+              <Info size={14} aria-hidden="true" />
             </Button>
+            <PageShortcuts current="fav-links" className={styles.iconBtn} />
+          </div>
+          {showInfo && (
+            <p id="fav-links-info" className={styles.subtitle}>
+              Click the star icon in any page toolbar to save the current
+              tab. Reorder groups with the arrows. Search filters by
+              title and URL.
+            </p>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowInfo((v) => !v)}
-            className={styles.iconBtn}
-            aria-label="About this page"
-            aria-expanded={showInfo}
-            aria-controls="fav-links-info"
-            title="About"
-          >
-            <Info size={14} aria-hidden="true" />
-          </Button>
-          <PageShortcuts current="fav-links" className={styles.iconBtn} />
-        </div>
-        {showInfo && (
-          <p id="fav-links-info" className={styles.subtitle}>
-            Bookmark pages you&apos;re actively working on. Pinned sites
-            get their own slide in the deck; the last slide is where you
-            pin, unpin, and reorder them.
-          </p>
+        </header>
+
+        {ready && (
+          <label className={styles.searchWrap}>
+            <Search
+              size={14}
+              aria-hidden="true"
+              className={styles.searchIcon}
+            />
+            <input
+              type="search"
+              className={styles.search}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search title, URL, or domain…"
+              aria-label="Search favorites"
+            />
+            {query && (
+              <button
+                type="button"
+                className={styles.searchClear}
+                onClick={() => setQuery('')}
+                aria-label="Clear search"
+                title="Clear"
+              >
+                <X size={12} aria-hidden="true" />
+              </button>
+            )}
+          </label>
         )}
-        {flash?.kind === 'error' && (
-          <p className={cx(styles.subtitle, styles.error)}>{flash.message}</p>
-        )}
-      </header>
+      </div>
 
       {!ready ? (
-        <p className={cx(styles.muted, styles.padded)}>Loading…</p>
+        <p className={styles.muted}>Loading…</p>
+      ) : isEmpty ? (
+        <EmptyState />
+      ) : noMatches ? (
+        <p className={cx(styles.muted, styles.noMatches)}>
+          No favorites match <code>{query}</code>.
+        </p>
       ) : (
-        <div className={cx('is-fluid-width', styles.deckWrap)}>
-          <Deck>
-            {deckSites.map((site) => (
-              <Slide
-                key={site.hostname}
-                span={10}
-                spanMd={6}
-                spanLg={5}
-                spanXl={4}
-                data-fav-host={site.hostname}
-              >
-                <FavDomainSlide
-                  hostname={site.hostname}
-                  label={site.label}
-                  origin={site.origin}
-                  bucket={site.bucket}
-                  onRemove={removeFavorite}
-                />
-              </Slide>
-            ))}
-            <Slide
-              key="__manage"
-              span={10}
-              spanMd={6}
-              spanLg={5}
-              spanXl={4}
-            >
-              <ManagePinsSlide
-                rows={manageRows}
-                pinned={pinnedSet}
-                currentHost={currentHost}
-                onToggle={togglePin}
-                onMove={movePinned}
-              />
-            </Slide>
-          </Deck>
+        <div className={styles.groups}>
+          {visibleGroups.map((g, i) => (
+            <FavGroup
+              key={g.hostname}
+              hostname={g.hostname}
+              label={g.label}
+              origin={g.origin}
+              rows={g.rows}
+              totalCount={g.totalCount}
+              index={i}
+              lastIndex={visibleGroups.length - 1}
+              canModify={canModify}
+              onMoveUp={(host) => moveDomain(host, -1)}
+              onMoveDown={(host) => moveDomain(host, +1)}
+              onRemoveRow={removeFavorite}
+              onUpdateRow={updateFavorite}
+              onClearDomain={clearDomain}
+            />
+          ))}
         </div>
       )}
     </div>

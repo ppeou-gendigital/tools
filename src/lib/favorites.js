@@ -1,10 +1,9 @@
 // Pure helpers for the Fav Links feature. Shared by:
 //   - FavoritesProvider (React: read from storage, expose to UI)
-//   - PrefsSync         (React: diff against baseline, per-domain upsert)
+//   - PrefsSync         (React: diff local vs baseline, per-domain upsert)
 //   - favoritesApi      (Supabase read/write; uses mergeFavoritePathObjects)
 //
-// Data model mirrors user_visits so the sync layer follows the exact same
-// per-domain upsert pattern:
+// Data model matches the (user_id, domain, paths) table exactly:
 //
 //   byDomain = {
 //     '<hostname>': {
@@ -18,17 +17,17 @@
 //   }
 //
 // The path string is the map key, so duplicates are impossible by
-// construction. FavValue is the per-favorite metadata (path is the key,
-// not repeated in the value):
+// construction. FavValue is the per-favorite metadata (path is the
+// key, not repeated in the value):
 //
 //   FavValue = {
 //     title:   'Tab title at time of bookmark',
 //     addedAt: '<iso>',
 //   }
 //
-// Cap: MAX_PATHS_PER_DOMAIN keys per domain — favorites are user-driven
-// and tend to be small, but the server-side trigger enforces the same
-// bound so we mirror it client-side too.
+// Cap: MAX_PATHS_PER_DOMAIN keys per domain. Server-side trigger
+// mirrors this bound so a client bug can't balloon a single row past
+// what the free tier can hold.
 
 export const MAX_PATHS_PER_DOMAIN = 200
 
@@ -48,15 +47,15 @@ function safeIso(v) {
 function normalizeFavValue(path, raw, fallbackAt) {
   if (!path || typeof path !== 'string') return null
   if (!raw || typeof raw !== 'object') return null
-  const addedAt = safeIso(raw.addedAt) ?? fallbackAt
+  const at = safeIso(raw.addedAt) ?? fallbackAt
   return {
     title: safeString(raw.title),
-    addedAt,
+    addedAt: at,
   }
 }
 
-// Newest-first ordering on [path, value] entries. Ties break by path so
-// sorts are stable across rehydration cycles.
+// Newest-first ordering on [path, value] entries. Ties break by path
+// so sorts are stable across rehydration cycles.
 function byEntryAddedAtDesc(a, b) {
   const aAt = a[1].addedAt ?? ''
   const bAt = b[1].addedAt ?? ''
@@ -89,40 +88,41 @@ export function normalizeFavoritesByDomain(raw) {
     if (!hostname) continue
     const bucket = value && typeof value === 'object' ? value : {}
     const rawPaths =
-      bucket.paths && typeof bucket.paths === 'object' && !Array.isArray(bucket.paths)
+      bucket.paths &&
+      typeof bucket.paths === 'object' &&
+      !Array.isArray(bucket.paths)
         ? bucket.paths
         : {}
     const paths = {}
-    let newestAddedAt = null
+    let newestAdded = null
     for (const [pathKey, rawValue] of Object.entries(rawPaths)) {
       const path = safeString(pathKey).trim()
       const norm = normalizeFavValue(path, rawValue, now)
       if (!norm) continue
       paths[path] = norm
-      if (!newestAddedAt || norm.addedAt > newestAddedAt) {
-        newestAddedAt = norm.addedAt
-      }
+      if (!newestAdded || norm.addedAt > newestAdded) newestAdded = norm.addedAt
     }
     if (Object.keys(paths).length === 0) continue
     const capped = capPathsObject(paths)
     out[hostname] = {
       paths: capped,
-      updatedAt: safeIso(bucket.updatedAt) ?? newestAddedAt ?? now,
+      updatedAt: safeIso(bucket.updatedAt) ?? newestAdded ?? now,
     }
   }
   return out
 }
 
 // Add one favorite entry to a domain bucket. Returns a *new* bucket
-// (never mutates its input) so React state comparisons stay simple.
+// (never mutates the input) so React state comparisons stay simple.
 //
 // Behavior:
-//   - If the path already exists, refresh its title + addedAt (a repeat
-//     bookmark should feel like a fresh save, not a no-op).
-//   - Otherwise add a fresh entry under bucket.paths[path].
+//   - If the path is already favorited, refresh title (when non-empty)
+//     and keep the original addedAt (a re-bookmark shouldn't erase the
+//     freshness signal from the first save).
+//   - Otherwise insert a fresh entry at that path.
 //   - Cap total keys at MAX_PATHS_PER_DOMAIN by dropping the oldest.
-//   - Bump bucket.updatedAt so the storage-level "did anything change"
-//     shortcut in the sync layer stays accurate.
+//   - Updates bucket.updatedAt so the sync layer's dirty check stays
+//     accurate.
 export function addFavorite(prevBucket, fav) {
   const at = safeIso(fav?.addedAt) ?? new Date().toISOString()
   const path = safeString(fav?.path).trim()
@@ -139,10 +139,8 @@ export function addFavorite(prevBucket, fav) {
 
   const nextEntry = existing
     ? {
-        // Prefer a non-empty new title so tabs whose title arrives late
-        // don't get stuck on the loading placeholder.
+        ...existing,
         title: title || existing.title,
-        addedAt: at,
       }
     : {
         title,
@@ -157,12 +155,13 @@ export function addFavorite(prevBucket, fav) {
   return { paths: capped, updatedAt: at }
 }
 
-// Merge two paths objects into one, deduped by key. Same rules used by
-// mergeFavoritesByDomain for shared keys:
-//   addedAt = max(a, b)                 (newest bookmark wins)
-//   title   = prefer the newer side's value if non-empty, else the older
+// Merge two paths objects into one, deduped by key. Rules for shared keys:
+//   addedAt = min(a, b)      (earliest save wins; the fav has existed
+//                             at least since then)
+//   title   = prefer newer side's non-empty title, else the other
 //
-// Result is NOT capped — that's normalizeFavoritesByDomain / capPathsObject.
+// Result is NOT capped — that's normalizeFavoritesByDomain /
+// capPathsObject.
 export function mergeFavoritePathObjects(a, b) {
   const out = {}
   const left = a && typeof a === 'object' && !Array.isArray(a) ? a : {}
@@ -179,11 +178,11 @@ export function mergeFavoritePathObjects(a, b) {
     }
     const aAt = existing.addedAt ?? ''
     const bAt = v.addedAt ?? ''
-    const newer = bAt >= aAt ? v : existing
-    const older = newer === v ? existing : v
+    const older = aAt <= bAt ? existing : v
+    const newer = older === existing ? v : existing
     out[k] = {
       title: newer.title || older.title || '',
-      addedAt: newer.addedAt ?? older.addedAt ?? '',
+      addedAt: older.addedAt || newer.addedAt || '',
     }
   }
   return out
@@ -226,17 +225,19 @@ export function mergeFavoritesByDomain(a, b) {
   return normalizeFavoritesByDomain(out)
 }
 
-// True when two byDomain buckets are structurally equal at the level
+// True when two favorites buckets are structurally equal at the level
 // the sync layer cares about (dirty vs clean).
 export function favoriteBucketsEqual(a, b) {
   if (a === b) return true
   if (!a || !b) return false
-  return stableStringifyBucket(a) === stableStringifyBucket(b)
+  return stableStringify(a) === stableStringify(b)
 }
 
-function stableStringifyBucket(bucket) {
+function stableStringify(bucket) {
   const paths =
-    bucket?.paths && typeof bucket.paths === 'object' && !Array.isArray(bucket.paths)
+    bucket?.paths &&
+    typeof bucket.paths === 'object' &&
+    !Array.isArray(bucket.paths)
       ? bucket.paths
       : {}
   const keys = Object.keys(paths).sort()
@@ -253,9 +254,7 @@ function stableStringifyBucket(bucket) {
 export function stableFavoritesKey(byDomain) {
   const map = byDomain ?? {}
   const domains = Object.keys(map).sort()
-  return JSON.stringify(
-    domains.map((d) => [d, stableStringifyBucket(map[d])]),
-  )
+  return JSON.stringify(domains.map((d) => [d, stableStringify(map[d])]))
 }
 
 // Compute the set of dirty domain keys between two byDomain maps.

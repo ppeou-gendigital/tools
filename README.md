@@ -423,17 +423,14 @@ Not supported in v1: `**` (multi-label wildcards) or full regex. The single-`*` 
 
 **Legacy array shape**: the module's normalizer (`normalizeTrackedHostnames`) still accepts the previous `[{ id, pattern, mode }]` array form and upgrades it to the object shape on read. Any local storage or server row that predates the object cutover will be silently normalized on next load.
 
-### 6. Favorites table (`user_favorites`)
+### 6. Favorites table (`user_favorites`) + `user_data.favorites_order`
 
-Backs the [Fav Links page](src/pages/FavLinks.jsx). One row per
-`(user_id, domain)` pair, `paths` is a **jsonb object keyed by
-path+search**. Modelled after `user_visits` so favorites can reuse the
-same per-domain CAS-merge sync pattern, but the per-favorite value is
-lighter — no visit counts, no first/last-visited timestamps, just the
-title captured at bookmark time and an `addedAt` stamp used for
-freshness sorting.
+Backs the [Fav Links page](src/pages/FavLinks.jsx). Split into two stores:
 
-In **SQL Editor**, run the block below. It's written to be safely re-runnable (`create table if not exists`, `drop policy if exists` before each `create policy`, and idempotent DDL for the index / function / trigger), so re-executing against a project where `user_favorites` is already provisioned is a no-op aside from replacing the RLS policies with the same definitions:
+- **`user_favorites`** — the payload. One row per `(user_id, domain)` pair; `paths` is a **jsonb object keyed by path+search**. Modelled after `user_visits` so favorites can reuse the same per-domain CAS-merge sync pattern, but the per-favorite value is lighter — no visit counts, no first/last-visited timestamps, just the title captured at save time and an `addedAt` stamp used for freshness sorting.
+- **`user_data.favorites_order`** — the pref. An ordered jsonb array of lowercase hostnames that drives the Fav Links group display order. Behaves like `pinned_sites`: single-blob push, last-writer-wins, part of the regular prefs sync round-trip. Domains not listed here fall back to freshest-first at render time so newly saved domains show up without an explicit reorder step.
+
+In **SQL Editor**, run the block below. It's written to be safely re-runnable (`create table if not exists`, `drop policy if exists` before each `create policy`, `add column if not exists`, and idempotent DDL for the index / function / trigger):
 
 ```sql
 create table if not exists public.user_favorites (
@@ -484,6 +481,10 @@ drop trigger if exists user_favorites_paths_cap_trg on public.user_favorites;
 create trigger user_favorites_paths_cap_trg
   before insert or update on public.user_favorites
   for each row execute function public.enforce_user_favorites_paths_cap();
+
+-- Domain display order for the Fav Links page. Parallel to pinned_sites.
+alter table public.user_data
+  add column if not exists favorites_order jsonb not null default '[]'::jsonb;
 ```
 
 **`paths`** shape — an object keyed by the path+search string (see [`src/lib/favorites.js`](src/lib/favorites.js)):
@@ -492,21 +493,32 @@ create trigger user_favorites_paths_cap_trg
 {
   "/products/product-a": {
     "title":   "Product A",
-    "addedAt": "2026-07-09T18:20:00Z"
+    "addedAt": "2026-07-15T18:20:00Z"
   },
   "/blog/how-it-works?ref=nav": { … }
 }
 ```
 
-**Bookmark flow** (extension only; the web build reads and displays but
-can't capture new favorites since it has no `chrome.tabs`):
+**Save flow** — favorites are **online-only + optimistic UI**. The [`FavStar`](src/patterns/FavStar.jsx) button is disabled when signed-out (aria-label switches to "Sign in to save favorites") because we deliberately don't queue mutations locally — the whole write path assumes a live Supabase connection.
 
-1. The Fav Links toolbar's bookmark button reads the current tab via [`readActiveTab`](src/lib/activeTab.js), which returns `{ url, title }` from `chrome.tabs.query` (with a `chrome.scripting.executeScript` fallback for SPA `pushState` URLs).
-2. The hostname is auto-added to [`tracked_hostnames`](#tracked-hostnames) as an `include` rule (via the same [`canonicalizePattern`](src/lib/trackedHostnames.js) recipe as **Track this site**) if it isn't already tracked, so future visits also flow into the Visited URLs / Site Tree feeds.
-3. The URL is added to `chrome.storage.local[loopy.favorites]` keyed by hostname + path+search. `FavoritesProvider` mirrors the key via `chrome.storage.onChanged` so an open popup reflects writes from other windows live.
-4. `PrefsSync` owns writes to Supabase for favorites (no service-worker involvement since bookmarking is user-triggered and low-volume): each dirty domain flows through a per-domain **compare-and-swap** ([`upsertDomainFavoritesWithMerge`](src/lib/favoritesApi.js)) so two devices bookmarking different URLs on the same domain converge to a row containing both. Local deletes propagate as row deletes.
+1. Every page's toolbar renders a [`FavStar`](src/patterns/FavStar.jsx) via [`PageShortcuts`](src/patterns/PageShortcuts.jsx). Clicking it reads the current tab via [`useCurrentTab`](src/hooks/useCurrentTabUrl.js) (which returns `{ url, title }` from `chrome.tabs.query` with a `chrome.scripting.executeScript` fallback for SPA `pushState` URLs) and toggles the entry. The star also appears on every Site Tree URL row so any tracked page can be saved without opening it first.
+2. [`FavoritesProvider`](src/providers/FavoritesProvider.jsx) applies the change **to local state first** for instant feedback (writes into `chrome.storage.local[loopy.favorites]` and mirrors the key via `chrome.storage.onChanged` so an open popup reflects writes from other windows live).
+3. In parallel, the provider queues a per-domain **read-modify-CAS** against Supabase via [`applyDomainOp`](src/lib/favoritesApi.js). The CAS loop:
+   1. `SELECT paths, updated_at WHERE (user_id, domain)`.
+   2. Runs a pure operator from [`src/lib/favoritesOps.js`](src/lib/favoritesOps.js) (`opAddPath`, `opRemovePath`, `opSetTitle`, `opRenameWithinDomain`) against the fresh remote `paths` — never against a stale local snapshot.
+   3. Writes back with `WHERE updated_at = <observed>`; on zero rows affected, re-reads and re-applies. Bounded by `CAS_MAX_ATTEMPTS`.
+   4. When the operator empties the bucket, the row is `DELETE`d instead of `UPDATE`d.
+4. On CAS success the local bucket is reconciled with the authoritative `{ paths, updated_at }` returned by the CAS. On failure the local bucket is reverted to its pre-op snapshot so the UI doesn't lie about durability.
+5. Rapid-fire clicks on the same domain are serialized by a per-domain in-flight promise map in the provider so a burst never fights its own CAS retries. Ops on different domains still run in parallel.
+6. **Cross-domain edits** (rename that changes hostname) run as *add-on-new-host* then *remove-from-old-host*, so a mid-op interruption favors the destination and never orphans the entry.
+7. **Clear all** bypasses CAS and issues one `DELETE ... WHERE user_id = $1` via [`deleteAllUserFavorites`](src/lib/favoritesApi.js).
+8. The domain display order (`favorites_order`) rides along with the regular prefs push in [`PrefsSync`](src/providers/PrefsSync.jsx). Reordering a group locally triggers a single `user_data` upsert alongside theme / font / pinned sites.
 
-The Fav Links page renders one slide per domain (freshest-first) plus a trailing manage slide where the user can remove individual URLs or clear a whole domain in one shot. Removing the last favorite on a domain drops the whole row so the deck doesn't show an empty slide.
+**Migration bridge**: the first sign-in after this refactor lands does a one-shot union upload of any pre-existing local favorites (from the previous debounced-push implementation that could silently fail to sync) before the pull absolute-replaces local from remote. A `loopy.favorites.migrated` flag in `chrome.storage.local` gates this so it only runs once.
+
+**Concurrency guarantees**: two devices saving different URLs on the same domain converge to a row containing both entries — the loser's CAS misses, it re-reads, re-applies its operator against the winner's post-state, and writes. `opRemovePath` is a no-op when the path is already absent, so a remove that lost a race against another remove is idempotent.
+
+The Fav Links page renders one group per domain (custom order via arrow buttons; freshest-first tiebreak for domains not yet in the order array). Rows are single-line with a 30% title / URL split and hover tooltips. A search box above filters by title, URL, group label, or hostname (case-insensitive substring); groups whose rows all drop out are hidden until the query clears. Removing the last favorite on a domain drops the whole row so the list doesn't show an empty header. Edit / remove / clear-domain / clear-all controls all hide when signed-out (the read-only list itself still renders).
 
 ### 7. Dev auto-login (optional)
 

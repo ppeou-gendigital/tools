@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Deck, Slide } from '@/blocks/Deck'
+import { FavStar } from '@/patterns/FavStar'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
 import { useAemDomains } from '@/providers/AemDomainsProvider'
 import { useVisitedUrls } from '@/providers/VisitedUrlsProvider'
@@ -171,6 +172,16 @@ function TreeNode({ node, origin, depth, collapsed, onToggle }) {
           >
             ×{node.variantCount}
           </span>
+        )}
+
+        {clickable ? (
+          <FavStar
+            url={href}
+            title={title ?? ''}
+            className={styles.treeFav}
+          />
+        ) : (
+          <span className={styles.treeFavSpacer} aria-hidden="true" />
         )}
       </div>
 

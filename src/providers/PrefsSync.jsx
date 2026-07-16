@@ -4,6 +4,7 @@ import { useAemDomains } from '@/providers/AemDomainsProvider'
 import { useAuth } from '@/providers/AuthProvider'
 import { useFabCorner } from '@/providers/FabCornerProvider'
 import { useFavorites } from '@/providers/FavoritesProvider'
+import { useFavoritesOrder } from '@/providers/FavoritesOrderProvider'
 import { useFontSize } from '@/providers/FontSizeProvider'
 import { usePinnedSites } from '@/providers/PinnedSitesProvider'
 import { useTheme } from '@/providers/ThemeProvider'
@@ -12,17 +13,16 @@ import { useVisitedUrls } from '@/providers/VisitedUrlsProvider'
 import { fetchUserData, saveUserData } from '@/lib/userDataApi'
 import { fetchUserVisits, saveDomainVisits } from '@/lib/visitedUrlsApi'
 import {
-  deleteDomainFavorites,
+  applyDomainOp,
   fetchUserFavorites,
-  upsertDomainFavoritesWithMerge,
 } from '@/lib/favoritesApi'
+import { opUnionPaths } from '@/lib/favoritesOps'
 import { syncVisits } from '@/lib/visitsSync'
+import { normalizeFavoritesByDomain } from '@/lib/favorites'
 import {
-  diffFavoritesByDomain,
-  mergeFavoritesByDomain,
-  normalizeFavoritesByDomain,
-  stableFavoritesKey,
-} from '@/lib/favorites'
+  normalizeFavoritesOrder,
+  stableFavoritesOrderKey,
+} from '@/lib/favoritesOrder'
 import {
   normalizePinnedSites,
   stablePinnedKey,
@@ -32,7 +32,13 @@ import {
   normalizeTrackedHostnames,
   stableHostsKey,
 } from '@/lib/trackedHostnames'
+import { asyncStorage } from '@/lib/storage'
 import { isExtension } from '@/env'
+
+// Set to '1' in chrome.storage.local after we've uploaded any pre-
+// refactor local favorites into the per-domain rows. Guards the
+// one-shot migration bridge in the favorites initial pull.
+const FAV_MIGRATED_KEY = 'loopy.favorites.migrated'
 
 // Wait this long after the last local change before firing a prefs push.
 // Coalesces bursts (e.g. multiple font-size clicks) into one request.
@@ -55,15 +61,30 @@ function prefsEqual(a, b) {
     a.fabCorner === b.fabCorner &&
     listKey(a.aemDomains) === listKey(b.aemDomains) &&
     stableHostsKey(a.trackedHostnames) === stableHostsKey(b.trackedHostnames) &&
-    stablePinnedKey(a.pinnedSites) === stablePinnedKey(b.pinnedSites)
+    stablePinnedKey(a.pinnedSites) === stablePinnedKey(b.pinnedSites) &&
+    stableFavoritesOrderKey(a.favoritesOrder) ===
+      stableFavoritesOrderKey(b.favoritesOrder)
   )
 }
 
 // Two-way sync between the local providers and Supabase.
 //
-// Prefs stream (theme, fontSize, fabCorner, aemDomains) -> user_data:
+// Prefs stream (theme, fontSize, fabCorner, aemDomains, tracked, pinned,
+//               favoritesOrder) -> user_data:
 //   - Pull on sign-in via fetchUserData, apply via setters.
 //   - Push debounced on any local change (this component owns writes).
+//
+// Favorites stream (user_favorites table):
+//   - Writes are owned by FavoritesProvider now: every add/remove/edit
+//     runs a per-op read-modify-CAS via applyDomainOp against the
+//     matching (user_id, domain) row. There's no debounced push here
+//     anymore.
+//   - This component's only remaining responsibility for favorites is
+//     the initial pull on sign-in, plus a one-shot migration bridge
+//     that uploads any pre-refactor local favorites the first time we
+//     see a signed-in user with local data. After the migration flag
+//     is set, the pull is a straight absolute-replace since the
+//     provider guarantees local == last-server-view.
 //
 // Visits stream (user_visits table):
 //   - Writes to Supabase are owned by the service worker, which runs
@@ -109,6 +130,11 @@ export function PrefsSync() {
     setByDomain: setFavByDomain,
     ready: favReady,
   } = useFavorites()
+  const {
+    order: favoritesOrder,
+    setOrder: setFavoritesOrder,
+    ready: favoritesOrderReady,
+  } = useFavoritesOrder()
   const queryClient = useQueryClient()
 
   const lastSyncedRef = useRef(null)
@@ -117,11 +143,10 @@ export function PrefsSync() {
   const initialPulledForUserRef = useRef(null)
   const visitsSyncedForUserRef = useRef(null)
 
-  // Favorites sync is owned by the popup (no SW involvement) since it's
-  // low-volume and user-triggered. Baseline = last-known-in-sync snapshot;
-  // dirty domains diff against it just like prefs.
-  const favBaselineRef = useRef(null)
-  const favPushTimerRef = useRef(null)
+  // Favorites: only tracks whether the initial pull has run for the
+  // current user id. There's no baseline or timer because writes are
+  // owned by FavoritesProvider (per-op CAS) — this component just
+  // pulls a fresh snapshot into local on sign-in.
   const favInitialPulledForUserRef = useRef(null)
 
   const userId = user?.id ?? null
@@ -133,7 +158,8 @@ export function PrefsSync() {
     trackedReady &&
     pinnedReady &&
     visitsReady &&
-    favReady
+    favReady &&
+    favoritesOrderReady
 
   // Debug helper: expose sync internals + a manual push trigger to the
   // popup window. Handy while iterating; safe to leave in prod builds
@@ -145,6 +171,8 @@ export function PrefsSync() {
       authLoading,
       providersReady,
       visitedByDomain,
+      favByDomain,
+      favoritesOrder,
       async pushAll() {
         if (!userId) {
           console.error('[loopy] __loopy.pushAll: no userId (not signed in)')
@@ -184,18 +212,27 @@ export function PrefsSync() {
         return requestVisitsSync(userId)
       },
     }
-  }, [userId, authLoading, providersReady, visitedByDomain])
+  }, [
+    userId,
+    authLoading,
+    providersReady,
+    visitedByDomain,
+    favByDomain,
+    favoritesOrder,
+  ])
 
   // Apply a fetched prefs row. Splits between the prefs blob (data column),
   // the domain list (aem_domains column), the tracked-hostnames list
-  // (tracked_hostnames column), and the pinned-sites list (pinned_sites
-  // column) since they normalize independently.
+  // (tracked_hostnames column), the pinned-sites list (pinned_sites
+  // column), and the favorites-order list (favorites_order column) since
+  // they normalize independently.
   const applyRemotePrefs = useCallback(
     (row) => {
       const safePrefs = normalizeRemotePrefs(row?.data)
       const safeDomains = normalizeAemDomains(row?.aemDomains)
       const safeTracked = normalizeTrackedHostnames(row?.trackedHostnames)
       const safePinned = normalizePinnedSites(row?.pinnedSites)
+      const safeFavOrder = normalizeFavoritesOrder(row?.favoritesOrder)
       applyingRemoteRef.current = true
       if (safePrefs.theme !== theme) setTheme(safePrefs.theme)
       if (safePrefs.fontSize !== fontSize) setFontSize(safePrefs.fontSize)
@@ -209,11 +246,18 @@ export function PrefsSync() {
       if (stablePinnedKey(safePinned) !== stablePinnedKey(pinnedSites)) {
         setPinnedSites(safePinned)
       }
+      if (
+        stableFavoritesOrderKey(safeFavOrder) !==
+        stableFavoritesOrderKey(favoritesOrder)
+      ) {
+        setFavoritesOrder(safeFavOrder)
+      }
       lastSyncedRef.current = {
         ...safePrefs,
         aemDomains: safeDomains,
         trackedHostnames: safeTracked,
         pinnedSites: safePinned,
+        favoritesOrder: safeFavOrder,
       }
       queueMicrotask(() => {
         applyingRemoteRef.current = false
@@ -232,6 +276,8 @@ export function PrefsSync() {
       setTrackedHostnames,
       pinnedSites,
       setPinnedSites,
+      favoritesOrder,
+      setFavoritesOrder,
     ],
   )
 
@@ -240,15 +286,10 @@ export function PrefsSync() {
       lastSyncedRef.current = null
       initialPulledForUserRef.current = null
       visitsSyncedForUserRef.current = null
-      favBaselineRef.current = null
       favInitialPulledForUserRef.current = null
       if (pushTimerRef.current) {
         clearTimeout(pushTimerRef.current)
         pushTimerRef.current = null
-      }
-      if (favPushTimerRef.current) {
-        clearTimeout(favPushTimerRef.current)
-        favPushTimerRef.current = null
       }
     }
   }, [userId])
@@ -280,6 +321,7 @@ export function PrefsSync() {
             aemDomains,
             trackedHostnames,
             pinnedSites,
+            favoritesOrder,
           }
         }
       } catch (err) {
@@ -309,10 +351,24 @@ export function PrefsSync() {
     })
   }, [authLoading, userId, providersReady])
 
-  // Initial favorites pull on sign-in. Union-merges the remote snapshot
-  // into local storage so bookmarks taken pre-sign-in survive the pull.
-  // Then seeds the baseline ref so the push effect knows what "clean"
-  // means. Runs once per user id.
+  // Initial favorites pull on sign-in. Two modes:
+  //
+  //   First run per install (migration bridge):
+  //     If chrome.storage.local doesn't have the migration flag yet
+  //     AND local has favorites the server may not know about,
+  //     upload each local domain via applyDomainOp(opUnionPaths) so
+  //     nothing gets lost when we then absolute-replace local from
+  //     remote. This handles users who bookmarked things under the
+  //     previous debounced-push implementation that may have failed
+  //     to sync.
+  //
+  //   Steady state:
+  //     Absolute-replace local from remote. FavoritesProvider owns
+  //     writes per-op, so local should already reflect the last
+  //     successful server view; the pull just picks up anything a
+  //     different device added since we last opened the popup.
+  //
+  // Runs once per user id.
   useEffect(() => {
     if (authLoading || !userId || !providersReady) return
     if (favInitialPulledForUserRef.current === userId) return
@@ -321,20 +377,62 @@ export function PrefsSync() {
     let cancelled = false
     ;(async () => {
       try {
+        // 1. One-shot migration: upload local buckets that the old
+        //    debounced-push implementation may have failed to send.
+        const migratedRaw = await asyncStorage.getItem(FAV_MIGRATED_KEY)
+        if (cancelled) return
+        if (migratedRaw !== '1') {
+          const localBefore = favByDomain
+          const domainsWithLocal = Object.entries(localBefore)
+            .filter(([, bucket]) => {
+              const paths = bucket?.paths
+              return (
+                paths &&
+                typeof paths === 'object' &&
+                !Array.isArray(paths) &&
+                Object.keys(paths).length > 0
+              )
+            })
+            .map(([host, bucket]) => [host, bucket.paths])
+
+          for (const [host, paths] of domainsWithLocal) {
+            if (cancelled) return
+            try {
+              await applyDomainOp(userId, host, opUnionPaths(paths))
+            } catch (err) {
+              console.warn(
+                '[loopy] favorites migration upload failed for',
+                host,
+                err?.message ?? err,
+              )
+            }
+          }
+          await asyncStorage.setItem(FAV_MIGRATED_KEY, '1')
+        }
+
+        // 2. Absolute-replace local from remote. React-query cache is
+        //    updated so any component reading the query sees the same
+        //    view. The functional setter guards against a concurrent
+        //    optimistic edit made mid-fetch by FavoritesProvider —
+        //    same-key remote paths win (server is authoritative), but
+        //    any client-only entries added during the round-trip are
+        //    preserved so the provider's own CAS can pick them up on
+        //    the next mutation.
         const remoteRaw = await queryClient.fetchQuery({
           queryKey: ['user_favorites', userId],
           queryFn: () => fetchUserFavorites(userId),
         })
         if (cancelled) return
         const remote = normalizeFavoritesByDomain(remoteRaw)
-        const merged = mergeFavoritesByDomain(favByDomain, remote)
-        // Only push a new snapshot into the provider if the merge changed
-        // anything — avoids a redundant chrome.storage.local write and
-        // the storage.onChanged echo it would trigger.
-        if (stableFavoritesKey(merged) !== stableFavoritesKey(favByDomain)) {
-          await setFavByDomain(merged)
-        }
-        favBaselineRef.current = merged
+        await setFavByDomain((current) => {
+          const next = { ...remote }
+          for (const [host, bucket] of Object.entries(current)) {
+            if (host in next) continue
+            next[host] = bucket
+          }
+          return next
+        })
+        queryClient.setQueryData(['user_favorites', userId], remote)
       } catch (err) {
         if (cancelled) return
         favInitialPulledForUserRef.current = null
@@ -347,80 +445,6 @@ export function PrefsSync() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, userId, providersReady])
-
-  // Auto-push favorites stream (debounced, per-dirty-domain CAS).
-  //
-  // Symmetric to the prefs push effect: `favBaselineRef.current === null`
-  // gate keeps us from clobbering the remote before the initial pull
-  // settles. Each dirty domain gets its own upsertDomainFavoritesWithMerge
-  // call so two devices bookmarking different URLs on the same domain
-  // converge without lost updates. Removed domains are deleted last.
-  useEffect(() => {
-    if (!userId) return
-    if (!providersReady) return
-    if (favBaselineRef.current === null) return
-
-    const baseline = favBaselineRef.current
-    if (stableFavoritesKey(favByDomain) === stableFavoritesKey(baseline)) {
-      return
-    }
-
-    if (favPushTimerRef.current) clearTimeout(favPushTimerRef.current)
-    favPushTimerRef.current = setTimeout(async () => {
-      favPushTimerRef.current = null
-      const { upserts, deletes } = diffFavoritesByDomain(favByDomain, baseline)
-      // Build the next byDomain snapshot from the current local (not
-      // baseline) so remote-only entries that arrive via CAS can be
-      // reflected into the popup without also throwing away any local
-      // domains that didn't need to be pushed.
-      const nextByDomain = { ...favByDomain }
-      try {
-        for (const domain of upserts) {
-          const bucket = favByDomain[domain]
-          const paths =
-            bucket?.paths &&
-            typeof bucket.paths === 'object' &&
-            !Array.isArray(bucket.paths)
-              ? bucket.paths
-              : {}
-          const result = await upsertDomainFavoritesWithMerge(
-            userId,
-            domain,
-            paths,
-          )
-          nextByDomain[domain] = {
-            paths: result.paths,
-            updatedAt: result.updatedAt,
-          }
-        }
-        for (const domain of deletes) {
-          await deleteDomainFavorites(userId, domain)
-          delete nextByDomain[domain]
-        }
-        // Normalize once and use the same snapshot for both the local
-        // write and the baseline so the next tick's stable-key compare
-        // is a wash (avoids a re-push loop when CAS merges pulled in
-        // remote-only paths).
-        const normalizedNext = normalizeFavoritesByDomain(nextByDomain)
-        favBaselineRef.current = normalizedNext
-        if (
-          stableFavoritesKey(normalizedNext) !== stableFavoritesKey(favByDomain)
-        ) {
-          await setFavByDomain(normalizedNext)
-        }
-        queryClient.setQueryData(['user_favorites', userId], normalizedNext)
-      } catch (err) {
-        console.warn('[loopy] favorites auto-push failed:', err?.message ?? err)
-      }
-    }, PUSH_DEBOUNCE_MS)
-
-    return () => {
-      if (favPushTimerRef.current) {
-        clearTimeout(favPushTimerRef.current)
-        favPushTimerRef.current = null
-      }
-    }
-  }, [favByDomain, userId, providersReady, queryClient, setFavByDomain])
 
   // Auto-push prefs stream (debounced).
   //
@@ -441,6 +465,7 @@ export function PrefsSync() {
       aemDomains,
       trackedHostnames,
       pinnedSites,
+      favoritesOrder,
     }
     if (prefsEqual(current, lastSyncedRef.current)) return
 
@@ -459,6 +484,7 @@ export function PrefsSync() {
           aemDomains: current.aemDomains,
           trackedHostnames: current.trackedHostnames,
           pinnedSites: current.pinnedSites,
+          favoritesOrder: current.favoritesOrder,
         })
         lastSyncedRef.current = current
         queryClient.setQueryData(['user_data', userId], row)
@@ -480,6 +506,7 @@ export function PrefsSync() {
     aemDomains,
     trackedHostnames,
     pinnedSites,
+    favoritesOrder,
     userId,
     providersReady,
     queryClient,
