@@ -1,0 +1,98 @@
+// Style overrides for the ambient autofill button in the app
+// toolbar. The base look comes from PageHeader's `.iconBtn`; here
+// we just tint on ok / err flashes and animate the spinner.
+
+.btnOk {
+  color: color-mix(in srgb, var(--fg) 20%, #2ecc71 80%);
+}
+
+.btnErr {
+  color: var(--destructive);
+}
+
+.spin {
+  animation: accesso-autofill-spin 700ms linear infinite;
+}
+
+@keyframes accesso-autofill-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Picker popover: dense, keyboard-friendly list. Sits below the
+// button, sized to the widest credential label up to ~240px.
+.popover {
+  min-width: 200px;
+  max-width: 280px;
+  padding: 4px;
+}
+
+.pickerHeader {
+  padding: 6px 10px 4px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-fg);
+}
+
+.host {
+  color: var(--fg);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.pickerList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.pickerItem {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg);
+  text-align: left;
+  cursor: pointer;
+  font-size: var(--text-xs);
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: var(--accent);
+    border-color: color-mix(in srgb, var(--primary) 20%, var(--border) 80%);
+  }
+}
+
+.pickerName {
+  font-weight: 600;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pickerUser {
+  font-size: 11px;
+  color: var(--muted-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subtle {
+  font-style: italic;
+  opacity: 0.7;
+}

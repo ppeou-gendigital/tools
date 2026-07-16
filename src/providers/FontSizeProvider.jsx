@@ -10,7 +10,7 @@ import { asyncStorage } from '@/lib/storage'
 
 const FontSizeContext = createContext(null)
 
-const STORAGE_KEY = 'acceso.fontSize'
+const STORAGE_KEY = 'accesso.fontSize'
 const MIN = 12
 const MAX = 24
 const DEFAULT = 16

@@ -7,6 +7,7 @@ import {
   Hash,
   Pencil,
   ShieldCheck,
+  Star,
   StickyNote,
   TriangleAlert,
 } from 'lucide-react'
@@ -27,15 +28,11 @@ async function writeClipboard(value) {
     await navigator.clipboard.writeText(value)
     return true
   } catch (err) {
-    console.warn('[acceso] clipboard write failed', err)
+    console.warn('[accesso] clipboard write failed', err)
     return false
   }
 }
 
-// Format expiration month + year for copy + display. Uses 2-digit
-// month and 2-digit year (MM / YY), which is what card-not-present
-// forms almost always expect. If either field is missing we return
-// whatever we've got so the row doesn't render a lone slash.
 function formatExpiry(month, year) {
   const m = String(month ?? '').trim()
   const y = String(year ?? '').trim()
@@ -46,19 +43,23 @@ function formatExpiry(month, year) {
   return mm || yy
 }
 
-// A single credit card rendered as one grid-row inside the tabular
-// list. Columns mirror CredentialRow's rhythm: brand+name, cardholder
-// (secondary text), copy-number, copy-cvv, copy-expiry, note, edit.
-// The three copy icons flash briefly on success so the user sees the
-// copy landed without a popover round-trip.
-export function CreditCardRow({ card, onEdit }) {
-  const { id, displayName, cardholderName, cardNumber, cvv, expMonth, expYear, notes, issuerBank, error } = card
-  const numBtnRef = useRef(null)
-  const cvvBtnRef = useRef(null)
-  const expBtnRef = useRef(null)
+export function CreditCardRow({ card, onEdit, onToggleFavorite }) {
+  const {
+    id,
+    displayName,
+    cardholderName,
+    cardNumber,
+    cvv,
+    expMonth,
+    expYear,
+    notes,
+    issuerBank,
+    isFavorite,
+    error,
+  } = card
   const noteBtnRef = useRef(null)
-  const [openPop, setOpenPop] = useState(null) // 'note' | null
-  const [flash, setFlash] = useState(null) // 'num' | 'cvv' | 'exp' | null
+  const [openPop, setOpenPop] = useState(null)
+  const [flash, setFlash] = useState(null)
   const flashTimerRef = useRef(null)
 
   useEffect(() => {
@@ -80,8 +81,6 @@ export function CreditCardRow({ card, onEdit }) {
 
   async function handleCopyNumber() {
     if (!cardNumber) return
-    // Strip formatting spaces/dashes before copying so pasted values
-    // land cleanly into single-line card-number inputs.
     await copyValue(String(cardNumber).replace(/\s|-/g, ''), 'num')
   }
 
@@ -94,10 +93,6 @@ export function CreditCardRow({ card, onEdit }) {
     const value = formatExpiry(expMonth, expYear)
     if (!value) return
     await copyValue(value, 'exp')
-  }
-
-  function handleNoteClick() {
-    setOpenPop(openPop === 'note' ? null : 'note')
   }
 
   if (error) {
@@ -119,11 +114,7 @@ export function CreditCardRow({ card, onEdit }) {
         <div className={styles.iconCell} aria-hidden="true" />
         <div className={styles.iconCell} aria-hidden="true" />
         <div className={styles.iconCell} role="cell">
-          <IconButton
-            icon={Pencil}
-            label="Edit"
-            onClick={() => onEdit?.(id)}
-          />
+          <IconButton icon={Pencil} label="Edit" onClick={() => onEdit?.(id)} />
         </div>
       </div>
     )
@@ -142,6 +133,16 @@ export function CreditCardRow({ card, onEdit }) {
   return (
     <div className={styles.row} role="row">
       <div className={styles.nameCell} role="cell">
+        <button
+          type="button"
+          className={cx(styles.favBtn, isFavorite && styles.favBtnOn)}
+          onClick={() => onToggleFavorite?.(card)}
+          aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          aria-pressed={Boolean(isFavorite)}
+        >
+          <Star size={12} fill={isFavorite ? 'currentColor' : 'none'} />
+        </button>
         <span
           className={cx(styles.icon, styles[`brand_${brand}`])}
           aria-hidden="true"
@@ -178,7 +179,6 @@ export function CreditCardRow({ card, onEdit }) {
 
       <div className={styles.iconCell} role="cell">
         <IconButton
-          ref={numBtnRef}
           icon={flash === 'num' ? Check : Hash}
           label="Copy card number"
           onClick={handleCopyNumber}
@@ -189,7 +189,6 @@ export function CreditCardRow({ card, onEdit }) {
 
       <div className={styles.iconCell} role="cell">
         <IconButton
-          ref={cvvBtnRef}
           icon={flash === 'cvv' ? Check : ShieldCheck}
           label="Copy CVV"
           onClick={handleCopyCvv}
@@ -200,7 +199,6 @@ export function CreditCardRow({ card, onEdit }) {
 
       <div className={styles.iconCell} role="cell">
         <IconButton
-          ref={expBtnRef}
           icon={flash === 'exp' ? Check : CalendarClock}
           label="Copy expiration"
           onClick={handleCopyExpiry}
@@ -215,7 +213,7 @@ export function CreditCardRow({ card, onEdit }) {
             ref={noteBtnRef}
             icon={StickyNote}
             label="Show note"
-            onClick={handleNoteClick}
+            onClick={() => setOpenPop(openPop === 'note' ? null : 'note')}
             active={openPop === 'note'}
             aria-haspopup="dialog"
             aria-expanded={openPop === 'note'}
@@ -226,11 +224,7 @@ export function CreditCardRow({ card, onEdit }) {
       </div>
 
       <div className={styles.iconCell} role="cell">
-        <IconButton
-          icon={Pencil}
-          label="Edit"
-          onClick={() => onEdit?.(id)}
-        />
+        <IconButton icon={Pencil} label="Edit" onClick={() => onEdit?.(id)} />
       </div>
 
       <NotePopover

@@ -12,7 +12,7 @@ import { DevBadgeItem } from '@/patterns/DevBadgeItem'
 import styles from './MenuPanel.module.scss'
 
 const VERSION = '0.1.0'
-const TOOL_NAME = 'Acceso'
+const TOOL_NAME = 'Accesso'
 
 export function MenuPanel({ corner, onClose }) {
   const { user } = useAuth()

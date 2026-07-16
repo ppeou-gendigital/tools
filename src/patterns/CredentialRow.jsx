@@ -36,7 +36,7 @@ async function writeClipboard(value) {
     await navigator.clipboard.writeText(value)
     return true
   } catch (err) {
-    console.warn('[acceso] clipboard write failed', err)
+    console.warn('[accesso] clipboard write failed', err)
     return false
   }
 }

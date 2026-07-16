@@ -1,4 +1,4 @@
-# acceso
+# accesso
 
 A Chrome extension **and** web app in one codebase. React (ES6, no TypeScript) + Vite + SCSS modules, with Supabase email-OTP auth and light/dark theming.
 
@@ -70,7 +70,7 @@ Inspect:
 | `npm run build`     | Production extension build → `dist/`                               |
 | `npm run build:web` | Production web build → `dist-web/`                                 |
 | `npm run lint`      | ESLint over `src/**/*.{js,jsx}`                                    |
-| `npm run icons`     | Rasterize `icons/tool.svg` into the four PNG sizes                 |
+| `npm run icons`     | Rasterize `icons/tool.svg` into extension + PWA PNG sizes          |
 | `npm run init`      | Rename the template to a new tool name (see below)                 |
 
 ---
@@ -78,7 +78,7 @@ Inspect:
 ## Project layout
 
 ```
-acceso/
+accesso/
 ├── manifest.json               # MV3 manifest (host permission for supabase.co)
 ├── background.js               # MV3 service worker (minimal stub)
 ├── index.html                  # web entry
@@ -117,9 +117,9 @@ acceso/
 │       ├── _base.scss
 │       └── _layout.scss
 ├── scripts/
-│   ├── generate-icons.mjs      # rasterize tool.svg -> 4 PNGs
+│   ├── generate-icons.mjs      # rasterize tool.svg -> extension + PWA PNGs
 │   └── init-tool.mjs           # rename template placeholders to your tool name
-└── icons/tool.svg              # source SVG for the four PNG sizes
+└── icons/tool.svg              # source SVG for extension + PWA PNG sizes
 ```
 
 ---
@@ -158,7 +158,7 @@ Create a project at https://supabase.com (free tier — 50k MAU / 500MB Postgres
 
 ### 1. Configure email OTP (6-digit code, not magic-link)
 
-acceso uses `signInWithOtp` + `verifyOtp` with `type: 'email'`. The default Supabase email template uses a `ConfirmationURL` — replace it with the OTP token.
+accesso uses `signInWithOtp` + `verifyOtp` with `type: 'email'`. The default Supabase email template uses a `ConfirmationURL` — replace it with the OTP token.
 
 - **Dashboard** → **Authentication** → **Email Templates** → **Magic Link**
 - Replace the body with something like:
@@ -337,7 +337,7 @@ Use this table as the template when you add another vault-backed feature: same `
 
 ### 3. Second consumer: the `credit_cards` table + RLS
 
-Credit cards use the exact same shape as credentials, with one twist: the plaintext `display_name` is **optional**. The card name is the only field the user is allowed to leak into the DB — everything else (number, expiry, CVV, cardholder, issuer, ZIP, PIN, notes) lives inside the encrypted blob. When the user leaves the name blank we compute an `Issuer •••• last 4` label client-side after decrypt, so nothing extra ends up in Postgres.
+Credit cards use the exact same shape as credentials, with one twist: the plaintext `display_name` is **optional**. The card name is the only field the user is allowed to leak into the DB — everything else (number, expiry, CVV, cardholder, issuer, ZIP, PIN, notes, favorite flag) lives inside the encrypted blob. When the user leaves the name blank we compute an `Issuer •••• last 4` label client-side after decrypt, so nothing extra ends up in Postgres.
 
 In **SQL Editor**, run:
 
@@ -375,7 +375,8 @@ The encrypted plaintext is a JSON blob:
   "issuerBank": "Chase",
   "billingZip": "94103",
   "pin": "",
-  "notes": "..."
+  "notes": "...",
+  "isFavorite": false
 }
 ```
 
@@ -398,7 +399,9 @@ The **Capture** button on the Credentials list reads the username / password fie
 - **Smart merge (hostname-based):** the detected URL is matched by hostname against your existing entries. No match → new credential seeded with URL + user + pass; hostname match + same username → the matched account's password is replaced; hostname match + new username → a new account is appended to the existing entry.
 - **Nothing leaves the device:** the injected page scanner runs entirely in the target tab, and captured values travel through the same E2EE vault path as any manually-entered credential — the Credentials page never sees plaintext outside the user's session.
 - **Manifest permissions:** requires `activeTab` (temporary tab access granted by the popup click) and `scripting` (to inject the scanner) in [manifest.json](manifest.json). No broad host_permissions are added — the extension can only touch the tab you're actively on.
-- **Current limitations (v1):** single form per page, first visible password field, no iframe traversal, no two-step (email → next page → password) flows. See [src/lib/pageScanner.js](src/lib/pageScanner.js).
+- **Email-first / two-step:** if the page only shows an email or username field (no password yet), Capture still seeds the username and leaves password empty — capture again after the password step to fill it in. See [src/lib/pageScanner.js](src/lib/pageScanner.js).
+- **SSO IdP pages:** when the tab is an identity provider that embeds `redirect_uri` / `returnUrl` (or Hearst-style base64 site path segments), Capture seeds the relying-party hostname so Autofill matches the real site. See [src/lib/ssoSiteUrl.js](src/lib/ssoSiteUrl.js).
+- **Current limitations (v1):** single form per page, first visible password field when several exist, no iframe traversal. See [src/lib/pageScanner.js](src/lib/pageScanner.js).
 
 ---
 
@@ -417,20 +420,28 @@ Add more as your tool needs them (`tabs`, `webNavigation`, `alarms`, etc.) in [m
 
 ## CI / GitHub Pages
 
-- **Workflow**: [`.github/workflows/deploy-acceso-pages.yml`](.github/workflows/deploy-acceso-pages.yml)
-- **Trigger**: push to `tool/acceso` (or manual `workflow_dispatch` from the Actions tab)
-- **Live URL**: `https://ppeou-gendigital.github.io/tools/acceso/`
-- **Build**: dual-build — this workflow builds `tool/acceso` and `tool/loopy`, then uploads a combined artifact (`site/acceso/` + `site/loopy/`) so both tools stay live on the one Pages site
+- **Workflow**: [`.github/workflows/deploy-accesso-pages.yml`](.github/workflows/deploy-accesso-pages.yml)
+- **Trigger**: push to `tool/accesso` (or manual `workflow_dispatch` from the Actions tab)
+- **Live URL**: `https://ppeou-gendigital.github.io/tools/accesso/`
+- **Build**: dual-build — this workflow builds `tool/accesso` and `tool/loopy`, then uploads a combined artifact (`site/accesso/` + `site/loopy/`) so both tools stay live on the one Pages site
 - **Repo secrets required** (Settings → Secrets and variables → Actions):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
 - **Repo Pages settings**: Settings → Pages → Source = **GitHub Actions**
-- **Deployment branch policy**: the `github-pages` environment must allow `tool/acceso` (and `tool/loopy`)
+- **Deployment branch policy**: the `github-pages` environment must allow `tool/accesso` (and `tool/loopy`)
 
 `scripts/init-tool.mjs` renames both this workflow file and the release workflow to match your tool's name, plus updates the branch triggers.
 
+### Install as a PWA (web build only)
+
+The web deploy is an installable Progressive Web App (manifest + service worker for the app shell). The Chrome extension build is unchanged and is not a PWA.
+
+- **iPhone / iPad (Safari):** open the live URL → Share → **Add to Home Screen**. The icon uses the Accesso touch icon; the app opens in standalone mode (no Safari chrome).
+- **Android (Chrome):** open the live URL → browser menu → **Install app** / **Add to Home screen** when Chrome offers it.
+- Vault data is **not** cached offline — you still need network access to Supabase.
+
 ### One Pages site per repo — dual-build coexistence
 
-A GitHub repo publishes exactly **one** Pages site, and each deploy replaces the entire site. To keep multiple tools live, each tool's Pages workflow checks out the sibling tool branch(es), builds every tool, and uploads a combined artifact (e.g. `site/loopy/` + `site/acceso/`). That yields stable URLs like `/tools/loopy/` and `/tools/acceso/` without one deploy wiping the other.
+A GitHub repo publishes exactly **one** Pages site, and each deploy replaces the entire site. To keep multiple tools live, each tool's Pages workflow checks out the sibling tool branch(es), builds every tool, and uploads a combined artifact (e.g. `site/loopy/` + `site/accesso/`). That yields stable URLs like `/tools/loopy/` and `/tools/accesso/` without one deploy wiping the other.
 
 When adding a third tool, extend every Pages workflow's dual-build (now multi-build) to include the new branch, and add that branch to the `github-pages` deployment branch policy. For a long-term split, give the new tool its own repo instead.

@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Acceso",
+  "name": "Accesso",
   "version": "0.1.0",
-  "description": "Acceso — React + Supabase Chrome extension",
+  "description": "Accesso — React + Supabase Chrome extension",
   "action": {
-    "default_title": "Acceso",
+    "default_title": "Accesso",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",

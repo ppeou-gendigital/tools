@@ -100,7 +100,7 @@ export function SignInForm() {
       // The handle_new_user trigger already created the row.
       if (mode === 'signup' && pendingDisplayName) {
         finalizeSignup(data?.session ?? null, pendingDisplayName).catch(
-          (err) => console.warn('[acceso] display name upsert failed:', err),
+          (err) => console.warn('[accesso] display name upsert failed:', err),
         )
       }
       // AuthProvider's onAuthStateChange will flip the gate.
@@ -166,8 +166,8 @@ export function SignInForm() {
             {step === 'token'
               ? 'Check your email'
               : isSignup
-                ? 'Create your Acceso account'
-                : 'Log in to Acceso'}
+                ? 'Create your Accesso account'
+                : 'Log in to Accesso'}
           </CardTitle>
           <CardDescription>
             {step === 'token'

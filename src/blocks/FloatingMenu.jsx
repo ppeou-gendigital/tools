@@ -49,7 +49,7 @@ export function FloatingMenu() {
         className={styles.fab}
         data-corner={corner}
         data-dragging={isDragging ? 'true' : undefined}
-        aria-label="Acceso menu"
+        aria-label="Accesso menu"
         aria-haspopup="menu"
         aria-expanded={open}
         style={fabStyle}

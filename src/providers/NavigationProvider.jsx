@@ -2,11 +2,35 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
+import { asyncStorage } from '@/lib/storage'
 
 const NavigationContext = createContext(null)
+
+// Persisted per-device so the popup / tab reopens on whichever landing
+// page you were last using — same pattern as FabCornerProvider (see
+// src/lib/storage.js).
+const LAST_ROUTE_STORAGE_KEY = 'accesso.lastRoute'
+
+// Only landing / index pages get remembered across sessions. Edit
+// routes (`credential-edit`, `credit-card-edit`, the `*-new` twins)
+// depend on params that can go stale between sessions — a row id
+// might be deleted, an in-flight seed is meaningless after popup
+// close — so restoring into them is worse UX than dropping the user
+// on the parent listing.
+const RESTORABLE_ROUTES = new Set([
+  'home',
+  'profile',
+  'deck-demo',
+  'settings',
+  'vault-settings',
+  'credentials',
+  'credit-cards',
+])
 
 const ROUTES = [
   'home',
@@ -70,10 +94,60 @@ function makeEntry(route, params = {}) {
   return { route, params: params ?? {} }
 }
 
-export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
+export function NavigationProvider({ children, initial }) {
+  const explicitInitial = ROUTES.includes(initial) ? initial : null
   const [stack, setStack] = useState(() => [
-    makeEntry(ROUTES.includes(initial) ? initial : DEFAULT_ROUTE),
+    makeEntry(explicitInitial ?? DEFAULT_ROUTE),
   ])
+
+  // Cold-start restore. Fires exactly once per provider mount. If the
+  // caller pinned an explicit initial route we honour that and skip
+  // the storage read entirely — deep-link intent always wins over a
+  // remembered value. Otherwise we async-read the last landing page
+  // and swap it in *only if the user hasn't already navigated in the
+  // meantime* (guarded by comparing the current stack to the seeded
+  // default). That way a fast click before the storage read resolves
+  // isn't clobbered by a stale restore.
+  useEffect(() => {
+    if (explicitInitial) return
+    let cancelled = false
+    ;(async () => {
+      const stored = await asyncStorage.getItem(LAST_ROUTE_STORAGE_KEY)
+      if (cancelled) return
+      if (typeof stored !== 'string' || !RESTORABLE_ROUTES.has(stored)) return
+      if (stored === DEFAULT_ROUTE) return
+      setStack((prev) => {
+        // If anything moved us off the seeded default (`home` at
+        // depth 1), the user already made a choice — don't override.
+        if (
+          prev.length !== 1 ||
+          prev[0].route !== DEFAULT_ROUTE ||
+          Object.keys(prev[0].params).length !== 0
+        ) {
+          return prev
+        }
+        return [makeEntry(stored)]
+      })
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [explicitInitial])
+
+  // Persist whenever the top route changes to a restorable landing
+  // page. Edit / new routes intentionally leave the stored value
+  // alone so that `credentials → credential-edit → close popup →
+  // reopen` correctly lands you back on `credentials` (the previous
+  // landing) rather than a stale row id.
+  const lastPersistedRef = useRef(null)
+  const currentTopRoute = stack[stack.length - 1]?.route
+  useEffect(() => {
+    if (!currentTopRoute) return
+    if (!RESTORABLE_ROUTES.has(currentTopRoute)) return
+    if (lastPersistedRef.current === currentTopRoute) return
+    lastPersistedRef.current = currentTopRoute
+    asyncStorage.setItem(LAST_ROUTE_STORAGE_KEY, currentTopRoute)
+  }, [currentTopRoute])
 
   const navigate = useCallback((next, params) => {
     if (!ROUTES.includes(next)) return

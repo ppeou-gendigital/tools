@@ -1,12 +1,12 @@
-name: Release acceso Chrome extension
+name: Release accesso Chrome extension
 
-# Fires when we push a tag shaped like `acceso-v<major>.<minor>.<patch>` so
+# Fires when we push a tag shaped like `accesso-v<major>.<minor>.<patch>` so
 # this tool's releases stay scoped inside a multi-tool repo. `workflow_dispatch`
 # lets us cut a release from the Actions UI without touching git if needed.
 on:
   push:
     tags:
-      - 'acceso-v*'
+      - 'accesso-v*'
   workflow_dispatch:
     inputs:
       version:
@@ -19,7 +19,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: acceso-release-${{ github.ref }}
+  group: accesso-release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -34,8 +34,8 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             VERSION="${{ inputs.version }}"
           else
-            # Strip the acceso-v prefix from refs/tags/acceso-v0.1.0 -> 0.1.0
-            VERSION="${GITHUB_REF_NAME#acceso-v}"
+            # Strip the accesso-v prefix from refs/tags/accesso-v0.1.0 -> 0.1.0
+            VERSION="${GITHUB_REF_NAME#accesso-v}"
           fi
           if [ -z "$VERSION" ]; then
             echo "Empty version" >&2
@@ -76,17 +76,17 @@ jobs:
           # at the root of the archive. Chrome's "Load unpacked" expects that
           # layout — a nested dist/ folder would break the install.
           cd dist
-          zip -r "../acceso-v${{ steps.version.outputs.version }}.zip" .
+          zip -r "../accesso-v${{ steps.version.outputs.version }}.zip" .
 
       - uses: softprops/action-gh-release@v2
         with:
-          files: acceso-v${{ steps.version.outputs.version }}.zip
-          name: acceso v${{ steps.version.outputs.version }}
-          tag_name: acceso-v${{ steps.version.outputs.version }}
+          files: accesso-v${{ steps.version.outputs.version }}.zip
+          name: accesso v${{ steps.version.outputs.version }}
+          tag_name: accesso-v${{ steps.version.outputs.version }}
           body: |
             ## Install (developer mode)
 
-            1. Download `acceso-v${{ steps.version.outputs.version }}.zip` below.
+            1. Download `accesso-v${{ steps.version.outputs.version }}.zip` below.
             2. Extract it to a folder somewhere permanent (Chrome loads the extension from disk, so don't delete the folder after install).
             3. Open `chrome://extensions` in Chrome or Edge.
             4. Toggle **Developer mode** on (top-right).

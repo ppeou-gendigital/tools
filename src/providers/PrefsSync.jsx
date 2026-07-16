@@ -103,7 +103,7 @@ export function PrefsSync() {
       } catch (err) {
         if (cancelled) return
         initialPulledForUserRef.current = null
-        console.warn('[acceso] prefs auto-pull failed:', err?.message ?? err)
+        console.warn('[accesso] prefs auto-pull failed:', err?.message ?? err)
       }
     })()
 
@@ -146,7 +146,7 @@ export function PrefsSync() {
         lastSyncedRef.current = current
         queryClient.setQueryData(['user_data', userId], row)
       } catch (err) {
-        console.warn('[acceso] prefs auto-push failed:', err?.message ?? err)
+        console.warn('[accesso] prefs auto-push failed:', err?.message ?? err)
       }
     }, PUSH_DEBOUNCE_MS)
 

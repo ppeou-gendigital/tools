@@ -55,7 +55,7 @@ const FAILED_UNLOCK_DELAYS_MS = [0, 250, 500, 1000, 2000, 4000]
 // We cache the passphrase (not the derived key bytes) so the CryptoKey
 // stays non-extractable everywhere. The ~200ms PBKDF2 cost on resume
 // is imperceptible and only paid on popup/tab wake.
-const VAULT_SESSION_KEY = 'acceso.vault.session'
+const VAULT_SESSION_KEY = 'accesso.vault.session'
 
 // Coalesce activity refreshes: even if the user is jiggling the mouse
 // non-stop we only re-arm the timer / rewrite the cache once every 30s.

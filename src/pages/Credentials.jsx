@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  ArrowLeft,
   KeyRound,
   Loader2,
   Lock,
@@ -14,6 +13,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { CredentialRow } from '@/patterns/CredentialRow'
+import { HeaderIconButton, PageHeader } from '@/patterns/PageHeader'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { useVault } from '@/providers/VaultProvider'
@@ -40,12 +40,7 @@ export function Credentials() {
   const { user } = useAuth()
   const userId = user?.id ?? null
   const vault = useVault()
-  const {
-    goBack,
-    previousRouteLabel,
-    goCredentialNew,
-    goCredentialEdit,
-  } = useNavigation()
+  const { goCredentialNew, goCredentialEdit } = useNavigation()
 
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState('updated_desc')
@@ -92,7 +87,7 @@ export function Credentials() {
               error: false,
             }
           } catch (err) {
-            console.warn('[acceso] credential decrypt failed', err)
+            console.warn('[accesso] credential decrypt failed', err)
             return {
               id: row.id,
               displayName: row.display_name,
@@ -203,6 +198,7 @@ export function Credentials() {
           seed: {
             mode: 'update-account',
             accountIdx,
+            username: detected.username,
             password: detected.password,
             hostname: host,
           },
@@ -222,7 +218,7 @@ export function Credentials() {
     }
   }
 
-  if (vault.isLocked) return <LockedPlaceholder onBack={goBack} previousRouteLabel={previousRouteLabel} onUnlock={() => vault.requestUnlock({ dismissible: false })} />
+  if (vault.isLocked) return <LockedPlaceholder onUnlock={() => vault.requestUnlock({ dismissible: false })} />
 
   const isLoading = listQuery.isLoading || decrypting
   const isEmpty = !isLoading && filtered.length === 0
@@ -230,50 +226,46 @@ export function Credentials() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <Button variant="ghost" size="sm" onClick={goBack} className={styles.back}>
-          <ArrowLeft size={14} aria-hidden="true" />
-          {previousRouteLabel ?? 'Back'}
-        </Button>
-        <div className={styles.headerText}>
-          <h1 className={styles.title}>Credentials</h1>
-          <p className={styles.subtitle}>
-            {decrypted.length} {decrypted.length === 1 ? 'entry' : 'entries'}
-          </p>
-        </div>
-        <div className={styles.headerActions}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => vault.lock()}
-            className={styles.lockBtn}
-            title="Lock vault"
-          >
-            <Lock size={14} aria-hidden="true" />
-            Lock
-          </Button>
-          {extensionMode && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCapture}
-              disabled={capturing}
-              title="Capture login from the current page"
+      <PageHeader
+        title="Credentials"
+        subtitle={`${decrypted.length} ${decrypted.length === 1 ? 'entry' : 'entries'}`}
+        actions={
+          <>
+            <HeaderIconButton
+              aria-label="Lock vault"
+              title="Lock vault"
+              onClick={() => vault.lock()}
             >
-              {capturing ? (
-                <Loader2 size={14} aria-hidden="true" className={styles.spin} />
-              ) : (
-                <Wand2 size={14} aria-hidden="true" />
-              )}
-              Capture
-            </Button>
-          )}
-          <Button size="sm" onClick={() => goCredentialNew()}>
-            <Plus size={14} aria-hidden="true" />
-            Add
-          </Button>
-        </div>
-      </div>
+              <Lock size={16} aria-hidden="true" />
+            </HeaderIconButton>
+            {extensionMode && (
+              <HeaderIconButton
+                aria-label="Capture login from current page"
+                title="Capture login from the current page"
+                onClick={handleCapture}
+                disabled={capturing}
+              >
+                {capturing ? (
+                  <Loader2
+                    size={16}
+                    aria-hidden="true"
+                    className={styles.spin}
+                  />
+                ) : (
+                  <Wand2 size={16} aria-hidden="true" />
+                )}
+              </HeaderIconButton>
+            )}
+            <HeaderIconButton
+              aria-label="Add credential"
+              title="Add credential"
+              onClick={() => goCredentialNew()}
+            >
+              <Plus size={16} aria-hidden="true" />
+            </HeaderIconButton>
+          </>
+        }
+      />
 
       {captureError && (
         <div className={cx(styles.captureStatus, styles.statusError)}>
@@ -364,19 +356,10 @@ export function Credentials() {
   )
 }
 
-function LockedPlaceholder({ onBack, previousRouteLabel, onUnlock }) {
+function LockedPlaceholder({ onUnlock }) {
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <Button variant="ghost" size="sm" onClick={onBack} className={styles.back}>
-          <ArrowLeft size={14} aria-hidden="true" />
-          {previousRouteLabel ?? 'Back'}
-        </Button>
-        <div className={styles.headerText}>
-          <h1 className={styles.title}>Credentials</h1>
-          <p className={styles.subtitle}>Locked</p>
-        </div>
-      </div>
+      <PageHeader title="Credentials" subtitle="Locked" />
       <div className={styles.emptyState}>
         <div className={styles.emptyIcon} aria-hidden="true">
           <LockKeyhole size={20} />
