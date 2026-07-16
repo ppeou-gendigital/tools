@@ -4,22 +4,6 @@
   padding: var(--space-4);
 }
 
-.header {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.title {
-  font-size: var(--text-xl);
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.subtitle {
-  font-size: var(--text-sm);
-  color: var(--muted-fg);
-}
-
 .grid {
   display: grid;
   grid-template-columns: 1fr;

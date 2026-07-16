@@ -1,26 +1,16 @@
-import { ArrowLeft } from 'lucide-react'
-import { Button } from '@/molecules/Button'
 import { Deck, Slide } from '@/blocks/Deck'
-import { useNavigation } from '@/providers/NavigationProvider'
+import { PageHeader } from '@/patterns/PageHeader'
 import { cx } from '@/lib/cx'
 import styles from './DeckDemo.module.scss'
 
 const SLIDES = [1, 2, 3, 4, 5]
 
 export function DeckDemo() {
-  const { goBack, previousRouteLabel } = useNavigation()
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <Button variant="ghost" size="sm" onClick={goBack} className={styles.back}>
-          <ArrowLeft size={14} aria-hidden="true" />
-          {previousRouteLabel ?? 'Back'}
-        </Button>
-        <div className={styles.headerText}>
-          <h1 className={styles.title}>Deck demo</h1>
-          <p className={styles.subtitle}>SM: 10 cols / MD: 5 / LG: 4 / XL: 3</p>
-        </div>
-      </header>
+      <div className={styles.headerWrap}>
+        <PageHeader title="Deck demo" subtitle="SM: 10 cols / MD: 5 / LG: 4 / XL: 3" />
+      </div>
 
       <div className={cx('is-fluid-width', styles.deckWrap)}>
         <Deck>

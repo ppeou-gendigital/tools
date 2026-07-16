@@ -1,5 +1,5 @@
-import { ArrowLeft, KeyRound } from 'lucide-react'
-import { Button } from '@/molecules/Button'
+import { KeyRound } from 'lucide-react'
+import { PageHeader } from '@/patterns/PageHeader'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { useAuth } from '@/providers/AuthProvider'
 import { useVault } from '@/providers/VaultProvider'
@@ -7,11 +7,11 @@ import { labelForIdleTimeoutMs } from '@/lib/vaultIdleOptions'
 import styles from './Settings.module.scss'
 
 // Settings page-group landing. Renders a card list of sub-pages so the
-// group can grow without adding depth to the FAB menu. Each sub-page
-// owns its own back button which returns here rather than jumping
-// straight home.
+// group can grow without adding depth to the FAB menu. Sub-pages are
+// reached by tapping a card; navigation back out lives in the app
+// toolbar / FAB.
 export function Settings() {
-  const { goBack, previousRouteLabel, goVaultSettings } = useNavigation()
+  const { goVaultSettings } = useNavigation()
   const { user } = useAuth()
   const vault = useVault()
 
@@ -22,21 +22,7 @@ export function Settings() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={goBack}
-          className={styles.back}
-        >
-          <ArrowLeft size={14} aria-hidden="true" />
-          {previousRouteLabel ?? 'Back'}
-        </Button>
-        <div className={styles.headerText}>
-          <h1 className={styles.title}>Settings</h1>
-          <p className={styles.subtitle}>Manage your tool preferences.</p>
-        </div>
-      </div>
+      <PageHeader title="Settings" subtitle="Manage your tool preferences." />
 
       <ul className={styles.cards}>
         {showVaultCard && (

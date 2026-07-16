@@ -1,22 +1,30 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  ArrowLeft,
   CreditCard,
+  Loader2,
   Lock,
   LockKeyhole,
   Plus,
   Search,
   TriangleAlert,
+  Wand2,
 } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { CreditCardRow } from '@/patterns/CreditCardRow'
+import { HeaderIconButton, PageHeader } from '@/patterns/PageHeader'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { useVault } from '@/providers/VaultProvider'
-import { listCreditCards } from '@/lib/creditCardsApi'
+import {
+  findMatchingCreditCard,
+  useDecryptedCreditCards,
+} from '@/hooks/useDecryptedCreditCards'
+import { updateCreditCard } from '@/lib/creditCardsApi'
+import { capturePageCreditCard } from '@/lib/pageCardCapture'
 import { detectBrand, last4, resolveDisplayName } from '@/lib/cardUtils'
+import { isExtension } from '@/env'
 import { cx } from '@/lib/cx'
 import styles from './CreditCards.module.scss'
 
@@ -28,6 +36,7 @@ const SORT_OPTIONS = [
 
 const FILTER_OPTIONS = [
   { value: 'all', label: 'All' },
+  { value: 'favorites', label: 'Favorites' },
   { value: 'has_notes', label: 'Has notes' },
   { value: 'visa', label: 'Visa' },
   { value: 'mastercard', label: 'Mastercard' },
@@ -35,105 +44,57 @@ const FILTER_OPTIONS = [
   { value: 'other', label: 'Other' },
 ]
 
-// Brand codes that fold into the "Other" filter chip. Anything not
-// listed here (and not one of the top-3 explicit chips) counts as
-// "other" — that includes Discover, JCB, Diners, UnionPay, and any
-// unresolvable numbers.
 const OTHER_BRANDS = new Set(['discover', 'jcb', 'diners', 'unionpay', 'unknown'])
 
 export function CreditCards() {
   const { user } = useAuth()
   const userId = user?.id ?? null
   const vault = useVault()
-  const {
-    goBack,
-    previousRouteLabel,
-    goCreditCardNew,
-    goCreditCardEdit,
-  } = useNavigation()
+  const { goCreditCardNew, goCreditCardEdit } = useNavigation()
+  const queryClient = useQueryClient()
+  const extensionMode = isExtension()
 
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState('updated_desc')
   const [filter, setFilter] = useState('all')
-  const [decrypted, setDecrypted] = useState([])
-  const [decrypting, setDecrypting] = useState(false)
+  const [capturing, setCapturing] = useState(false)
+  const [captureError, setCaptureError] = useState(null)
 
-  const listQuery = useQuery({
-    queryKey: ['credit_cards', userId],
-    queryFn: () => listCreditCards(userId),
-    enabled: !!userId && vault.isUnlocked,
+  const { decrypted, isLoading, isDecrypting, error, listQuery } =
+    useDecryptedCreditCards()
+
+  const favoriteMutation = useMutation({
+    mutationFn: async ({ card, nextFavorite }) => {
+      const payload = {
+        cardholderName: card.cardholderName ?? '',
+        cardNumber: String(card.cardNumber || '').replace(/\D+/g, ''),
+        expMonth: card.expMonth ?? '',
+        expYear: card.expYear ?? '',
+        cvv: card.cvv ?? '',
+        issuerBank: card.issuerBank ?? '',
+        billingZip: card.billingZip ?? '',
+        pin: card.pin ?? '',
+        notes: card.notes ?? '',
+        isFavorite: nextFavorite,
+      }
+      const { ciphertext, iv } = await vault.encryptRecord(payload)
+      return updateCreditCard(card.id, {
+        displayName: card.displayName ?? '',
+        ciphertext,
+        iv,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['credit_cards', userId] })
+    },
   })
-
-  // Decrypt when either the row set or the vault key changes. Same
-  // pattern as Credentials: rows that fail to decrypt stay in the
-  // list marked `error: true` so the user can still delete them.
-  useEffect(() => {
-    let cancelled = false
-    async function run() {
-      if (!listQuery.data) {
-        setDecrypted([])
-        return
-      }
-      setDecrypting(true)
-      const results = await Promise.all(
-        listQuery.data.map(async (row) => {
-          try {
-            const plain = await vault.decryptRecord({
-              ciphertext: row.ciphertext,
-              iv: row.iv,
-            })
-            return {
-              id: row.id,
-              displayName: row.display_name,
-              cardholderName: plain?.cardholderName ?? '',
-              cardNumber: plain?.cardNumber ?? '',
-              expMonth: plain?.expMonth ?? '',
-              expYear: plain?.expYear ?? '',
-              cvv: plain?.cvv ?? '',
-              issuerBank: plain?.issuerBank ?? '',
-              billingZip: plain?.billingZip ?? '',
-              pin: plain?.pin ?? '',
-              notes: plain?.notes ?? '',
-              updatedAt: row.updated_at,
-              createdAt: row.created_at,
-              error: false,
-            }
-          } catch (err) {
-            console.warn('[acceso] credit card decrypt failed', err)
-            return {
-              id: row.id,
-              displayName: row.display_name,
-              cardholderName: '',
-              cardNumber: '',
-              expMonth: '',
-              expYear: '',
-              cvv: '',
-              issuerBank: '',
-              billingZip: '',
-              pin: '',
-              notes: '',
-              updatedAt: row.updated_at,
-              createdAt: row.created_at,
-              error: true,
-            }
-          }
-        }),
-      )
-      if (!cancelled) {
-        setDecrypted(results)
-        setDecrypting(false)
-      }
-    }
-    run()
-    return () => {
-      cancelled = true
-    }
-  }, [listQuery.data, vault])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     let out = decrypted
-    if (filter === 'has_notes') {
+    if (filter === 'favorites') {
+      out = out.filter((c) => c.isFavorite)
+    } else if (filter === 'has_notes') {
       out = out.filter((c) => c.notes && c.notes.trim().length > 0)
     } else if (filter === 'visa' || filter === 'mastercard' || filter === 'amex') {
       out = out.filter((c) => detectBrand(c.cardNumber) === filter)
@@ -156,9 +117,6 @@ export function CreditCards() {
       })
     }
     const sorted = [...out]
-    // Sort by the resolved display name (user name if set, otherwise
-    // Issuer •••• last4) so blank-name rows land in a predictable
-    // spot rather than clustering at the start of the alphabet.
     const nameOf = (c) =>
       resolveDisplayName({
         displayName: c.displayName,
@@ -171,15 +129,57 @@ export function CreditCards() {
       sorted.sort((a, b) => nameOf(b).localeCompare(nameOf(a)))
     } else {
       sorted.sort((a, b) => {
+        // Favorites float to the top within "recently updated".
+        if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1
         return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       })
     }
     return sorted
   }, [decrypted, search, sort, filter])
 
-  // While the vault is locked, raise the non-dismissible unlock
-  // overlay. Effect re-fires if the vault re-locks (auto-lock,
-  // manual lock) while the user is still on this page.
+  async function handleCapture() {
+    setCapturing(true)
+    setCaptureError(null)
+    let detected
+    try {
+      detected = await capturePageCreditCard()
+    } catch (err) {
+      setCaptureError(err?.message ?? 'Could not capture from this page.')
+      setCapturing(false)
+      return
+    }
+    try {
+      const match = findMatchingCreditCard(decrypted, detected.cardNumber)
+      const seedBase = {
+        hostname: detected.hostname,
+        cardholderName: detected.cardholderName,
+        cardNumber: detected.cardNumber,
+        expMonth: detected.expMonth,
+        expYear: detected.expYear,
+        cvv: detected.cvv,
+        billingZip: detected.billingZip,
+      }
+      if (!match) {
+        goCreditCardNew({
+          seed: {
+            mode: 'new',
+            title: detected.title,
+            ...seedBase,
+          },
+        })
+        return
+      }
+      goCreditCardEdit(match.id, {
+        seed: {
+          mode: 'update',
+          ...seedBase,
+        },
+      })
+    } finally {
+      setCapturing(false)
+    }
+  }
+
   const { isLocked, requestUnlock } = vault
   useEffect(() => {
     if (isLocked) {
@@ -187,42 +187,54 @@ export function CreditCards() {
     }
   }, [isLocked, requestUnlock])
 
-  if (vault.isLocked) return <LockedPlaceholder onBack={goBack} previousRouteLabel={previousRouteLabel} onUnlock={() => vault.requestUnlock({ dismissible: false })} />
+  if (vault.isLocked) {
+    return (
+      <LockedPlaceholder onUnlock={() => vault.requestUnlock({ dismissible: false })} />
+    )
+  }
 
-  const isLoading = listQuery.isLoading || decrypting
-  const isEmpty = !isLoading && filtered.length === 0
-  const errorMessage = listQuery.error?.message ?? null
+  const loading = isLoading || isDecrypting
+  const isEmpty = !loading && filtered.length === 0
+  const errorMessage = error?.message ?? listQuery.error?.message ?? null
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <Button variant="ghost" size="sm" onClick={goBack} className={styles.back}>
-          <ArrowLeft size={14} aria-hidden="true" />
-          {previousRouteLabel ?? 'Back'}
-        </Button>
-        <div className={styles.headerText}>
-          <h1 className={styles.title}>Credit cards</h1>
-          <p className={styles.subtitle}>
-            {decrypted.length} {decrypted.length === 1 ? 'card' : 'cards'}
-          </p>
-        </div>
-        <div className={styles.headerActions}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => vault.lock()}
-            className={styles.lockBtn}
-            title="Lock vault"
-          >
-            <Lock size={14} aria-hidden="true" />
-            Lock
-          </Button>
-          <Button size="sm" onClick={() => goCreditCardNew()}>
-            <Plus size={14} aria-hidden="true" />
-            Add
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Credit cards"
+        subtitle={`${decrypted.length} ${decrypted.length === 1 ? 'card' : 'cards'}`}
+        actions={
+          <>
+            <HeaderIconButton
+              aria-label="Lock vault"
+              title="Lock vault"
+              onClick={() => vault.lock()}
+            >
+              <Lock size={16} aria-hidden="true" />
+            </HeaderIconButton>
+            {extensionMode && (
+              <HeaderIconButton
+                aria-label="Capture card from current page"
+                title="Capture card from the current page"
+                onClick={handleCapture}
+                disabled={capturing}
+              >
+                {capturing ? (
+                  <Loader2 size={16} aria-hidden="true" className={styles.spin} />
+                ) : (
+                  <Wand2 size={16} aria-hidden="true" />
+                )}
+              </HeaderIconButton>
+            )}
+            <HeaderIconButton
+              aria-label="Add card"
+              title="Add card"
+              onClick={() => goCreditCardNew()}
+            >
+              <Plus size={16} aria-hidden="true" />
+            </HeaderIconButton>
+          </>
+        }
+      />
 
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>
@@ -262,14 +274,14 @@ export function CreditCards() {
         </div>
       </div>
 
-      {errorMessage && (
+      {(errorMessage || captureError) && (
         <div className={cx(styles.status, styles.statusError)}>
           <TriangleAlert size={12} aria-hidden="true" />
-          <span>{errorMessage}</span>
+          <span>{captureError || errorMessage}</span>
         </div>
       )}
 
-      {isLoading && (
+      {loading && (
         <div className={styles.emptyState}>Loading credit cards…</div>
       )}
 
@@ -280,7 +292,7 @@ export function CreditCards() {
         />
       )}
 
-      {!isLoading && filtered.length > 0 && (
+      {!loading && filtered.length > 0 && (
         <div className={styles.table} role="table" aria-label="Credit cards">
           <div className={styles.tableHeader} role="row">
             <span role="columnheader">Name</span>
@@ -297,6 +309,12 @@ export function CreditCards() {
                 <CreditCardRow
                   card={card}
                   onEdit={(id) => goCreditCardEdit(id)}
+                  onToggleFavorite={(c) =>
+                    favoriteMutation.mutate({
+                      card: c,
+                      nextFavorite: !c.isFavorite,
+                    })
+                  }
                 />
               </li>
             ))}
@@ -307,19 +325,10 @@ export function CreditCards() {
   )
 }
 
-function LockedPlaceholder({ onBack, previousRouteLabel, onUnlock }) {
+function LockedPlaceholder({ onUnlock }) {
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <Button variant="ghost" size="sm" onClick={onBack} className={styles.back}>
-          <ArrowLeft size={14} aria-hidden="true" />
-          {previousRouteLabel ?? 'Back'}
-        </Button>
-        <div className={styles.headerText}>
-          <h1 className={styles.title}>Credit cards</h1>
-          <p className={styles.subtitle}>Locked</p>
-        </div>
-      </div>
+      <PageHeader title="Credit cards" subtitle="Locked" />
       <div className={styles.emptyState}>
         <div className={styles.emptyIcon} aria-hidden="true">
           <LockKeyhole size={20} />

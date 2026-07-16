@@ -38,3 +38,19 @@ export function findMatchingCredential(credentials, targetHostname) {
   }
   return null
 }
+
+// Same match logic as findMatchingCredential, but returns every hit
+// in stable order. Used by the autofill button — when a page matches
+// multiple credentials the user gets a picker instead of a silent
+// first-match win.
+export function findAllMatchingCredentials(credentials, targetHostname) {
+  if (!targetHostname || !Array.isArray(credentials)) return []
+  const target = targetHostname.toLowerCase()
+  const out = []
+  for (const cred of credentials) {
+    if (!cred || cred.error) continue
+    const host = hostnameOf(cred.urlOrApp)
+    if (host && host === target) out.push(cred)
+  }
+  return out
+}

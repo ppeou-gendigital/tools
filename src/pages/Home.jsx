@@ -1,5 +1,6 @@
 import { CircleUserRound, Clock, Mail } from 'lucide-react'
 import { Button } from '@/molecules/Button'
+import { PageHeader } from '@/patterns/PageHeader'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import styles from './Home.module.scss'
@@ -19,10 +20,7 @@ export function Home() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Welcome back</h1>
-        <p className={styles.subtitle}>You&apos;re signed in.</p>
-      </div>
+      <PageHeader title="Welcome back" subtitle="You're signed in." />
 
       <div className={styles.grid}>
         <div className={styles.stat}>

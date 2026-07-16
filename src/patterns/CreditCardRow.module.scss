@@ -38,6 +38,34 @@
   min-width: 0;
 }
 
+.favBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-fg);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--fg);
+    background: var(--accent);
+  }
+}
+
+.favBtnOn {
+  color: #c9a227;
+
+  &:hover {
+    color: #c9a227;
+  }
+}
+
 .icon {
   display: inline-flex;
   align-items: center;

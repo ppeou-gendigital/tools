@@ -9,6 +9,9 @@
 // or null if no plausible login form was found. Never throws — an
 // invisible-catch pattern keeps errors from bubbling into
 // executeScript and turning into opaque "script error" messages.
+//
+// Supports classic email+password forms and email-first / two-step
+// flows (username only on step 1; password empty until the next step).
 export function scanPageForCredentials() {
   try {
     function isVisible(el) {
@@ -45,45 +48,85 @@ export function scanPageForCredentials() {
       return false
     }
 
+    // Stricter than isUsernameCandidate — used for email-first pages
+    // where there is no password field to anchor on. Bare type=text
+    // would match search boxes; require email/username signals.
+    function isStrongUsernameCandidate(el) {
+      if (!el || el.tagName !== 'INPUT') return false
+      if (el.disabled || el.type === 'hidden') return false
+      const type = (el.type || '').toLowerCase()
+      const ac = (el.getAttribute('autocomplete') || '').toLowerCase()
+      if (ac === 'username' || ac === 'email') return true
+      if (type === 'email' || type === 'tel') return true
+      return false
+    }
+
+    function rankUsername(el) {
+      const ac = (el.getAttribute('autocomplete') || '').toLowerCase()
+      const type = (el.type || '').toLowerCase()
+      if (ac === 'username' || ac === 'email') return 0
+      if (type === 'email') return 1
+      if (type === 'tel') return 2
+      return 3
+    }
+
+    function findUsernameBefore(passwordEl) {
+      let usernameEl = null
+
+      // 1) Same-form scan (Chrome autofill's primary heuristic).
+      const form = passwordEl.form
+      if (form) {
+        const elems = Array.from(form.elements)
+        const pwIdx = elems.indexOf(passwordEl)
+        for (let i = pwIdx - 1; i >= 0; i--) {
+          if (isUsernameCandidate(elems[i]) && isVisible(elems[i])) {
+            usernameEl = elems[i]
+            break
+          }
+        }
+      }
+
+      // 2) Formless fallback — walk DOM order backwards.
+      if (!usernameEl) {
+        const allInputs = Array.from(document.querySelectorAll('input'))
+        const pwIdx = allInputs.indexOf(passwordEl)
+        for (let i = pwIdx - 1; i >= 0; i--) {
+          if (isUsernameCandidate(allInputs[i]) && isVisible(allInputs[i])) {
+            usernameEl = allInputs[i]
+            break
+          }
+        }
+      }
+
+      return usernameEl
+    }
+
     const passwords = Array.from(
       document.querySelectorAll('input[type="password"]'),
     ).filter(isVisible)
-    if (passwords.length === 0) return null
 
-    // Pick the highest-priority password field.
-    passwords.sort((a, b) => rankPassword(a) - rankPassword(b))
-    const passwordEl = passwords[0]
-
-    let usernameEl = null
-
-    // 1) Same-form scan (Chrome autofill's primary heuristic).
-    const form = passwordEl.form
-    if (form) {
-      const elems = Array.from(form.elements)
-      const pwIdx = elems.indexOf(passwordEl)
-      for (let i = pwIdx - 1; i >= 0; i--) {
-        if (isUsernameCandidate(elems[i]) && isVisible(elems[i])) {
-          usernameEl = elems[i]
-          break
-        }
+    if (passwords.length > 0) {
+      passwords.sort((a, b) => rankPassword(a) - rankPassword(b))
+      const passwordEl = passwords[0]
+      const usernameEl = findUsernameBefore(passwordEl)
+      return {
+        username: usernameEl?.value ?? '',
+        password: passwordEl.value ?? '',
+        docTitle: document.title || '',
       }
     }
 
-    // 2) Formless fallback — walk DOM order backwards.
-    if (!usernameEl) {
-      const allInputs = Array.from(document.querySelectorAll('input'))
-      const pwIdx = allInputs.indexOf(passwordEl)
-      for (let i = pwIdx - 1; i >= 0; i--) {
-        if (isUsernameCandidate(allInputs[i]) && isVisible(allInputs[i])) {
-          usernameEl = allInputs[i]
-          break
-        }
-      }
-    }
+    // Email-first / two-step: no password yet, but a clear email or
+    // username field. Password stays empty for a later capture.
+    const usernames = Array.from(document.querySelectorAll('input'))
+      .filter((el) => isStrongUsernameCandidate(el) && isVisible(el))
+    if (usernames.length === 0) return null
 
+    usernames.sort((a, b) => rankUsername(a) - rankUsername(b))
+    const usernameEl = usernames[0]
     return {
-      username: usernameEl?.value ?? '',
-      password: passwordEl.value ?? '',
+      username: usernameEl.value ?? '',
+      password: '',
       docTitle: document.title || '',
     }
   } catch {

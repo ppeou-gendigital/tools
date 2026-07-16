@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 //
-// Rasterize icons/tool.svg into the Chrome extension PNG sizes using
+// Rasterize icons/tool.svg into Chrome extension + PWA PNG sizes using
 // @resvg/resvg-js. resvg reads `width`/`height`/`viewBox` faithfully and
-// produces true transparent PNGs at any target size, which is exactly
-// what Chrome extension icons need.
+// produces true transparent PNGs at any target size.
+//
+// Extension: 16, 32, 48, 128
+// PWA / Apple: 180 (apple-touch-icon), 192, 512
 //
 // Replace `icons/tool.svg` with your own SVG (keep the file name or
 // update SRC below), then run:
@@ -22,7 +24,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
 const SRC = resolve(ROOT, 'icons/tool.svg')
 
-const SIZES = [16, 32, 48, 128]
+const SIZES = [16, 32, 48, 128, 180, 192, 512]
 
 const svg = readFileSync(SRC, 'utf8')
 

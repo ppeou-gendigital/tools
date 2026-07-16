@@ -1,19 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
-  ArrowLeft,
   Eye,
   EyeOff,
   Loader2,
   Lock,
   LockKeyhole,
+  Star,
   Trash2,
   TriangleAlert,
+  X,
 } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { Textarea } from '@/molecules/Textarea'
+import { PageHeader } from '@/patterns/PageHeader'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { useVault } from '@/providers/VaultProvider'
@@ -38,12 +40,25 @@ function emptyForm() {
     billingZip: '',
     pin: '',
     notes: '',
+    isFavorite: false,
   }
 }
 
-// Single form for both add and edit, mirroring CredentialEdit. In
-// edit mode we fetch + decrypt the row before hydrating; in add
-// mode we start empty. No seed / capture flow — v1 is manual entry.
+function applySeedToForm(base, seed) {
+  if (!seed) return base
+  return {
+    ...base,
+    cardholderName: seed.cardholderName ?? base.cardholderName,
+    cardNumber: seed.cardNumber ?? base.cardNumber,
+    expMonth: seed.expMonth ?? base.expMonth,
+    expYear: seed.expYear ?? base.expYear,
+    cvv: seed.cvv ?? base.cvv,
+    billingZip: seed.billingZip ?? base.billingZip,
+  }
+}
+
+// Single form for add + edit. Capture seeds arrive via navigation
+// params and never auto-save — user reviews then clicks Save.
 export function CreditCardEdit() {
   const { user } = useAuth()
   const userId = user?.id ?? null
@@ -52,6 +67,7 @@ export function CreditCardEdit() {
   const queryClient = useQueryClient()
 
   const editingId = route === 'credit-card-edit' ? params?.id ?? null : null
+  const seed = params?.seed ?? null
 
   const cardQuery = useQuery({
     queryKey: ['credit_card', userId, editingId],
@@ -65,29 +81,49 @@ export function CreditCardEdit() {
   const [reveal, setReveal] = useState({ number: false, cvv: false, pin: false })
   const [error, setError] = useState(null)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [seedBannerOpen, setSeedBannerOpen] = useState(Boolean(seed))
+  const seedAppliedRef = useRef(null)
+
+  useEffect(() => {
+    setSeedBannerOpen(Boolean(seed))
+  }, [seed])
 
   useEffect(() => {
     let cancelled = false
     async function hydrate() {
       if (!editingId) {
         if (hydratedFor !== 'new') {
-          setDisplayName('')
-          setForm(emptyForm())
+          let nextName = ''
+          let nextForm = emptyForm()
+          if (seed && seed.mode === 'new' && seedAppliedRef.current !== seed) {
+            nextName = seed.title || seed.hostname || ''
+            nextForm = applySeedToForm(nextForm, seed)
+            seedAppliedRef.current = seed
+          }
+          setDisplayName(nextName)
+          setForm(nextForm)
           setHydratedFor('new')
+        } else if (
+          seed &&
+          seed.mode === 'new' &&
+          seedAppliedRef.current !== seed
+        ) {
+          setDisplayName(seed.title || seed.hostname || '')
+          setForm((prev) => applySeedToForm(prev, seed))
+          seedAppliedRef.current = seed
         }
         return
       }
       const row = cardQuery.data
       if (!row) return
-      if (hydratedFor === row.id) return
+      if (hydratedFor === row.id && seedAppliedRef.current === seed) return
       try {
         const plain = await vault.decryptRecord({
           ciphertext: row.ciphertext,
           iv: row.iv,
         })
         if (cancelled) return
-        setDisplayName(row.display_name ?? '')
-        setForm({
+        let nextForm = {
           cardholderName: plain?.cardholderName ?? '',
           cardNumber: plain?.cardNumber ?? '',
           expMonth: plain?.expMonth ?? '',
@@ -97,7 +133,16 @@ export function CreditCardEdit() {
           billingZip: plain?.billingZip ?? '',
           pin: plain?.pin ?? '',
           notes: plain?.notes ?? '',
-        })
+          isFavorite: Boolean(plain?.isFavorite),
+        }
+        if (seed && seedAppliedRef.current !== seed) {
+          if (seed.mode === 'update' || seed.mode === 'new') {
+            nextForm = applySeedToForm(nextForm, seed)
+          }
+          seedAppliedRef.current = seed
+        }
+        setDisplayName(row.display_name ?? '')
+        setForm(nextForm)
         setHydratedFor(row.id)
       } catch (err) {
         if (cancelled) return
@@ -109,7 +154,7 @@ export function CreditCardEdit() {
     return () => {
       cancelled = true
     }
-  }, [cardQuery.data, editingId, hydratedFor, vault])
+  }, [cardQuery.data, editingId, hydratedFor, seed, vault])
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -130,10 +175,6 @@ export function CreditCardEdit() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      // Normalize the card number to digits-only before persisting.
-      // We strip formatting spaces so the encrypted plaintext is a
-      // clean string; formatCardNumber() reintroduces grouping for
-      // display anywhere we render it.
       const digits = (form.cardNumber || '').replace(/\D+/g, '')
       const payload = {
         cardholderName: (form.cardholderName || '').trim(),
@@ -145,6 +186,7 @@ export function CreditCardEdit() {
         billingZip: (form.billingZip || '').trim(),
         pin: (form.pin || '').trim(),
         notes: form.notes ?? '',
+        isFavorite: Boolean(form.isFavorite),
       }
       const { ciphertext, iv } = await vault.encryptRecord(payload)
       if (editingId) {
@@ -183,8 +225,6 @@ export function CreditCardEdit() {
     saveMutation.mutate()
   }
 
-  // Same locked-state pattern as CredentialEdit: raise the
-  // non-dismissible overlay and render a placeholder underneath.
   const { isLocked, requestUnlock } = vault
   useEffect(() => {
     if (isLocked) {
@@ -195,15 +235,7 @@ export function CreditCardEdit() {
   if (vault.isLocked) {
     return (
       <div className={styles.page}>
-        <div className={styles.header}>
-          <Button variant="ghost" size="sm" onClick={goBack} className={styles.back}>
-            <ArrowLeft size={14} aria-hidden="true" />
-            Back
-          </Button>
-          <h1 className={styles.title}>
-            {editingId ? 'Edit card' : 'New card'}
-          </h1>
-        </div>
+        <PageHeader title={editingId ? 'Edit card' : 'New card'} />
         <div className={styles.lockedPanel}>
           <div className={styles.lockedIcon} aria-hidden="true">
             <LockKeyhole size={20} />
@@ -229,15 +261,23 @@ export function CreditCardEdit() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <Button variant="ghost" size="sm" onClick={goBack} className={styles.back}>
-          <ArrowLeft size={14} aria-hidden="true" />
-          Back
-        </Button>
-        <h1 className={styles.title}>
-          {editingId ? 'Edit card' : 'New card'}
-        </h1>
-      </div>
+      <PageHeader title={editingId ? 'Edit card' : 'New card'} />
+
+      {seed && seedBannerOpen && (
+        <div className={styles.seedBanner} role="status">
+          <span>
+            Captured from {seed.hostname || 'this page'} — review and save.
+          </span>
+          <button
+            type="button"
+            className={styles.seedBannerClose}
+            onClick={() => setSeedBannerOpen(false)}
+            aria-label="Dismiss"
+          >
+            <X size={12} />
+          </button>
+        </div>
+      )}
 
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.field}>
@@ -246,7 +286,10 @@ export function CreditCardEdit() {
             id="displayName"
             placeholder="e.g. Chase Sapphire — personal"
             value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
+            onChange={(e) => {
+              setDisplayName(e.target.value)
+              if (seedBannerOpen) setSeedBannerOpen(false)
+            }}
             disabled={isBusy}
             autoFocus={!editingId}
             maxLength={120}
@@ -254,6 +297,19 @@ export function CreditCardEdit() {
           <span className={styles.hint}>
             Optional. Leave blank to fall back to &ldquo;Issuer •••• last 4&rdquo;. Not encrypted.
           </span>
+        </div>
+
+        <div className={styles.field}>
+          <button
+            type="button"
+            className={cx(styles.favoriteToggle, form.isFavorite && styles.favoriteToggleOn)}
+            onClick={() => handleFieldChange({ isFavorite: !form.isFavorite })}
+            disabled={isBusy}
+            aria-pressed={form.isFavorite}
+          >
+            <Star size={14} fill={form.isFavorite ? 'currentColor' : 'none'} aria-hidden="true" />
+            {form.isFavorite ? 'Favorite — shown first when filling' : 'Mark as favorite'}
+          </button>
         </div>
 
         <div className={styles.field}>

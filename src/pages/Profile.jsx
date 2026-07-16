@@ -1,18 +1,17 @@
 import { useState } from 'react'
-import { ArrowLeft, Check, Loader2, TriangleAlert } from 'lucide-react'
+import { Check, Loader2, TriangleAlert } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
+import { PageHeader } from '@/patterns/PageHeader'
 import { useAuth } from '@/providers/AuthProvider'
-import { useNavigation } from '@/providers/NavigationProvider'
 import { supabase } from '@/lib/supabase'
 import { cx } from '@/lib/cx'
 import styles from './Profile.module.scss'
 
 export function Profile() {
   const { user } = useAuth()
-  const { goBack, previousRouteLabel } = useNavigation()
   const queryClient = useQueryClient()
 
   const profileQuery = useQuery({
@@ -84,18 +83,7 @@ export function Profile() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={goBack}
-          className={styles.back}
-        >
-          <ArrowLeft size={14} aria-hidden="true" />
-          {previousRouteLabel ?? 'Back'}
-        </Button>
-        <h1 className={styles.title}>Profile</h1>
-      </div>
+      <PageHeader title="Profile" />
 
       <form className={styles.form} onSubmit={handleSave}>
         <div className={styles.field}>

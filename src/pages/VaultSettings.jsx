@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Check, Loader2, TriangleAlert } from 'lucide-react'
-import { Button } from '@/molecules/Button'
-import { useNavigation } from '@/providers/NavigationProvider'
+import { Check, Loader2, TriangleAlert } from 'lucide-react'
+import { PageHeader } from '@/patterns/PageHeader'
 import { useVault } from '@/providers/VaultProvider'
 import { VAULT_IDLE_OPTIONS } from '@/lib/vaultIdleOptions'
 import { cx } from '@/lib/cx'
@@ -16,7 +15,6 @@ import styles from './VaultSettings.module.scss'
 // VaultProvider.setIdleTimeoutMs (which shallow-merges so it doesn't
 // clobber salt/iterations/verifier).
 export function VaultSettings() {
-  const { goBack, previousRouteLabel } = useNavigation()
   const vault = useVault()
 
   const [pending, setPending] = useState(false)
@@ -51,23 +49,10 @@ export function VaultSettings() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={goBack}
-          className={styles.back}
-        >
-          <ArrowLeft size={14} aria-hidden="true" />
-          {previousRouteLabel ?? 'Back'}
-        </Button>
-        <div className={styles.headerText}>
-          <h1 className={styles.title}>Vault</h1>
-          <p className={styles.subtitle}>
-            How long your passphrase stays cached on this device.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Vault"
+        subtitle="How long your passphrase stays cached on this device."
+      />
 
       <section className={styles.section}>
         <div className={styles.sectionHead}>

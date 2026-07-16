@@ -6,35 +6,12 @@
   gap: var(--space-3);
 }
 
-.header {
+// The page uses `padding: 0` on the horizontal axis so the deck can
+// bleed to the edges via `is-fluid-width`. The header still wants a
+// normal gutter, so we wrap it in a scoped container that reinstates
+// the horizontal padding — PageHeader itself is layout-agnostic.
+.headerWrap {
   padding-inline: var(--layout-pad);
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.back {
-  flex-shrink: 0;
-}
-
-.headerText {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.title {
-  font-size: var(--text-xl);
-  font-weight: 600;
-  margin: 0;
-}
-
-.subtitle {
-  color: var(--muted-fg);
-  font-size: var(--text-xs);
-  margin: 0;
 }
 
 .deckWrap {

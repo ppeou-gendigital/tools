@@ -6,6 +6,7 @@
 // Callers must gate on isExtension() from src/env.js.
 
 import { scanPageForCredentials } from './pageScanner'
+import { inferCredentialSite } from './ssoSiteUrl'
 
 // Tagged error so the UI can distinguish "nothing to capture on this
 // page" (informational, common) from a real permission / API failure
@@ -70,17 +71,18 @@ export async function capturePageCredentials() {
     )
   }
 
-  let parsedUrl
-  try {
-    parsedUrl = new URL(url)
-  } catch {
+  // Prefer relying-party host when the tab is an SSO/IdP page that
+  // embeds redirect_uri / returnUrl (e.g. realm.hearstnp.com →
+  // houstonchronicle.com). Falls back to the tab origin otherwise.
+  const site = inferCredentialSite(url)
+  if (!site.hostname) {
     throw new CaptureError('bad-url', 'Active tab has an invalid URL.')
   }
 
   return {
-    url,
-    origin: parsedUrl.origin,
-    hostname: parsedUrl.hostname,
+    url: site.url || url,
+    origin: site.origin,
+    hostname: site.hostname,
     title: found.docTitle || tab.title || '',
     username: found.username || '',
     password: found.password || '',

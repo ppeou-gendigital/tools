@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  ArrowLeft,
   Eye,
   EyeOff,
   Loader2,
@@ -17,6 +16,7 @@ import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { Textarea } from '@/molecules/Textarea'
+import { PageHeader } from '@/patterns/PageHeader'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { useVault } from '@/providers/VaultProvider'
@@ -135,7 +135,16 @@ export function CredentialEdit() {
           ) {
             nextAccounts = nextAccounts.map((a, i) =>
               i === seed.accountIdx
-                ? { ...a, password: seed.password ?? a.password }
+                ? {
+                    ...a,
+                    // Empty password means email-first step — keep the
+                    // stored password rather than wiping it.
+                    password:
+                      typeof seed.password === 'string' &&
+                      seed.password.length > 0
+                        ? seed.password
+                        : a.password,
+                  }
                 : a,
             )
             seedAppliedRef.current = seed
@@ -269,15 +278,7 @@ export function CredentialEdit() {
   if (vault.isLocked) {
     return (
       <div className={styles.page}>
-        <div className={styles.header}>
-          <Button variant="ghost" size="sm" onClick={goBack} className={styles.back}>
-            <ArrowLeft size={14} aria-hidden="true" />
-            Back
-          </Button>
-          <h1 className={styles.title}>
-            {editingId ? 'Edit credential' : 'New credential'}
-          </h1>
-        </div>
+        <PageHeader title={editingId ? 'Edit credential' : 'New credential'} />
         <div className={styles.lockedPanel}>
           <div className={styles.lockedIcon} aria-hidden="true">
             <LockKeyhole size={20} />
@@ -303,21 +304,15 @@ export function CredentialEdit() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <Button variant="ghost" size="sm" onClick={goBack} className={styles.back}>
-          <ArrowLeft size={14} aria-hidden="true" />
-          Back
-        </Button>
-        <h1 className={styles.title}>
-          {editingId ? 'Edit credential' : 'New credential'}
-        </h1>
-      </div>
+      <PageHeader title={editingId ? 'Edit credential' : 'New credential'} />
 
       {seed && seedBannerOpen && (
         <div className={styles.seedBanner} role="status">
           <Wand2 size={12} aria-hidden="true" />
           <span>
-            Captured from {seed.hostname || 'this page'} — review and save.
+            {!(seed.password ?? '') && (seed.username ?? '')
+              ? `Captured from ${seed.hostname || 'this page'} — no password on this step yet. Save the email now, or capture again after the password screen.`
+              : `Captured from ${seed.hostname || 'this page'} — review and save.`}
           </span>
           <button
             type="button"
