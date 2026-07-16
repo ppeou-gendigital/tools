@@ -23,15 +23,15 @@ jobs:
           path: loopy
       - uses: actions/checkout@v4
         with:
-          ref: tool/acceso
-          path: acceso
+          ref: tool/accesso
+          path: accesso
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: |
             loopy/package-lock.json
-            acceso/package-lock.json
+            accesso/package-lock.json
       - name: Build loopy
         working-directory: loopy
         run: |
@@ -40,8 +40,8 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-      - name: Build acceso
-        working-directory: acceso
+      - name: Build accesso
+        working-directory: accesso
         run: |
           npm ci
           npm run build:web
@@ -52,7 +52,7 @@ jobs:
         run: |
           mkdir -p site
           cp -R loopy/dist-web/loopy site/loopy
-          cp -R acceso/dist-web/acceso site/acceso
+          cp -R accesso/dist-web/accesso site/accesso
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

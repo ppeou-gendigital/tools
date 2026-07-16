@@ -567,12 +567,12 @@ Add more later in [`manifest.json`](manifest.json) as features land.
 - **Workflow**: [`.github/workflows/deploy-loopy-pages.yml`](.github/workflows/deploy-loopy-pages.yml)
 - **Trigger**: push to `tool/loopy` (or manual `workflow_dispatch` from the Actions tab)
 - **Live URL**: https://ppeou-gendigital.github.io/tools/loopy/
-- **Build**: dual-build — this workflow builds `tool/loopy` and `tool/acceso`, then uploads a combined artifact (`site/loopy/` + `site/acceso/`) so both tools stay live on the one Pages site
+- **Build**: dual-build — this workflow builds `tool/loopy` and `tool/accesso`, then uploads a combined artifact (`site/loopy/` + `site/accesso/`) so both tools stay live on the one Pages site
 - **Repo secrets required** (Settings → Secrets and variables → Actions):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
 - **Repo Pages settings**: Settings → Pages → Source = **GitHub Actions**
-- **Deployment branch policy**: the `github-pages` environment must allow `tool/loopy` (and `tool/acceso`)
+- **Deployment branch policy**: the `github-pages` environment must allow `tool/loopy` (and `tool/accesso`)
 
 ### Convention for other tool branches
 
@@ -587,7 +587,7 @@ For a hypothetical new tool `tool/foo`, mirror the loopy setup:
 
 ### One Pages site per repo — dual-build coexistence
 
-A GitHub repo publishes exactly **one** Pages site, and each deploy replaces the entire site. To keep multiple tools live, each tool's Pages workflow checks out the sibling tool branch(es), builds every tool, and uploads a combined artifact (e.g. `site/loopy/` + `site/acceso/`). That yields stable URLs like `/tools/loopy/` and `/tools/acceso/` without one deploy wiping the other.
+A GitHub repo publishes exactly **one** Pages site, and each deploy replaces the entire site. To keep multiple tools live, each tool's Pages workflow checks out the sibling tool branch(es), builds every tool, and uploads a combined artifact (e.g. `site/loopy/` + `site/accesso/`). That yields stable URLs like `/tools/loopy/` and `/tools/accesso/` without one deploy wiping the other.
 
 When adding a third tool, extend every Pages workflow's dual-build (now multi-build) to include the new branch, and add that branch to the `github-pages` deployment branch policy. For a long-term split, give the new tool its own repo instead.
 
