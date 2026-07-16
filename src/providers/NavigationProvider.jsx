@@ -99,6 +99,11 @@ export function NavigationProvider({ children, initial }) {
   const [stack, setStack] = useState(() => [
     makeEntry(explicitInitial ?? DEFAULT_ROUTE),
   ])
+  // Persist must wait until cold-start restore finishes. Otherwise the
+  // seeded default (`home`) is written to storage on mount and wipes
+  // the remembered landing page before getItem resolves — refresh then
+  // always lands on Welcome.
+  const [restoreDone, setRestoreDone] = useState(Boolean(explicitInitial))
 
   // Cold-start restore. Fires exactly once per provider mount. If the
   // caller pinned an explicit initial route we honour that and skip
@@ -112,22 +117,30 @@ export function NavigationProvider({ children, initial }) {
     if (explicitInitial) return
     let cancelled = false
     ;(async () => {
-      const stored = await asyncStorage.getItem(LAST_ROUTE_STORAGE_KEY)
-      if (cancelled) return
-      if (typeof stored !== 'string' || !RESTORABLE_ROUTES.has(stored)) return
-      if (stored === DEFAULT_ROUTE) return
-      setStack((prev) => {
-        // If anything moved us off the seeded default (`home` at
-        // depth 1), the user already made a choice — don't override.
+      try {
+        const stored = await asyncStorage.getItem(LAST_ROUTE_STORAGE_KEY)
+        if (cancelled) return
         if (
-          prev.length !== 1 ||
-          prev[0].route !== DEFAULT_ROUTE ||
-          Object.keys(prev[0].params).length !== 0
+          typeof stored === 'string' &&
+          RESTORABLE_ROUTES.has(stored) &&
+          stored !== DEFAULT_ROUTE
         ) {
-          return prev
+          setStack((prev) => {
+            // If anything moved us off the seeded default (`home` at
+            // depth 1), the user already made a choice — don't override.
+            if (
+              prev.length !== 1 ||
+              prev[0].route !== DEFAULT_ROUTE ||
+              Object.keys(prev[0].params).length !== 0
+            ) {
+              return prev
+            }
+            return [makeEntry(stored)]
+          })
         }
-        return [makeEntry(stored)]
-      })
+      } finally {
+        if (!cancelled) setRestoreDone(true)
+      }
     })()
     return () => {
       cancelled = true
@@ -142,12 +155,13 @@ export function NavigationProvider({ children, initial }) {
   const lastPersistedRef = useRef(null)
   const currentTopRoute = stack[stack.length - 1]?.route
   useEffect(() => {
+    if (!restoreDone) return
     if (!currentTopRoute) return
     if (!RESTORABLE_ROUTES.has(currentTopRoute)) return
     if (lastPersistedRef.current === currentTopRoute) return
     lastPersistedRef.current = currentTopRoute
     asyncStorage.setItem(LAST_ROUTE_STORAGE_KEY, currentTopRoute)
-  }, [currentTopRoute])
+  }, [currentTopRoute, restoreDone])
 
   const navigate = useCallback((next, params) => {
     if (!ROUTES.includes(next)) return

@@ -1,5 +1,10 @@
 // Extension-side orchestrator for credit-card capture. Mirror of
 // pageCapture.js — tab query + http(s) guard + inject scanner.
+//
+// Injects into every frame (`allFrames: true`) because checkout UIs
+// often host the card form in an iframe (merchant or PSP). Cross-
+// origin hosted fields that block injection still won't be readable;
+// same-origin / injectable frames will.
 
 import { scanPageForCreditCard } from './pageCardScanner'
 
@@ -12,6 +17,29 @@ export class CardCaptureError extends Error {
 }
 
 const HTTP_RE = /^https?:/i
+
+const CAPTURE_FIELDS = [
+  'cardholderName',
+  'cardNumber',
+  'expMonth',
+  'expYear',
+  'cvv',
+  'billingZip',
+]
+
+// Prefer the frame whose scan returned a card number and the most
+// populated sibling fields (number alone beats a richer empty frame).
+function pickBestCardCapture(results) {
+  const candidates = (results ?? [])
+    .map((r) => r?.result)
+    .filter((r) => r?.cardNumber)
+  if (candidates.length === 0) return null
+  candidates.sort((a, b) => {
+    const score = (x) => CAPTURE_FIELDS.reduce((n, k) => n + (x[k] ? 1 : 0), 0)
+    return score(b) - score(a)
+  })
+  return candidates[0]
+}
 
 export async function capturePageCreditCard() {
   if (typeof chrome === 'undefined' || !chrome?.tabs || !chrome?.scripting) {
@@ -36,13 +64,13 @@ export async function capturePageCreditCard() {
     )
   }
 
-  let injectionResult
+  let found
   try {
     const results = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
+      target: { tabId: tab.id, allFrames: true },
       func: scanPageForCreditCard,
     })
-    injectionResult = results?.[0]
+    found = pickBestCardCapture(results)
   } catch (err) {
     throw new CardCaptureError(
       'inject-failed',
@@ -52,7 +80,6 @@ export async function capturePageCreditCard() {
     )
   }
 
-  const found = injectionResult?.result
   if (!found || !found.cardNumber) {
     throw new CardCaptureError(
       'no-fields',

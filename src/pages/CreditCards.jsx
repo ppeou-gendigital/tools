@@ -24,6 +24,7 @@ import {
 import { updateCreditCard } from '@/lib/creditCardsApi'
 import { capturePageCreditCard } from '@/lib/pageCardCapture'
 import { detectBrand, last4, resolveDisplayName } from '@/lib/cardUtils'
+import { usePersistedListView } from '@/hooks/usePersistedListView'
 import { isExtension } from '@/env'
 import { cx } from '@/lib/cx'
 import styles from './CreditCards.module.scss'
@@ -44,6 +45,8 @@ const FILTER_OPTIONS = [
   { value: 'other', label: 'Other' },
 ]
 
+const LIST_VIEW_STORAGE_KEY = 'accesso.creditCards.listView'
+
 const OTHER_BRANDS = new Set(['discover', 'jcb', 'diners', 'unionpay', 'unknown'])
 
 export function CreditCards() {
@@ -54,9 +57,13 @@ export function CreditCards() {
   const queryClient = useQueryClient()
   const extensionMode = isExtension()
 
-  const [search, setSearch] = useState('')
-  const [sort, setSort] = useState('updated_desc')
-  const [filter, setFilter] = useState('all')
+  const { search, setSearch, sort, setSort, filter, setFilter } =
+    usePersistedListView({
+      storageKey: LIST_VIEW_STORAGE_KEY,
+      sortValues: SORT_OPTIONS.map((o) => o.value),
+      filterValues: FILTER_OPTIONS.map((o) => o.value),
+      defaults: { search: '', sort: 'updated_desc', filter: 'all' },
+    })
   const [capturing, setCapturing] = useState(false)
   const [captureError, setCaptureError] = useState(null)
 

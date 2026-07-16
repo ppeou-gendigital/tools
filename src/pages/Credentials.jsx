@@ -20,6 +20,7 @@ import { useVault } from '@/providers/VaultProvider'
 import { listCredentials } from '@/lib/credentialsApi'
 import { capturePageCredentials } from '@/lib/pageCapture'
 import { findMatchingCredential, hostnameOf } from '@/lib/urlMatch'
+import { usePersistedListView } from '@/hooks/usePersistedListView'
 import { isExtension } from '@/env'
 import { cx } from '@/lib/cx'
 import styles from './Credentials.module.scss'
@@ -36,15 +37,21 @@ const FILTER_OPTIONS = [
   { value: 'multi_account', label: 'Multiple accounts' },
 ]
 
+const LIST_VIEW_STORAGE_KEY = 'accesso.credentials.listView'
+
 export function Credentials() {
   const { user } = useAuth()
   const userId = user?.id ?? null
   const vault = useVault()
   const { goCredentialNew, goCredentialEdit } = useNavigation()
 
-  const [search, setSearch] = useState('')
-  const [sort, setSort] = useState('updated_desc')
-  const [filter, setFilter] = useState('all')
+  const { search, setSearch, sort, setSort, filter, setFilter } =
+    usePersistedListView({
+      storageKey: LIST_VIEW_STORAGE_KEY,
+      sortValues: SORT_OPTIONS.map((o) => o.value),
+      filterValues: FILTER_OPTIONS.map((o) => o.value),
+      defaults: { search: '', sort: 'updated_desc', filter: 'all' },
+    })
   const [decrypted, setDecrypted] = useState([])
   const [decrypting, setDecrypting] = useState(false)
   const [capturing, setCapturing] = useState(false)
