@@ -4,6 +4,7 @@ import { FabCornerProvider } from '@/providers/FabCornerProvider'
 import { FontSizeProvider } from '@/providers/FontSizeProvider'
 import { NavigationProvider, useNavigation } from '@/providers/NavigationProvider'
 import { PrefsSync } from '@/providers/PrefsSync'
+import { VaultItemsSync } from '@/providers/VaultItemsSync'
 import { ThemeProvider } from '@/providers/ThemeProvider'
 import { VaultProvider, useVault } from '@/providers/VaultProvider'
 import { AppShell } from '@/templates/AppShell'
@@ -71,12 +72,15 @@ export function App() {
         buster: APP_VERSION,
       }}
     >
-      <ThemeProvider>
-        <FontSizeProvider>
-          <FabCornerProvider>
-            <AuthProvider>
+      {/* AuthProvider is above Theme/Font/Fab so those providers can
+          call applySyncOp with the current userId (Fav Links recipe). */}
+      <AuthProvider>
+        <ThemeProvider>
+          <FontSizeProvider>
+            <FabCornerProvider>
               <VaultProvider>
                 <PrefsSync />
+                <VaultItemsSync />
                 <NavigationProvider>
                   <AppShell>
                     <AuthGate>
@@ -86,10 +90,10 @@ export function App() {
                   </AppShell>
                 </NavigationProvider>
               </VaultProvider>
-            </AuthProvider>
-          </FabCornerProvider>
-        </FontSizeProvider>
-      </ThemeProvider>
+            </FabCornerProvider>
+          </FontSizeProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </PersistQueryClientProvider>
   )
 }

@@ -87,8 +87,14 @@ If a tool should not share this site, give it its own dedicated GitHub repo (or 
 The template ships with a bare skeleton (Home, Profile, Settings, DeckDemo). Common next steps:
 
 - **Add a page** — create `src/pages/YourPage.jsx` + `.module.scss`, register the route in [NavigationProvider](src/providers/NavigationProvider.jsx), and add a `MenuRow` entry in [MenuPanel](src/patterns/MenuPanel.jsx) (or a `SettingsCard` in [Settings](src/pages/Settings.jsx)).
-- **Add a synced field** — extend the `data` blob in [PrefsSync](src/providers/PrefsSync.jsx), add a normalizer in [prefs.js](src/lib/prefs.js), and add a provider that reads/writes the value. See the `theme` / `fontSize` / `fabCorner` triple as the pattern to copy.
-- **Add a synced list or map** — add a new `jsonb` column on `user_data` (loopy has three), read/write it alongside `data` in [userDataApi.js](src/lib/userDataApi.js), and mirror it into a dedicated provider like `AemDomainsProvider` on the loopy branch.
-- **Capture URLs from the SW** — layer `chrome.webNavigation.onCompleted` on top of the [background.js](background.js) stub. Loopy's background.js is the reference for a full capture + Supabase sync loop with `chrome.alarms`-driven pushes.
+- **Add a synced field** — do **not** grow a monolithic PrefsSync push. Instead:
+  1. Add a pure operator in [`userDataOps.js`](src/lib/userDataOps.js) that only touches your key(s) inside `data`.
+  2. Have the provider call `applySyncOp({ stream: 'prefs', userId, op })` after an optimistic local write (support `{ fromRemote: true }` so pull does not echo).
+  3. Extend [PrefsSync](src/providers/PrefsSync.jsx) pull to apply the field when it is not dirty mid-fetch.
+  4. Add a normalizer in [prefs.js](src/lib/prefs.js) if the value needs clamping.
+  See `theme` / `fontSize` / `fabCorner` / `opPatchVaultMeta` as the patterns to copy. Entry point: [`supabaseSync.js`](src/lib/supabaseSync.js).
+- **Add a synced list or map** — prefer a new `jsonb` column on `user_data` (Loopy has several) and extend `applySyncOp` with a stream/column adapter, or keep it inside `data` with a field-scoped op. Mirror into a dedicated provider. Do not blind-upsert the whole `data` blob.
+- **Add a synced vault table** — encrypted feature tables (`credentials` / `credit_cards` pattern): add a stream in [`supabaseSync.js`](src/lib/supabaseSync.js), pure ops in [`vaultItemOps.js`](src/lib/vaultItemOps.js), route writes through `enqueueSyncOp` + `applySyncOp`, optimistic cache via [`vaultItemsCache.js`](src/lib/vaultItemsCache.js), and pull-on-unlock via [`VaultItemsSync`](src/providers/VaultItemsSync.jsx) with dirty-id guards. Do not stuff ciphertext into the `user_data` prefs blob.
+- **Capture URLs from the SW** — layer `chrome.webNavigation.onCompleted` on top of the [background.js](background.js) stub. Loopy's `supabaseSync` + `visitsSync` + background.js is the reference for per-domain CAS merges and `chrome.alarms`-driven pushes.
 
-Reference: [`tool/loopy`](../../tree/tool/loopy) is a real, shipped tool built on this template. Anything you're missing here — a synced list, a capture pipeline, per-domain compare-and-swap merges — is likely there in a fully working form.
+Reference: [`tool/loopy`](../../tree/tool/loopy) is a real, shipped tool built on this template. Its [`supabaseSync.js`](../../blob/tool/loopy/src/lib/supabaseSync.js) is the shared sync contract Acceso now mirrors for prefs.

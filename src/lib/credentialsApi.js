@@ -1,15 +1,19 @@
+import {
+  applySyncOp,
+  enqueueSyncOp,
+  opDeleteVaultItem,
+  opUpsertVaultItem,
+} from '@/lib/supabaseSync'
 import { supabase } from '@/lib/supabase'
 
-// CRUD wrappers over the `public.credentials` table. RLS enforces
-// user_id == auth.uid() on every operation, so passing the wrong
-// userId simply returns no rows — but we still guard the argument so
-// unauthenticated calls fail loudly instead of silently writing a
-// null-user row.
+// CRUD wrappers over the `public.credentials` table. Reads stay as
+// thin selects; writes go through supabaseSync (CAS + enqueue).
 //
 // All rows stay opaque here: this layer never touches the ciphertext
-// or iv. Encryption happens in VaultProvider before we get here, and
-// decryption happens in the list/edit pages after we return.
+// or iv semantics. Encryption happens in VaultProvider before we get
+// here, and decryption happens in the list/edit pages after we return.
 
+const STREAM = 'credentials'
 const COLUMNS = 'id, user_id, display_name, ciphertext, iv, created_at, updated_at'
 
 export async function listCredentials(userId) {
@@ -36,47 +40,75 @@ export async function fetchCredential(userId, id) {
   return data ?? null
 }
 
-export async function createCredential(userId, { displayName, ciphertext, iv }) {
+export async function createCredential(
+  userId,
+  { id, displayName, ciphertext, iv },
+) {
   if (!userId) throw new Error('createCredential: userId is required')
-  if (!displayName?.trim()) throw new Error('createCredential: displayName is required')
-  if (!ciphertext || !iv) throw new Error('createCredential: ciphertext + iv are required')
-  const now = new Date().toISOString()
-  const { data, error } = await supabase
-    .from('credentials')
-    .insert({
-      user_id: userId,
-      display_name: displayName.trim(),
-      ciphertext,
-      iv,
-      created_at: now,
-      updated_at: now,
-    })
-    .select(COLUMNS)
-    .single()
-  if (error) throw error
-  return data
-}
-
-export async function updateCredential(id, patch) {
-  if (!id) throw new Error('updateCredential: id is required')
-  const next = {
-    updated_at: new Date().toISOString(),
+  if (!displayName?.trim()) {
+    throw new Error('createCredential: displayName is required')
   }
-  if (typeof patch.displayName === 'string') next.display_name = patch.displayName.trim()
-  if (typeof patch.ciphertext === 'string') next.ciphertext = patch.ciphertext
-  if (typeof patch.iv === 'string') next.iv = patch.iv
-  const { data, error } = await supabase
-    .from('credentials')
-    .update(next)
-    .eq('id', id)
-    .select(COLUMNS)
-    .single()
-  if (error) throw error
-  return data
+  if (!ciphertext || !iv) {
+    throw new Error('createCredential: ciphertext + iv are required')
+  }
+  const rowId = id ?? crypto.randomUUID()
+  return enqueueSyncOp({
+    stream: STREAM,
+    key: rowId,
+    fn: () =>
+      applySyncOp({
+        stream: STREAM,
+        userId,
+        rowId,
+        op: opUpsertVaultItem({
+          id: rowId,
+          userId,
+          displayName,
+          ciphertext,
+          iv,
+        }),
+      }),
+  })
 }
 
-export async function deleteCredential(id) {
+export async function updateCredential(
+  userId,
+  id,
+  { displayName, ciphertext, iv },
+) {
+  if (!userId) throw new Error('updateCredential: userId is required')
+  if (!id) throw new Error('updateCredential: id is required')
+  return enqueueSyncOp({
+    stream: STREAM,
+    key: id,
+    fn: () =>
+      applySyncOp({
+        stream: STREAM,
+        userId,
+        rowId: id,
+        op: opUpsertVaultItem({
+          id,
+          userId,
+          displayName,
+          ciphertext,
+          iv,
+        }),
+      }),
+  })
+}
+
+export async function deleteCredential(userId, id) {
+  if (!userId) throw new Error('deleteCredential: userId is required')
   if (!id) throw new Error('deleteCredential: id is required')
-  const { error } = await supabase.from('credentials').delete().eq('id', id)
-  if (error) throw error
+  return enqueueSyncOp({
+    stream: STREAM,
+    key: id,
+    fn: () =>
+      applySyncOp({
+        stream: STREAM,
+        userId,
+        rowId: id,
+        op: opDeleteVaultItem(),
+      }),
+  })
 }

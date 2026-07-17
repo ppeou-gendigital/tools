@@ -9,15 +9,13 @@ import {
   TriangleAlert,
   Wand2,
 } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { CredentialRow } from '@/patterns/CredentialRow'
 import { HeaderIconButton, PageHeader } from '@/patterns/PageHeader'
-import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { useVault } from '@/providers/VaultProvider'
-import { listCredentials } from '@/lib/credentialsApi'
+import { useDecryptedCredentials } from '@/hooks/useDecryptedCredentials'
 import { capturePageCredentials } from '@/lib/pageCapture'
 import { findMatchingCredential, hostnameOf } from '@/lib/urlMatch'
 import { usePersistedListView } from '@/hooks/usePersistedListView'
@@ -40,8 +38,6 @@ const FILTER_OPTIONS = [
 const LIST_VIEW_STORAGE_KEY = 'accesso.credentials.listView'
 
 export function Credentials() {
-  const { user } = useAuth()
-  const userId = user?.id ?? null
   const vault = useVault()
   const { goCredentialNew, goCredentialEdit } = useNavigation()
 
@@ -52,72 +48,12 @@ export function Credentials() {
       filterValues: FILTER_OPTIONS.map((o) => o.value),
       defaults: { search: '', sort: 'updated_desc', filter: 'all' },
     })
-  const [decrypted, setDecrypted] = useState([])
-  const [decrypting, setDecrypting] = useState(false)
   const [capturing, setCapturing] = useState(false)
   const [captureError, setCaptureError] = useState(null)
   const extensionMode = isExtension()
 
-  const listQuery = useQuery({
-    queryKey: ['credentials', userId],
-    queryFn: () => listCredentials(userId),
-    enabled: !!userId && vault.isUnlocked,
-  })
-
-  // Decrypt when either the row set or the vault key changes. We
-  // debounce nothing here; decrypt cost per row is a single AES-GCM
-  // call and the list is small. If any row fails, keep it in the list
-  // marked `error: true` so the user can still delete it.
-  useEffect(() => {
-    let cancelled = false
-    async function run() {
-      if (!listQuery.data) {
-        setDecrypted([])
-        return
-      }
-      setDecrypting(true)
-      const results = await Promise.all(
-        listQuery.data.map(async (row) => {
-          try {
-            const plain = await vault.decryptRecord({
-              ciphertext: row.ciphertext,
-              iv: row.iv,
-            })
-            return {
-              id: row.id,
-              displayName: row.display_name,
-              urlOrApp: plain?.urlOrApp ?? '',
-              accounts: Array.isArray(plain?.accounts) ? plain.accounts : [],
-              notes: plain?.notes ?? '',
-              updatedAt: row.updated_at,
-              createdAt: row.created_at,
-              error: false,
-            }
-          } catch (err) {
-            console.warn('[accesso] credential decrypt failed', err)
-            return {
-              id: row.id,
-              displayName: row.display_name,
-              urlOrApp: '',
-              accounts: [],
-              notes: '',
-              updatedAt: row.updated_at,
-              createdAt: row.created_at,
-              error: true,
-            }
-          }
-        }),
-      )
-      if (!cancelled) {
-        setDecrypted(results)
-        setDecrypting(false)
-      }
-    }
-    run()
-    return () => {
-      cancelled = true
-    }
-  }, [listQuery.data, vault])
+  const { decrypted, isLoading, isDecrypting, error, listQuery } =
+    useDecryptedCredentials()
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -227,9 +163,9 @@ export function Credentials() {
 
   if (vault.isLocked) return <LockedPlaceholder onUnlock={() => vault.requestUnlock({ dismissible: false })} />
 
-  const isLoading = listQuery.isLoading || decrypting
-  const isEmpty = !isLoading && filtered.length === 0
-  const errorMessage = listQuery.error?.message ?? null
+  const loading = isLoading || isDecrypting
+  const isEmpty = !loading && filtered.length === 0
+  const errorMessage = error?.message ?? listQuery.error?.message ?? null
 
   return (
     <div className={styles.page}>
@@ -326,7 +262,7 @@ export function Credentials() {
         </div>
       )}
 
-      {isLoading && (
+      {loading && (
         <div className={styles.emptyState}>Loading credentials…</div>
       )}
 
@@ -337,7 +273,7 @@ export function Credentials() {
         />
       )}
 
-      {!isLoading && filtered.length > 0 && (
+      {!loading && filtered.length > 0 && (
         <div className={styles.table} role="table" aria-label="Credentials">
           <div className={styles.tableHeader} role="row">
             <span role="columnheader">Name</span>

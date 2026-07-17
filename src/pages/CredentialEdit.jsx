@@ -26,8 +26,20 @@ import {
   fetchCredential,
   updateCredential,
 } from '@/lib/credentialsApi'
+import {
+  clearVaultItemDirty,
+  markVaultItemDirty,
+} from '@/lib/vaultItemDirty'
+import {
+  optimisticRemoveVaultItem,
+  optimisticUpsertVaultItem,
+  revertVaultItemCaches,
+  snapshotVaultItemCaches,
+} from '@/lib/vaultItemsCache'
 import { cx } from '@/lib/cx'
 import styles from './CredentialEdit.module.scss'
+
+const STREAM = 'credentials'
 
 function newAccount() {
   return { username: '', password: '' }
@@ -179,12 +191,26 @@ export function CredentialEdit() {
   const deleteMutation = useMutation({
     mutationFn: async () => {
       if (!editingId) throw new Error('nothing to delete')
-      await deleteCredential(editingId)
-      return editingId
+      if (!userId) throw new Error('not signed in')
+      const snapshot = snapshotVaultItemCaches(
+        queryClient,
+        STREAM,
+        userId,
+        editingId,
+      )
+      markVaultItemDirty(STREAM, editingId)
+      optimisticRemoveVaultItem(queryClient, STREAM, userId, editingId)
+      try {
+        await deleteCredential(userId, editingId)
+        clearVaultItemDirty(STREAM, editingId)
+        return editingId
+      } catch (err) {
+        revertVaultItemCaches(queryClient, snapshot)
+        clearVaultItemDirty(STREAM, editingId)
+        throw err
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['credentials', userId] })
-      queryClient.removeQueries({ queryKey: ['credential', userId, editingId] })
       goCredentials()
     },
     onError: (err) => {
@@ -195,6 +221,7 @@ export function CredentialEdit() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      if (!userId) throw new Error('not signed in')
       const payload = {
         urlOrApp: urlOrApp.trim(),
         accounts: accounts
@@ -211,24 +238,48 @@ export function CredentialEdit() {
         payload.accounts = [{ username: '', password: '' }]
       }
       const { ciphertext, iv } = await vault.encryptRecord(payload)
-      if (editingId) {
-        return updateCredential(editingId, {
-          displayName,
-          ciphertext,
-          iv,
-        })
-      }
-      return createCredential(userId, {
-        displayName,
+      const rowId = editingId ?? crypto.randomUUID()
+      const now = new Date().toISOString()
+      const optimistic = {
+        id: rowId,
+        user_id: userId,
+        display_name: displayName.trim(),
         ciphertext,
         iv,
-      })
+        created_at:
+          credentialQuery.data?.created_at ?? now,
+        updated_at: now,
+      }
+      const snapshot = snapshotVaultItemCaches(
+        queryClient,
+        STREAM,
+        userId,
+        rowId,
+      )
+      markVaultItemDirty(STREAM, rowId)
+      optimisticUpsertVaultItem(queryClient, STREAM, userId, optimistic)
+      try {
+        const result = editingId
+          ? await updateCredential(userId, editingId, {
+              displayName,
+              ciphertext,
+              iv,
+            })
+          : await createCredential(userId, {
+              id: rowId,
+              displayName,
+              ciphertext,
+              iv,
+            })
+        clearVaultItemDirty(STREAM, rowId)
+        return result
+      } catch (err) {
+        revertVaultItemCaches(queryClient, snapshot)
+        clearVaultItemDirty(STREAM, rowId)
+        throw err
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['credentials', userId] })
-      if (editingId) {
-        queryClient.invalidateQueries({ queryKey: ['credential', userId, editingId] })
-      }
       goCredentials()
     },
     onError: (err) => {

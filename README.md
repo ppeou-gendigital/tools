@@ -95,14 +95,20 @@ accesso/
 │   │   ├── queryClient.js      # React Query client
 │   │   ├── queryPersister.js   # Async storage persister
 │   │   ├── prefs.js            # normalizers for the user_data blob
-│   │   └── userDataApi.js      # fetch/upsert user_data row
+│   │   ├── supabaseSync.js     # applySyncOp / pullSync (CAS sync entry point)
+│   │   ├── userDataOps.js      # pure prefs/vault operators for applySyncOp
+│   │   ├── vaultItemOps.js     # pure credential/card row operators
+│   │   ├── vaultItemDirty.js   # dirty-id set for pull-on-unlock guards
+│   │   ├── vaultItemsCache.js  # optimistic React Query helpers
+│   │   └── userDataApi.js      # thin wrappers over supabaseSync
 │   ├── providers/
 │   │   ├── AuthProvider.jsx    # session, requestOtp, verifyOtp, signOut
 │   │   ├── ThemeProvider.jsx   # light | dark | system, persisted
 │   │   ├── FontSizeProvider.jsx
 │   │   ├── FabCornerProvider.jsx
 │   │   ├── NavigationProvider.jsx  # in-memory router (no react-router)
-│   │   └── PrefsSync.jsx       # two-way sync theme/fontSize/fabCorner to Supabase
+│   │   ├── PrefsSync.jsx       # pull-only prefs sync on sign-in (writes via supabaseSync)
+│   │   └── VaultItemsSync.jsx  # pull-only credentials/cards sync on unlock
 │   ├── molecules/              # Button, Input, Label, IconButton, MenuRow, Divider
 │   ├── patterns/               # Card, MenuPanel, AccountRow, AppearanceRow, AboutRow, DevBadgeItem, DeckDemoItem
 │   ├── blocks/                 # AuthGate, Deck, FloatingMenu, SignInForm
@@ -146,7 +152,7 @@ Pages own their own reading inset via `.is-fluid-width` / `.is-static-width` wra
 ## Layout primitives
 
 - **`AppShell`** ([src/templates/AppShell.jsx](src/templates/AppShell.jsx)) — grid header/main/footer that fills its parent.
-- **`FloatingMenu`** ([src/blocks/FloatingMenu.jsx](src/blocks/FloatingMenu.jsx)) — draggable FAB that snaps to the nearest corner. Position is persisted via `FabCornerProvider` and synced across devices via `PrefsSync`. Uses the [`useCornerDrag`](src/hooks/useCornerDrag.js) hook, which is reusable on any element.
+- **`FloatingMenu`** ([src/blocks/FloatingMenu.jsx](src/blocks/FloatingMenu.jsx)) — draggable FAB that snaps to the nearest corner. Position is persisted via `FabCornerProvider` and synced across devices via `applySyncOp` (`opSetFabCorner`). Uses the [`useCornerDrag`](src/hooks/useCornerDrag.js) hook, which is reusable on any element.
 - **`MenuPanel`** ([src/patterns/MenuPanel.jsx](src/patterns/MenuPanel.jsx)) — the popover the FAB opens. Composes `AppearanceRow` (theme + font size), `AccountRow` (profile + settings + sign out), `DeckDemoItem`, `DevBadgeItem`, `AboutRow`. Add your tool's menu entries here.
 - **`Deck`** + **`Slide`** ([src/blocks/Deck.jsx](src/blocks/Deck.jsx)) — horizontal, snap-scrolling deck container with responsive column spans. See [`DeckDemo`](src/pages/DeckDemo.jsx) for a live example.
 
@@ -239,12 +245,19 @@ Row-scoped RLS covers all columns automatically. No trigger needed — the app u
 
 The `data` blob also carries the vault metadata (`vault.salt`, `vault.iterations`, `vault.verifier`) that powers the app-wide E2EE vault — see [Vault (app-wide E2EE)](#vault-app-wide-e2ee) below.
 
-**Auto-sync behavior** (see [src/providers/PrefsSync.jsx](src/providers/PrefsSync.jsx)):
+**Sync contract** — all synced I/O goes through [`src/lib/supabaseSync.js`](src/lib/supabaseSync.js) (same Fav Links CAS recipe as Loopy):
 
-- **On sign-in** the app fetches the row and applies it via the provider setters (remote wins). If there's no cloud row yet, the current local values become the sync baseline.
-- **On any local change** (theme toggle, +/- font size, FAB corner drag) the app upserts after a 500ms debounce (local wins during the session). Rapid clicks coalesce into a single request.
+- `applySyncOp({ stream, userId, op, rowId? })` — pure-operator CAS write on `updated_at`
+- `pullSync({ stream, userId })` — force-network pull
+- Streams: `'prefs'` (`user_data`), `'credentials'`, `'credit_cards'`
 
-Two guards prevent ping-pong: an "applying remote" flag skips the auto-push that would otherwise fire from the setter calls during a pull, and a `lastSynced` ref short-circuits the push effect when the current values already match the cloud.
+**Prefs** (theme / fontSize / fabCorner): each provider owns its mutations — optimistic local write, then `applySyncOp` with a field op from [`userDataOps.js`](src/lib/userDataOps.js) (`opSetTheme`, `opSetFontSize`, `opSetFabCorner`). On CAS miss the op re-applies against the latest remote row so concurrent edits to *different* keys (including `vault`) both survive.
+
+**Vault meta** (`data.vault`): [`saveVaultMeta`](src/lib/userDataApi.js) calls `applySyncOp` with `opPatchVaultMeta` so idle-timeout / setup writes cannot wipe theme (and vice versa).
+
+[`PrefsSync`](src/providers/PrefsSync.jsx) is **pull-only** on sign-in. Fields the user changed while the fetch was in flight are skipped (dirty-field guard).
+
+**Credentials / credit cards** stay in their own encrypted tables (not inside `user_data`). Writes go through `applySyncOp` with row-level CAS (`opUpsertVaultItem` / `opDeleteVaultItem` in [`vaultItemOps.js`](src/lib/vaultItemOps.js)), via [`credentialsApi.js`](src/lib/credentialsApi.js) / [`creditCardsApi.js`](src/lib/creditCardsApi.js). UI mutations are optimistic on React Query, then reconciled. [`VaultItemsSync`](src/providers/VaultItemsSync.jsx) is **pull-only** on vault unlock, with a dirty-id guard so in-flight edits are not overwritten.
 
 ### 5. Dev auto-login (optional)
 

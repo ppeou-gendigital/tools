@@ -85,5 +85,6 @@ export function useDecryptedCredentials() {
     isLoading: listQuery.isLoading,
     isDecrypting: decrypting,
     error: listQuery.error ?? null,
+    listQuery,
   }
 }

@@ -24,10 +24,21 @@ import {
 import { updateCreditCard } from '@/lib/creditCardsApi'
 import { capturePageCreditCard } from '@/lib/pageCardCapture'
 import { detectBrand, last4, resolveDisplayName } from '@/lib/cardUtils'
+import {
+  clearVaultItemDirty,
+  markVaultItemDirty,
+} from '@/lib/vaultItemDirty'
+import {
+  optimisticUpsertVaultItem,
+  revertVaultItemCaches,
+  snapshotVaultItemCaches,
+} from '@/lib/vaultItemsCache'
 import { usePersistedListView } from '@/hooks/usePersistedListView'
 import { isExtension } from '@/env'
 import { cx } from '@/lib/cx'
 import styles from './CreditCards.module.scss'
+
+const STREAM = 'credit_cards'
 
 const SORT_OPTIONS = [
   { value: 'updated_desc', label: 'Recently updated' },
@@ -72,6 +83,7 @@ export function CreditCards() {
 
   const favoriteMutation = useMutation({
     mutationFn: async ({ card, nextFavorite }) => {
+      if (!userId) throw new Error('not signed in')
       const payload = {
         cardholderName: card.cardholderName ?? '',
         cardNumber: String(card.cardNumber || '').replace(/\D+/g, ''),
@@ -85,14 +97,37 @@ export function CreditCards() {
         isFavorite: nextFavorite,
       }
       const { ciphertext, iv } = await vault.encryptRecord(payload)
-      return updateCreditCard(card.id, {
-        displayName: card.displayName ?? '',
+      const now = new Date().toISOString()
+      const optimistic = {
+        id: card.id,
+        user_id: userId,
+        display_name: card.displayName ?? '',
         ciphertext,
         iv,
-      })
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['credit_cards', userId] })
+        created_at: card.createdAt ?? now,
+        updated_at: now,
+      }
+      const snapshot = snapshotVaultItemCaches(
+        queryClient,
+        STREAM,
+        userId,
+        card.id,
+      )
+      markVaultItemDirty(STREAM, card.id)
+      optimisticUpsertVaultItem(queryClient, STREAM, userId, optimistic)
+      try {
+        const result = await updateCreditCard(userId, card.id, {
+          displayName: card.displayName ?? '',
+          ciphertext,
+          iv,
+        })
+        clearVaultItemDirty(STREAM, card.id)
+        return result
+      } catch (err) {
+        revertVaultItemCaches(queryClient, snapshot)
+        clearVaultItemDirty(STREAM, card.id)
+        throw err
+      }
     },
   })
 
