@@ -11,23 +11,24 @@ import {
   movePinned as movePinnedInList,
   normalizePinnedSites,
 } from '@/lib/pinnedSites'
+import {
+  applySyncOp,
+  enqueueSyncOp,
+  opMovePinned,
+  opSetPinnedSites,
+  opTogglePinned,
+} from '@/lib/supabaseSync'
+import { useAuth } from '@/providers/AuthProvider'
 import { isExtension } from '@/env'
 
 const PinnedSitesContext = createContext(null)
 
 const STORAGE_KEY = 'loopy.sitetreePinned'
 
-// Persisted sorted array of hostnames the user has explicitly pinned to
-// the Site Tree page's deck. Pins are UI-only curation: they don't affect
-// capture (that's the tracked-hostnames list) — they just decide which
-// per-site tree slides show up on the Site Tree page.
-//
-// Round-trips through the shared normalizer on every read/write so
-// PrefsSync, the SiteTree page, and any future consumer agree on a
-// deterministic (sorted, deduped, lowercased) shape. The provider mirrors
-// the TrackedHostnamesProvider pattern one-for-one so callers can be
-// wired identically in PrefsSync.
 export function PinnedSitesProvider({ children }) {
+  const { user } = useAuth()
+  const userId = user?.id ?? null
+
   const [pinned, setPinnedState] = useState([])
   const [ready, setReady] = useState(false)
 
@@ -43,9 +44,6 @@ export function PinnedSitesProvider({ children }) {
     }
   }, [])
 
-  // Extension surface: reflect writes from other popup instances (or from
-  // PrefsSync in another window) into React state so a fresh pin shows up
-  // live without a reopen.
   useEffect(() => {
     if (!isExtension()) return
     if (!chrome?.storage?.onChanged?.addListener) return
@@ -60,49 +58,108 @@ export function PinnedSitesProvider({ children }) {
     }
   }, [])
 
-  // Absolute-set. Used by PrefsSync when applying a remote pull, and
-  // internally by toggle/setPinned below.
-  const setPinned = useCallback(async (next) => {
-    let resolved
-    setPinnedState((prev) => {
-      const raw = typeof next === 'function' ? next(prev) : next
-      resolved = normalizePinnedSites(raw)
-      return resolved
-    })
-    await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(resolved ?? []))
-  }, [])
+  // Absolute-set. PrefsSync pull passes { fromRemote: true } to skip CAS.
+  const setPinned = useCallback(
+    async (next, { fromRemote = false } = {}) => {
+      let resolved
+      setPinnedState((prev) => {
+        const raw = typeof next === 'function' ? next(prev) : next
+        resolved = normalizePinnedSites(raw)
+        return resolved
+      })
+      await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(resolved ?? []))
+      if (fromRemote || !userId) return
+      try {
+        await enqueueSyncOp({
+          stream: 'prefs',
+          key: 'pinnedSites',
+          fn: () =>
+            applySyncOp({
+              stream: 'prefs',
+              userId,
+              op: opSetPinnedSites(resolved),
+            }),
+        })
+      } catch (err) {
+        console.warn('[loopy] pinnedSites sync failed:', err?.message ?? err)
+      }
+    },
+    [userId],
+  )
 
-  // Add-or-remove. New pins land at the end of the array so the user's
-  // most recent pin action sits at the bottom of the Site Tree deck
-  // (feels less disruptive than reshuffling the whole list). Removing
-  // preserves the relative order of the survivors.
   const toggle = useCallback(
     async (host) => {
       const key = String(host ?? '').trim().toLowerCase()
       if (!key) return
-      await setPinned((prev) => {
+      const before = pinned
+      let resolved
+      setPinnedState((prev) => {
         const idx = prev.indexOf(key)
-        if (idx === -1) return [...prev, key]
-        return prev.filter((h) => h !== key)
+        resolved =
+          idx === -1 ? [...prev, key] : prev.filter((h) => h !== key)
+        return normalizePinnedSites(resolved)
       })
+      await asyncStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(normalizePinnedSites(resolved) ?? []),
+      )
+      if (!userId) return
+      try {
+        const row = await enqueueSyncOp({
+          stream: 'prefs',
+          key: 'pinnedSites',
+          fn: () =>
+            applySyncOp({
+              stream: 'prefs',
+              userId,
+              op: opTogglePinned(key),
+            }),
+        })
+        const next = normalizePinnedSites(row?.pinnedSites)
+        setPinnedState(next)
+        await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      } catch (err) {
+        console.warn('[loopy] pin toggle sync failed:', err?.message ?? err)
+        setPinnedState(before)
+        await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(before))
+      }
     },
-    [setPinned],
+    [userId, pinned],
   )
 
-  // Move a hostname up (-1) or down (+1) in the pinned order. No-op if
-  // the host isn't pinned or is already at the corresponding edge.
-  // Delegates to the pure movePinned helper so behavior is testable
-  // outside React.
   const movePinned = useCallback(
     async (host, direction) => {
-      await setPinned((prev) => movePinnedInList(prev, host, direction))
+      const before = pinned
+      let resolved
+      setPinnedState((prev) => {
+        resolved = movePinnedInList(prev, host, direction)
+        return resolved
+      })
+      await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(resolved ?? []))
+      if (!userId) return
+      try {
+        const row = await enqueueSyncOp({
+          stream: 'prefs',
+          key: 'pinnedSites',
+          fn: () =>
+            applySyncOp({
+              stream: 'prefs',
+              userId,
+              op: opMovePinned(host, direction),
+            }),
+        })
+        const next = normalizePinnedSites(row?.pinnedSites)
+        setPinnedState(next)
+        await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      } catch (err) {
+        console.warn('[loopy] pin move sync failed:', err?.message ?? err)
+        setPinnedState(before)
+        await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(before))
+      }
     },
-    [setPinned],
+    [userId, pinned],
   )
 
-  // Expose the Set view too — callers reach for `.has(host)` more often
-  // than they iterate, and computing it once per state change avoids a
-  // Set construction in every consumer's render.
   const pinnedSet = useMemo(() => new Set(pinned), [pinned])
 
   const value = useMemo(

@@ -15,6 +15,7 @@ import { AppShell } from '@/templates/AppShell'
 import { AuthGate } from '@/blocks/AuthGate'
 import { Home } from '@/pages/Home'
 import { Profile } from '@/pages/Profile'
+import { Landing } from '@/pages/Landing'
 import { DeckTest } from '@/pages/DeckTest'
 import { AemJump } from '@/pages/AemJump'
 import { FavLinks } from '@/pages/FavLinks'
@@ -34,6 +35,7 @@ const APP_VERSION = '0.1.0'
 function Router() {
   const { route } = useNavigation()
   if (route === 'profile') return <Profile />
+  if (route === 'landing') return <Landing />
   if (route === 'deck-test') return <DeckTest />
   if (route === 'aem-jump') return <AemJump />
   if (route === 'visited-urls') return <VisitedUrls />

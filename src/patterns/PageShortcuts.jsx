@@ -1,4 +1,4 @@
-import { Bookmark, ExternalLink, FolderTree } from 'lucide-react'
+import { Bookmark, ExternalLink, FolderTree, House } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { FavStar } from '@/patterns/FavStar'
 import { UrlParamsMenu } from '@/patterns/UrlParamsMenu'
@@ -6,13 +6,17 @@ import { useCurrentTab } from '@/hooks/useCurrentTabUrl'
 import { useNavigation } from '@/providers/NavigationProvider'
 import styles from './PageShortcuts.module.scss'
 
-// Cross-page shortcuts rendered in each page's toolbar. AEM Jump, Site
-// Tree, and Fav Links share the workflow (jump to an environment,
-// inspect its tree, save a URL for later) so we surface the siblings
-// on every page. Order below is the same everywhere; we just filter
-// the current page out so the strip occupies a consistent slot in the
-// header.
+// Cross-page shortcuts rendered in each page's toolbar. Landing, AEM
+// Jump, Site Tree, and Fav Links share the workflow, so we surface the
+// siblings on every page. Order below is the same everywhere; we just
+// filter the current page out so the strip occupies a consistent slot.
 const SHORTCUTS = [
+  {
+    id: 'landing',
+    label: 'Landing',
+    icon: House,
+    pick: (nav) => nav.goLanding,
+  },
   {
     id: 'aem-jump',
     label: 'AEM Jump',

@@ -10,16 +10,15 @@ import {
 import { asyncStorage } from '@/lib/storage'
 import { normalizeFavoritesByDomain } from '@/lib/favorites'
 import {
-  applyDomainOp,
-  deleteAllUserFavorites,
-  deleteDomainFavorites,
-} from '@/lib/favoritesApi'
-import {
+  applySyncOp,
+  deleteSyncAll,
+  enqueueSyncOp,
   opAddPath,
+  opClearDomainPaths,
   opRemovePath,
   opRenameWithinDomain,
   opSetTitle,
-} from '@/lib/favoritesOps'
+} from '@/lib/supabaseSync'
 import { useAuth } from '@/providers/AuthProvider'
 import { isExtension } from '@/env'
 
@@ -63,11 +62,6 @@ export function FavoritesProvider({ children }) {
   useEffect(() => {
     byDomainRef.current = byDomain
   }, [byDomain])
-
-  // Per-domain in-flight tail. New ops on the same domain chain onto
-  // the previous op's promise so they execute sequentially, but ops
-  // on different domains still run in parallel.
-  const domainQueueRef = useRef(new Map())
 
   useEffect(() => {
     let mounted = true
@@ -117,24 +111,11 @@ export function FavoritesProvider({ children }) {
     [persist],
   )
 
-  // Chain fn onto the tail of the given domain's op queue. Errors from
-  // fn are swallowed at the *chaining* layer so the next op still gets
-  // to run — the caller receives them via the returned promise.
-  const enqueueDomainOp = useCallback((domain, fn) => {
-    const prev = domainQueueRef.current.get(domain) ?? Promise.resolve()
-    const next = prev.catch(() => {}).then(fn)
-    domainQueueRef.current.set(domain, next)
-    // Best-effort cleanup so the map doesn't grow unbounded across a
-    // long session. If a newer op hasn't arrived by the time this one
-    // settles, drop the tail so the domain slot goes back to
-    // Promise.resolve() on next use.
-    next.finally(() => {
-      if (domainQueueRef.current.get(domain) === next) {
-        domainQueueRef.current.delete(domain)
-      }
-    })
-    return next
-  }, [])
+  const enqueueDomainOp = useCallback(
+    (domain, fn) =>
+      enqueueSyncOp({ stream: 'favorites', key: domain, fn }),
+    [],
+  )
 
   // Apply a local mutation (via updater fn) synchronously and persist.
   // Returns the resolved bucket for the touched hostname (or null if
@@ -235,11 +216,12 @@ export function FavoritesProvider({ children }) {
 
       return enqueueDomainOp(host, async () => {
         try {
-          const result = await applyDomainOp(
+          const result = await applySyncOp({
+            stream: 'favorites',
             userId,
-            host,
-            opAddPath(p, { title: titleStr, addedAt: stamp }),
-          )
+            key: host,
+            op: opAddPath(p, { title: titleStr, addedAt: stamp }),
+          })
           await reconcileDomain(host, result)
           return { ok: true }
         } catch (err) {
@@ -289,7 +271,12 @@ export function FavoritesProvider({ children }) {
 
       return enqueueDomainOp(host, async () => {
         try {
-          const result = await applyDomainOp(userId, host, opRemovePath(p))
+          const result = await applySyncOp({
+            stream: 'favorites',
+            userId,
+            key: host,
+            op: opRemovePath(p),
+          })
           await reconcileDomain(host, result)
           return { ok: true }
         } catch (err) {
@@ -324,7 +311,12 @@ export function FavoritesProvider({ children }) {
 
       return enqueueDomainOp(host, async () => {
         try {
-          await deleteDomainFavorites(userId, host)
+          await applySyncOp({
+            stream: 'favorites',
+            userId,
+            key: host,
+            op: opClearDomainPaths(),
+          })
           return { ok: true }
         } catch (err) {
           console.warn('[loopy] clearDomain failed:', err?.message ?? err)
@@ -351,11 +343,7 @@ export function FavoritesProvider({ children }) {
     await applyLocalMutation(() => ({}))
 
     try {
-      await deleteAllUserFavorites(userId)
-      // Also clear any lingering per-domain op queue tails so a stale
-      // in-flight CAS from before the wipe doesn't try to re-populate
-      // a row we just intentionally emptied.
-      domainQueueRef.current.clear()
+      await deleteSyncAll({ stream: 'favorites', userId })
       return { ok: true }
     } catch (err) {
       console.warn('[loopy] clearAll failed:', err?.message ?? err)
@@ -413,11 +401,12 @@ export function FavoritesProvider({ children }) {
         })
         return enqueueDomainOp(oldHost, async () => {
           try {
-            const result = await applyDomainOp(
+            const result = await applySyncOp({
+              stream: 'favorites',
               userId,
-              oldHost,
-              opSetTitle(oldP, newTitle),
-            )
+              key: oldHost,
+              op: opSetTitle(oldP, newTitle),
+            })
             await reconcileDomain(oldHost, result)
             return { ok: true }
           } catch (err) {
@@ -455,11 +444,12 @@ export function FavoritesProvider({ children }) {
         })
         return enqueueDomainOp(oldHost, async () => {
           try {
-            const result = await applyDomainOp(
+            const result = await applySyncOp({
+              stream: 'favorites',
               userId,
-              oldHost,
-              opRenameWithinDomain(oldP, newP, newTitle),
-            )
+              key: oldHost,
+              op: opRenameWithinDomain(oldP, newP, newTitle),
+            })
             await reconcileDomain(oldHost, result)
             return { ok: true }
           } catch (err) {
@@ -524,11 +514,12 @@ export function FavoritesProvider({ children }) {
       // Add on the new domain first. If this fails we still need to
       // revert BOTH sides of the local edit.
       const addPromise = enqueueDomainOp(newHost, async () => {
-        return applyDomainOp(
+        return applySyncOp({
+          stream: 'favorites',
           userId,
-          newHost,
-          opAddPath(newP, { title: newTitle, addedAt: preservedAddedAt }),
-        )
+          key: newHost,
+          op: opAddPath(newP, { title: newTitle, addedAt: preservedAddedAt }),
+        })
       })
 
       let addResult
@@ -546,7 +537,12 @@ export function FavoritesProvider({ children }) {
       // exists in both places; leave it that way (user can clean up)
       // rather than lose data.
       const removePromise = enqueueDomainOp(oldHost, async () => {
-        return applyDomainOp(userId, oldHost, opRemovePath(oldP))
+        return applySyncOp({
+          stream: 'favorites',
+          userId,
+          key: oldHost,
+          op: opRemovePath(oldP),
+        })
       })
       try {
         const removeResult = await removePromise

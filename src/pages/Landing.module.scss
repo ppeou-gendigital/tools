@@ -1,0 +1,73 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--space-4) 0;
+  gap: var(--space-3);
+}
+
+.header {
+  padding-inline: var(--layout-pad);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subtitle {
+  color: var(--muted-fg);
+  font-size: var(--text-xs);
+  margin: 0;
+}
+
+.iconBtn {
+  color: var(--muted-fg);
+
+  &:hover {
+    color: var(--fg);
+  }
+}
+
+.padded {
+  padding-inline: var(--layout-pad);
+}
+
+.muted {
+  color: var(--muted-fg);
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.deckWrap {
+  flex: 1;
+  min-height: 0;
+}
+
+.emptySlide {
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}

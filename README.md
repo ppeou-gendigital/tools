@@ -260,20 +260,21 @@ set aem_domains = coalesce(data -> 'aemDomains', '[]'::jsonb),
 where data ? 'aemDomains';
 ```
 
-**Auto-sync behavior** (see `src/providers/PrefsSync.jsx`):
+**Sync contract** — all Supabase I/O goes through [`src/lib/supabaseSync.js`](src/lib/supabaseSync.js):
 
-- **On sign-in** the app fetches the row (`data` + `aem_domains` + `tracked_hostnames`)
-  and applies each column via its own provider setters (remote wins). If
-  there's no cloud row yet, the current local values become the sync baseline.
-- **On any local change** (theme toggle, +/- font size, FAB corner drag,
-  AEM domain add/remove, tracked-host rule edit) the app upserts all three
-  columns together after a 500ms debounce (local wins during the session).
-  Rapid clicks coalesce into a single request.
+- `applySyncOp({ stream, userId, key?, op })` — pure-operator CAS write
+- `pullSync({ stream, userId, local? })` — force-network pull (merge for maps)
 
-Two guards prevent ping-pong: an "applying remote" flag skips the auto-push
-that would otherwise fire from the setter calls during a pull, and a
-`lastSynced` ref short-circuits the push effect when the current values
-already match the cloud.
+**Prefs (`stream: 'prefs'`)** use the same Fav Links recipe as favorites:
+
+- Each provider (theme, font, FAB corner, AEM domains, tracked hosts, pinned
+  sites, favorites order) owns its mutations: optimistic local write, then
+  `applySyncOp` with a field-scoped operator from [`userDataOps.js`](src/lib/userDataOps.js)
+  (`opTogglePinned`, `opSetTheme`, …). On CAS miss the op re-applies against
+  the latest remote row so concurrent edits to *different* fields both survive.
+- [`PrefsSync`](src/providers/PrefsSync.jsx) is **pull-only** on sign-in. Fields
+  the user changed while the fetch was in flight are skipped (dirty-field
+  guard) so a mid-pull pin is not wiped.
 
 ### 5. Visited URLs table (`user_visits`)
 
@@ -386,7 +387,7 @@ shape is rebuilt from fresh captures.
 2. It reads the [tracked-hostnames](#tracked-hostnames) rule list from `chrome.storage.local` (cached in worker memory as a compiled `{ includes, excludes }` regex set; invalidated via `chrome.storage.onChanged` when the list changes) and calls `matchTabToTrackedHost(url, rules)`.
 3. On a matching hostname (at least one include hit and no exclude hit), it merges the visit into the domain's bucket in `loopy.visitedByDomain` — dedup is an O(1) `paths[path]` lookup, bumps `visitCount` + `lastVisitedAt`, evicts the oldest when the bucket exceeds 200 keys.
 4. `VisitedUrlsProvider` mirrors the same key via `chrome.storage.onChanged`, so an open popup reflects background writes live.
-5. Sync to Supabase is owned by the service worker (`chrome.alarms`-driven: a ~1s debounced push after each capture, plus a 5-minute periodic heartbeat). Each dirty domain goes through a per-domain **compare-and-swap** (`upsertDomainWithMerge`): read the current row, union its paths object with local via `mergePathObjects`, and write back conditionally on the row's `updated_at`. Two devices simultaneously adding different paths to the same domain converge to a row containing both, with at most one retry.
+5. Sync to Supabase is owned by the service worker (`chrome.alarms`-driven: a ~1s debounced push after each capture, plus a 5-minute periodic heartbeat) via [`syncVisits`](src/lib/visitsSync.js) → [`applySyncOp`](src/lib/supabaseSync.js) (`stream: 'visits'`). Capture merges are append/union (`opUnionVisitPaths`). User-initiated clears/removes on the Visited URLs page call the same CAS path (`opClearDomainPaths` / `opRemovePath`) so remote rows are deleted and the next sync cannot resurrect them.
 
 Fragments (`#…`) are stripped before storage — they're UI state (editor panel, scroll target) and would spam the list with near-duplicates.
 
@@ -503,18 +504,20 @@ alter table public.user_data
 
 1. Every page's toolbar renders a [`FavStar`](src/patterns/FavStar.jsx) via [`PageShortcuts`](src/patterns/PageShortcuts.jsx). Clicking it reads the current tab via [`useCurrentTab`](src/hooks/useCurrentTabUrl.js) (which returns `{ url, title }` from `chrome.tabs.query` with a `chrome.scripting.executeScript` fallback for SPA `pushState` URLs) and toggles the entry. The star also appears on every Site Tree URL row so any tracked page can be saved without opening it first.
 2. [`FavoritesProvider`](src/providers/FavoritesProvider.jsx) applies the change **to local state first** for instant feedback (writes into `chrome.storage.local[loopy.favorites]` and mirrors the key via `chrome.storage.onChanged` so an open popup reflects writes from other windows live).
-3. In parallel, the provider queues a per-domain **read-modify-CAS** against Supabase via [`applyDomainOp`](src/lib/favoritesApi.js). The CAS loop:
+3. In parallel, the provider queues a per-domain **read-modify-CAS** via [`applySyncOp`](src/lib/supabaseSync.js) (`stream: 'favorites'`). The CAS loop:
    1. `SELECT paths, updated_at WHERE (user_id, domain)`.
    2. Runs a pure operator from [`src/lib/favoritesOps.js`](src/lib/favoritesOps.js) (`opAddPath`, `opRemovePath`, `opSetTitle`, `opRenameWithinDomain`) against the fresh remote `paths` — never against a stale local snapshot.
    3. Writes back with `WHERE updated_at = <observed>`; on zero rows affected, re-reads and re-applies. Bounded by `CAS_MAX_ATTEMPTS`.
    4. When the operator empties the bucket, the row is `DELETE`d instead of `UPDATE`d.
 4. On CAS success the local bucket is reconciled with the authoritative `{ paths, updated_at }` returned by the CAS. On failure the local bucket is reverted to its pre-op snapshot so the UI doesn't lie about durability.
-5. Rapid-fire clicks on the same domain are serialized by a per-domain in-flight promise map in the provider so a burst never fights its own CAS retries. Ops on different domains still run in parallel.
+5. Rapid-fire clicks on the same domain are serialized by `enqueueSyncOp` so a burst never fights its own CAS retries. Ops on different domains still run in parallel.
 6. **Cross-domain edits** (rename that changes hostname) run as *add-on-new-host* then *remove-from-old-host*, so a mid-op interruption favors the destination and never orphans the entry.
-7. **Clear all** bypasses CAS and issues one `DELETE ... WHERE user_id = $1` via [`deleteAllUserFavorites`](src/lib/favoritesApi.js).
-8. The domain display order (`favorites_order`) rides along with the regular prefs push in [`PrefsSync`](src/providers/PrefsSync.jsx). Reordering a group locally triggers a single `user_data` upsert alongside theme / font / pinned sites.
+7. **Clear all** issues one `DELETE ... WHERE user_id = $1` via `deleteSyncAll`.
+8. Domain display order (`favorites_order`) syncs through the same prefs `applySyncOp` path (`opMoveFavoritesOrder` / `opSetFavoritesOrder`) — not a full-row snapshot push.
 
-**Migration bridge**: the first sign-in after this refactor lands does a one-shot union upload of any pre-existing local favorites (from the previous debounced-push implementation that could silently fail to sync) before the pull absolute-replaces local from remote. A `loopy.favorites.migrated` flag in `chrome.storage.local` gates this so it only runs once.
+**Pull**: on sign-in, `pullSync({ stream: 'favorites' })` merges remote into local with `mergeFavoritesByDomain` (path-level union). Never absolute-replaces a domain bucket.
+
+**Migration bridge**: the first sign-in after the favorites refactor does a one-shot union upload of any pre-existing local favorites before the merge pull. A `loopy.favorites.migrated` flag gates this; it is only set when every upload succeeds.
 
 **Concurrency guarantees**: two devices saving different URLs on the same domain converge to a row containing both entries — the loser's CAS misses, it re-reads, re-applies its operator against the winner's post-state, and writes. `opRemovePath` is a no-op when the path is already absent, so a remove that lost a race against another remove is idempotent.
 
@@ -567,12 +570,11 @@ Add more later in [`manifest.json`](manifest.json) as features land.
 - **Workflow**: [`.github/workflows/deploy-loopy-pages.yml`](.github/workflows/deploy-loopy-pages.yml)
 - **Trigger**: push to `tool/loopy` (or manual `workflow_dispatch` from the Actions tab)
 - **Live URL**: https://ppeou-gendigital.github.io/tools/loopy/
-- **Build**: dual-build — this workflow builds `tool/loopy` and `tool/accesso`, then uploads a combined artifact (`site/loopy/` + `site/accesso/`) so both tools stay live on the one Pages site
+- **Build**: `npm run build:web` → `dist-web/loopy/` (nested so the uploaded artifact serves at `/tools/loopy/`)
 - **Repo secrets required** (Settings → Secrets and variables → Actions):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
 - **Repo Pages settings**: Settings → Pages → Source = **GitHub Actions**
-- **Deployment branch policy**: the `github-pages` environment must allow `tool/loopy` (and `tool/accesso`)
 
 ### Convention for other tool branches
 
@@ -581,15 +583,18 @@ Each `tool/*` branch owns its own workflow at `.github/workflows/deploy-<tool>-p
 For a hypothetical new tool `tool/foo`, mirror the loopy setup:
 
 - Vite prod web build: `base: '/tools/foo/'`, `outDir: 'dist-web/foo'`
-- Workflow: `.github/workflows/deploy-foo-pages.yml` with `on: push: branches: [tool/foo]`, dual-building sibling tools into one artifact
+- Workflow: `.github/workflows/deploy-foo-pages.yml` with `on: push: branches: [tool/foo]`
 - Live URL: `https://ppeou-gendigital.github.io/tools/foo/`
-- Add `tool/foo` to the `github-pages` deployment branch policy
 
-### One Pages site per repo — dual-build coexistence
+### One Pages site per repo — important
 
-A GitHub repo publishes exactly **one** Pages site, and each deploy replaces the entire site. To keep multiple tools live, each tool's Pages workflow checks out the sibling tool branch(es), builds every tool, and uploads a combined artifact (e.g. `site/loopy/` + `site/accesso/`). That yields stable URLs like `/tools/loopy/` and `/tools/accesso/` without one deploy wiping the other.
+A GitHub repo publishes exactly **one** Pages site. Every deploy to the `github-pages` environment **replaces the entire site**. If `tool/loopy` deploys today and `tool/foo` deploys tomorrow, `/tools/loopy/` will 404 until loopy is redeployed. The `/tools/<tool>/` subpath convention gives us clean, stable URLs but does *not* enable coexistence.
 
-When adding a third tool, extend every Pages workflow's dual-build (now multi-build) to include the new branch, and add that branch to the `github-pages` deployment branch policy. For a long-term split, give the new tool its own repo instead.
+If two tools need Pages simultaneously, options in order of preference:
+
+1. Give the second tool its own dedicated GitHub repo (recommended long-term).
+2. Host the second tool on Vercel / Cloudflare Pages / Netlify (Supabase-backed apps work identically there).
+3. Build a coordinator workflow that combines all tools' builds into one artifact (complex — not recommended unless the tool count grows).
 
 ---
 

@@ -8,16 +8,21 @@ import {
 } from 'react'
 import { asyncStorage } from '@/lib/storage'
 import { normalizeAemDomains } from '@/lib/prefs'
+import {
+  applySyncOp,
+  enqueueSyncOp,
+  opSetAemDomains,
+} from '@/lib/supabaseSync'
+import { useAuth } from '@/providers/AuthProvider'
 
 const AemDomainsContext = createContext(null)
 
 const STORAGE_KEY = 'loopy.aemDomains'
 
-// Persisted list of AEM Jump domain entries. Shape is documented in
-// src/lib/prefs.js -> normalizeAemDomains. The provider round-trips through
-// the shared normalizer on both read and write so PrefsSync, Settings, and
-// AemJump all see the same clean shape.
 export function AemDomainsProvider({ children }) {
+  const { user } = useAuth()
+  const userId = user?.id ?? null
+
   const [domains, setDomainsState] = useState([])
   const [ready, setReady] = useState(false)
 
@@ -33,7 +38,6 @@ export function AemDomainsProvider({ children }) {
           parsed = null
         }
       } else if (Array.isArray(raw)) {
-        // chrome.storage.local returns the object as-is.
         parsed = raw
       }
       setDomainsState(normalizeAemDomains(parsed))
@@ -44,19 +48,33 @@ export function AemDomainsProvider({ children }) {
     }
   }, [])
 
-  const setDomains = useCallback(async (next) => {
-    // Support both the value and updater forms so callers can do
-    //   setDomains([...])              // absolute
-    //   setDomains(prev => [...prev])  // functional, gets latest state
-    // Persistence always runs against the normalized post-update value.
-    let resolved
-    setDomainsState((prev) => {
-      const raw = typeof next === 'function' ? next(prev) : next
-      resolved = normalizeAemDomains(raw)
-      return resolved
-    })
-    await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(resolved ?? []))
-  }, [])
+  const setDomains = useCallback(
+    async (next, { fromRemote = false } = {}) => {
+      let resolved
+      setDomainsState((prev) => {
+        const raw = typeof next === 'function' ? next(prev) : next
+        resolved = normalizeAemDomains(raw)
+        return resolved
+      })
+      await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(resolved ?? []))
+      if (fromRemote || !userId) return
+      try {
+        await enqueueSyncOp({
+          stream: 'prefs',
+          key: 'aemDomains',
+          fn: () =>
+            applySyncOp({
+              stream: 'prefs',
+              userId,
+              op: opSetAemDomains(resolved),
+            }),
+        })
+      } catch (err) {
+        console.warn('[loopy] aemDomains sync failed:', err?.message ?? err)
+      }
+    },
+    [userId],
+  )
 
   const value = useMemo(
     () => ({ domains, setDomains, ready }),

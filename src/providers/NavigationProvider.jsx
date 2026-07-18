@@ -12,6 +12,7 @@ const NavigationContext = createContext(null)
 const ROUTES = [
   'home',
   'profile',
+  'landing',
   'deck-test',
   'aem-jump',
   'visited-urls',
@@ -21,12 +22,13 @@ const ROUTES = [
   'settings-aem-environments',
   'settings-tracked-hosts',
 ]
-const DEFAULT_ROUTE = 'aem-jump'
+const DEFAULT_ROUTE = 'landing'
 
 // Human labels used by page headers to render dynamic "back" text.
 const ROUTE_LABELS = {
   home: 'Home',
   profile: 'Profile',
+  landing: 'Landing',
   'deck-test': 'Deck test',
   'aem-jump': 'AEM Jump',
   'visited-urls': 'Visited URLs',
@@ -44,6 +46,7 @@ const ROUTE_LABELS = {
 const PARENT_ROUTE = {
   home: null,
   profile: 'home',
+  landing: null,
   'deck-test': 'home',
   'aem-jump': 'home',
   'visited-urls': 'home',
@@ -154,6 +157,7 @@ export function NavigationProvider({ children, initial }) {
       goBack,
       goHome: () => navigate('home'),
       goProfile: () => navigate('profile'),
+      goLanding: () => navigate('landing'),
       goDeckTest: () => navigate('deck-test'),
       goAemJump: () => navigate('aem-jump'),
       goVisitedUrls: () => navigate('visited-urls'),

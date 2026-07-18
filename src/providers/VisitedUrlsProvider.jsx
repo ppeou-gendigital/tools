@@ -8,22 +8,27 @@ import {
 } from 'react'
 import { asyncStorage } from '@/lib/storage'
 import { normalizeVisitedByDomain } from '@/lib/visitedUrls'
+import {
+  applySyncOp,
+  deleteSyncAll,
+  enqueueSyncOp,
+  opClearDomainPaths,
+  opRemovePath,
+} from '@/lib/supabaseSync'
+import { useAuth } from '@/providers/AuthProvider'
 import { isExtension } from '@/env'
 
 const VisitedUrlsContext = createContext(null)
 
 const STORAGE_KEY = 'loopy.visitedByDomain'
 
-// Persisted map of AEM-matched tab visits, grouped by hostname:
-//   { [hostname]: { paths: { [path]: PathValue }, updatedAt: '<iso>' } }
-//
-// Round-tripped through the shared normalizer on both read and write so
-// background.js, PrefsSync, and the Visited URLs page all agree on shape.
-//
-// In the extension, the background service worker writes to the same
-// storage key on every tracked navigation, so we subscribe to
-// chrome.storage.onChanged and reflect those writes into React state live.
+// Persisted map of AEM-matched tab visits, grouped by hostname.
+// User-initiated clears/removes sync through supabaseSync (same recipe
+// as favorites). Capture merges are owned by the SW via syncVisits.
 export function VisitedUrlsProvider({ children }) {
+  const { user } = useAuth()
+  const userId = user?.id ?? null
+
   const [byDomain, setByDomainState] = useState({})
   const [ready, setReady] = useState(false)
 
@@ -39,9 +44,6 @@ export function VisitedUrlsProvider({ children }) {
     }
   }, [])
 
-  // Extension surface only: reflect background-worker writes into React.
-  // The web build has no chrome.storage; the provider stays a plain state
-  // holder that React callers own end-to-end.
   useEffect(() => {
     if (!isExtension()) return
     if (!chrome?.storage?.onChanged?.addListener) return
@@ -61,8 +63,6 @@ export function VisitedUrlsProvider({ children }) {
     await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(next ?? {}))
   }, [])
 
-  // Absolute-set. Used by PrefsSync when applying a remote pull, and by
-  // clear/remove helpers below.
   const setByDomain = useCallback(
     async (next) => {
       let resolved
@@ -77,54 +77,92 @@ export function VisitedUrlsProvider({ children }) {
   )
 
   const clearAll = useCallback(async () => {
-    console.warn('[loopy] visited-urls: clearAll invoked', new Error().stack)
+    const snapshot = byDomain
     setByDomainState({})
     await persist({})
-  }, [persist])
+    if (!userId) return
+    try {
+      await deleteSyncAll({ stream: 'visits', userId })
+    } catch (err) {
+      console.warn('[loopy] visits clearAll sync failed:', err?.message ?? err)
+      setByDomainState(snapshot)
+      await persist(snapshot)
+    }
+  }, [persist, userId, byDomain])
 
   const clearDomain = useCallback(
     async (hostname) => {
+      const host = String(hostname ?? '').trim().toLowerCase()
+      if (!host) return
+      let before = null
       let resolved
       setByDomainState((prev) => {
-        if (!(hostname in prev)) {
+        if (!(host in prev)) {
           resolved = prev
           return prev
         }
+        before = prev[host]
         const next = { ...prev }
-        delete next[hostname]
+        delete next[host]
         resolved = next
         return next
       })
-      if (resolved && resolved !== undefined) {
-        console.warn('[loopy] visited-urls: clearDomain', { hostname })
-        await persist(resolved)
+      await persist(resolved)
+      if (!userId || !before) return
+      try {
+        await enqueueSyncOp({
+          stream: 'visits',
+          key: host,
+          fn: () =>
+            applySyncOp({
+              stream: 'visits',
+              userId,
+              key: host,
+              op: opClearDomainPaths(),
+            }),
+        })
+      } catch (err) {
+        console.warn('[loopy] visits clearDomain sync failed:', err?.message ?? err)
+        setByDomainState((prev) => {
+          const next = { ...prev, [host]: before }
+          persist(next)
+          return next
+        })
       }
     },
-    [persist],
+    [persist, userId],
   )
 
   const removePath = useCallback(
     async (hostname, path) => {
+      const host = String(hostname ?? '').trim().toLowerCase()
+      const p = String(path ?? '').trim()
+      if (!host || !p) return
+      let before = null
       let resolved
       setByDomainState((prev) => {
-        const bucket = prev[hostname]
+        const bucket = prev[host]
         const prevPaths =
           bucket?.paths &&
           typeof bucket.paths === 'object' &&
           !Array.isArray(bucket.paths)
             ? bucket.paths
             : null
-        if (!prevPaths || !(path in prevPaths)) {
+        if (!prevPaths || !(p in prevPaths)) {
           resolved = prev
           return prev
         }
+        before = {
+          paths: { ...prevPaths },
+          updatedAt: bucket.updatedAt,
+        }
         const nextPaths = { ...prevPaths }
-        delete nextPaths[path]
+        delete nextPaths[p]
         const next = { ...prev }
         if (Object.keys(nextPaths).length === 0) {
-          delete next[hostname]
+          delete next[host]
         } else {
-          next[hostname] = {
+          next[host] = {
             paths: nextPaths,
             updatedAt: new Date().toISOString(),
           }
@@ -132,12 +170,30 @@ export function VisitedUrlsProvider({ children }) {
         resolved = next
         return next
       })
-      if (resolved) {
-        console.debug('[loopy] visited-urls: removePath', { hostname, path })
-        await persist(resolved)
+      await persist(resolved)
+      if (!userId || !before) return
+      try {
+        await enqueueSyncOp({
+          stream: 'visits',
+          key: host,
+          fn: () =>
+            applySyncOp({
+              stream: 'visits',
+              userId,
+              key: host,
+              op: opRemovePath(p),
+            }),
+        })
+      } catch (err) {
+        console.warn('[loopy] visits removePath sync failed:', err?.message ?? err)
+        setByDomainState((prev) => {
+          const next = { ...prev, [host]: before }
+          persist(next)
+          return next
+        })
       }
     },
-    [persist],
+    [persist, userId],
   )
 
   const value = useMemo(

@@ -11,25 +11,23 @@ import {
   moveFavoriteDomain,
   normalizeFavoritesOrder,
 } from '@/lib/favoritesOrder'
+import {
+  applySyncOp,
+  enqueueSyncOp,
+  opMoveFavoritesOrder,
+  opSetFavoritesOrder,
+} from '@/lib/supabaseSync'
+import { useAuth } from '@/providers/AuthProvider'
 import { isExtension } from '@/env'
 
 const FavoritesOrderContext = createContext(null)
 
 const STORAGE_KEY = 'loopy.favoritesOrder'
 
-// Persisted ordered array of hostnames — the user-curated display
-// sequence for domain groups on the Fav Links page.
-//
-// Behaves exactly like PinnedSitesProvider (single-blob, order-
-// sensitive, syncs via user_data.favorites_order): last-writer-wins
-// through PrefsSync alongside theme / font-size / pinned_sites.
-//
-// The Fav Links page is defensive: any hostname in `byDomain` not
-// present here appends implicitly at render time (freshest-first),
-// and any hostname here whose bucket disappeared is skipped. That
-// means callers only ever call `moveDomain` for hostnames the user
-// explicitly wants to reorder — no one has to "seed" new domains.
 export function FavoritesOrderProvider({ children }) {
+  const { user } = useAuth()
+  const userId = user?.id ?? null
+
   const [order, setOrderState] = useState([])
   const [ready, setReady] = useState(false)
 
@@ -45,9 +43,6 @@ export function FavoritesOrderProvider({ children }) {
     }
   }, [])
 
-  // Extension surface: reflect writes from other popup instances (or
-  // from PrefsSync in another window) into React state so a fresh
-  // reorder shows up live without a reopen.
   useEffect(() => {
     if (!isExtension()) return
     if (!chrome?.storage?.onChanged?.addListener) return
@@ -62,36 +57,70 @@ export function FavoritesOrderProvider({ children }) {
     }
   }, [])
 
-  // Absolute-set. Used by PrefsSync when applying a remote pull, and
-  // internally by moveDomain below.
-  const setOrder = useCallback(async (next) => {
-    let resolved
-    setOrderState((prev) => {
-      const raw = typeof next === 'function' ? next(prev) : next
-      resolved = normalizeFavoritesOrder(raw)
-      return resolved
-    })
-    await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(resolved ?? []))
-  }, [])
+  const setOrder = useCallback(
+    async (next, { fromRemote = false } = {}) => {
+      let resolved
+      setOrderState((prev) => {
+        const raw = typeof next === 'function' ? next(prev) : next
+        resolved = normalizeFavoritesOrder(raw)
+        return resolved
+      })
+      await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(resolved ?? []))
+      if (fromRemote || !userId) return
+      try {
+        await enqueueSyncOp({
+          stream: 'prefs',
+          key: 'favoritesOrder',
+          fn: () =>
+            applySyncOp({
+              stream: 'prefs',
+              userId,
+              op: opSetFavoritesOrder(resolved),
+            }),
+        })
+      } catch (err) {
+        console.warn('[loopy] favoritesOrder sync failed:', err?.message ?? err)
+      }
+    },
+    [userId],
+  )
 
-  // Move a hostname up (-1) or down (+1) in the order array. Delegates
-  // to the pure helper so behavior is testable outside React.
-  //
-  // Auto-seeds the hostname into the array if it's not already there,
-  // then applies the requested delta. That way clicking "up" on a
-  // domain that has been rendering by implicit-append works as expected.
   const moveDomain = useCallback(
     async (host, direction) => {
       const key = String(host ?? '').trim().toLowerCase()
       if (!key) return
       const delta = Math.sign(direction ?? 0)
       if (delta === 0) return
-      await setOrder((prev) => {
+      const before = order
+      let resolved
+      setOrderState((prev) => {
         const seeded = prev.includes(key) ? prev : [...prev, key]
-        return moveFavoriteDomain(seeded, key, delta)
+        resolved = moveFavoriteDomain(seeded, key, delta)
+        return resolved
       })
+      await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(resolved ?? []))
+      if (!userId) return
+      try {
+        const row = await enqueueSyncOp({
+          stream: 'prefs',
+          key: 'favoritesOrder',
+          fn: () =>
+            applySyncOp({
+              stream: 'prefs',
+              userId,
+              op: opMoveFavoritesOrder(key, delta),
+            }),
+        })
+        const next = normalizeFavoritesOrder(row?.favoritesOrder)
+        setOrderState(next)
+        await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      } catch (err) {
+        console.warn('[loopy] favoritesOrder move sync failed:', err?.message ?? err)
+        setOrderState(before)
+        await asyncStorage.setItem(STORAGE_KEY, JSON.stringify(before))
+      }
     },
-    [setOrder],
+    [userId, order],
   )
 
   const value = useMemo(

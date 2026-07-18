@@ -67,9 +67,7 @@
   min-height: 0;
 }
 
-// Slide chrome — one card per site + one for the picker. Overflow hidden on
-// the outer body so the internal .slideScroll owns the vertical scroll and
-// the header stays pinned at the top of the card.
+// Manage-pins slide chrome (tree slides use PathTree.module.scss).
 .slideBody {
   height: 100%;
   border: 1px solid var(--border);
@@ -120,13 +118,6 @@
   text-overflow: ellipsis;
 }
 
-.slideCount {
-  color: var(--muted-fg);
-  font-size: var(--text-xs);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  flex-shrink: 0;
-}
-
 .slideScroll {
   flex: 1;
   min-height: 0;
@@ -134,138 +125,7 @@
   padding: var(--space-2) var(--space-1) var(--space-2) var(--space-1);
 }
 
-// One tree row. Grid keeps the chevron, name, and badge in aligned columns
-// across every depth so the tree reads like a real outline. Depth-driven
-// indent uses a CSS var written by the JSX side.
-.treeRow {
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
-  align-items: center;
-  gap: var(--space-1);
-  min-height: 1.75rem;
-  padding-left: calc(var(--space-3) + var(--space-3) * var(--tree-depth, 0));
-  padding-right: var(--space-2);
-  border-radius: var(--radius-sm);
-
-  &:hover {
-    background: color-mix(in srgb, var(--muted) 30%, transparent);
-  }
-}
-
-// Trailing star column. Compact so the leaf label + variant badge get
-// the space they need. `treeFavSpacer` reserves the same width so
-// non-clickable rows (folders) stay column-aligned with clickable ones.
-.treeFav {
-  padding: 0;
-  min-width: 1.5rem;
-  height: 1.5rem;
-}
-
-.treeFavSpacer {
-  display: inline-block;
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-.chevronBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--muted-fg);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-
-  &:hover {
-    color: var(--fg);
-    background: color-mix(in srgb, var(--fg) 8%, transparent);
-  }
-
-  &:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--fg) 40%, transparent);
-    outline-offset: -2px;
-  }
-}
-
-// Reserve the same width as .chevronBtn so leaf labels line up under folder
-// labels regardless of whether a chevron is present on the row.
-.chevronSpacer {
-  display: inline-block;
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.treeLink,
-.treePlain {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  min-width: 0;
-  color: inherit;
-  text-decoration: none;
-  padding: var(--space-1) 0;
-}
-
-.treeLink {
-  color: var(--fg);
-
-  &:hover .treeName {
-    text-decoration: underline;
-  }
-
-  &:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--fg) 40%, transparent);
-    outline-offset: 2px;
-    border-radius: var(--radius-sm);
-  }
-}
-
-.treePlain {
-  color: var(--muted-fg);
-}
-
-.treeName {
-  font-size: var(--text-sm);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
-
-.treeTitle {
-  font-size: var(--text-xs);
-  color: var(--muted-fg);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
-
-.variantBadge {
-  padding: 0 var(--space-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--fg);
-  background: color-mix(in srgb, var(--muted) 60%, transparent);
-  font-size: var(--text-xs);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  white-space: nowrap;
-}
-
-// Wrapper for child rows. Keeps the DOM clean and lets us style the whole
-// subtree as a group later (e.g. collapse animation) without touching each
-// row.
-.children {
-  display: contents;
-}
-
-// Picker slide — vertical list of site buttons. Same visual language as the
-// tree rows so the two slides feel of a piece.
+// Picker slide — vertical list of site buttons.
 .pickerList {
   list-style: none;
   margin: 0;
@@ -299,20 +159,15 @@
   }
 }
 
-// Rows for hosts already pinned to the deck. Slight tint + a visible border
-// so the state is legible without hover interaction.
 .pickerRowPinned {
   background: color-mix(in srgb, var(--muted) 35%, transparent);
   border-color: var(--border);
 }
 
-// Row for the current browser tab's host (extension-only). Uses the theme's
-// focus/ring color so it stands out even against the pinned tint.
 .pickerRowCurrent {
   border-color: color-mix(in srgb, var(--fg) 30%, var(--border));
 }
 
-// Small "current" badge shown inline in the row label.
 .currentBadge {
   display: inline-block;
   margin-left: var(--space-2);
@@ -327,7 +182,6 @@
   vertical-align: middle;
 }
 
-// Pin toggle icons on the right side of a row.
 .pinIconActive {
   color: var(--fg);
   flex-shrink: 0;
@@ -373,28 +227,6 @@
   text-overflow: ellipsis;
 }
 
-.pickerCount {
-  color: var(--muted-fg);
-  font-size: var(--text-xs);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  flex-shrink: 0;
-}
-
-// Friendly note shown inside a site-tree slide when a freshly-pinned site
-// has no visits yet.
-.emptyTree {
-  padding: var(--space-3) var(--space-4);
-
-  & code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: var(--text-xs);
-    padding: 0 var(--space-1);
-    background: color-mix(in srgb, var(--muted) 60%, transparent);
-    border-radius: var(--radius-sm);
-  }
-}
-
-// Empty state inside the manage-pins slide when we know about zero hosts.
 .empty {
   display: flex;
   flex-direction: column;
