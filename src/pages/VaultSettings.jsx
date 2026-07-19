@@ -8,8 +8,9 @@ import styles from './VaultSettings.module.scss'
 
 // Vault preferences page. Currently the only knob is the auto-lock
 // idle timeout, but the page is set up to grow (passphrase change,
-// export, etc.) — new sections can be added as sibling <section>
-// blocks below the idle picker.
+// etc.) — new sections can be added as sibling <section> blocks
+// below the idle picker. JSON import/export lives on the separate
+// DatafeedSettings page under Settings.
 //
 // The change persists to `user_data.data.vault.idleTimeoutMs` via
 // VaultProvider.setIdleTimeoutMs (which shallow-merges so it doesn't

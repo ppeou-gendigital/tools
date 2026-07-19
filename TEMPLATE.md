@@ -36,6 +36,7 @@ Verify with `git diff` before committing.
    ```bash
    npm run icons
    ```
+   Extension sizes (16–128) stay transparent. Apple/PWA sizes (180, 192, 512) are filled opaque with the brand color so iOS home-screen icons do not show black corners.
 3. Commit `icons/tool.svg` and the generated PNGs (extension + PWA sizes).
 
 ## 4. Set up Supabase

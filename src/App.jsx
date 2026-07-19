@@ -15,6 +15,7 @@ import { Profile } from '@/pages/Profile'
 import { DeckDemo } from '@/pages/DeckDemo'
 import { Settings } from '@/pages/Settings'
 import { VaultSettings } from '@/pages/VaultSettings'
+import { DatafeedSettings } from '@/pages/DatafeedSettings'
 import { Credentials } from '@/pages/Credentials'
 import { CredentialEdit } from '@/pages/CredentialEdit'
 import { CreditCards } from '@/pages/CreditCards'
@@ -39,6 +40,7 @@ const VAULT_ROUTES = new Set([
   'credit-cards',
   'credit-card-new',
   'credit-card-edit',
+  'datafeed-settings',
 ])
 
 function Router() {
@@ -53,6 +55,7 @@ function Router() {
   if (route === 'deck-demo') return <DeckDemo />
   if (route === 'settings') return <Settings />
   if (route === 'vault-settings') return <VaultSettings />
+  if (route === 'datafeed-settings') return <DatafeedSettings />
   if (route === 'credentials') return <Credentials />
   if (route === 'credential-new') return <CredentialEdit />
   if (route === 'credential-edit') return <CredentialEdit />

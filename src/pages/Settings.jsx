@@ -1,4 +1,4 @@
-import { KeyRound } from 'lucide-react'
+import { ArrowLeftRight, KeyRound } from 'lucide-react'
 import { PageHeader } from '@/patterns/PageHeader'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { useAuth } from '@/providers/AuthProvider'
@@ -11,7 +11,7 @@ import styles from './Settings.module.scss'
 // reached by tapping a card; navigation back out lives in the app
 // toolbar / FAB.
 export function Settings() {
-  const { goVaultSettings } = useNavigation()
+  const { goVaultSettings, goDatafeedSettings } = useNavigation()
   const { user } = useAuth()
   const vault = useVault()
 
@@ -35,6 +35,14 @@ export function Settings() {
                 : 'Auto-lock and passphrase settings.'
             }
             onClick={goVaultSettings}
+          />
+        )}
+        {showVaultCard && (
+          <SettingsCard
+            icon={ArrowLeftRight}
+            title="Import / Export"
+            description="JSON datafeeds for credentials and credit cards."
+            onClick={goDatafeedSettings}
           />
         )}
       </ul>

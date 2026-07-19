@@ -100,7 +100,8 @@ accesso/
 │   │   ├── vaultItemOps.js     # pure credential/card row operators
 │   │   ├── vaultItemDirty.js   # dirty-id set for pull-on-unlock guards
 │   │   ├── vaultItemsCache.js  # optimistic React Query helpers
-│   │   └── userDataApi.js      # thin wrappers over supabaseSync
+│   │   ├── userDataApi.js      # thin wrappers over supabaseSync
+│   │   └── datafeed/           # JSON import/export parse + encrypt pipeline
 │   ├── providers/
 │   │   ├── AuthProvider.jsx    # session, requestOtp, verifyOtp, signOut
 │   │   ├── ThemeProvider.jsx   # light | dark | system, persisted
@@ -122,6 +123,7 @@ accesso/
 │       ├── _mixins.scss        # focus-ring, stack, row
 │       ├── _base.scss
 │       └── _layout.scss
+├── datafeed/                   # sample JSON feeds + contract for external systems
 ├── scripts/
 │   ├── generate-icons.mjs      # rasterize tool.svg -> extension + PWA PNGs
 │   └── init-tool.mjs           # rename template placeholders to your tool name
@@ -415,6 +417,28 @@ The **Capture** button on the Credentials list reads the username / password fie
 - **Email-first / two-step:** if the page only shows an email or username field (no password yet), Capture still seeds the username and leaves password empty — capture again after the password step to fill it in. See [src/lib/pageScanner.js](src/lib/pageScanner.js).
 - **SSO IdP pages:** when the tab is an identity provider that embeds `redirect_uri` / `returnUrl` (or Hearst-style base64 site path segments), Capture seeds the relying-party hostname so Autofill matches the real site. See [src/lib/ssoSiteUrl.js](src/lib/ssoSiteUrl.js).
 - **Current limitations (v1):** single form per page, first visible password field when several exist, no iframe traversal. See [src/lib/pageScanner.js](src/lib/pageScanner.js).
+
+### 6. Import / Export (JSON datafeeds)
+
+**Settings → Import / Export** downloads or uploads JSON feeds that match the
+plaintext shapes above. Samples and the full field contract for external
+systems live in [`datafeed/`](datafeed/):
+
+| File | Purpose |
+|------|---------|
+| [`datafeed/credentials.sample.json`](datafeed/credentials.sample.json) | Credentials-only feed (`type: "credentials"`) |
+| [`datafeed/credit-cards.sample.json`](datafeed/credit-cards.sample.json) | Cards-only feed (`type: "credit_cards"`) |
+| [`datafeed/vault.sample.json`](datafeed/vault.sample.json) | Combined feed (`type: "vault"`) |
+| [`datafeed/README.md`](datafeed/README.md) | Envelope + field rules |
+
+Import requires an unlocked vault: each item is encrypted client-side with
+`encryptRecord`, then written through the existing `createCredential` /
+`createCreditCard` sync path. Items are always created as **new rows** (no
+merge by URL or card number). Export omits row ids so feeds stay portable.
+
+Exported files are **plaintext secrets** — warn users before download.
+
+Implementation: [`src/lib/datafeed/`](src/lib/datafeed/) + [`src/pages/DatafeedSettings.jsx`](src/pages/DatafeedSettings.jsx).
 
 ---
 

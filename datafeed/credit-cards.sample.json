@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "type": "credit_cards",
+  "exportedAt": "2026-07-19T17:00:00.000Z",
+  "items": [
+    {
+      "displayName": "Chase Sapphire",
+      "cardholderName": "Ada Lovelace",
+      "cardNumber": "4242424242424242",
+      "expMonth": "12",
+      "expYear": "2029",
+      "cvv": "123",
+      "issuerBank": "Chase",
+      "billingZip": "94103",
+      "pin": "",
+      "notes": "Primary card — Stripe test Visa number.",
+      "isFavorite": true
+    },
+    {
+      "displayName": "",
+      "cardholderName": "Ada Lovelace",
+      "cardNumber": "5555555555554444",
+      "expMonth": "06",
+      "expYear": "2028",
+      "cvv": "456",
+      "issuerBank": "Amex",
+      "billingZip": "10001",
+      "pin": "",
+      "notes": "Blank displayName → Accesso shows Issuer •••• last4 after import.",
+      "isFavorite": false
+    }
+  ]
+}
