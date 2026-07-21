@@ -582,6 +582,14 @@ A GitHub repo publishes exactly **one** Pages site, and each deploy replaces the
 
 When adding a third tool, extend every Pages workflow's dual-build to include the new branch. For a long-term split, give the new tool its own repo instead.
 
+### Install as a PWA (web build only)
+
+The web deploy is an installable Progressive Web App (manifest + service worker for the app shell). The Chrome extension build is unchanged and is not a PWA.
+
+- **iPhone / iPad (Safari):** open the live URL → Share → **Add to Home Screen**.
+- **Android (Chrome):** open the live URL → browser menu → **Install app** / **Add to Home screen** when Chrome offers it.
+- **Updates:** [`src/pwaRegister.js`](src/pwaRegister.js) checks for a new service worker on app focus / visibility and reloads automatically. Home-screen apps have no hard-reload control; if a build still looks stuck after deploy, force-quit the PWA once and reopen.
+
 ---
 
 ## This branch
