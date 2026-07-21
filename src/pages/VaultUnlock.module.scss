@@ -85,13 +85,31 @@
 
 .inputWrap {
   position: relative;
+
+  // Room for the trailing eye toggle inside the field.
+  :global(input) {
+    padding-right: calc(var(--space-3) + 26px);
+  }
 }
 
-.revealBtn {
+.inputWrapWithHint {
+  // Eye + question-mark hint actions.
+  :global(input) {
+    padding-right: calc(var(--space-3) + 52px);
+  }
+}
+
+.inputActions {
   position: absolute;
   top: 50%;
   right: 6px;
   transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.revealBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -104,9 +122,14 @@
   cursor: pointer;
   border-radius: var(--radius-sm);
 
-  &:hover {
+  &:hover:not(:disabled) {
     color: var(--fg);
     background: var(--accent);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 }
 
@@ -122,28 +145,6 @@
 .optional {
   color: var(--muted-fg);
   font-weight: 400;
-}
-
-.passphraseHint {
-  display: grid;
-  gap: 2px;
-  margin: 0;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--fg) 4%, var(--card) 96%);
-  font-size: var(--text-xs);
-  line-height: 1.4;
-  color: var(--fg);
-  word-break: break-word;
-}
-
-.passphraseHintLabel {
-  color: var(--muted-fg);
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .status {

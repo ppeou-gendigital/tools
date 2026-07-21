@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import {
   ArrowLeft,
+  CircleHelp,
   Eye,
   EyeOff,
   KeyRound,
@@ -143,16 +144,18 @@ function SetupForm() {
               disabled={pending}
               placeholder="At least 8 characters"
             />
-            <button
-              type="button"
-              className={styles.revealBtn}
-              onClick={() => setReveal((v) => !v)}
-              aria-label={reveal ? 'Hide passphrase' : 'Show passphrase'}
-              title={reveal ? 'Hide passphrase' : 'Show passphrase'}
-              tabIndex={-1}
-            >
-              {reveal ? <EyeOff size={14} /> : <Eye size={14} />}
-            </button>
+            <div className={styles.inputActions}>
+              <button
+                type="button"
+                className={styles.revealBtn}
+                onClick={() => setReveal((v) => !v)}
+                aria-label={reveal ? 'Hide passphrase' : 'Show passphrase'}
+                title={reveal ? 'Hide passphrase' : 'Show passphrase'}
+                tabIndex={-1}
+              >
+                {reveal ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
           </div>
           {tooShort && (
             <span className={styles.hint}>Must be at least 8 characters.</span>
@@ -235,16 +238,22 @@ export function UnlockForm({ autoFocus = true, className }) {
   const vault = useVault()
   const inputRef = useRef(null)
   const errorId = useId()
-  const hintId = useId()
   const [passphrase, setPassphrase] = useState('')
   const [reveal, setReveal] = useState(false)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(null)
 
   const storedHint = vault.passphraseHint
-  const describedBy = [storedHint ? hintId : null, error ? errorId : null]
-    .filter(Boolean)
-    .join(' ') || undefined
+
+  function applyHint() {
+    if (!storedHint || pending) return
+    setPassphrase(storedHint)
+    setReveal(true)
+    if (error) setError(null)
+    requestAnimationFrame(() => {
+      inputRef.current?.focus()
+    })
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -272,16 +281,14 @@ export function UnlockForm({ autoFocus = true, className }) {
 
   return (
     <form className={cx(styles.form, className)} onSubmit={handleSubmit}>
-      {storedHint && (
-        <p id={hintId} className={styles.passphraseHint}>
-          <span className={styles.passphraseHintLabel}>Hint</span>
-          <span>{storedHint}</span>
-        </p>
-      )}
-
       <div className={styles.field}>
         <Label htmlFor="unlock-passphrase">Master passphrase</Label>
-        <div className={styles.inputWrap}>
+        <div
+          className={cx(
+            styles.inputWrap,
+            storedHint ? styles.inputWrapWithHint : null,
+          )}
+        >
           <Input
             ref={inputRef}
             id="unlock-passphrase"
@@ -294,20 +301,35 @@ export function UnlockForm({ autoFocus = true, className }) {
               if (error) setError(null)
             }}
             aria-invalid={error ? true : undefined}
-            aria-describedby={describedBy}
+            aria-describedby={error ? errorId : undefined}
             aria-busy={pending || undefined}
           />
-          <button
-            type="button"
-            className={styles.revealBtn}
-            onClick={() => setReveal((v) => !v)}
-            aria-label={reveal ? 'Hide passphrase' : 'Show passphrase'}
-            title={reveal ? 'Hide passphrase' : 'Show passphrase'}
-            tabIndex={-1}
-            disabled={pending}
-          >
-            {reveal ? <EyeOff size={14} /> : <Eye size={14} />}
-          </button>
+          <div className={styles.inputActions}>
+            {storedHint && (
+              <button
+                type="button"
+                className={styles.revealBtn}
+                onClick={applyHint}
+                aria-label="Fill with passphrase hint"
+                title="Fill with passphrase hint"
+                tabIndex={-1}
+                disabled={pending}
+              >
+                <CircleHelp size={14} />
+              </button>
+            )}
+            <button
+              type="button"
+              className={styles.revealBtn}
+              onClick={() => setReveal((v) => !v)}
+              aria-label={reveal ? 'Hide passphrase' : 'Show passphrase'}
+              title={reveal ? 'Hide passphrase' : 'Show passphrase'}
+              tabIndex={-1}
+              disabled={pending}
+            >
+              {reveal ? <EyeOff size={14} /> : <Eye size={14} />}
+            </button>
+          </div>
         </div>
       </div>
 
