@@ -46,6 +46,17 @@ export function normalizeRemotePrefs(remote) {
   }
 }
 
+// Optional plaintext reminder shown on the unlock screen. Never used
+// for crypto — keep it short and never put the passphrase itself here.
+export const PASSPHRASE_HINT_MAX_LENGTH = 80
+
+export function normalizePassphraseHint(v) {
+  if (typeof v !== 'string') return null
+  const trimmed = v.trim().replace(/\s+/g, ' ')
+  if (!trimmed) return null
+  return trimmed.slice(0, PASSPHRASE_HINT_MAX_LENGTH)
+}
+
 // Extract the vault meta subtree from a `user_data.data` blob. Kept
 // separate from normalizeRemotePrefs so a vault write never has to
 // re-run the prefs normalizer, and vice versa. Returns null when no
@@ -58,7 +69,10 @@ export function extractVaultMeta(data) {
   if (!verifier || typeof verifier.ciphertext !== 'string' || typeof verifier.iv !== 'string') {
     return null
   }
-  return { salt, iterations, verifier }
+  const hint = normalizePassphraseHint(vault.hint)
+  return hint
+    ? { salt, iterations, verifier, hint }
+    : { salt, iterations, verifier }
 }
 
 // Merge a fresh prefs blob into the existing `user_data.data`, keeping
