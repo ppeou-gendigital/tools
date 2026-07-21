@@ -25,7 +25,11 @@ export const VAULT_IDLE_OPTIONS = [
   { value: 7 * DAY, label: '1 week' },
 ]
 
-export const VAULT_IDLE_DEFAULT_MS = 15 * MIN
+// Default 24h so extension popup open/close stays unlocked across a
+// normal workday. Closing the popup does not lock; only expiry,
+// manual lock, or quitting the browser does. Users can still pick
+// shorter tiers in Vault settings.
+export const VAULT_IDLE_DEFAULT_MS = 1 * DAY
 
 // Clamp an incoming value (from user_data.data.vault.idleTimeoutMs)
 // to the nearest allowed choice. A remote value written by a future

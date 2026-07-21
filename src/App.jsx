@@ -10,6 +10,7 @@ import { VaultProvider, useVault } from '@/providers/VaultProvider'
 import { AppShell } from '@/templates/AppShell'
 import { AuthGate } from '@/blocks/AuthGate'
 import { VaultUnlockOverlay } from '@/blocks/VaultUnlockOverlay'
+import { BiometricEnrollPrompt } from '@/blocks/BiometricEnrollPrompt'
 import { Home } from '@/pages/Home'
 import { Profile } from '@/pages/Profile'
 import { DeckDemo } from '@/pages/DeckDemo'
@@ -89,6 +90,7 @@ export function App() {
                     <AuthGate>
                       <Router />
                       <VaultUnlockOverlay />
+                      <BiometricEnrollPrompt />
                     </AuthGate>
                   </AppShell>
                 </NavigationProvider>

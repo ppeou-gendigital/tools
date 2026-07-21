@@ -16,23 +16,25 @@ import {
   normalizePassphraseHint,
 } from '@/lib/prefs'
 import { VAULT_IDLE_OPTIONS } from '@/lib/vaultIdleOptions'
+import { BIO_REAUTH_OPTIONS } from '@/lib/biometrics'
 import { cx } from '@/lib/cx'
 import styles from './VaultSettings.module.scss'
 
 const MIN_PASSPHRASE_LENGTH = 8
 
-// Vault preferences: idle timeout, optional hint, and passphrase change.
+// Vault preferences: idle timeout, biometrics, hint, and passphrase change.
 // JSON import/export lives on the separate DatafeedSettings page.
 export function VaultSettings() {
   return (
     <div className={styles.page}>
       <PageHeader
         title="Vault"
-        subtitle="Auto-lock, hint, and passphrase settings."
+        subtitle="Auto-lock, biometrics, hint, and passphrase settings."
       />
       <div className={styles.layout}>
         <div className={styles.sideColumn}>
           <IdleTimeoutSection />
+          <BiometricUnlockSection />
           <PassphraseHintSection />
         </div>
         <div className={styles.mainColumn}>
@@ -76,8 +78,9 @@ function IdleTimeoutSection() {
       <div className={styles.sectionHead}>
         <h2 className={styles.sectionTitle}>Auto-lock after inactivity</h2>
         <p className={styles.sectionBody}>
-          Any activity (typing, clicking, focusing the popup) resets the
-          timer. The vault always locks when your browser closes.
+          Activity in the app resets the timer. Closing the extension popup
+          does not lock the vault. Quitting the browser always does. Default
+          is 1 day.
         </p>
       </div>
 
@@ -104,6 +107,133 @@ function IdleTimeoutSection() {
           />
         )}
       </div>
+
+      {error && (
+        <div className={cx(styles.status, styles.statusError)}>
+          <TriangleAlert size={12} aria-hidden="true" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {showSaved && !error && (
+        <div className={cx(styles.status, styles.statusOk)}>
+          <Check size={12} aria-hidden="true" />
+          <span>Saved.</span>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function BiometricUnlockSection() {
+  const vault = useVault()
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState(null)
+  const [showSaved, setShowSaved] = useState(false)
+
+  const capability = vault.biometrics?.capability
+  const enrollment = vault.biometrics?.enrollment
+  const enabled = Boolean(enrollment)
+  const label = capability?.label || 'biometrics'
+
+  useEffect(() => {
+    if (!showSaved) return
+    const id = setTimeout(() => setShowSaved(false), 1500)
+    return () => clearTimeout(id)
+  }, [showSaved])
+
+  async function handleToggle(nextEnabled) {
+    if (pending || vault.isRekeying) return
+    setPending(true)
+    setError(null)
+    setShowSaved(false)
+    try {
+      if (nextEnabled) {
+        if (!vault.isUnlocked) {
+          vault.requestUnlock({ dismissible: true })
+          throw new Error('Unlock the vault, then enable biometrics.')
+        }
+        await vault.enrollBiometrics()
+      } else if (
+        typeof window !== 'undefined' &&
+        window.confirm('Remove biometric unlock on this device?')
+      ) {
+        await vault.disableBiometrics()
+      } else if (enabled) {
+        return
+      }
+      setShowSaved(true)
+    } catch (err) {
+      setError(err?.message ?? String(err))
+    } finally {
+      setPending(false)
+    }
+  }
+
+  async function handleReauthChange(ms) {
+    if (pending || !enabled) return
+    setPending(true)
+    setError(null)
+    try {
+      await vault.setBiometricsReauthInterval(ms)
+      setShowSaved(true)
+    } catch (err) {
+      setError(err?.message ?? String(err))
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <section className={styles.section}>
+      <div className={styles.sectionHead}>
+        <h2 className={styles.sectionTitle}>Biometric unlock</h2>
+        <p className={styles.sectionBody}>
+          Use {label} on this device after one passphrase unlock. Your master
+          passphrase is still required on new devices.
+        </p>
+      </div>
+
+      {!capability?.available ? (
+        <p className={styles.fieldHint}>
+          {capability?.reason ||
+            'Biometrics aren’t available in this browser. Use your master passphrase.'}
+        </p>
+      ) : (
+        <>
+          <label className={styles.toggleRow}>
+            <input
+              type="checkbox"
+              checked={enabled}
+              disabled={pending || vault.isRekeying}
+              onChange={(e) => handleToggle(e.target.checked)}
+            />
+            <span>Unlock with {label} on this device</span>
+            {pending && (
+              <Loader2 size={14} className={styles.spin} aria-hidden="true" />
+            )}
+          </label>
+
+          {enabled && (
+            <div className={styles.selectWrap}>
+              <select
+                id="bio-reauth"
+                className={styles.select}
+                aria-label="Ask for biometrics again"
+                value={enrollment?.reauthIntervalMs ?? BIO_REAUTH_OPTIONS[1].value}
+                onChange={(e) => handleReauthChange(Number(e.target.value))}
+                disabled={pending || vault.isRekeying}
+              >
+                {BIO_REAUTH_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    Ask again: {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </>
+      )}
 
       {error && (
         <div className={cx(styles.status, styles.statusError)}>
@@ -374,7 +504,10 @@ function ChangePassphraseSection() {
       {showSaved && !error && (
         <div className={cx(styles.status, styles.statusOk)}>
           <Check size={12} aria-hidden="true" />
-          <span>Updated. Use the new passphrase next unlock.</span>
+          <span>
+            Updated. Biometric unlock was turned off — enable it again after
+            unlocking with your new passphrase.
+          </span>
         </div>
       )}
     </section>

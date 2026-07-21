@@ -126,7 +126,7 @@ function SetupForm() {
       <div className={styles.warning}>
         <TriangleAlert size={14} aria-hidden="true" />
         <span>
-          If you forget it, your credentials are gone. There is no reset.
+          If you forget it, encrypted data cannot be recovered.
         </span>
       </div>
 

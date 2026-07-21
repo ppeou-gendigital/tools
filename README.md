@@ -288,7 +288,7 @@ Because the derivation is deterministic (passphrase + per-user salt → same 256
 
 **Credentials** is the first consumer of the vault and doubles as a worked example (see below). Future features (secure notes, encrypted files, saved sessions, etc.) plug into the same primitives.
 
-> **Warning**: if you forget the master passphrase, every encrypted feature is unrecoverable. There is no reset — that is the point of E2EE. See [src/providers/VaultProvider.jsx](src/providers/VaultProvider.jsx) and [src/lib/vaultCrypto.js](src/lib/vaultCrypto.js).
+> **Warning**: if you forget the master passphrase, every encrypted feature is unrecoverable — that is the point of E2EE. Optional **biometric unlock** (WebAuthn + PRF) is a per-device convenience after one passphrase unlock; it does not replace the passphrase on new devices. See [src/providers/VaultProvider.jsx](src/providers/VaultProvider.jsx), [src/lib/vaultCrypto.js](src/lib/vaultCrypto.js), and [src/lib/biometrics.js](src/lib/biometrics.js).
 
 ### 1. Vault metadata (rides on `user_data.data`)
 
@@ -303,7 +303,7 @@ No dedicated table for vault meta — it piggybacks on the existing `user_data` 
     "salt": "<base64 16 bytes>",
     "iterations": 310000,
     "verifier": { "ciphertext": "<base64>", "iv": "<base64>" },
-    "idleTimeoutMs": 900000
+    "idleTimeoutMs": 86400000
   }
 }
 ```
@@ -403,7 +403,9 @@ Typing the master passphrase every time the popup opens gets old fast. To keep t
 
 The cached passphrase re-derives the same non-extractable AES key on next popup / tab load — the CryptoKey itself never leaves memory. See [src/lib/sessionStorage.js](src/lib/sessionStorage.js).
 
-An **idle timeout** locks the vault after a configurable window of user inactivity (`pointerdown` / `keydown` / `visibilitychange` count as activity). The list of options and the default live in [src/lib/vaultIdleOptions.js](src/lib/vaultIdleOptions.js). The current selection is stored on `user_data.data.vault.idleTimeoutMs` (see the JSON above) so it syncs across devices, and can be changed from **Settings → Vault**.
+An **idle timeout** (default **24 hours**) ends the unlocked session after inactivity or when the session `expiresAt` elapses. Closing the extension popup does **not** lock the vault. Quitting the browser clears session storage and always locks. Options live in [src/lib/vaultIdleOptions.js](src/lib/vaultIdleOptions.js); the selection syncs via `user_data.data.vault.idleTimeoutMs` (**Settings → Vault**).
+
+**Biometric unlock** (Face ID / Touch ID / Windows Hello where WebAuthn PRF is available) wraps the passphrase on-device after opt-in. Unlock overlay prefers biometrics when enrolled; passphrase remains the fallback. Changing the master passphrase clears biometric enrollment on that device.
 
 Anything that ends the vault session — manual lock, sign-out, auth switch, browser close, or the timeout firing — clears the session cache, drops the in-memory `CryptoKey`, and evicts any decrypted data (`credentials` and `credit_cards` queries today; future vault-backed queries should follow the same pattern) from React Query, so no plaintext lingers.
 

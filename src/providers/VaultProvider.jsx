@@ -27,6 +27,15 @@ import {
   VAULT_IDLE_DEFAULT_MS,
   normalizeIdleTimeoutMs,
 } from '@/lib/vaultIdleOptions'
+import {
+  clearBiometricEnrollment,
+  enrollBiometrics as enrollBiometricsDevice,
+  probeBiometricsCapability,
+  readBiometricEnrollment,
+  setBiometricReauthInterval,
+  touchBiometricStrongUnlock,
+  unlockWithBiometrics as unlockPassphraseWithBiometrics,
+} from '@/lib/biometrics'
 
 const MIN_PASSPHRASE_LENGTH = 8
 
@@ -132,18 +141,84 @@ export function VaultProvider({ children }) {
   // True while changePassphrase is re-encrypting rows / flipping meta.
   // Gates encrypt/decrypt so nothing else writes under the old key.
   const [isRekeying, setIsRekeying] = useState(false)
+  const [biometrics, setBiometrics] = useState({
+    capability: null,
+    enrollment: null,
+    loading: true,
+  })
 
   const keyRef = useRef(null)
   const metaRef = useRef(null)
   const failedAttemptsRef = useRef(0)
   const idleTimeoutMsRef = useRef(VAULT_IDLE_DEFAULT_MS)
   const rekeyingRef = useRef(false)
+  // Kept only while unlocked so Vault settings can enroll biometrics
+  // without re-typing the passphrase. Cleared on lock.
+  const passphraseRef = useRef(null)
 
   const userId = user?.id ?? null
 
   useEffect(() => {
     idleTimeoutMsRef.current = idleTimeoutMs
   }, [idleTimeoutMs])
+
+  const refreshBiometrics = useCallback(async () => {
+    if (!userId) {
+      setBiometrics({ capability: null, enrollment: null, loading: false })
+      return
+    }
+    try {
+      const [capability, enrollment] = await Promise.all([
+        probeBiometricsCapability(),
+        readBiometricEnrollment(userId),
+      ])
+      setBiometrics({ capability, enrollment, loading: false })
+    } catch {
+      setBiometrics({
+        capability: {
+          available: false,
+          reason: 'Could not check biometric support.',
+        },
+        enrollment: null,
+        loading: false,
+      })
+    }
+  }, [userId])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      if (!userId) {
+        if (!cancelled) {
+          setBiometrics({ capability: null, enrollment: null, loading: false })
+        }
+        return
+      }
+      try {
+        const [capability, enrollment] = await Promise.all([
+          probeBiometricsCapability(),
+          readBiometricEnrollment(userId),
+        ])
+        if (!cancelled) {
+          setBiometrics({ capability, enrollment, loading: false })
+        }
+      } catch {
+        if (!cancelled) {
+          setBiometrics({
+            capability: {
+              available: false,
+              reason: 'Could not check biometric support.',
+            },
+            enrollment: null,
+            loading: false,
+          })
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
 
   // Single sync-and-load effect. All state mutations happen inside
   // an async body — the first `await Promise.resolve()` yields to a
@@ -210,6 +285,7 @@ export function VaultProvider({ children }) {
             if (cancelled) return
             if (ok) {
               keyRef.current = key
+              passphraseRef.current = cached.passphrase
               // Refresh the expiry so a hydrate counts as activity.
               await writeCache(userId, cached.passphrase, idleTimeoutMsRef.current)
               setStatus(STATUS.UNLOCKED)
@@ -273,6 +349,7 @@ export function VaultProvider({ children }) {
       metaRef.current = meta
       failedAttemptsRef.current = 0
       await writeCache(userId, passphrase, idleTimeoutMsRef.current)
+      passphraseRef.current = passphrase
       setPassphraseHintState(hint)
       setStatus(STATUS.UNLOCKED)
       setError(null)
@@ -304,7 +381,13 @@ export function VaultProvider({ children }) {
       }
       keyRef.current = key
       failedAttemptsRef.current = 0
+      passphraseRef.current = passphrase
       await writeCache(userId, passphrase, idleTimeoutMsRef.current)
+      touchBiometricStrongUnlock(userId).then((enrollment) => {
+        if (enrollment) {
+          setBiometrics((prev) => ({ ...prev, enrollment }))
+        }
+      })
       setStatus(STATUS.UNLOCKED)
       setError(null)
       setUnlockPrompt(null)
@@ -312,8 +395,56 @@ export function VaultProvider({ children }) {
     [userId],
   )
 
+  const unlockWithBiometrics = useCallback(async () => {
+    if (!userId) throw new Error('unlockWithBiometrics: not signed in')
+    const passphrase = await unlockPassphraseWithBiometrics(userId)
+    await unlock(passphrase)
+    await refreshBiometrics()
+  }, [refreshBiometrics, unlock, userId])
+
+  const enrollDeviceBiometrics = useCallback(
+    async (options = {}) => {
+      if (!userId) throw new Error('enrollBiometrics: not signed in')
+      if (!keyRef.current) {
+        throw new Error('Unlock the vault before enabling biometrics.')
+      }
+      const passphrase = passphraseRef.current
+      if (!passphrase) {
+        throw new Error(
+          'Re-unlock with your passphrase, then enable biometrics.',
+        )
+      }
+      const enrollment = await enrollBiometricsDevice(
+        userId,
+        passphrase,
+        options,
+      )
+      setBiometrics((prev) => ({ ...prev, enrollment }))
+      return enrollment
+    },
+    [userId],
+  )
+
+  const disableBiometrics = useCallback(async () => {
+    if (!userId) return
+    await clearBiometricEnrollment(userId)
+    setBiometrics((prev) => ({ ...prev, enrollment: null }))
+  }, [userId])
+
+  const setBiometricsReauthInterval = useCallback(
+    async (ms) => {
+      if (!userId) return
+      const enrollment = await setBiometricReauthInterval(userId, ms)
+      if (enrollment) {
+        setBiometrics((prev) => ({ ...prev, enrollment }))
+      }
+    },
+    [userId],
+  )
+
   const lock = useCallback(() => {
     keyRef.current = null
+    passphraseRef.current = null
     failedAttemptsRef.current = 0
     queryClient.removeQueries({ queryKey: ['credentials', userId] })
     queryClient.removeQueries({ queryKey: ['credit_cards', userId] })
@@ -492,8 +623,12 @@ export function VaultProvider({ children }) {
           verifier: newVerifier,
         }
         keyRef.current = newKey
+        passphraseRef.current = nextPassphrase
         failedAttemptsRef.current = 0
         await writeCache(userId, nextPassphrase, idleTimeoutMsRef.current)
+        // Old biometric wrap was under the previous passphrase.
+        await clearBiometricEnrollment(userId)
+        setBiometrics((prev) => ({ ...prev, enrollment: null }))
 
         queryClient.setQueryData(['credentials', userId], nextCredRows)
         queryClient.setQueryData(['credit_cards', userId], nextCardRows)
@@ -617,6 +752,12 @@ export function VaultProvider({ children }) {
       dismissUnlock,
       setup,
       unlock,
+      unlockWithBiometrics,
+      enrollBiometrics: enrollDeviceBiometrics,
+      disableBiometrics,
+      setBiometricsReauthInterval,
+      refreshBiometrics,
+      biometrics,
       changePassphrase,
       lock,
       retryLoad,
@@ -636,6 +777,12 @@ export function VaultProvider({ children }) {
       dismissUnlock,
       setup,
       unlock,
+      unlockWithBiometrics,
+      enrollDeviceBiometrics,
+      disableBiometrics,
+      setBiometricsReauthInterval,
+      refreshBiometrics,
+      biometrics,
       changePassphrase,
       lock,
       retryLoad,
