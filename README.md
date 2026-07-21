@@ -70,7 +70,7 @@ Inspect:
 | `npm run build`     | Production extension build → `dist/`                               |
 | `npm run build:web` | Production web build → `dist-web/`                                 |
 | `npm run lint`      | ESLint over `src/**/*.{js,jsx}`                                    |
-| `npm run icons`     | Rasterize `icons/tool.svg` into the four PNG sizes                 |
+| `npm run icons`     | Rasterize `icons/tool.svg` → transparent extension + opaque iOS/PWA PNGs |
 | `npm run init`      | Rename the template to a new tool name (see below)                 |
 
 ---
@@ -90,23 +90,25 @@ TOOLNAME/
 │   ├── env.js                  # isExtension(), env accessors, dev auto-login
 │   ├── lib/
 │   │   ├── supabase.js         # createClient + storage adapter + PKCE
+│   │   ├── supabaseSync.js     # CAS applySyncOp / pullSync / enqueueSyncOp
+│   │   ├── userDataOps.js      # pure op factories for the prefs row
 │   │   ├── storage.js          # chrome.storage.local <-> localStorage
 │   │   ├── cx.js               # className concatenator
 │   │   ├── queryClient.js      # React Query client
 │   │   ├── queryPersister.js   # Async storage persister
 │   │   ├── prefs.js            # normalizers for the user_data blob
-│   │   └── userDataApi.js      # fetch/upsert user_data row
+│   │   └── userDataApi.js      # thin wrappers → supabaseSync
 │   ├── providers/
 │   │   ├── AuthProvider.jsx    # session, requestOtp, verifyOtp, signOut
-│   │   ├── ThemeProvider.jsx   # light | dark | system, persisted
+│   │   ├── ThemeProvider.jsx   # light | dark | system; local + CAS push
 │   │   ├── FontSizeProvider.jsx
 │   │   ├── FabCornerProvider.jsx
 │   │   ├── NavigationProvider.jsx  # in-memory router (no react-router)
-│   │   └── PrefsSync.jsx       # two-way sync theme/fontSize/fabCorner to Supabase
-│   ├── molecules/              # Button, Input, Label, IconButton, MenuRow, Divider
-│   ├── patterns/               # Card, MenuPanel, AccountRow, AppearanceRow, AboutRow, DevBadgeItem, DeckDemoItem
+│   │   └── PrefsSync.jsx       # pull-only on sign-in (providers push)
+│   ├── molecules/              # Button, Input, Label, Logo, IconButton, MenuRow, Divider
+│   ├── patterns/               # Card, MenuPanel, PageHeader, PageShortcuts, …
 │   ├── blocks/                 # AuthGate, Deck, FloatingMenu, SignInForm
-│   ├── templates/AppShell.jsx  # grid header/main/footer
+│   ├── templates/AppShell.jsx  # scrollable main + FloatingMenu FAB
 │   ├── pages/                  # Home, Profile, Settings, DeckDemo
 │   ├── hooks/useCornerDrag.js  # FAB corner-drag + snap
 │   └── tokens/
@@ -117,9 +119,10 @@ TOOLNAME/
 │       ├── _base.scss
 │       └── _layout.scss
 ├── scripts/
-│   ├── generate-icons.mjs      # rasterize tool.svg -> 4 PNGs
+│   ├── generate-icons.mjs      # dual pipeline: transparent ext + opaque iOS/PWA
 │   └── init-tool.mjs           # rename template placeholders to your tool name
-└── icons/tool.svg              # source SVG for the four PNG sizes
+├── icons/                      # tool.svg + transparent extension PNGs (16–128)
+└── public/icons/               # opaque iOS / PWA PNGs (180 / 192 / 512)
 ```
 
 ---
@@ -237,12 +240,12 @@ create policy "user_data self-update" on public.user_data for update using (auth
 
 Row-scoped RLS covers all columns automatically. No trigger needed — the app upserts on first change, so rows only exist for users who have actually signed in and touched a pref.
 
-**Auto-sync behavior** (see [src/providers/PrefsSync.jsx](src/providers/PrefsSync.jsx)):
+**Auto-sync behavior** (CAS via [src/lib/supabaseSync.js](src/lib/supabaseSync.js)):
 
-- **On sign-in** the app fetches the row and applies it via the provider setters (remote wins). If there's no cloud row yet, the current local values become the sync baseline.
-- **On any local change** (theme toggle, +/- font size, FAB corner drag) the app upserts after a 500ms debounce (local wins during the session). Rapid clicks coalesce into a single request.
+- **On sign-in** [PrefsSync](src/providers/PrefsSync.jsx) pulls the row and applies it via provider setters with `{ fromRemote: true }`. Fields the user changed mid-fetch are skipped (dirty-key guard).
+- **On any local change** (theme toggle, +/- font size, FAB corner drag) the owning provider writes local storage first, then pushes through `enqueueSyncOp` → `applySyncOp` with a pure op from [userDataOps.js](src/lib/userDataOps.js). CAS retries on `updated_at` so concurrent edits to other fields are preserved.
 
-Two guards prevent ping-pong: an "applying remote" flag skips the auto-push that would otherwise fire from the setter calls during a pull, and a `lastSynced` ref short-circuits the push effect when the current values already match the cloud.
+Recipe for a new synced field: add a normalizer in `prefs.js`, an `opSet*` factory in `userDataOps.js`, push from the provider, and teach PrefsSync's pull how to apply the remote value. For domain-keyed streams (favorites / visits), copy the helpers from [`tool/loopy`](../../tree/tool/loopy).
 
 ### 5. Dev auto-login (optional)
 
@@ -274,9 +277,16 @@ Add more as your tool needs them (`activeTab`, `tabs`, `scripting`, `webNavigati
 
 ## CI / GitHub Pages
 
+Branch naming drives the live path. After `npm run init -- --name TOOLNAME`:
+
+| | |
+| --- | --- |
+| Branch | `tool/TOOLNAME` |
+| Vite `base` / `outDir` | `/tools/TOOLNAME/` · `dist-web/TOOLNAME` |
+| Live URL | `https://<user>.github.io/tools/TOOLNAME/` |
+
 - **Workflow**: [`.github/workflows/deploy-TOOLNAME-pages.yml`](.github/workflows/deploy-TOOLNAME-pages.yml)
 - **Trigger**: push to `tool/TOOLNAME` (or manual `workflow_dispatch` from the Actions tab)
-- **Live URL**: `https://<user>.github.io/tools/TOOLNAME/`
 - **Build**: `npm run build:web` → `dist-web/TOOLNAME/` (nested so the uploaded artifact serves at `/tools/TOOLNAME/`)
 - **Repo secrets required** (Settings → Secrets and variables → Actions):
   - `VITE_SUPABASE_URL`
@@ -285,12 +295,20 @@ Add more as your tool needs them (`activeTab`, `tabs`, `scripting`, `webNavigati
 
 `scripts/init-tool.mjs` renames both this workflow file and the release workflow to match your tool's name, plus updates the branch triggers.
 
+### Install as a PWA (web build only)
+
+The web deploy is an installable Progressive Web App (manifest + service worker for the app shell). The Chrome extension build is unchanged and is not a PWA.
+
+- **iPhone / iPad**: Safari → Share → **Add to Home Screen**.
+- **Desktop Chrome / Edge**: address-bar install icon or Install app menu.
+- **Updates:** [`src/pwaRegister.js`](src/pwaRegister.js) checks for a new service worker on app focus / visibility and reloads automatically (`registerType: 'autoUpdate'`). Home-screen apps have no hard-reload control; if a build still looks stuck after deploy, force-quit the PWA once and reopen.
+
 ### One Pages site per repo — important
 
-A GitHub repo publishes exactly **one** Pages site. Every deploy to the `github-pages` environment **replaces the entire site**. If `tool/loopy` deploys today and `tool/foo` deploys tomorrow, `/tools/loopy/` will 404 until loopy is redeployed. The `/tools/<tool>/` subpath convention gives us clean, stable URLs but does *not* enable coexistence.
+A GitHub repo publishes exactly **one** Pages site. Every deploy to the `github-pages` environment **replaces the entire site**. If `tool/loopy` deploys today and `tool/foo` deploys tomorrow, `/tools/loopy/` will 404 until loopy is redeployed. The `/tools/<tool>/` subpath convention gives us clean, stable URLs but does *not* enable coexistence by itself.
 
 If two tools need Pages simultaneously, options in order of preference:
 
-1. Give the second tool its own dedicated GitHub repo (recommended long-term).
-2. Host the second tool on Vercel / Cloudflare Pages / Netlify.
-3. Build a coordinator workflow that combines all tools' builds into one artifact (complex — not recommended unless the tool count grows).
+1. Use a **multi-tool coordinator** workflow that checks out sibling branches, builds every tool, and uploads one combined artifact (see [`tool/accesso`](../../tree/tool/accesso) `deploy-accesso-pages.yml`).
+2. Give the second tool its own dedicated GitHub repo.
+3. Host the second tool on Vercel / Cloudflare Pages / Netlify.

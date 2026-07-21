@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { crx } from '@crxjs/vite-plugin'
+import { VitePWA } from 'vite-plugin-pwa'
 import { resolve } from 'node:path'
 import manifest from './manifest.json' with { type: 'json' }
 
@@ -8,9 +9,13 @@ import manifest from './manifest.json' with { type: 'json' }
 //   npm run dev          -> web dev server (index.html)
 //   npm run build        -> extension prod build (uses manifest.json via CRXJS)  [mode=extension]
 //   npm run build:web    -> web prod build to dist-web/                          [mode=web]
+//
+// Branch naming → Pages URL (after `npm run init -- --name foo`):
+//   branch tool/foo  →  base /tools/foo/  →  https://<user>.github.io/tools/foo/
 export default defineConfig(({ command, mode }) => {
   const isExtension = mode === 'extension'
   const isBuild = command === 'build'
+  const webBase = '/tools/TOOLNAME/'
 
   return {
     // Web PROD build is intended to be served from
@@ -18,10 +23,67 @@ export default defineConfig(({ command, mode }) => {
     // be prefixed with the repo-and-tool subpath. Dev server (`npm run
     // dev`) keeps '/' so http://localhost:5173/ works, and the extension
     // build always resolves at the extension root.
-    base: !isExtension && isBuild ? '/tools/TOOLNAME/' : '/',
+    base: !isExtension && isBuild ? webBase : '/',
+    // Web build serves public/ (PWA + apple-touch icons under public/icons/).
+    // Extension build keeps icons via the MV3 manifest paths in icons/.
+    publicDir: isExtension ? false : resolve(__dirname, 'public'),
     plugins: [
       react(),
-      ...(isExtension ? [crx({ manifest })] : []),
+      ...(isExtension
+        ? [crx({ manifest })]
+        : [
+            VitePWA({
+              // Registration lives in src/pwaRegister.js (visibility/focus
+              // update checks for iOS home-screen). Don't double-inject.
+              injectRegister: false,
+              registerType: 'autoUpdate',
+              includeAssets: [
+                'icons/icon-180.png',
+                'icons/icon-192.png',
+                'icons/icon-512.png',
+              ],
+              manifest: {
+                name: 'TOOLNAME',
+                short_name: 'TOOLNAME',
+                description: 'TOOLNAME — React + Supabase web app',
+                theme_color: '#0a0a0a',
+                background_color: '#0a0a0a',
+                display: 'standalone',
+                start_url: './',
+                scope: './',
+                icons: [
+                  {
+                    src: 'icons/icon-192.png',
+                    sizes: '192x192',
+                    type: 'image/png',
+                  },
+                  {
+                    src: 'icons/icon-512.png',
+                    sizes: '512x512',
+                    type: 'image/png',
+                  },
+                  {
+                    src: 'icons/icon-512.png',
+                    sizes: '512x512',
+                    type: 'image/png',
+                    purpose: 'maskable',
+                  },
+                ],
+              },
+              workbox: {
+                // Precache the app shell only. No runtimeCaching for
+                // Supabase / API — cloud data stays network-fetched.
+                globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+                navigateFallback: 'index.html',
+                cleanupOutdatedCaches: true,
+                skipWaiting: true,
+                clientsClaim: true,
+              },
+              devOptions: {
+                enabled: false,
+              },
+            }),
+          ]),
     ],
     resolve: {
       alias: {
