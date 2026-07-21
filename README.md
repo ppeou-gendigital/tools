@@ -478,6 +478,7 @@ The web deploy is an installable Progressive Web App (manifest + service worker 
 - **iPhone / iPad (Safari):** open the live URL → Share → **Add to Home Screen**. The icon uses the Accesso touch icon; the app opens in standalone mode (no Safari chrome).
 - **Android (Chrome):** open the live URL → browser menu → **Install app** / **Add to Home screen** when Chrome offers it.
 - Vault data is **not** cached offline — you still need network access to Supabase.
+- **Updates:** [`src/pwaRegister.js`](src/pwaRegister.js) checks for a new service worker on app focus / visibility and reloads automatically (`registerType: 'autoUpdate'`). Home-screen apps have no hard-reload control; if a build still looks stuck after deploy, force-quit the PWA once and reopen.
 
 ### One Pages site per repo — dual-build coexistence
 

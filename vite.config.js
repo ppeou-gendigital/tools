@@ -31,6 +31,9 @@ export default defineConfig(({ command, mode }) => {
         ? [crx({ manifest })]
         : [
             VitePWA({
+              // Registration lives in src/pwaRegister.js (visibility/focus
+              // update checks for iOS home-screen). Don't double-inject.
+              injectRegister: false,
               registerType: 'autoUpdate',
               includeAssets: ['icon-180.png', 'icon-192.png', 'icon-512.png'],
               manifest: {
@@ -66,6 +69,9 @@ export default defineConfig(({ command, mode }) => {
                 // Supabase / API — vault data stays network-fetched.
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
                 navigateFallback: 'index.html',
+                cleanupOutdatedCaches: true,
+                skipWaiting: true,
+                clientsClaim: true,
               },
               devOptions: {
                 enabled: false,
