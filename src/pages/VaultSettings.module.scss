@@ -96,6 +96,16 @@
   color: color-mix(in srgb, var(--fg) 60%, transparent);
 }
 
+.hintForm {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-1);
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
