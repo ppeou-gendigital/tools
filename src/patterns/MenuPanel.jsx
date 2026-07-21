@@ -1,5 +1,6 @@
 import { useAuth } from '@/providers/AuthProvider'
 import { Divider } from '@/molecules/Divider'
+import { Logo } from '@/molecules/Logo'
 import { AboutRow } from '@/patterns/AboutRow'
 import { AccountRow } from '@/patterns/AccountRow'
 import { AppearanceRow } from '@/patterns/AppearanceRow'
@@ -16,6 +17,11 @@ export function MenuPanel({ corner, onClose }) {
 
   return (
     <div role="menu" className={styles.panel} data-corner={corner}>
+      <div className={styles.brand}>
+        <Logo size={28} alt={TOOL_NAME} />
+        <span className={styles.brandName}>{TOOL_NAME}</span>
+      </div>
+      <Divider />
       <AppearanceRow onClose={onClose} />
       {signedIn && <Divider />}
       {signedIn && <AccountRow onClose={onClose} />}

@@ -1,3 +1,19 @@
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  min-width: 0;
+}
+
+.brandName {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .panel {
   // Positioned relative to the FloatingMenu block's .wrap (which spans the
   // shell). data-corner mirrors the FAB corner and offsets past the FAB by

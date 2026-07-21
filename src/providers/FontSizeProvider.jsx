@@ -4,9 +4,16 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { asyncStorage } from '@/lib/storage'
+import {
+  applySyncOp,
+  enqueueSyncOp,
+  opSetFontSize,
+} from '@/lib/supabaseSync'
+import { useAuth } from '@/providers/AuthProvider'
 
 const FontSizeContext = createContext(null)
 
@@ -31,8 +38,14 @@ function applyFontSize(size) {
 }
 
 export function FontSizeProvider({ children }) {
+  const { user } = useAuth()
+  const userId = user?.id ?? null
+
   const [size, setSizeState] = useState(DEFAULT)
   const [ready, setReady] = useState(false)
+  const skipSyncRef = useRef(false)
+  const hydratedRef = useRef(false)
+  const lastSyncedSizeRef = useRef(null)
 
   useEffect(() => {
     let mounted = true
@@ -53,11 +66,36 @@ export function FontSizeProvider({ children }) {
     if (!ready) return
     applyFontSize(size)
     asyncStorage.setItem(STORAGE_KEY, String(size))
-  }, [size, ready])
+    if (!hydratedRef.current) {
+      hydratedRef.current = true
+      lastSyncedSizeRef.current = size
+      return
+    }
+    if (skipSyncRef.current) {
+      skipSyncRef.current = false
+      lastSyncedSizeRef.current = size
+      return
+    }
+    // Skip when only userId changed (sign-in) — PrefsSync pull owns that.
+    if (lastSyncedSizeRef.current === size) return
+    lastSyncedSizeRef.current = size
+    if (!userId) return
+    enqueueSyncOp({
+      stream: 'prefs',
+      key: 'fontSize',
+      fn: () =>
+        applySyncOp({
+          stream: 'prefs',
+          userId,
+          op: opSetFontSize(size),
+        }),
+    }).catch((err) => {
+      console.warn('[toolname] fontSize sync failed:', err?.message ?? err)
+    })
+  }, [size, ready, userId])
 
-  // Imperative setter used by remote-sync code that needs to write an exact
-  // value. UI still uses the +/- controls below, which snap on their own.
-  const setSize = useCallback((n) => {
+  const setSize = useCallback((n, { fromRemote = false } = {}) => {
+    if (fromRemote) skipSyncRef.current = true
     setSizeState(clamp(n))
   }, [])
 

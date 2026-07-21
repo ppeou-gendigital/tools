@@ -7,6 +7,12 @@ import {
   useState,
 } from 'react'
 import { asyncStorage } from '@/lib/storage'
+import {
+  applySyncOp,
+  enqueueSyncOp,
+  opSetFabCorner,
+} from '@/lib/supabaseSync'
+import { useAuth } from '@/providers/AuthProvider'
 
 const FabCornerContext = createContext(null)
 
@@ -22,6 +28,9 @@ function isValidCorner(v) {
 // written by anything on the page (PrefsSync, tests, dev tools). The hook
 // keeps ownership of the gesture; this provider owns the persisted value.
 export function FabCornerProvider({ children }) {
+  const { user } = useAuth()
+  const userId = user?.id ?? null
+
   const [corner, setCornerState] = useState(DEFAULT_CORNER)
   const [ready, setReady] = useState(false)
 
@@ -37,11 +46,29 @@ export function FabCornerProvider({ children }) {
     }
   }, [])
 
-  const setCorner = useCallback(async (next) => {
-    if (!isValidCorner(next)) return
-    setCornerState(next)
-    await asyncStorage.setItem(STORAGE_KEY, next)
-  }, [])
+  const setCorner = useCallback(
+    async (next, { fromRemote = false } = {}) => {
+      if (!isValidCorner(next)) return
+      setCornerState(next)
+      await asyncStorage.setItem(STORAGE_KEY, next)
+      if (fromRemote || !userId) return
+      try {
+        await enqueueSyncOp({
+          stream: 'prefs',
+          key: 'fabCorner',
+          fn: () =>
+            applySyncOp({
+              stream: 'prefs',
+              userId,
+              op: opSetFabCorner(next),
+            }),
+        })
+      } catch (err) {
+        console.warn('[toolname] fabCorner sync failed:', err?.message ?? err)
+      }
+    },
+    [userId],
+  )
 
   const value = useMemo(
     () => ({ corner, setCorner, ready }),

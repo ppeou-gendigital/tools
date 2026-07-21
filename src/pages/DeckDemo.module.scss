@@ -6,35 +6,16 @@
   gap: var(--space-3);
 }
 
-.header {
-  padding-inline: var(--layout-pad);
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
 .back {
   flex-shrink: 0;
 }
 
-.headerText {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.title {
-  font-size: var(--text-xl);
-  font-weight: 600;
-  margin: 0;
-}
-
-.subtitle {
+.iconBtn {
   color: var(--muted-fg);
-  font-size: var(--text-xs);
-  margin: 0;
+
+  &:hover {
+    color: var(--fg);
+  }
 }
 
 .deckWrap {

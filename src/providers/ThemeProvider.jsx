@@ -7,6 +7,12 @@ import {
   useState,
 } from 'react'
 import { asyncStorage } from '@/lib/storage'
+import {
+  applySyncOp,
+  enqueueSyncOp,
+  opSetTheme,
+} from '@/lib/supabaseSync'
+import { useAuth } from '@/providers/AuthProvider'
 
 const ThemeContext = createContext(null)
 
@@ -28,6 +34,9 @@ function applyTheme(resolved) {
 }
 
 export function ThemeProvider({ children, defaultTheme = 'system' }) {
+  const { user } = useAuth()
+  const userId = user?.id ?? null
+
   const [pref, setPref] = useState(defaultTheme)
   const [ready, setReady] = useState(false)
 
@@ -59,11 +68,29 @@ export function ThemeProvider({ children, defaultTheme = 'system' }) {
     return () => mq.removeEventListener?.('change', handler)
   }, [pref])
 
-  const setTheme = useCallback(async (next) => {
-    if (!THEMES.includes(next)) return
-    setPref(next)
-    await asyncStorage.setItem(STORAGE_KEY, next)
-  }, [])
+  const setTheme = useCallback(
+    async (next, { fromRemote = false } = {}) => {
+      if (!THEMES.includes(next)) return
+      setPref(next)
+      await asyncStorage.setItem(STORAGE_KEY, next)
+      if (fromRemote || !userId) return
+      try {
+        await enqueueSyncOp({
+          stream: 'prefs',
+          key: 'theme',
+          fn: () =>
+            applySyncOp({
+              stream: 'prefs',
+              userId,
+              op: opSetTheme(next),
+            }),
+        })
+      } catch (err) {
+        console.warn('[toolname] theme sync failed:', err?.message ?? err)
+      }
+    },
+    [userId],
+  )
 
   const value = useMemo(
     () => ({

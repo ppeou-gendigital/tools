@@ -11,6 +11,7 @@ import {
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
+import { Logo } from '@/molecules/Logo'
 import { useAuth } from '@/providers/AuthProvider'
 import styles from './SignInForm.module.scss'
 
@@ -71,6 +72,9 @@ export function SignInForm() {
     <div className={styles.container}>
       <Card className={styles.card}>
         <CardHeader>
+          <div className={styles.brand}>
+            <Logo size={48} alt="TOOLNAME" />
+          </div>
           <div className={styles.stepIndicator}>
             <span className={styles.stepLabel}>
               Step {step === 'email' ? '1' : '2'} of 2

@@ -1,0 +1,16 @@
+// Vertical pipe rendered before the sibling-page shortcut buttons. The
+// pattern is meant to sit at the tail of a flex header row: `margin-left:
+// auto` shoves the pipe (and everything after it) to the far right so
+// page-specific toolbar icons occupy the left, and the nav-links group
+// occupies the right.
+.separator {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+  margin-left: auto;
+  // Cancel a bit of the header row's flex gap on the separator's right
+  // side so it hugs closer to the following buttons than the buttons hug
+  // each other.
+  margin-right: calc(var(--space-1) * -1);
+}

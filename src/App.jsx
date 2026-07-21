@@ -36,10 +36,12 @@ export function App() {
         buster: APP_VERSION,
       }}
     >
-      <ThemeProvider>
-        <FontSizeProvider>
-          <FabCornerProvider>
-            <AuthProvider>
+      {/* AuthProvider is hoisted so prefs providers can call useAuth() and
+          push each mutation through supabaseSync with the current userId. */}
+      <AuthProvider>
+        <ThemeProvider>
+          <FontSizeProvider>
+            <FabCornerProvider>
               <PrefsSync />
               <NavigationProvider>
                 <AppShell>
@@ -48,10 +50,10 @@ export function App() {
                   </AuthGate>
                 </AppShell>
               </NavigationProvider>
-            </AuthProvider>
-          </FabCornerProvider>
-        </FontSizeProvider>
-      </ThemeProvider>
+            </FabCornerProvider>
+          </FontSizeProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </PersistQueryClientProvider>
   )
 }
