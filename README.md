@@ -570,31 +570,17 @@ Add more later in [`manifest.json`](manifest.json) as features land.
 - **Workflow**: [`.github/workflows/deploy-loopy-pages.yml`](.github/workflows/deploy-loopy-pages.yml)
 - **Trigger**: push to `tool/loopy` (or manual `workflow_dispatch` from the Actions tab)
 - **Live URL**: https://ppeou-gendigital.github.io/tools/loopy/
-- **Build**: `npm run build:web` → `dist-web/loopy/` (nested so the uploaded artifact serves at `/tools/loopy/`)
+- **Build**: dual-build — checks out `tool/accesso`, builds both tools, uploads a combined artifact (`site/loopy/` + `site/accesso/`) so neither deploy wipes the other
 - **Repo secrets required** (Settings → Secrets and variables → Actions):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
 - **Repo Pages settings**: Settings → Pages → Source = **GitHub Actions**
 
-### Convention for other tool branches
+### One Pages site per repo — dual-build coexistence
 
-Each `tool/*` branch owns its own workflow at `.github/workflows/deploy-<tool>-pages.yml`, triggered only on pushes to its own branch. Branches never share workflow files — Actions evaluates workflows per-branch off the pushed commit.
+A GitHub repo publishes exactly **one** Pages site, and each deploy replaces the entire site. Both `tool/loopy` and `tool/accesso` workflows therefore dual-build every sibling and upload `site/<tool>/` together. Skipping the sibling (uploading only `dist-web`) makes the other tool 404 until the next dual deploy.
 
-For a hypothetical new tool `tool/foo`, mirror the loopy setup:
-
-- Vite prod web build: `base: '/tools/foo/'`, `outDir: 'dist-web/foo'`
-- Workflow: `.github/workflows/deploy-foo-pages.yml` with `on: push: branches: [tool/foo]`
-- Live URL: `https://ppeou-gendigital.github.io/tools/foo/`
-
-### One Pages site per repo — important
-
-A GitHub repo publishes exactly **one** Pages site. Every deploy to the `github-pages` environment **replaces the entire site**. If `tool/loopy` deploys today and `tool/foo` deploys tomorrow, `/tools/loopy/` will 404 until loopy is redeployed. The `/tools/<tool>/` subpath convention gives us clean, stable URLs but does *not* enable coexistence.
-
-If two tools need Pages simultaneously, options in order of preference:
-
-1. Give the second tool its own dedicated GitHub repo (recommended long-term).
-2. Host the second tool on Vercel / Cloudflare Pages / Netlify (Supabase-backed apps work identically there).
-3. Build a coordinator workflow that combines all tools' builds into one artifact (complex — not recommended unless the tool count grows).
+When adding a third tool, extend every Pages workflow's dual-build to include the new branch. For a long-term split, give the new tool its own repo instead.
 
 ---
 
