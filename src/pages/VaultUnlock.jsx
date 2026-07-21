@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import {
   ArrowLeft,
   Eye,
@@ -204,8 +204,15 @@ function SetupForm() {
 // own state so it's a drop-in "just render it" component. Auto-clears
 // the input on success; consumers listen to VaultProvider state
 // changes instead of onSuccess callbacks so no wire-up is needed.
+//
+// Wrong-passphrase path: clear the field, keep the overlay open, and
+// put focus back in the input so the user can re-enter immediately.
+// The input stays enabled during the attempt (only submit is gated)
+// so a failed unlock never leaves the control disabled/unfocused.
 export function UnlockForm({ autoFocus = true, className }) {
   const vault = useVault()
+  const inputRef = useRef(null)
+  const errorId = useId()
   const [passphrase, setPassphrase] = useState('')
   const [reveal, setReveal] = useState(false)
   const [pending, setPending] = useState(false)
@@ -216,13 +223,22 @@ export function UnlockForm({ autoFocus = true, className }) {
     if (pending || passphrase.length === 0) return
     setPending(true)
     setError(null)
+    let failed = false
     try {
       await vault.unlock(passphrase)
       setPassphrase('')
     } catch (err) {
+      failed = true
       setError(err?.message ?? String(err))
+      setPassphrase('')
     } finally {
       setPending(false)
+    }
+    if (failed) {
+      // Next frame: React has re-rendered with the cleared field.
+      requestAnimationFrame(() => {
+        inputRef.current?.focus()
+      })
     }
   }
 
@@ -232,6 +248,7 @@ export function UnlockForm({ autoFocus = true, className }) {
         <Label htmlFor="unlock-passphrase">Master passphrase</Label>
         <div className={styles.inputWrap}>
           <Input
+            ref={inputRef}
             id="unlock-passphrase"
             type={reveal ? 'text' : 'password'}
             autoComplete="current-password"
@@ -241,7 +258,9 @@ export function UnlockForm({ autoFocus = true, className }) {
               setPassphrase(e.target.value)
               if (error) setError(null)
             }}
-            disabled={pending}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
+            aria-busy={pending || undefined}
           />
           <button
             type="button"
@@ -250,6 +269,7 @@ export function UnlockForm({ autoFocus = true, className }) {
             aria-label={reveal ? 'Hide passphrase' : 'Show passphrase'}
             title={reveal ? 'Hide passphrase' : 'Show passphrase'}
             tabIndex={-1}
+            disabled={pending}
           >
             {reveal ? <EyeOff size={14} /> : <Eye size={14} />}
           </button>
@@ -257,7 +277,11 @@ export function UnlockForm({ autoFocus = true, className }) {
       </div>
 
       {error && (
-        <div className={cx(styles.status, styles.statusError)}>
+        <div
+          id={errorId}
+          role="alert"
+          className={cx(styles.status, styles.statusError)}
+        >
           <TriangleAlert size={12} aria-hidden="true" />
           <span>{error}</span>
         </div>
