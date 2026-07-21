@@ -4,6 +4,26 @@
   padding: var(--space-3);
 }
 
+.layout {
+  display: grid;
+  gap: var(--space-3);
+  align-items: start;
+
+  @media (min-width: 560px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.sideColumn {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.mainColumn {
+  min-width: 0;
+}
+
 .section {
   display: grid;
   gap: var(--space-2);

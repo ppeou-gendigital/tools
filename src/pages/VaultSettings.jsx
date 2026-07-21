@@ -30,9 +30,15 @@ export function VaultSettings() {
         title="Vault"
         subtitle="Auto-lock, hint, and passphrase settings."
       />
-      <IdleTimeoutSection />
-      <PassphraseHintSection />
-      <ChangePassphraseSection />
+      <div className={styles.layout}>
+        <div className={styles.sideColumn}>
+          <IdleTimeoutSection />
+          <PassphraseHintSection />
+        </div>
+        <div className={styles.mainColumn}>
+          <ChangePassphraseSection />
+        </div>
+      </div>
     </div>
   )
 }
