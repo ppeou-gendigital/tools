@@ -31,8 +31,8 @@ export function Settings() {
             title="Vault"
             description={
               vault.idleTimeoutMs
-                ? `Auto-lock after ${labelForIdleTimeoutMs(vault.idleTimeoutMs)} of inactivity.`
-                : 'Auto-lock and passphrase settings.'
+                ? `Auto-lock after ${labelForIdleTimeoutMs(vault.idleTimeoutMs)}. Hint & passphrase.`
+                : 'Auto-lock, hint, and passphrase settings.'
             }
             onClick={goVaultSettings}
           />
