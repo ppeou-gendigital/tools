@@ -10,6 +10,8 @@ import {
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/providers/AuthProvider'
 import { fetchUserData, saveVaultMeta } from '@/lib/userDataApi'
+import { listCredentials, updateCredential } from '@/lib/credentialsApi'
+import { listCreditCards, updateCreditCard } from '@/lib/creditCardsApi'
 import { extractVaultMeta, normalizePassphraseHint } from '@/lib/prefs'
 import { sessionAsyncStorage } from '@/lib/sessionStorage'
 import {
@@ -25,6 +27,23 @@ import {
   VAULT_IDLE_DEFAULT_MS,
   normalizeIdleTimeoutMs,
 } from '@/lib/vaultIdleOptions'
+
+const MIN_PASSPHRASE_LENGTH = 8
+
+// applySyncOp attaches CAS bookkeeping (`attempts`, `noop`) — keep only
+// the vault-item columns before stuffing rows into React Query caches.
+function stripSyncMeta(row) {
+  if (!row || typeof row !== 'object') return row
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    display_name: row.display_name ?? '',
+    ciphertext: row.ciphertext ?? '',
+    iv: row.iv ?? '',
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }
+}
 
 const VaultContext = createContext(null)
 
@@ -110,11 +129,15 @@ export function VaultProvider({ children }) {
   // Plaintext memory jog from vault meta. Mirrored in state (not read
   // from metaRef during render) so the unlock UI can subscribe to it.
   const [passphraseHint, setPassphraseHintState] = useState(null)
+  // True while changePassphrase is re-encrypting rows / flipping meta.
+  // Gates encrypt/decrypt so nothing else writes under the old key.
+  const [isRekeying, setIsRekeying] = useState(false)
 
   const keyRef = useRef(null)
   const metaRef = useRef(null)
   const failedAttemptsRef = useRef(0)
   const idleTimeoutMsRef = useRef(VAULT_IDLE_DEFAULT_MS)
+  const rekeyingRef = useRef(false)
 
   const userId = user?.id ?? null
 
@@ -228,8 +251,13 @@ export function VaultProvider({ children }) {
   const setup = useCallback(
     async (passphrase, options = {}) => {
       if (!userId) throw new Error('setup: not signed in')
-      if (typeof passphrase !== 'string' || passphrase.length < 8) {
-        throw new Error('Passphrase must be at least 8 characters.')
+      if (
+        typeof passphrase !== 'string' ||
+        passphrase.length < MIN_PASSPHRASE_LENGTH
+      ) {
+        throw new Error(
+          `Passphrase must be at least ${MIN_PASSPHRASE_LENGTH} characters.`,
+        )
       }
       const salt = generateSalt()
       const iterations = KDF_ITERATIONS
@@ -328,6 +356,9 @@ export function VaultProvider({ children }) {
       if (!metaRef.current) {
         throw new Error('setPassphraseHint: vault has not been set up')
       }
+      if (rekeyingRef.current) {
+        throw new Error('setPassphraseHint: passphrase change in progress')
+      }
       const hint = normalizePassphraseHint(nextHint)
       const current = metaRef.current.hint ?? null
       if (hint === current) return
@@ -341,6 +372,145 @@ export function VaultProvider({ children }) {
         metaRef.current = nextMeta
       }
       setPassphraseHintState(hint)
+    },
+    [queryClient, userId],
+  )
+
+  // Rotate the master passphrase: verify current → decrypt every vault
+  // item under the old key → re-encrypt under a fresh salt/key → write
+  // rows → only then patch vault meta. Hint + idleTimeoutMs are kept
+  // via shallow merge (we don't include them in the meta patch).
+  // If anything fails before the meta write, the old passphrase still
+  // unlocks and the user can retry.
+  const changePassphrase = useCallback(
+    async (currentPassphrase, nextPassphrase) => {
+      if (!userId) throw new Error('changePassphrase: not signed in')
+      const meta = metaRef.current
+      if (!meta) throw new Error('changePassphrase: vault has not been set up')
+      if (!keyRef.current) {
+        throw new Error('Unlock the vault before changing the passphrase.')
+      }
+      if (rekeyingRef.current) {
+        throw new Error('A passphrase change is already in progress.')
+      }
+      if (typeof currentPassphrase !== 'string' || currentPassphrase.length === 0) {
+        throw new Error('Current passphrase is required.')
+      }
+      if (
+        typeof nextPassphrase !== 'string' ||
+        nextPassphrase.length < MIN_PASSPHRASE_LENGTH
+      ) {
+        throw new Error(
+          `New passphrase must be at least ${MIN_PASSPHRASE_LENGTH} characters.`,
+        )
+      }
+      if (currentPassphrase === nextPassphrase) {
+        throw new Error('New passphrase must be different from the current one.')
+      }
+
+      const oldKey = await deriveKey(
+        currentPassphrase,
+        meta.salt,
+        meta.iterations,
+      )
+      const ok = await checkVerifier(oldKey, meta.verifier)
+      if (!ok) {
+        throw new Error('Wrong current passphrase. Try again.')
+      }
+
+      rekeyingRef.current = true
+      setIsRekeying(true)
+      try {
+        const newSalt = generateSalt()
+        const iterations = KDF_ITERATIONS
+        const newKey = await deriveKey(nextPassphrase, newSalt, iterations)
+        const newVerifier = await makeVerifier(newKey)
+
+        const [credRows, cardRows] = await Promise.all([
+          listCredentials(userId),
+          listCreditCards(userId),
+        ])
+
+        // Decrypt everything first so a bad row aborts with zero writes.
+        const credPlain = []
+        for (const row of credRows) {
+          try {
+            const plain = await decryptJson(oldKey, row.ciphertext, row.iv)
+            credPlain.push({ row, plain })
+          } catch {
+            throw new Error(
+              `Could not decrypt credential "${row.display_name || row.id}". Nothing was changed.`,
+            )
+          }
+        }
+        const cardPlain = []
+        for (const row of cardRows) {
+          try {
+            const plain = await decryptJson(oldKey, row.ciphertext, row.iv)
+            cardPlain.push({ row, plain })
+          } catch {
+            throw new Error(
+              `Could not decrypt card "${row.display_name || row.id}". Nothing was changed.`,
+            )
+          }
+        }
+
+        const nextCredRows = []
+        for (const { row, plain } of credPlain) {
+          const enc = await encryptJson(newKey, plain)
+          const updated = await updateCredential(userId, row.id, {
+            displayName: row.display_name,
+            ciphertext: enc.ciphertext,
+            iv: enc.iv,
+          })
+          nextCredRows.push(stripSyncMeta(updated))
+        }
+
+        const nextCardRows = []
+        for (const { row, plain } of cardPlain) {
+          const enc = await encryptJson(newKey, plain)
+          const updated = await updateCreditCard(userId, row.id, {
+            displayName: row.display_name ?? '',
+            ciphertext: enc.ciphertext,
+            iv: enc.iv,
+          })
+          nextCardRows.push(stripSyncMeta(updated))
+        }
+
+        // Flip the unlock key only after every row is under the new key.
+        const prefsRow = await saveVaultMeta(userId, {
+          salt: newSalt,
+          iterations,
+          verifier: newVerifier,
+        })
+        queryClient.setQueryData(['user_data', userId], prefsRow)
+
+        metaRef.current = {
+          ...meta,
+          salt: newSalt,
+          iterations,
+          verifier: newVerifier,
+        }
+        keyRef.current = newKey
+        failedAttemptsRef.current = 0
+        await writeCache(userId, nextPassphrase, idleTimeoutMsRef.current)
+
+        queryClient.setQueryData(['credentials', userId], nextCredRows)
+        queryClient.setQueryData(['credit_cards', userId], nextCardRows)
+        queryClient.removeQueries({
+          predicate: (q) => {
+            const key = q.queryKey
+            return (
+              Array.isArray(key) &&
+              (key[0] === 'credential' || key[0] === 'credit_card') &&
+              key[1] === userId
+            )
+          },
+        })
+      } finally {
+        rekeyingRef.current = false
+        setIsRekeying(false)
+      }
     },
     [queryClient, userId],
   )
@@ -415,11 +585,17 @@ export function VaultProvider({ children }) {
 
   const encryptRecord = useCallback(async (value) => {
     if (!keyRef.current) throw new Error('encryptRecord: vault is locked')
+    if (rekeyingRef.current) {
+      throw new Error('encryptRecord: passphrase change in progress')
+    }
     return encryptJson(keyRef.current, value)
   }, [])
 
   const decryptRecord = useCallback(async ({ ciphertext, iv }) => {
     if (!keyRef.current) throw new Error('decryptRecord: vault is locked')
+    if (rekeyingRef.current) {
+      throw new Error('decryptRecord: passphrase change in progress')
+    }
     return decryptJson(keyRef.current, ciphertext, iv)
   }, [])
 
@@ -431,6 +607,7 @@ export function VaultProvider({ children }) {
       isUnlocked: status === STATUS.UNLOCKED,
       needsSetup: status === STATUS.NEEDS_SETUP,
       isLocked: status === STATUS.LOCKED,
+      isRekeying,
       passphraseHint,
       setPassphraseHint,
       idleTimeoutMs,
@@ -440,6 +617,7 @@ export function VaultProvider({ children }) {
       dismissUnlock,
       setup,
       unlock,
+      changePassphrase,
       lock,
       retryLoad,
       encryptRecord,
@@ -448,6 +626,7 @@ export function VaultProvider({ children }) {
     [
       status,
       error,
+      isRekeying,
       passphraseHint,
       setPassphraseHint,
       idleTimeoutMs,
@@ -457,6 +636,7 @@ export function VaultProvider({ children }) {
       dismissUnlock,
       setup,
       unlock,
+      changePassphrase,
       lock,
       retryLoad,
       encryptRecord,
