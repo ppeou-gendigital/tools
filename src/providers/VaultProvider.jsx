@@ -109,7 +109,7 @@ export function VaultProvider({ children }) {
   const [unlockPrompt, setUnlockPrompt] = useState(null)
   // Plaintext memory jog from vault meta. Mirrored in state (not read
   // from metaRef during render) so the unlock UI can subscribe to it.
-  const [passphraseHint, setPassphraseHint] = useState(null)
+  const [passphraseHint, setPassphraseHintState] = useState(null)
 
   const keyRef = useRef(null)
   const metaRef = useRef(null)
@@ -144,7 +144,7 @@ export function VaultProvider({ children }) {
         setStatus(STATUS.LOADING)
         setError(null)
         setUnlockPrompt(null)
-        setPassphraseHint(null)
+        setPassphraseHintState(null)
         setIdleTimeoutMsState(VAULT_IDLE_DEFAULT_MS)
         await clearCache()
         return
@@ -152,7 +152,7 @@ export function VaultProvider({ children }) {
 
       setStatus(STATUS.LOADING)
       setError(null)
-      setPassphraseHint(null)
+      setPassphraseHintState(null)
 
       try {
         const row = await queryClient.fetchQuery({
@@ -167,13 +167,13 @@ export function VaultProvider({ children }) {
 
         if (!meta) {
           metaRef.current = null
-          setPassphraseHint(null)
+          setPassphraseHintState(null)
           await clearCache()
           setStatus(STATUS.NEEDS_SETUP)
           return
         }
         metaRef.current = meta
-        setPassphraseHint(meta.hint ?? null)
+        setPassphraseHintState(meta.hint ?? null)
 
         // Try to hydrate from the session cache before falling back
         // to the locked screen. If the cache is fresh and matches
@@ -206,7 +206,7 @@ export function VaultProvider({ children }) {
       } catch (err) {
         if (cancelled) return
         setError(err)
-        setPassphraseHint(null)
+        setPassphraseHintState(null)
         setStatus(STATUS.ERROR)
       }
     })()
@@ -245,7 +245,7 @@ export function VaultProvider({ children }) {
       metaRef.current = meta
       failedAttemptsRef.current = 0
       await writeCache(userId, passphrase, idleTimeoutMsRef.current)
-      setPassphraseHint(hint)
+      setPassphraseHintState(hint)
       setStatus(STATUS.UNLOCKED)
       setError(null)
       setUnlockPrompt(null)
@@ -316,6 +316,31 @@ export function VaultProvider({ children }) {
           }
         }
       }
+    },
+    [queryClient, userId],
+  )
+
+  // Update / clear the optional plaintext passphrase hint. Does not
+  // touch salt/verifier/ciphertext — hint is not part of the KDF.
+  const setPassphraseHint = useCallback(
+    async (nextHint) => {
+      if (!userId) throw new Error('setPassphraseHint: not signed in')
+      if (!metaRef.current) {
+        throw new Error('setPassphraseHint: vault has not been set up')
+      }
+      const hint = normalizePassphraseHint(nextHint)
+      const current = metaRef.current.hint ?? null
+      if (hint === current) return
+      const row = await saveVaultMeta(userId, { hint })
+      queryClient.setQueryData(['user_data', userId], row)
+      if (hint) {
+        metaRef.current = { ...metaRef.current, hint }
+      } else {
+        const nextMeta = { ...metaRef.current }
+        delete nextMeta.hint
+        metaRef.current = nextMeta
+      }
+      setPassphraseHintState(hint)
     },
     [queryClient, userId],
   )
@@ -407,6 +432,7 @@ export function VaultProvider({ children }) {
       needsSetup: status === STATUS.NEEDS_SETUP,
       isLocked: status === STATUS.LOCKED,
       passphraseHint,
+      setPassphraseHint,
       idleTimeoutMs,
       setIdleTimeoutMs,
       unlockPrompt,
@@ -423,6 +449,7 @@ export function VaultProvider({ children }) {
       status,
       error,
       passphraseHint,
+      setPassphraseHint,
       idleTimeoutMs,
       setIdleTimeoutMs,
       unlockPrompt,
