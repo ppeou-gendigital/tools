@@ -10,7 +10,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/providers/AuthProvider'
 import { fetchUserData, saveVaultMeta } from '@/lib/userDataApi'
-import { extractVaultMeta } from '@/lib/prefs'
+import { extractVaultMeta, normalizePassphraseHint } from '@/lib/prefs'
 import { sessionAsyncStorage } from '@/lib/sessionStorage'
 import {
   KDF_ITERATIONS,
@@ -107,6 +107,9 @@ export function VaultProvider({ children }) {
   const [reloadCounter, setReloadCounter] = useState(0)
   const [idleTimeoutMs, setIdleTimeoutMsState] = useState(VAULT_IDLE_DEFAULT_MS)
   const [unlockPrompt, setUnlockPrompt] = useState(null)
+  // Plaintext memory jog from vault meta. Mirrored in state (not read
+  // from metaRef during render) so the unlock UI can subscribe to it.
+  const [passphraseHint, setPassphraseHint] = useState(null)
 
   const keyRef = useRef(null)
   const metaRef = useRef(null)
@@ -141,6 +144,7 @@ export function VaultProvider({ children }) {
         setStatus(STATUS.LOADING)
         setError(null)
         setUnlockPrompt(null)
+        setPassphraseHint(null)
         setIdleTimeoutMsState(VAULT_IDLE_DEFAULT_MS)
         await clearCache()
         return
@@ -148,6 +152,7 @@ export function VaultProvider({ children }) {
 
       setStatus(STATUS.LOADING)
       setError(null)
+      setPassphraseHint(null)
 
       try {
         const row = await queryClient.fetchQuery({
@@ -162,11 +167,13 @@ export function VaultProvider({ children }) {
 
         if (!meta) {
           metaRef.current = null
+          setPassphraseHint(null)
           await clearCache()
           setStatus(STATUS.NEEDS_SETUP)
           return
         }
         metaRef.current = meta
+        setPassphraseHint(meta.hint ?? null)
 
         // Try to hydrate from the session cache before falling back
         // to the locked screen. If the cache is fresh and matches
@@ -199,6 +206,7 @@ export function VaultProvider({ children }) {
       } catch (err) {
         if (cancelled) return
         setError(err)
+        setPassphraseHint(null)
         setStatus(STATUS.ERROR)
       }
     })()
@@ -215,8 +223,10 @@ export function VaultProvider({ children }) {
   // First-time vault setup: pick salt + iterations, derive key,
   // encrypt the verifier, persist meta. On success the vault is
   // already unlocked in memory — no second passphrase prompt.
+  // Optional `options.hint` is stored in plaintext on vault meta and
+  // shown on later unlock screens as a memory jog — never used in KDF.
   const setup = useCallback(
-    async (passphrase) => {
+    async (passphrase, options = {}) => {
       if (!userId) throw new Error('setup: not signed in')
       if (typeof passphrase !== 'string' || passphrase.length < 8) {
         throw new Error('Passphrase must be at least 8 characters.')
@@ -225,13 +235,17 @@ export function VaultProvider({ children }) {
       const iterations = KDF_ITERATIONS
       const key = await deriveKey(passphrase, salt, iterations)
       const verifier = await makeVerifier(key)
-      const meta = { salt, iterations, verifier }
+      const hint = normalizePassphraseHint(options?.hint)
+      const meta = hint
+        ? { salt, iterations, verifier, hint }
+        : { salt, iterations, verifier }
       const row = await saveVaultMeta(userId, meta)
       queryClient.setQueryData(['user_data', userId], row)
       keyRef.current = key
       metaRef.current = meta
       failedAttemptsRef.current = 0
       await writeCache(userId, passphrase, idleTimeoutMsRef.current)
+      setPassphraseHint(hint)
       setStatus(STATUS.UNLOCKED)
       setError(null)
       setUnlockPrompt(null)
@@ -392,6 +406,7 @@ export function VaultProvider({ children }) {
       isUnlocked: status === STATUS.UNLOCKED,
       needsSetup: status === STATUS.NEEDS_SETUP,
       isLocked: status === STATUS.LOCKED,
+      passphraseHint,
       idleTimeoutMs,
       setIdleTimeoutMs,
       unlockPrompt,
@@ -407,6 +422,7 @@ export function VaultProvider({ children }) {
     [
       status,
       error,
+      passphraseHint,
       idleTimeoutMs,
       setIdleTimeoutMs,
       unlockPrompt,

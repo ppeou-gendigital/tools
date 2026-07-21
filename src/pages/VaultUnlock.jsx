@@ -13,6 +13,7 @@ import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { useVault } from '@/providers/VaultProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { PASSPHRASE_HINT_MAX_LENGTH } from '@/lib/prefs'
 import { cx } from '@/lib/cx'
 import styles from './VaultUnlock.module.scss'
 
@@ -75,6 +76,7 @@ function SetupForm() {
   const { goBack, previousRouteLabel } = useNavigation()
   const [passphrase, setPassphrase] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [hint, setHint] = useState('')
   const [reveal, setReveal] = useState(false)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(null)
@@ -92,7 +94,7 @@ function SetupForm() {
     setPending(true)
     setError(null)
     try {
-      await vault.setup(passphrase)
+      await vault.setup(passphrase, { hint })
     } catch (err) {
       setError(err?.message ?? String(err))
     } finally {
@@ -174,6 +176,26 @@ function SetupForm() {
           )}
         </div>
 
+        <div className={styles.field}>
+          <Label htmlFor="passphrase-hint">
+            Hint <span className={styles.optional}>(optional)</span>
+          </Label>
+          <Input
+            id="passphrase-hint"
+            type="text"
+            autoComplete="off"
+            value={hint}
+            onChange={(e) => setHint(e.target.value)}
+            disabled={pending}
+            maxLength={PASSPHRASE_HINT_MAX_LENGTH}
+            placeholder="A reminder only you would understand"
+          />
+          <span className={styles.hint}>
+            Stored in plain text on your account. Don&apos;t include the
+            passphrase itself.
+          </span>
+        </div>
+
         {error && (
           <div className={cx(styles.status, styles.statusError)}>
             <TriangleAlert size={12} aria-hidden="true" />
@@ -213,10 +235,16 @@ export function UnlockForm({ autoFocus = true, className }) {
   const vault = useVault()
   const inputRef = useRef(null)
   const errorId = useId()
+  const hintId = useId()
   const [passphrase, setPassphrase] = useState('')
   const [reveal, setReveal] = useState(false)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(null)
+
+  const storedHint = vault.passphraseHint
+  const describedBy = [storedHint ? hintId : null, error ? errorId : null]
+    .filter(Boolean)
+    .join(' ') || undefined
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -244,6 +272,13 @@ export function UnlockForm({ autoFocus = true, className }) {
 
   return (
     <form className={cx(styles.form, className)} onSubmit={handleSubmit}>
+      {storedHint && (
+        <p id={hintId} className={styles.passphraseHint}>
+          <span className={styles.passphraseHintLabel}>Hint</span>
+          <span>{storedHint}</span>
+        </p>
+      )}
+
       <div className={styles.field}>
         <Label htmlFor="unlock-passphrase">Master passphrase</Label>
         <div className={styles.inputWrap}>
@@ -259,7 +294,7 @@ export function UnlockForm({ autoFocus = true, className }) {
               if (error) setError(null)
             }}
             aria-invalid={error ? true : undefined}
-            aria-describedby={error ? errorId : undefined}
+            aria-describedby={describedBy}
             aria-busy={pending || undefined}
           />
           <button

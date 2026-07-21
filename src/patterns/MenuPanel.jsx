@@ -7,7 +7,6 @@ import { AppearanceRow } from '@/patterns/AppearanceRow'
 import { CredentialsItem } from '@/patterns/CredentialsItem'
 import { CreditCardsItem } from '@/patterns/CreditCardsItem'
 import { UnlockVaultItem } from '@/patterns/UnlockVaultItem'
-import { DeckDemoItem } from '@/patterns/DeckDemoItem'
 import { DevBadgeItem } from '@/patterns/DevBadgeItem'
 import styles from './MenuPanel.module.scss'
 
@@ -32,7 +31,6 @@ export function MenuPanel({ corner, onClose }) {
       {signedIn && <CredentialsItem onClose={onClose} />}
       {signedIn && <CreditCardsItem onClose={onClose} />}
       {showUnlock && <UnlockVaultItem onClose={onClose} />}
-      <DeckDemoItem onClose={onClose} />
       <DevBadgeItem />
       <AboutRow name={TOOL_NAME} version={VERSION} />
     </div>
