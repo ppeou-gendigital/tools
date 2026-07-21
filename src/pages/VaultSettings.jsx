@@ -10,7 +10,6 @@ import {
 import { PageHeader } from '@/patterns/PageHeader'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
-import { Label } from '@/molecules/Label'
 import { useVault } from '@/providers/VaultProvider'
 import {
   PASSPHRASE_HINT_MAX_LENGTH,
@@ -160,35 +159,31 @@ function PassphraseHintSection() {
         </p>
       </div>
 
-      <form className={styles.hintForm} onSubmit={handleSave}>
-        <div className={styles.field}>
-          <Label htmlFor="vault-passphrase-hint">Hint</Label>
+      <form className={styles.compactForm} onSubmit={handleSave}>
+        <div className={styles.hintRow}>
           <Input
             id="vault-passphrase-hint"
             type="text"
             autoComplete="off"
+            aria-label="Passphrase hint"
             value={hint}
             onChange={(e) => setHint(e.target.value)}
             disabled={pending || vault.isRekeying}
             maxLength={PASSPHRASE_HINT_MAX_LENGTH}
-            placeholder="A reminder only you would understand"
+            placeholder="Optional reminder (not the passphrase)"
           />
-        </div>
-
-        <Button
-          type="submit"
-          size="sm"
-          disabled={pending || !dirty || vault.isRekeying}
-        >
-          {pending ? (
-            <>
+          <Button
+            type="submit"
+            size="sm"
+            disabled={pending || !dirty || vault.isRekeying}
+          >
+            {pending ? (
               <Loader2 size={14} aria-hidden="true" />
-              Saving
-            </>
-          ) : (
-            'Save hint'
-          )}
-        </Button>
+            ) : (
+              'Save'
+            )}
+          </Button>
+        </div>
       </form>
 
       {error && (
@@ -237,6 +232,14 @@ function ChangePassphraseSection() {
     confirm === next &&
     next !== current
 
+  const fieldHint = tooShort
+    ? `At least ${MIN_PASSPHRASE_LENGTH} characters.`
+    : sameAsCurrent
+      ? 'Must differ from the current passphrase.'
+      : mismatch
+        ? "Passphrases don't match."
+        : null
+
   async function handleSubmit(e) {
     e.preventDefault()
     if (!canSubmit) return
@@ -261,9 +264,9 @@ function ChangePassphraseSection() {
     return (
       <section className={styles.section}>
         <div className={styles.sectionHead}>
-          <h2 className={styles.sectionTitle}>Change master passphrase</h2>
+          <h2 className={styles.sectionTitle}>Change passphrase</h2>
           <p className={styles.sectionBody}>
-            Unlock the vault to re-encrypt your data under a new passphrase.
+            Unlock to re-encrypt your vault under a new passphrase.
           </p>
         </div>
         <Button
@@ -271,93 +274,83 @@ function ChangePassphraseSection() {
           onClick={() => vault.requestUnlock({ dismissible: true })}
         >
           <Lock size={14} aria-hidden="true" />
-          Unlock to continue
+          Unlock
         </Button>
       </section>
     )
   }
 
+  const inputType = reveal ? 'text' : 'password'
+  const busy = pending || vault.isRekeying
+
   return (
     <section className={styles.section}>
       <div className={styles.sectionHead}>
-        <h2 className={styles.sectionTitle}>Change master passphrase</h2>
+        <div className={styles.sectionTitleRow}>
+          <h2 className={styles.sectionTitle}>Change passphrase</h2>
+          <button
+            type="button"
+            className={styles.revealLink}
+            onClick={() => setReveal((v) => !v)}
+            disabled={busy}
+          >
+            {reveal ? <EyeOff size={12} aria-hidden="true" /> : <Eye size={12} aria-hidden="true" />}
+            {reveal ? 'Hide' : 'Show'}
+          </button>
+        </div>
         <p className={styles.sectionBody}>
-          Re-encrypts every credential and card with a new key. Your hint is
-          kept — update it separately if it mentioned the old passphrase.
+          Re-encrypts all vault items. Hint is unchanged.
         </p>
       </div>
 
-      <form className={styles.hintForm} onSubmit={handleSubmit}>
-        <div className={styles.field}>
-          <Label htmlFor="vault-current-passphrase">Current passphrase</Label>
-          <div className={styles.inputWrap}>
-            <Input
-              id="vault-current-passphrase"
-              type={reveal ? 'text' : 'password'}
-              autoComplete="current-password"
-              value={current}
-              onChange={(e) => setCurrent(e.target.value)}
-              disabled={pending || vault.isRekeying}
-            />
-            <button
-              type="button"
-              className={styles.revealBtn}
-              onClick={() => setReveal((v) => !v)}
-              aria-label={reveal ? 'Hide passphrases' : 'Show passphrases'}
-              title={reveal ? 'Hide passphrases' : 'Show passphrases'}
-              tabIndex={-1}
-              disabled={pending || vault.isRekeying}
-            >
-              {reveal ? <EyeOff size={14} /> : <Eye size={14} />}
-            </button>
-          </div>
-        </div>
+      <form className={styles.compactForm} onSubmit={handleSubmit}>
+        <Input
+          id="vault-current-passphrase"
+          type={inputType}
+          autoComplete="current-password"
+          aria-label="Current passphrase"
+          placeholder="Current passphrase"
+          value={current}
+          onChange={(e) => setCurrent(e.target.value)}
+          disabled={busy}
+        />
+        <Input
+          id="vault-new-passphrase"
+          type={inputType}
+          autoComplete="new-password"
+          aria-label="New passphrase"
+          placeholder={`New passphrase (${MIN_PASSPHRASE_LENGTH}+ chars)`}
+          value={next}
+          onChange={(e) => setNext(e.target.value)}
+          disabled={busy}
+        />
+        <Input
+          id="vault-confirm-passphrase"
+          type={inputType}
+          autoComplete="new-password"
+          aria-label="Confirm new passphrase"
+          placeholder="Confirm new passphrase"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          disabled={busy}
+        />
 
-        <div className={styles.field}>
-          <Label htmlFor="vault-new-passphrase">New passphrase</Label>
-          <Input
-            id="vault-new-passphrase"
-            type={reveal ? 'text' : 'password'}
-            autoComplete="new-password"
-            value={next}
-            onChange={(e) => setNext(e.target.value)}
-            disabled={pending || vault.isRekeying}
-            placeholder={`At least ${MIN_PASSPHRASE_LENGTH} characters`}
-          />
-          {tooShort && (
-            <span className={styles.fieldHint}>
-              Must be at least {MIN_PASSPHRASE_LENGTH} characters.
-            </span>
-          )}
-          {sameAsCurrent && !tooShort && (
-            <span className={cx(styles.fieldHint, styles.fieldHintError)}>
-              Must be different from the current passphrase.
-            </span>
-          )}
-        </div>
+        {fieldHint && (
+          <span
+            className={cx(
+              styles.fieldHint,
+              (mismatch || sameAsCurrent) && styles.fieldHintError,
+            )}
+          >
+            {fieldHint}
+          </span>
+        )}
 
-        <div className={styles.field}>
-          <Label htmlFor="vault-confirm-passphrase">Confirm new passphrase</Label>
-          <Input
-            id="vault-confirm-passphrase"
-            type={reveal ? 'text' : 'password'}
-            autoComplete="new-password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            disabled={pending || vault.isRekeying}
-          />
-          {mismatch && (
-            <span className={cx(styles.fieldHint, styles.fieldHintError)}>
-              Passphrases don&apos;t match.
-            </span>
-          )}
-        </div>
-
-        <Button type="submit" size="sm" disabled={!canSubmit}>
-          {pending || vault.isRekeying ? (
+        <Button type="submit" size="sm" fullWidth disabled={!canSubmit}>
+          {busy ? (
             <>
               <Loader2 size={14} aria-hidden="true" />
-              Re-encrypting vault
+              Re-encrypting
             </>
           ) : (
             'Change passphrase'
@@ -375,7 +368,7 @@ function ChangePassphraseSection() {
       {showSaved && !error && (
         <div className={cx(styles.status, styles.statusOk)}>
           <Check size={12} aria-hidden="true" />
-          <span>Passphrase updated. Use the new one next unlock.</span>
+          <span>Updated. Use the new passphrase next unlock.</span>
         </div>
       )}
     </section>
