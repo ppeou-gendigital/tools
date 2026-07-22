@@ -1,0 +1,147 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--space-4) 0;
+  gap: var(--space-3);
+}
+
+.body {
+  display: grid;
+  gap: var(--space-4);
+  padding-inline: var(--layout-pad);
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  align-content: start;
+}
+
+.back {
+  flex-shrink: 0;
+}
+
+.iconBtn {
+  color: var(--muted-fg);
+
+  &:hover {
+    color: var(--fg);
+  }
+}
+
+.lead {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--muted-fg);
+  line-height: 1.45;
+
+  code {
+    font-size: var(--text-xs);
+  }
+}
+
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+  line-height: 1.4;
+}
+
+.error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--destructive);
+}
+
+.attachHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.attachList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.attachRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--muted-fg);
+  font-size: var(--text-xs);
+}
+
+.attachName {
+  flex: 1;
+  min-width: 0;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachMeta {
+  flex-shrink: 0;
+}
+
+.previewModal {
+  max-width: min(920px, 96vw);
+}
+
+.previewMedia {
+  display: block;
+  max-width: 100%;
+  max-height: min(70vh, 640px);
+  margin: 0 auto;
+  border-radius: var(--radius);
+  object-fit: contain;
+  background: var(--muted);
+}
+
+.previewFrame {
+  display: block;
+  width: 100%;
+  height: min(70vh, 640px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.previewText {
+  margin: 0;
+  max-height: min(70vh, 640px);
+  overflow: auto;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--muted);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

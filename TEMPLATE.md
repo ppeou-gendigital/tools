@@ -59,6 +59,7 @@ Follow [README.md → Supabase setup](README.md#supabase-setup):
 - [ ] Copy `.env.example` → `.env` and paste `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`.
 - [ ] Run the `profiles` table + RLS + `handle_new_user` trigger SQL.
 - [ ] Run the `user_data` table + RLS SQL.
+- [ ] (Optional) Rich text attachments: run [`supabase/template_attachments.sql`](supabase/template_attachments.sql) after init (renames `toolname_*` → your tool). Add an FK from `parent_id` to your domain table when you have one.
 - [ ] (Optional) Configure a Test OTP and set `VITE_DEV_AUTOLOGIN_EMAIL` / `_TOKEN` in `.env.local` for dev auto-login.
 
 ## 5. Add repo secrets
@@ -113,13 +114,32 @@ If two tools need Pages simultaneously, options in order of preference:
 2. Give the second tool its own dedicated GitHub repo.
 3. Host the second tool on Vercel / Cloudflare Pages / Netlify.
 
+## WebAuthn user-handle gotcha (READ THIS)
+
+WebAuthn `publicKey.user.id` (the **user handle**) is capped at **64 bytes**. Browsers reject enrollment with `User handle exceeds 64 bytes` if you go over.
+
+A single UUID as UTF-8 is fine (~36 bytes) — that is what [`tool/accesso`](../../tree/tool/accesso) `src/lib/biometrics.js` uses for vault biometrics. Concatenating two UUIDs (e.g. `userId:lockboxId`) is ~73 bytes and **will fail**.
+
+When the handle must encode more than one id, hash it instead of concatenating:
+
+```js
+async function webAuthnUserHandle(userId, scopeId) {
+  const raw = new TextEncoder().encode(`${userId}:${scopeId}`)
+  return new Uint8Array(await crypto.subtle.digest('SHA-256', raw)) // 32 bytes
+}
+```
+
+Reference: [`tool/notas`](../../tree/tool/notas) lockbox biometrics (`src/lib/biometrics.js`).
+
 ## What to build next
 
-The template ships with a bare skeleton (Home, Profile, Settings, DeckDemo). Common next steps:
+The template ships with a bare skeleton (Home, Profile, Settings, DeckDemo, RichTextDemo). Common next steps:
 
 - **Add a page** — create `src/pages/YourPage.jsx` + `.module.scss`, register the route in [NavigationProvider](src/providers/NavigationProvider.jsx), wrap the header in [PageHeader](src/patterns/PageHeader.jsx) + [PageShortcuts](src/patterns/PageShortcuts.jsx), and add a menu entry in [MenuPanel](src/patterns/MenuPanel.jsx) (or a `SettingsCard` in [Settings](src/pages/Settings.jsx)).
+- **Rich text field** — drop in [`RichNoteEditor`](src/molecules/RichNoteEditor.jsx); persist with [`richBody.js`](src/lib/richBody.js) (`serializeRichBody` / `parseRichBody`). Demo: menu → **Rich text demo**.
+- **File attachments (Supabase Storage)** — run [`supabase/template_attachments.sql`](supabase/template_attachments.sql), then call [`attachmentsApi.js`](src/lib/attachmentsApi.js) (`uploadAttachment`, `listAttachments`, …) with your domain `parentId`. Paste/drop from the editor is forwarded via `onFiles` — do not embed binaries in the TipTap JSON. Full notes + lockbox encryption: [`tool/notas`](../../tree/tool/notas) `NoteEdit.jsx`.
 - **Add a synced field** — add a normalizer in [prefs.js](src/lib/prefs.js), an `opSet*` in [userDataOps.js](src/lib/userDataOps.js), push from the provider via `applySyncOp`, and teach [PrefsSync](src/providers/PrefsSync.jsx) how to apply the remote value on pull. See the `theme` / `fontSize` / `fabCorner` triple as the pattern to copy.
 - **Add a synced list or map** — add a new `jsonb` column on `user_data` (loopy has several), extend `normalizePrefsRow` / op factories in [supabaseSync.js](src/lib/supabaseSync.js) + [userDataOps.js](src/lib/userDataOps.js), and mirror it into a dedicated provider. For per-domain CAS tables, copy the domain-stream helpers from the loopy branch.
 - **Capture URLs from the SW** — layer `chrome.webNavigation.onCompleted` on top of the [background.js](background.js) stub. Loopy's background.js is the reference for a full capture + Supabase sync loop with `chrome.alarms`-driven pushes.
 
-Reference: [`tool/loopy`](../../tree/tool/loopy) is a real, shipped tool built on this template. Anything you're missing here — a synced list, a capture pipeline, per-domain compare-and-swap merges — is likely there in a fully working form.
+References: [`tool/loopy`](../../tree/tool/loopy) (synced lists / capture), [`tool/notas`](../../tree/tool/notas) (RTE + Storage attachments + lockboxes), [`tool/accesso`](../../tree/tool/accesso) (vault E2EE).

@@ -8,7 +8,7 @@ import {
 
 const NavigationContext = createContext(null)
 
-const ROUTES = ['home', 'profile', 'deck-demo', 'settings']
+const ROUTES = ['home', 'profile', 'deck-demo', 'rich-text-demo', 'settings']
 const DEFAULT_ROUTE = 'home'
 
 // Human labels used by page headers to render dynamic "back" text.
@@ -16,6 +16,7 @@ const ROUTE_LABELS = {
   home: 'Home',
   profile: 'Profile',
   'deck-demo': 'Deck demo',
+  'rich-text-demo': 'Rich text demo',
   settings: 'Settings',
 }
 
@@ -27,6 +28,7 @@ const PARENT_ROUTE = {
   home: null,
   profile: 'home',
   'deck-demo': 'home',
+  'rich-text-demo': 'home',
   settings: 'home',
 }
 
@@ -80,6 +82,7 @@ export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
       goHome: () => navigate('home'),
       goProfile: () => navigate('profile'),
       goDeckDemo: () => navigate('deck-demo'),
+      goRichTextDemo: () => navigate('rich-text-demo'),
       goSettings: () => navigate('settings'),
     }
   }, [stack, navigate, goBack])

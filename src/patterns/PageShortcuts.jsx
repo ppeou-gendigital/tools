@@ -1,10 +1,10 @@
-import { House, LayoutGrid } from 'lucide-react'
+import { FilePenLine, House, LayoutGrid } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { useNavigation } from '@/providers/NavigationProvider'
 import styles from './PageShortcuts.module.scss'
 
 // Default sibling shortcuts for the template demo pages. Replace or pass
-// a custom `shortcuts` array when your tool grows past Home + DeckDemo.
+// a custom `shortcuts` array when your tool grows past the demos.
 const DEFAULT_SHORTCUTS = [
   {
     id: 'home',
@@ -17,6 +17,12 @@ const DEFAULT_SHORTCUTS = [
     label: 'Deck demo',
     icon: LayoutGrid,
     pick: (nav) => nav.goDeckDemo,
+  },
+  {
+    id: 'rich-text-demo',
+    label: 'Rich text demo',
+    icon: FilePenLine,
+    pick: (nav) => nav.goRichTextDemo,
   },
 ]
 

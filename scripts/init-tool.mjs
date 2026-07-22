@@ -78,6 +78,9 @@ const TEXT_FILES = [
   'src/env.js',
   'src/lib/supabase.js',
   'src/lib/queryPersister.js',
+  'src/lib/richBody.js',
+  'src/lib/attachmentsApi.js',
+  'src/pages/RichTextDemo.jsx',
   'src/providers/AuthProvider.jsx',
   'src/providers/ThemeProvider.jsx',
   'src/providers/FontSizeProvider.jsx',
@@ -86,6 +89,7 @@ const TEXT_FILES = [
   'src/blocks/SignInForm.jsx',
   'src/blocks/FloatingMenu.jsx',
   'src/patterns/MenuPanel.jsx',
+  'supabase/template_attachments.sql',
   '.gitignore',
 ]
 

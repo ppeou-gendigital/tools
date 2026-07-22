@@ -5,6 +5,7 @@ import { AboutRow } from '@/patterns/AboutRow'
 import { AccountRow } from '@/patterns/AccountRow'
 import { AppearanceRow } from '@/patterns/AppearanceRow'
 import { DeckDemoItem } from '@/patterns/DeckDemoItem'
+import { RichTextDemoItem } from '@/patterns/RichTextDemoItem'
 import { DevBadgeItem } from '@/patterns/DevBadgeItem'
 import styles from './MenuPanel.module.scss'
 
@@ -27,6 +28,7 @@ export function MenuPanel({ corner, onClose }) {
       {signedIn && <AccountRow onClose={onClose} />}
       <Divider />
       <DeckDemoItem onClose={onClose} />
+      <RichTextDemoItem onClose={onClose} />
       <DevBadgeItem />
       <AboutRow name={TOOL_NAME} version={VERSION} />
     </div>

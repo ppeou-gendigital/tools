@@ -10,6 +10,7 @@ import { AuthGate } from '@/blocks/AuthGate'
 import { Home } from '@/pages/Home'
 import { Profile } from '@/pages/Profile'
 import { DeckDemo } from '@/pages/DeckDemo'
+import { RichTextDemo } from '@/pages/RichTextDemo'
 import { Settings } from '@/pages/Settings'
 import { queryClient } from '@/lib/queryClient'
 import { queryPersister } from '@/lib/queryPersister'
@@ -22,6 +23,7 @@ function Router() {
   const { route } = useNavigation()
   if (route === 'profile') return <Profile />
   if (route === 'deck-demo') return <DeckDemo />
+  if (route === 'rich-text-demo') return <RichTextDemo />
   if (route === 'settings') return <Settings />
   return <Home />
 }
