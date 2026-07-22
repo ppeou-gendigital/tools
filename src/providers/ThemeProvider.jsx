@@ -16,7 +16,7 @@ import { useAuth } from '@/providers/AuthProvider'
 
 const ThemeContext = createContext(null)
 
-const STORAGE_KEY = 'toolname.theme'
+const STORAGE_KEY = 'notas.theme'
 const THEMES = ['light', 'dark', 'system']
 
 function resolveTheme(pref) {
@@ -86,7 +86,7 @@ export function ThemeProvider({ children, defaultTheme = 'system' }) {
             }),
         })
       } catch (err) {
-        console.warn('[toolname] theme sync failed:', err?.message ?? err)
+        console.warn('[notas] theme sync failed:', err?.message ?? err)
       }
     },
     [userId],

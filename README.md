@@ -1,4 +1,4 @@
-# TOOLNAME
+# notas
 
 A Chrome extension **and** web app in one codebase. React (ES6, no TypeScript) + Vite + SCSS modules, with Supabase email-OTP auth and light/dark theming.
 
@@ -78,7 +78,7 @@ Inspect:
 ## Project layout
 
 ```
-TOOLNAME/
+notas/
 ├── manifest.json               # MV3 manifest (host permission for supabase.co)
 ├── background.js               # MV3 service worker (minimal stub)
 ├── index.html                  # web entry
@@ -161,7 +161,7 @@ Create a project at https://supabase.com (free tier — 50k MAU / 500MB Postgres
 
 ### 1. Configure email OTP (6-digit code, not magic-link)
 
-TOOLNAME uses `signInWithOtp` + `verifyOtp` with `type: 'email'`. The default Supabase email template uses a `ConfirmationURL` — replace it with the OTP token.
+notas uses `signInWithOtp` + `verifyOtp` with `type: 'email'`. The default Supabase email template uses a `ConfirmationURL` — replace it with the OTP token.
 
 - **Dashboard** → **Authentication** → **Email Templates** → **Magic Link**
 - Replace the body with something like:
@@ -277,27 +277,25 @@ Add more as your tool needs them (`activeTab`, `tabs`, `scripting`, `webNavigati
 
 ## CI / GitHub Pages
 
-Branch naming drives the live path. After `npm run init -- --name TOOLNAME`:
-
 | | |
 | --- | --- |
-| Branch | `tool/TOOLNAME` |
-| Vite `base` / `outDir` | `/tools/TOOLNAME/` · `dist-web/TOOLNAME` |
-| Live URL | `https://<user>.github.io/tools/TOOLNAME/` |
+| Branch | `tool/notas` |
+| Vite `base` / `outDir` | `/tools/notas/` · `dist-web/notas` |
+| Live URL | `https://ppeou-gendigital.github.io/tools/notas/` |
 
-- **Workflow**: [`.github/workflows/deploy-TOOLNAME-pages.yml`](.github/workflows/deploy-TOOLNAME-pages.yml)
-- **Trigger**: push to `tool/TOOLNAME` (or manual `workflow_dispatch` from the Actions tab)
-- **Build**: `npm run build:web` → `dist-web/TOOLNAME/` (nested so the uploaded artifact serves at `/tools/TOOLNAME/`)
-- **Repo secrets required** (Settings → Secrets and variables → Actions):
-  - `VITE_SUPABASE_URL`
-  - `VITE_SUPABASE_ANON_KEY`
-- **Repo Pages settings**: Settings → Pages → Source = **GitHub Actions**
+- **Workflow**: [`.github/workflows/deploy-notas-pages.yml`](.github/workflows/deploy-notas-pages.yml)
+- **Trigger**: push to `tool/notas` (or Actions → **Deploy notas to GitHub Pages** → Run workflow)
+- **Build**: multi-tool coordinator — builds `notas` + `loopy` + `accesso`, assembles `site/{notas,loopy,accesso}`, uploads one Pages artifact (so this deploy does not wipe the other tools)
+- **Repo secrets** (already set on `ppeou-gendigital/tools`): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- **Pages settings**: Settings → Pages → Source = **GitHub Actions**
 
-`scripts/init-tool.mjs` renames both this workflow file and the release workflow to match your tool's name, plus updates the branch triggers.
+The workflow file only runs after it exists on the remote `tool/notas` branch (push this branch once).
 
 ### Install as a PWA (web build only)
 
 The web deploy is an installable Progressive Web App (manifest + service worker for the app shell). The Chrome extension build is unchanged and is not a PWA.
+
+**iPhone (Add to Home Screen):** open the deployed web URL in Safari → Share → **Add to Home Screen**. The app opens standalone (`apple-mobile-web-app-capable` + `display: standalone`). Updates: [`src/pwaRegister.js`](src/pwaRegister.js) calls `registration.update()` on focus, visibility, `pageshow` (bfcache), `online`, and every 15 minutes; `registerType: 'autoUpdate'` + Workbox `skipWaiting` / `clientsClaim` activates the new SW and reloads.
 
 - **iPhone / iPad**: Safari → Share → **Add to Home Screen**.
 - **Desktop Chrome / Edge**: address-bar install icon or Install app menu.

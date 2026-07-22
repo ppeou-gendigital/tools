@@ -5,15 +5,12 @@
 //   - Only touches the field(s) it owns so a CAS miss + re-apply
 //     preserves concurrent edits to other columns.
 //   - Returns the same row reference when the op is a no-op.
-//
-// When you add a new JSONB column on user_data, add a normalizer in
-// prefs.js and an op factory here. See tool/loopy for multi-column
-// examples (aemDomains, pinnedSites, …).
 
 import {
   normalizeFabCorner,
   normalizeFontSize,
   normalizeRemotePrefs,
+  normalizeRemoteWorkspace,
   normalizeTheme,
 } from '@/lib/prefs'
 
@@ -61,5 +58,21 @@ export function opSetFabCorner(corner) {
     const cur = cloneRow(row)
     if (cur.data.fabCorner === next) return row ?? cur
     return withData(cur, { fabCorner: next })
+  }
+}
+
+export function opSetWorkspace(workspace) {
+  const next = normalizeRemoteWorkspace(workspace)
+  return (row) => {
+    const cur = cloneRow(row)
+    const prevJson = JSON.stringify(cur.data.workspace ?? null)
+    const nextJson = JSON.stringify(next)
+    if (prevJson === nextJson) return row ?? cur
+    if (next == null) {
+      const cloned = cloneRow(cur)
+      delete cloned.data.workspace
+      return cloned
+    }
+    return withData(cur, { workspace: next })
   }
 }

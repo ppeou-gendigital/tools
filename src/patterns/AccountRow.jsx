@@ -1,13 +1,13 @@
-import { CircleUserRound, LogOut, Settings } from 'lucide-react'
+import { CircleUserRound, LogOut } from 'lucide-react'
 import { IconButton } from '@/molecules/IconButton'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import styles from './AccountRow.module.scss'
 
-// Compact account row: profile, settings, sign out as three ghost icon
-// buttons. Only rendered when the user is signed in (see MenuPanel).
+// Compact account row: profile + sign out. Only rendered when the user
+// is signed in (see MenuPanel).
 export function AccountRow({ onClose }) {
-  const { goProfile, goSettings } = useNavigation()
+  const { goProfile } = useNavigation()
   const { signOut } = useAuth()
   return (
     <div className={styles.row}>
@@ -16,12 +16,6 @@ export function AccountRow({ onClose }) {
         label="Profile"
         onClose={onClose}
         onClick={goProfile}
-      />
-      <IconButton
-        icon={Settings}
-        label="Settings"
-        onClose={onClose}
-        onClick={goSettings}
       />
       <IconButton
         icon={LogOut}

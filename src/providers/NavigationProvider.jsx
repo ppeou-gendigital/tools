@@ -2,21 +2,33 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react'
+import { asyncStorage } from '@/lib/storage'
 
 const NavigationContext = createContext(null)
 
-const ROUTES = ['home', 'profile', 'deck-demo', 'settings']
+const ROUTES = [
+  'home',
+  'note-edit',
+  'profile',
+  'deck-demo',
+  'settings',
+  'lockboxes',
+]
 const DEFAULT_ROUTE = 'home'
+const LAST_ROUTE_KEY = 'notas:lastRoute'
 
 // Human labels used by page headers to render dynamic "back" text.
 const ROUTE_LABELS = {
-  home: 'Home',
+  home: 'Notes',
+  'note-edit': 'Edit note',
   profile: 'Profile',
   'deck-demo': 'Deck demo',
   settings: 'Settings',
+  lockboxes: 'Lockboxes',
 }
 
 // Logical parent for each route. Used when the history stack is empty
@@ -25,9 +37,11 @@ const ROUTE_LABELS = {
 // stranding the user.
 const PARENT_ROUTE = {
   home: null,
+  'note-edit': 'home',
   profile: 'home',
   'deck-demo': 'home',
   settings: 'home',
+  lockboxes: 'home',
 }
 
 // Cap on stored history depth. This is a menu-driven single-window app; a
@@ -35,13 +49,56 @@ const PARENT_ROUTE = {
 // cases from menu-jumping loops.
 const HISTORY_LIMIT = 10
 
-export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
+/** Routes safe to reopen after a reload (skip ephemeral editor). */
+function resolveStoredRoute(raw) {
+  if (!ROUTES.includes(raw) || raw === 'note-edit') return DEFAULT_ROUTE
+  return raw
+}
+
+function readLastRouteSync() {
+  try {
+    return resolveStoredRoute(globalThis.localStorage?.getItem(LAST_ROUTE_KEY))
+  } catch {
+    return DEFAULT_ROUTE
+  }
+}
+
+export function NavigationProvider({ children, initial }) {
+  const hasExplicitInitial =
+    typeof initial === 'string' && ROUTES.includes(initial)
+
   // The top of the stack is the current route. `navigate` pushes, `goBack`
   // pops. Rendering derives everything from this single source of truth so
   // dev-tools can inspect the whole nav history in one place.
   const [stack, setStack] = useState(() => [
-    ROUTES.includes(initial) ? initial : DEFAULT_ROUTE,
+    hasExplicitInitial ? initial : readLastRouteSync(),
   ])
+
+  // Extension builds use chrome.storage (async). Reconcile once on mount
+  // when the caller did not force an initial route.
+  useEffect(() => {
+    if (hasExplicitInitial) return
+    let cancelled = false
+    ;(async () => {
+      const stored = await asyncStorage.getItem(LAST_ROUTE_KEY)
+      if (cancelled || stored == null) return
+      const route = resolveStoredRoute(stored)
+      setStack((prev) => {
+        if (prev.length !== 1 || prev[0] === route) return prev
+        return [route]
+      })
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [hasExplicitInitial])
+
+  useEffect(() => {
+    const route = stack[stack.length - 1]
+    // Keep the last stable page while the note editor is open.
+    if (route === 'note-edit') return
+    asyncStorage.setItem(LAST_ROUTE_KEY, route)
+  }, [stack])
 
   const navigate = useCallback((next) => {
     if (!ROUTES.includes(next)) return
@@ -78,9 +135,11 @@ export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
       navigate,
       goBack,
       goHome: () => navigate('home'),
+      goNoteEdit: () => navigate('note-edit'),
       goProfile: () => navigate('profile'),
       goDeckDemo: () => navigate('deck-demo'),
       goSettings: () => navigate('settings'),
+      goLockboxes: () => navigate('lockboxes'),
     }
   }, [stack, navigate, goBack])
 

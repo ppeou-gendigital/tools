@@ -20,13 +20,22 @@ export async function saveUserData(userId, { data }) {
   return applySyncOp({
     stream: 'prefs',
     userId,
-    op: (row) => ({
-      ...(row ?? { data: {} }),
-      data: {
+    op: (row) => {
+      const prev = row?.data ?? {}
+      const next = {
         theme: data.theme,
         fontSize: data.fontSize,
         fabCorner: data.fabCorner,
-      },
-    }),
+      }
+      if (data.workspace !== undefined) {
+        if (data.workspace != null) next.workspace = data.workspace
+      } else if (prev.workspace != null) {
+        next.workspace = prev.workspace
+      }
+      return {
+        ...(row ?? { data: {} }),
+        data: next,
+      }
+    },
   })
 }

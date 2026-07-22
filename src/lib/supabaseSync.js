@@ -59,12 +59,16 @@ function rowFromDb(row) {
 
 function normalizePrefsRow(row) {
   const prefs = normalizeRemotePrefs(row?.data)
+  const data = {
+    theme: prefs.theme,
+    fontSize: prefs.fontSize,
+    fabCorner: prefs.fabCorner,
+  }
+  if (prefs.workspace != null) {
+    data.workspace = prefs.workspace
+  }
   return {
-    data: {
-      theme: prefs.theme,
-      fontSize: prefs.fontSize,
-      fabCorner: prefs.fabCorner,
-    },
+    data,
     updated_at: row?.updated_at ?? null,
   }
 }
@@ -74,17 +78,25 @@ function prefsRowsEqual(a, b) {
   return (
     a.data.theme === b.data.theme &&
     a.data.fontSize === b.data.fontSize &&
-    a.data.fabCorner === b.data.fabCorner
+    a.data.fabCorner === b.data.fabCorner &&
+    JSON.stringify(a.data.workspace ?? null) ===
+      JSON.stringify(b.data.workspace ?? null)
   )
 }
 
 function toDbPrefsPayload(userId, row) {
+  const data = {
+    theme: row.data.theme,
+    fontSize: row.data.fontSize,
+    fabCorner: row.data.fabCorner,
+    updatedAt: new Date().toISOString(),
+  }
+  if (row.data.workspace != null) {
+    data.workspace = row.data.workspace
+  }
   return {
     id: userId,
-    data: {
-      ...row.data,
-      updatedAt: new Date().toISOString(),
-    },
+    data,
     updated_at: new Date().toISOString(),
   }
 }
@@ -245,6 +257,13 @@ export async function pullSync({ stream, userId, local, dirtyKeys } = {}) {
     if (!dirty.has('fabCorner') && !dirty.has('data')) {
       next.data.fabCorner = remote.data.fabCorner
     }
+    if (!dirty.has('workspace') && !dirty.has('data')) {
+      if (remote.data.workspace != null) {
+        next.data.workspace = remote.data.workspace
+      } else {
+        delete next.data.workspace
+      }
+    }
     next.updated_at = remote.updated_at
     const normalized = normalizePrefsRow(next)
     touchQueryCache(stream, userId, normalized)
@@ -257,4 +276,9 @@ export async function pullSync({ stream, userId, local, dirtyKeys } = {}) {
 }
 
 // Re-export op factories so callers can import everything from one place.
-export { opSetTheme, opSetFontSize, opSetFabCorner } from '@/lib/userDataOps'
+export {
+  opSetTheme,
+  opSetFontSize,
+  opSetFabCorner,
+  opSetWorkspace,
+} from '@/lib/userDataOps'

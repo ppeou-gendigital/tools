@@ -23,9 +23,9 @@ The renamer touches:
 - `manifest.json` — `name`, `description`, `action.default_title`
 - `vite.config.js` — `base: '/tools/foo/'`, `outDir: 'dist-web/foo'`, and PWA manifest `name` / `short_name` / `description`
 - `index.html` / `popup.html` — `<title>` and `apple-mobile-web-app-title`
-- `.github/workflows/deploy-TOOLNAME-pages.yml` → `deploy-foo-pages.yml` (updates branch trigger to `tool/foo`)
-- `.github/workflows/release-TOOLNAME-extension.yml` → `release-foo-extension.yml` (updates tag prefix to `foo-v*`)
-- Any remaining `TOOLNAME` / `toolname` in source files (storage keys, aria labels, console prefixes, About row name)
+- `.github/workflows/deploy-notas-pages.yml` → `deploy-foo-pages.yml` (updates branch trigger to `tool/foo`)
+- `.github/workflows/release-notas-extension.yml` → `release-foo-extension.yml` (updates tag prefix to `foo-v*`)
+- Any remaining `notas` / `notas` in source files (storage keys, aria labels, console prefixes, About row name)
 
 **Branch → Pages URL formula** (keep these aligned):
 

@@ -1,22 +1,21 @@
-import { House, LayoutGrid } from 'lucide-react'
+import { House, Lock } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { useNavigation } from '@/providers/NavigationProvider'
 import styles from './PageShortcuts.module.scss'
 
-// Default sibling shortcuts for the template demo pages. Replace or pass
-// a custom `shortcuts` array when your tool grows past Home + DeckDemo.
+// Sibling shortcuts for the app-nav toolbar strip.
 const DEFAULT_SHORTCUTS = [
   {
     id: 'home',
-    label: 'Home',
+    label: 'Notes',
     icon: House,
     pick: (nav) => nav.goHome,
   },
   {
-    id: 'deck-demo',
-    label: 'Deck demo',
-    icon: LayoutGrid,
-    pick: (nav) => nav.goDeckDemo,
+    id: 'lockboxes',
+    label: 'Lockboxes',
+    icon: Lock,
+    pick: (nav) => nav.goLockboxes,
   },
 ]
 
@@ -29,7 +28,7 @@ const DEFAULT_SHORTCUTS = [
  *
  * @param {string} current — route id to filter out of the strip
  * @param {string} [className] — applied to each shortcut button
- * @param {Array} [shortcuts] — override the default Home / DeckDemo set
+ * @param {Array} [shortcuts] — override the default shortcut set
  */
 export function PageShortcuts({
   current,

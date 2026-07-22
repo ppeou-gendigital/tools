@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 //
-// Rasterize icons/tool.svg into PNG sizes using @resvg/resvg-js.
+// Rasterize icons/notas.svg into PNG sizes using @resvg/resvg-js.
 //
 // Outputs:
 //   - Extension icons (16/32/48/128) → icons/icon-{size}.png
@@ -23,10 +23,10 @@ import { Resvg } from '@resvg/resvg-js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
-const SRC = resolve(ROOT, 'icons/tool.svg')
+const SRC = resolve(ROOT, 'icons/notas.svg')
 
-// Matches icons/tool.svg circle fill and src/tokens --fab-bg.
-const BRAND_BG = '#8b5cf6'
+// Matches icons/notas.svg circle fill and src/tokens --fab-bg.
+const BRAND_BG = '#10b981'
 
 const TARGETS = [
   {

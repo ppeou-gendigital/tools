@@ -1,21 +1,20 @@
-import toolLogo from '../../icons/tool.svg'
+import { LineStyle } from 'lucide-react'
 import { cx } from '@/lib/cx'
 import styles from './Logo.module.scss'
 
 /**
- * In-app brand mark. Uses the same SVG source as the extension / PWA icons
- * (`icons/tool.svg`). Swap that file and re-run `npm run icons` when
- * branding a new tool — this component picks up the new art automatically.
+ * In-app brand mark: emerald Lucide `LineStyle` glyph.
+ * Extension / PWA toolbar icons come from `icons/notas.svg`
+ * (filled emerald circle + white glyph) via `npm run icons`.
  */
-export function Logo({ size = 40, className, alt = 'TOOLNAME' }) {
+export function Logo({ size = 40, className, alt = 'Notas' }) {
   return (
-    <img
-      src={toolLogo}
-      alt={alt}
-      width={size}
-      height={size}
+    <LineStyle
+      size={size}
+      strokeWidth={2.25}
       className={cx(styles.logo, className)}
-      draggable={false}
+      aria-label={alt}
+      role="img"
     />
   )
 }

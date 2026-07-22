@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!--
+    Notas extension icon.
+
+    Filled emerald circle (Tailwind Emerald 500, matching the fab-bg token
+    in src/tokens/_tokens.scss) with the lucide LineStyle glyph in white
+    on top. The glyph is rendered inside a nested 24-unit coordinate space
+    via transform="translate scale" so the original lucide path data stays
+    verbatim and easy to swap for another icon later.
+
+    IMPORTANT: Keep this comment free of consecutive hyphens. XML forbids
+    them inside comments, and macOS qlmanage will silently rasterize the
+    resulting XML parse error page into your PNG instead of the icon. If
+    you must reference a CSS custom property here, spell it like fab-bg
+    or (dash dash)fab-bg.
+
+    To regenerate PNG assets after editing this file, run:
+      npm run icons
+    That writes extension sizes to icons/ (transparent) and PWA sizes
+    to public/icons/ (opaque emerald so iOS home-screen icons stay clean).
+  -->
+  <circle cx="64" cy="64" r="60" fill="#10b981" />
+  <g
+    transform="translate(25.6 25.6) scale(3.2)"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M11 5h2" />
+    <path d="M15 12h6" />
+    <path d="M19 5h2" />
+    <path d="M3 12h6" />
+    <path d="M3 19h18" />
+    <path d="M3 5h2" />
+  </g>
+</svg>

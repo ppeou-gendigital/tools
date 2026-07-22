@@ -17,7 +17,7 @@ import { useAuth } from '@/providers/AuthProvider'
 
 const FontSizeContext = createContext(null)
 
-const STORAGE_KEY = 'toolname.fontSize'
+const STORAGE_KEY = 'notas.fontSize'
 const MIN = 12
 const MAX = 24
 const DEFAULT = 16
@@ -90,7 +90,7 @@ export function FontSizeProvider({ children }) {
           op: opSetFontSize(size),
         }),
     }).catch((err) => {
-      console.warn('[toolname] fontSize sync failed:', err?.message ?? err)
+      console.warn('[notas] fontSize sync failed:', err?.message ?? err)
     })
   }, [size, ready, userId])
 

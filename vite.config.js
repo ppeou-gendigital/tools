@@ -15,11 +15,11 @@ import manifest from './manifest.json' with { type: 'json' }
 export default defineConfig(({ command, mode }) => {
   const isExtension = mode === 'extension'
   const isBuild = command === 'build'
-  const webBase = '/tools/TOOLNAME/'
+  const webBase = '/tools/notas/'
 
   return {
     // Web PROD build is intended to be served from
-    // https://<user>.github.io/tools/TOOLNAME/, so every asset URL must
+    // https://<user>.github.io/tools/notas/, so every asset URL must
     // be prefixed with the repo-and-tool subpath. Dev server (`npm run
     // dev`) keeps '/' so http://localhost:5173/ works, and the extension
     // build always resolves at the extension root.
@@ -33,22 +33,29 @@ export default defineConfig(({ command, mode }) => {
         ? [crx({ manifest })]
         : [
             VitePWA({
-              // Registration lives in src/pwaRegister.js (visibility/focus
-              // update checks for iOS home-screen). Don't double-inject.
+              // Registration lives in src/pwaRegister.js (visibility/focus/
+              // pageshow/online update checks for iOS home-screen).
+              // Don't double-inject a second register call.
               injectRegister: false,
               registerType: 'autoUpdate',
+              filename: 'sw.js',
+              manifestFilename: 'manifest.webmanifest',
               includeAssets: [
                 'icons/icon-180.png',
                 'icons/icon-192.png',
                 'icons/icon-512.png',
               ],
               manifest: {
-                name: 'TOOLNAME',
-                short_name: 'TOOLNAME',
-                description: 'TOOLNAME — React + Supabase web app',
+                id: '/tools/notas/',
+                name: 'Notas',
+                short_name: 'Notas',
+                description: 'Notas — notebooks, tags, and locked notes',
                 theme_color: '#0a0a0a',
                 background_color: '#0a0a0a',
                 display: 'standalone',
+                display_override: ['standalone', 'browser'],
+                orientation: 'any',
+                lang: 'en',
                 start_url: './',
                 scope: './',
                 icons: [
@@ -56,11 +63,13 @@ export default defineConfig(({ command, mode }) => {
                     src: 'icons/icon-192.png',
                     sizes: '192x192',
                     type: 'image/png',
+                    purpose: 'any',
                   },
                   {
                     src: 'icons/icon-512.png',
                     sizes: '512x512',
                     type: 'image/png',
+                    purpose: 'any',
                   },
                   {
                     src: 'icons/icon-512.png',
@@ -69,6 +78,7 @@ export default defineConfig(({ command, mode }) => {
                     purpose: 'maskable',
                   },
                 ],
+                categories: ['productivity', 'utilities'],
               },
               workbox: {
                 // Precache the app shell only. No runtimeCaching for
@@ -78,6 +88,9 @@ export default defineConfig(({ command, mode }) => {
                 cleanupOutdatedCaches: true,
                 skipWaiting: true,
                 clientsClaim: true,
+                // Prefer network for navigations when online so deploys
+                // surface faster; precache still covers offline shell.
+                navigationPreload: false,
               },
               devOptions: {
                 enabled: false,
@@ -110,9 +123,9 @@ export default defineConfig(({ command, mode }) => {
         }
       : {
           // Nested so the uploaded Pages artifact serves at
-          // /tools/TOOLNAME/ (matching `base` above). The workflow uploads
+          // /tools/notas/ (matching `base` above). The workflow uploads
           // the parent `dist-web/` folder as the site.
-          outDir: 'dist-web/TOOLNAME',
+          outDir: 'dist-web/notas',
           emptyOutDir: true,
           rollupOptions: {
             input: {
