@@ -1,0 +1,98 @@
+.page {
+  display: grid;
+  gap: var(--space-4);
+  padding-inline: var(--layout-pad);
+  padding-bottom: calc(var(--fab-size) + var(--fab-corner-offset) + var(--space-4));
+}
+
+.section {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.sectionHead {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.sectionTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  margin: 0;
+  color: var(--fg);
+}
+
+.sectionBody {
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.warn {
+  font-size: var(--text-xs);
+  color: var(--destructive, #b91c1c);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+  line-height: 1.45;
+}
+
+.statusError {
+  color: var(--destructive, #b91c1c);
+}
+
+.statusOk {
+  color: color-mix(in srgb, var(--fg) 60%, transparent);
+}
+
+.failureList {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 2px;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

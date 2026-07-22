@@ -2,48 +2,108 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react'
+import { asyncStorage } from '@/lib/storage'
 
 const NavigationContext = createContext(null)
 
-const ROUTES = ['home', 'profile', 'deck-demo', 'rich-text-demo', 'settings']
+const ROUTES = [
+  'home',
+  'visits',
+  'appointments',
+  'doctors',
+  'medications',
+  'readings',
+  'files',
+  'family',
+  'profile',
+  'settings',
+  'vault-security',
+  'datafeed-settings',
+]
 const DEFAULT_ROUTE = 'home'
+const LAST_ROUTE_KEY = 'docto:lastRoute'
 
-// Human labels used by page headers to render dynamic "back" text.
 const ROUTE_LABELS = {
   home: 'Home',
+  visits: 'Visits',
+  appointments: 'Appointments',
+  doctors: 'Doctors',
+  medications: 'Medications',
+  readings: 'Readings',
+  files: 'Files',
+  family: 'Family',
   profile: 'Profile',
-  'deck-demo': 'Deck demo',
-  'rich-text-demo': 'Rich text demo',
   settings: 'Settings',
+  'vault-security': 'Vault security',
+  'datafeed-settings': 'Import / Export',
 }
 
-// Logical parent for each route. Used when the history stack is empty
-// (e.g. the app opened directly onto a sub-page): goBack still needs
-// somewhere sensible to land, so we fall back to the parent instead of
-// stranding the user.
 const PARENT_ROUTE = {
   home: null,
+  visits: 'home',
+  appointments: 'home',
+  doctors: 'home',
+  medications: 'home',
+  readings: 'home',
+  files: 'home',
+  family: 'home',
   profile: 'home',
-  'deck-demo': 'home',
-  'rich-text-demo': 'home',
   settings: 'home',
+  'vault-security': 'settings',
+  'datafeed-settings': 'settings',
 }
 
-// Cap on stored history depth. This is a menu-driven single-window app; a
-// small cap keeps memory bounded and prevents "back a hundred times" edge
-// cases from menu-jumping loops.
 const HISTORY_LIMIT = 10
 
-export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
-  // The top of the stack is the current route. `navigate` pushes, `goBack`
-  // pops. Rendering derives everything from this single source of truth so
-  // dev-tools can inspect the whole nav history in one place.
+function resolveStoredRoute(raw) {
+  if (!ROUTES.includes(raw)) return DEFAULT_ROUTE
+  return raw
+}
+
+function readLastRouteSync() {
+  try {
+    return resolveStoredRoute(globalThis.localStorage?.getItem(LAST_ROUTE_KEY))
+  } catch {
+    return DEFAULT_ROUTE
+  }
+}
+
+export function NavigationProvider({ children, initial }) {
+  const hasExplicitInitial =
+    typeof initial === 'string' && ROUTES.includes(initial)
+
   const [stack, setStack] = useState(() => [
-    ROUTES.includes(initial) ? initial : DEFAULT_ROUTE,
+    hasExplicitInitial ? initial : readLastRouteSync(),
   ])
+
+  // Extension builds use chrome.storage (async). Reconcile once on mount
+  // when the caller did not force an initial route.
+  useEffect(() => {
+    if (hasExplicitInitial) return
+    let cancelled = false
+    ;(async () => {
+      const stored = await asyncStorage.getItem(LAST_ROUTE_KEY)
+      if (cancelled || stored == null) return
+      const route = resolveStoredRoute(stored)
+      setStack((prev) => {
+        if (prev.length !== 1 || prev[0] === route) return prev
+        return [route]
+      })
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [hasExplicitInitial])
+
+  useEffect(() => {
+    const route = stack[stack.length - 1]
+    if (!route || !ROUTES.includes(route)) return
+    asyncStorage.setItem(LAST_ROUTE_KEY, route)
+  }, [stack])
 
   const navigate = useCallback((next) => {
     if (!ROUTES.includes(next)) return
@@ -80,10 +140,17 @@ export function NavigationProvider({ children, initial = DEFAULT_ROUTE }) {
       navigate,
       goBack,
       goHome: () => navigate('home'),
+      goVisits: () => navigate('visits'),
+      goAppointments: () => navigate('appointments'),
+      goDoctors: () => navigate('doctors'),
+      goMedications: () => navigate('medications'),
+      goReadings: () => navigate('readings'),
+      goFiles: () => navigate('files'),
+      goFamily: () => navigate('family'),
       goProfile: () => navigate('profile'),
-      goDeckDemo: () => navigate('deck-demo'),
-      goRichTextDemo: () => navigate('rich-text-demo'),
       goSettings: () => navigate('settings'),
+      goVaultSecurity: () => navigate('vault-security'),
+      goDatafeedSettings: () => navigate('datafeed-settings'),
     }
   }, [stack, navigate, goBack])
 

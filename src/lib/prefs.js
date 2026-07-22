@@ -73,3 +73,13 @@ export function normalizeRemotePrefs(remote) {
     fabCorner: normalizeFabCorner(remote?.fabCorner),
   }
 }
+
+/** Optional plaintext reminder on unlock — never used for crypto. */
+export const PASSPHRASE_HINT_MAX_LENGTH = 80
+
+export function normalizePassphraseHint(v) {
+  if (typeof v !== 'string') return null
+  const trimmed = v.trim().replace(/\s+/g, ' ')
+  if (!trimmed) return null
+  return trimmed.slice(0, PASSPHRASE_HINT_MAX_LENGTH)
+}

@@ -280,6 +280,20 @@ Only active in dev builds. `import.meta.env.DEV` is statically `false` in `npm r
 
 ---
 
+## Import / Export (JSON datafeeds)
+
+Settings → **Import / Export** downloads and imports plaintext patient JSON
+while the vault is unlocked (same idea as Accesso’s credential datafeeds).
+
+Hand [`datafeed/README.md`](./datafeed/README.md) to another system so it can
+export a compatible feed. Samples:
+
+- [`datafeed/patient.sample.json`](./datafeed/patient.sample.json) — full patient
+- [`datafeed/doctors.sample.json`](./datafeed/doctors.sample.json)
+- [`datafeed/medications.sample.json`](./datafeed/medications.sample.json)
+
+Files are **unencrypted health data**. Binary uploads are not included in v1.
+
 ## Permissions
 
 The manifest declares:

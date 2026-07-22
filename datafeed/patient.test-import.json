@@ -1,0 +1,318 @@
+{
+  "version": 1,
+  "type": "patient",
+  "exportedAt": "2026-07-22T22:00:00.000Z",
+  "patient": {
+    "preferredName": "Test Patient",
+    "birthday": "1978-04-12",
+    "sex": "female",
+    "notes": "Sample import for Docto QA — safe to delete after testing."
+  },
+  "doctors": [
+    {
+      "id": "doc-pcp",
+      "name": "Dr. Maya Chen",
+      "specialty": "Family medicine",
+      "email": "maya.chen@bayview.example",
+      "website": "https://bayview.example/chen",
+      "notes": "Primary care. Prefers morning appointments.",
+      "offices": [
+        {
+          "id": "office-bayview",
+          "label": "Bayview Clinic",
+          "phone": "+1-415-555-0142",
+          "phoneExt": "3",
+          "email": "front@bayview.example",
+          "addressLine1": "450 Mission St",
+          "addressLine2": "Suite 200",
+          "city": "San Francisco",
+          "region": "CA",
+          "postalCode": "94105",
+          "country": "US"
+        },
+        {
+          "id": "office-sunset",
+          "label": "Sunset Annex",
+          "phone": "+1-415-555-0199",
+          "addressLine1": "1200 Irving St",
+          "city": "San Francisco",
+          "region": "CA",
+          "postalCode": "94122",
+          "country": "US"
+        }
+      ]
+    },
+    {
+      "id": "doc-cardio",
+      "name": "Dr. Omar Patel",
+      "specialty": "Cardiology",
+      "email": "omar.patel@heart.example",
+      "website": "https://heart.example/patel",
+      "offices": [
+        {
+          "id": "office-heart",
+          "label": "Heart Center",
+          "phone": "+1-415-555-0177",
+          "addressLine1": "505 Parnassus Ave",
+          "city": "San Francisco",
+          "region": "CA",
+          "postalCode": "94143",
+          "country": "US"
+        }
+      ]
+    },
+    {
+      "id": "doc-derm",
+      "name": "Dr. Leah Ortiz",
+      "specialty": "Dermatology",
+      "email": "leah.ortiz@skin.example",
+      "offices": [
+        {
+          "id": "office-skin",
+          "label": "Main",
+          "phone": "+1-650-555-0110",
+          "addressLine1": "880 Santa Cruz Ave",
+          "city": "Menlo Park",
+          "region": "CA",
+          "postalCode": "94025",
+          "country": "US"
+        }
+      ]
+    }
+  ],
+  "appointments": [
+    {
+      "id": "appt-checkup",
+      "title": "Annual physical",
+      "kind": "checkup",
+      "status": "scheduled",
+      "startsAt": "2026-08-05T16:00:00.000Z",
+      "doctorId": "doc-pcp",
+      "officeId": "office-bayview",
+      "instructions": "Bring medication list. Fasting not required."
+    },
+    {
+      "id": "appt-labs",
+      "title": "Lipid panel + A1C",
+      "kind": "blood_draw",
+      "status": "scheduled",
+      "startsAt": "2026-07-28T14:15:00.000Z",
+      "doctorId": "doc-pcp",
+      "officeId": "office-sunset",
+      "instructions": "Fasting 8–12 hours. Water OK."
+    },
+    {
+      "id": "appt-echo",
+      "title": "Echocardiogram",
+      "kind": "ultrasound",
+      "status": "scheduled",
+      "startsAt": "2026-08-12T18:30:00.000Z",
+      "doctorId": "doc-cardio",
+      "officeId": "office-heart",
+      "instructions": "Wear a two-piece top. No lotion on chest."
+    },
+    {
+      "id": "appt-done",
+      "title": "Skin check",
+      "kind": "checkup",
+      "status": "done",
+      "startsAt": "2026-05-20T17:00:00.000Z",
+      "doctorId": "doc-derm",
+      "officeId": "office-skin"
+    }
+  ],
+  "visits": [
+    {
+      "id": "visit-skin",
+      "title": "Dermatology visit",
+      "kind": "doctor_visit",
+      "visitDate": "2026-05-20",
+      "doctorId": "doc-derm",
+      "officeId": "office-skin",
+      "appointmentId": "appt-done",
+      "summary": "Full body skin exam. One benign lesion noted on left forearm; monitor."
+    },
+    {
+      "id": "visit-pcp",
+      "title": "PCP follow-up",
+      "kind": "doctor_visit",
+      "visitDate": "2026-04-03",
+      "doctorId": "doc-pcp",
+      "officeId": "office-bayview",
+      "summary": "BP improved on current lisinopril dose. Continue meds. Ordered labs before August visit."
+    },
+    {
+      "id": "visit-cardio",
+      "title": "Cardiology consult",
+      "kind": "doctor_visit",
+      "visitDate": "2026-03-11",
+      "doctorId": "doc-cardio",
+      "officeId": "office-heart",
+      "summary": "Discussed palpitations. Ordered echo. No med changes."
+    },
+    {
+      "id": "visit-vaccine",
+      "title": "Flu shot",
+      "kind": "procedure",
+      "visitDate": "2025-10-15",
+      "doctorId": "doc-pcp",
+      "officeId": "office-bayview",
+      "summary": "Seasonal influenza vaccine administered left deltoid."
+    }
+  ],
+  "medications": [
+    {
+      "id": "med-lisinopril",
+      "name": "Lisinopril",
+      "strength": "10 mg",
+      "isActive": true,
+      "refillDate": "2026-08-08",
+      "doctorId": "doc-pcp",
+      "schedule": {
+        "timesPerDay": 1,
+        "times": ["08:00"],
+        "instructions": "Take in the morning with water"
+      },
+      "refill": {
+        "quantity": 90,
+        "pillsLeft": 24,
+        "rxNumber": "RX-100442"
+      }
+    },
+    {
+      "id": "med-metformin",
+      "name": "Metformin",
+      "strength": "500 mg",
+      "isActive": true,
+      "refillDate": "2026-07-30",
+      "doctorId": "doc-pcp",
+      "schedule": {
+        "timesPerDay": 2,
+        "times": ["08:00", "20:00"],
+        "instructions": "Take with meals"
+      },
+      "refill": {
+        "quantity": 60,
+        "pillsLeft": 12,
+        "rxNumber": "RX-100443"
+      }
+    },
+    {
+      "id": "med-vitd",
+      "name": "Vitamin D3",
+      "strength": "2000 IU",
+      "isActive": true,
+      "schedule": {
+        "timesPerDay": 1,
+        "times": ["09:00"],
+        "instructions": "With breakfast"
+      }
+    },
+    {
+      "id": "med-old",
+      "name": "Amoxicillin",
+      "strength": "500 mg",
+      "isActive": false,
+      "doctorId": "doc-pcp",
+      "schedule": {
+        "timesPerDay": 3,
+        "times": ["08:00", "14:00", "20:00"],
+        "instructions": "Completed course Jan 2026"
+      }
+    }
+  ],
+  "doses": [
+    {
+      "medicationId": "med-lisinopril",
+      "takenAt": "2026-07-22T13:05:00.000Z",
+      "note": "With breakfast"
+    },
+    {
+      "medicationId": "med-metformin",
+      "takenAt": "2026-07-22T13:06:00.000Z"
+    },
+    {
+      "medicationId": "med-metformin",
+      "takenAt": "2026-07-21T01:10:00.000Z",
+      "note": "Evening dose"
+    },
+    {
+      "medicationId": "med-lisinopril",
+      "takenAt": "2026-07-21T13:02:00.000Z"
+    },
+    {
+      "medicationId": "med-vitd",
+      "takenAt": "2026-07-21T14:00:00.000Z"
+    },
+    {
+      "medicationId": "med-lisinopril",
+      "takenAt": "2026-07-20T13:08:00.000Z"
+    }
+  ],
+  "readings": [
+    {
+      "measuredAt": "2026-07-22T13:12:00.000Z",
+      "bloodPressure": { "systolic": 122, "diastolic": 78 },
+      "pulse": 70,
+      "weightKg": 68.2,
+      "notes": "Morning, seated 5 min"
+    },
+    {
+      "measuredAt": "2026-07-15T13:20:00.000Z",
+      "bloodPressure": { "systolic": 128, "diastolic": 82 },
+      "pulse": 74,
+      "weightKg": 68.5
+    },
+    {
+      "measuredAt": "2026-07-01T14:00:00.000Z",
+      "bloodPressure": { "systolic": 134, "diastolic": 86 },
+      "pulse": 76,
+      "weightKg": 69.0,
+      "heightCm": 165,
+      "notes": "Home cuff"
+    },
+    {
+      "measuredAt": "2026-06-10T15:30:00.000Z",
+      "bloodPressure": { "systolic": 138, "diastolic": 88 },
+      "pulse": 80,
+      "weightKg": 69.4
+    },
+    {
+      "measuredAt": "2026-05-01T13:45:00.000Z",
+      "bloodPressure": { "systolic": 142, "diastolic": 90 },
+      "pulse": 78,
+      "weightKg": 70.1,
+      "notes": "Before med adjustment"
+    }
+  ],
+  "files": [
+    {
+      "title": "Primary insurance — front",
+      "category": "insurance",
+      "insuranceCompany": "Bay Health PPO",
+      "memberId": "BHP-8844210",
+      "notes": "Group 2201. Effective 2026-01-01."
+    },
+    {
+      "title": "Primary insurance — back",
+      "category": "insurance",
+      "insuranceCompany": "Bay Health PPO",
+      "memberId": "BHP-8844210"
+    },
+    {
+      "title": "Lipid panel Mar 2026",
+      "category": "lab",
+      "notes": "From Quest. LDL 118."
+    },
+    {
+      "title": "Chest X-ray report",
+      "category": "imaging",
+      "notes": "Clear. Dated 2025-11-02."
+    },
+    {
+      "title": "Advance directive PDF",
+      "category": "other",
+      "notes": "Signed copy on file at Bayview."
+    }
+  ]
+}

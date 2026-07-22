@@ -1,25 +1,13 @@
 import { supabase } from '@/lib/supabase'
+import { normalizePassphraseHint } from '@/lib/prefs'
 
 // Per-app vault crypto row in public.vault_meta.
-//
-// After `npm run init` / init-tool, TOOLNAME becomes your kebab tool id
-// (e.g. 'accesso'). Multi-vault tools can use 'TOOLNAME:<scopeId>' —
-// see tool/notas (notas:<lockboxUuid>).
-//
 // Never put salt/verifier in user_data.data.
 
-/** Replaced by init-tool.mjs → kebab tool name. */
-export const VAULT_APP_ID = 'TOOLNAME'
+export const VAULT_APP_ID = 'docto'
 
 export function vaultMetaQueryKey(userId, appId = VAULT_APP_ID) {
   return ['vault_meta', userId, appId]
-}
-
-function normalizeHint(v) {
-  if (typeof v !== 'string') return null
-  const trimmed = v.trim().replace(/\s+/g, ' ')
-  if (!trimmed) return null
-  return trimmed.slice(0, 80)
 }
 
 /**
@@ -39,7 +27,7 @@ export function normalizeVaultMetaRow(row) {
   ) {
     return null
   }
-  const hint = normalizeHint(row.hint)
+  const hint = normalizePassphraseHint(row.hint)
   const meta = {
     salt,
     iterations,
@@ -63,7 +51,7 @@ function toDbPatch(meta) {
     out.verifier = meta.verifier
   }
   if ('hint' in meta) {
-    out.hint = normalizeHint(meta.hint)
+    out.hint = normalizePassphraseHint(meta.hint)
   }
   if ('idleTimeoutMs' in meta || 'idle_timeout_ms' in meta) {
     const n = meta.idleTimeoutMs ?? meta.idle_timeout_ms

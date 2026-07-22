@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "type": "doctors",
+  "exportedAt": "2026-07-22T18:00:00.000Z",
+  "items": [
+    {
+      "id": "doc-1",
+      "name": "Dr. Grace Hopper",
+      "specialty": "Internal medicine",
+      "email": "hopper@clinic.example",
+      "offices": [
+        {
+          "id": "office-1",
+          "label": "Downtown",
+          "phone": "+1-555-0100",
+          "addressLine1": "1 Pier Ave",
+          "city": "San Francisco",
+          "region": "CA",
+          "postalCode": "94105",
+          "country": "US"
+        }
+      ]
+    }
+  ]
+}

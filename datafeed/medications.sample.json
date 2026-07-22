@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "type": "medications",
+  "exportedAt": "2026-07-22T18:00:00.000Z",
+  "items": [
+    {
+      "id": "med-1",
+      "name": "Lisinopril",
+      "strength": "10 mg",
+      "isActive": true,
+      "refillDate": "2026-08-15",
+      "schedule": {
+        "timesPerDay": 1,
+        "times": ["08:00"],
+        "instructions": "Take with water"
+      }
+    }
+  ]
+}
