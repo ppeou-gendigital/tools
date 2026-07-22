@@ -57,10 +57,9 @@ export function normalizePassphraseHint(v) {
   return trimmed.slice(0, PASSPHRASE_HINT_MAX_LENGTH)
 }
 
-// Extract the vault meta subtree from a `user_data.data` blob. Kept
-// separate from normalizeRemotePrefs so a vault write never has to
-// re-run the prefs normalizer, and vice versa. Returns null when no
-// vault has been set up yet.
+// Legacy: vault meta used to ride on user_data.data.vault. Accesso now
+// stores salt/verifier in public.vault_meta (see vaultMetaApi.js). Kept
+// only for one-off debugging of old cached blobs.
 export function extractVaultMeta(data) {
   const vault = data?.vault
   if (!vault) return null
@@ -76,8 +75,7 @@ export function extractVaultMeta(data) {
 }
 
 // Merge a fresh prefs blob into the existing `user_data.data`, keeping
-// any keys we don't own (currently: `vault`). Used by PrefsSync so
-// writing a theme change doesn't clobber the vault metadata.
+// any sibling keys. Theme writes must never invent vault meta.
 export function mergePrefsIntoData(existingData, nextPrefs) {
   return {
     ...(existingData ?? {}),

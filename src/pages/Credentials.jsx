@@ -13,6 +13,7 @@ import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { CredentialRow } from '@/patterns/CredentialRow'
 import { HeaderIconButton, PageHeader } from '@/patterns/PageHeader'
+import { VaultIntegrityBanner } from '@/patterns/VaultIntegrityBanner'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { useVault } from '@/providers/VaultProvider'
 import { useDecryptedCredentials } from '@/hooks/useDecryptedCredentials'
@@ -52,8 +53,14 @@ export function Credentials() {
   const [captureError, setCaptureError] = useState(null)
   const extensionMode = isExtension()
 
-  const { decrypted, isLoading, isDecrypting, error, listQuery } =
-    useDecryptedCredentials()
+  const {
+    decrypted,
+    isLoading,
+    isDecrypting,
+    integrityFailed,
+    error,
+    listQuery,
+  } = useDecryptedCredentials()
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -215,6 +222,10 @@ export function Credentials() {
           <TriangleAlert size={12} aria-hidden="true" />
           <span>{captureError}</span>
         </div>
+      )}
+
+      {!loading && integrityFailed && (
+        <VaultIntegrityBanner itemLabel="entries" />
       )}
 
       <div className={styles.toolbar}>

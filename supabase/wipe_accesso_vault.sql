@@ -1,0 +1,15 @@
+-- Destructive: remove Accesso encrypted items + crypto meta for one user.
+-- Run AFTER supabase/vault_meta.sql. Replace the UUID with your auth user id.
+-- Does NOT touch Notas (notas_*) or shared prefs (theme/font/fab/workspace).
+
+-- delete from public.credentials
+--   where user_id = '1623b278-2570-4e9e-ab34-7c58c3bf8127';
+-- delete from public.credit_cards
+--   where user_id = '1623b278-2570-4e9e-ab34-7c58c3bf8127';
+-- delete from public.vault_meta
+--   where user_id = '1623b278-2570-4e9e-ab34-7c58c3bf8127'
+--     and app_id = 'accesso';
+-- update public.user_data
+--   set data = coalesce(data, '{}'::jsonb) - 'vault',
+--       updated_at = now()
+--   where id = '1623b278-2570-4e9e-ab34-7c58c3bf8127';

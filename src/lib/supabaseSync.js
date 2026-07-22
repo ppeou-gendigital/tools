@@ -12,7 +12,8 @@
 //   4. Return authoritative view → caller reconciles or reverts.
 //
 // Acceso streams:
-//   'prefs'         — one user_data row; data JSONB holds theme/font/fab + vault meta
+//   'prefs'         — one user_data row; data JSONB holds theme/font/fab
+//                     (vault salt/verifier lives in public.vault_meta)
 //   'credentials'   — row-level CAS on public.credentials
 //   'credit_cards'  — row-level CAS on public.credit_cards
 
@@ -141,8 +142,7 @@ function prefsDataEqual(a, b) {
   return (
     ad.theme === bd.theme &&
     ad.fontSize === bd.fontSize &&
-    ad.fabCorner === bd.fabCorner &&
-    JSON.stringify(ad.vault ?? null) === JSON.stringify(bd.vault ?? null)
+    ad.fabCorner === bd.fabCorner
   )
 }
 

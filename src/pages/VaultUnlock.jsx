@@ -7,13 +7,18 @@ import {
   KeyRound,
   Loader2,
   Lock,
+  Trash2,
   TriangleAlert,
+  Upload,
 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
+import { useAuth } from '@/providers/AuthProvider'
 import { useVault } from '@/providers/VaultProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { listCredentials } from '@/lib/credentialsApi'
+import { listCreditCards } from '@/lib/creditCardsApi'
 import { PASSPHRASE_HINT_MAX_LENGTH } from '@/lib/prefs'
 import { cx } from '@/lib/cx'
 import styles from './VaultUnlock.module.scss'
@@ -74,20 +79,48 @@ export function VaultUnlock() {
 
 function SetupForm() {
   const vault = useVault()
+  const { user } = useAuth()
+  const userId = user?.id ?? null
   const { goBack, previousRouteLabel } = useNavigation()
+  const fileRef = useRef(null)
   const [passphrase, setPassphrase] = useState('')
   const [confirm, setConfirm] = useState('')
   const [hint, setHint] = useState('')
   const [reveal, setReveal] = useState(false)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(null)
+  const [orphanCount, setOrphanCount] = useState(null)
+  const [confirmWipe, setConfirmWipe] = useState(false)
 
   const tooShort = passphrase.length > 0 && passphrase.length < MIN_PASSPHRASE_LENGTH
   const mismatch = confirm.length > 0 && confirm !== passphrase
   const canSubmit =
     !pending &&
     passphrase.length >= MIN_PASSPHRASE_LENGTH &&
-    confirm === passphrase
+    confirm === passphrase &&
+    !confirmWipe
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      if (!userId) {
+        setOrphanCount(0)
+        return
+      }
+      try {
+        const [creds, cards] = await Promise.all([
+          listCredentials(userId),
+          listCreditCards(userId),
+        ])
+        if (!cancelled) setOrphanCount(creds.length + cards.length)
+      } catch {
+        if (!cancelled) setOrphanCount(null)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -98,10 +131,55 @@ function SetupForm() {
       await vault.setup(passphrase, { hint })
     } catch (err) {
       setError(err?.message ?? String(err))
+      // Re-probe — setup guard usually means orphans are still present.
+      if (userId) {
+        try {
+          const [creds, cards] = await Promise.all([
+            listCredentials(userId),
+            listCreditCards(userId),
+          ])
+          setOrphanCount(creds.length + cards.length)
+        } catch {
+          // keep previous count
+        }
+      }
     } finally {
       setPending(false)
     }
   }
+
+  async function handleWipe() {
+    if (pending) return
+    setPending(true)
+    setError(null)
+    try {
+      await vault.wipeVaultData()
+      setOrphanCount(0)
+      setConfirmWipe(false)
+    } catch (err) {
+      setError(err?.message ?? String(err))
+    } finally {
+      setPending(false)
+    }
+  }
+
+  async function handleRestoreFile(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || pending) return
+    setPending(true)
+    setError(null)
+    try {
+      const text = await file.text()
+      await vault.restoreVaultMetaBackup(text)
+    } catch (err) {
+      setError(err?.message ?? String(err))
+    } finally {
+      setPending(false)
+    }
+  }
+
+  const hasOrphans = typeof orphanCount === 'number' && orphanCount > 0
 
   return (
     <div className={styles.page}>
@@ -129,6 +207,81 @@ function SetupForm() {
           If you forget it, encrypted data cannot be recovered.
         </span>
       </div>
+
+      {hasOrphans && (
+        <div className={styles.recovery}>
+          <p className={styles.recoveryTitle}>
+            {orphanCount} encrypted item{orphanCount === 1 ? '' : 's'} still on
+            this account
+          </p>
+          <p className={styles.recoveryBody}>
+            Vault metadata is missing, so a new passphrase would leave those
+            rows unreadable. Restore a vault-meta backup if you have one, or
+            wipe the orphaned items and start fresh.
+          </p>
+          <div className={styles.recoveryActions}>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              disabled={pending}
+              onClick={() => fileRef.current?.click()}
+            >
+              <Upload size={14} aria-hidden="true" />
+              Restore meta…
+            </Button>
+            {!confirmWipe ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                disabled={pending}
+                onClick={() => setConfirmWipe(true)}
+              >
+                <Trash2 size={14} aria-hidden="true" />
+                Wipe items…
+              </Button>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={pending}
+                  onClick={() => setConfirmWipe(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  disabled={pending}
+                  onClick={handleWipe}
+                >
+                  {pending ? (
+                    <Loader2
+                      size={14}
+                      aria-hidden="true"
+                      className={styles.spinner}
+                    />
+                  ) : (
+                    <Trash2 size={14} aria-hidden="true" />
+                  )}
+                  Yes, wipe {orphanCount} item{orphanCount === 1 ? '' : 's'}
+                </Button>
+              </>
+            )}
+          </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={handleRestoreFile}
+          />
+        </div>
+      )}
 
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.field}>
@@ -206,7 +359,7 @@ function SetupForm() {
           </div>
         )}
 
-        <Button type="submit" disabled={!canSubmit} fullWidth>
+        <Button type="submit" disabled={!canSubmit || hasOrphans} fullWidth>
           {pending ? (
             <>
               <Loader2 size={14} aria-hidden="true" />
@@ -219,6 +372,11 @@ function SetupForm() {
             </>
           )}
         </Button>
+        {hasOrphans && (
+          <p className={styles.hint}>
+            Wipe or restore meta above before creating a new vault.
+          </p>
+        )}
       </form>
     </div>
   )

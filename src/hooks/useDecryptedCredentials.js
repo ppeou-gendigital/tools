@@ -1,8 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/providers/AuthProvider'
 import { useVault } from '@/providers/VaultProvider'
 import { listCredentials } from '@/lib/credentialsApi'
+import {
+  decryptVaultRows,
+  isVaultIntegrityFailed,
+} from '@/lib/decryptVaultRows'
 
 // Fetches the credentials list from Supabase (React Query cached
 // under `['credentials', userId]`, so it dedupes with the Credentials
@@ -19,71 +23,89 @@ export function useDecryptedCredentials() {
   const { user } = useAuth()
   const vault = useVault()
   const userId = user?.id ?? null
+  const { isUnlocked, isRekeying, decryptRecord, keyEpoch } = vault
 
   const listQuery = useQuery({
     queryKey: ['credentials', userId],
     queryFn: () => listCredentials(userId),
-    enabled: !!userId && vault.isUnlocked,
+    enabled: !!userId && isUnlocked,
   })
 
   const [decrypted, setDecrypted] = useState([])
   const [decrypting, setDecrypting] = useState(false)
+  const generationRef = useRef(0)
 
   useEffect(() => {
-    let cancelled = false
+    const generation = ++generationRef.current
+    const isCurrent = () => generationRef.current === generation
+
     async function run() {
-      if (!listQuery.data) {
-        setDecrypted([])
+      if (!isUnlocked || isRekeying || !listQuery.data) {
+        if (isCurrent()) {
+          setDecrypted([])
+          setDecrypting(false)
+        }
         return
       }
+
       setDecrypting(true)
-      const results = await Promise.all(
-        listQuery.data.map(async (row) => {
-          try {
-            const plain = await vault.decryptRecord({
-              ciphertext: row.ciphertext,
-              iv: row.iv,
-            })
-            return {
-              id: row.id,
-              displayName: row.display_name,
-              urlOrApp: plain?.urlOrApp ?? '',
-              accounts: Array.isArray(plain?.accounts) ? plain.accounts : [],
-              notes: plain?.notes ?? '',
-              updatedAt: row.updated_at,
-              createdAt: row.created_at,
-              error: false,
-            }
-          } catch (err) {
-            console.warn('[accesso] credential decrypt failed', err)
-            return {
-              id: row.id,
-              displayName: row.display_name,
-              urlOrApp: '',
-              accounts: [],
-              notes: '',
-              updatedAt: row.updated_at,
-              createdAt: row.created_at,
-              error: true,
-            }
+      const { results } = await decryptVaultRows({
+        rows: listQuery.data,
+        label: 'credential',
+        isCurrent,
+        decryptOne: async (row) => {
+          const plain = await decryptRecord({
+            ciphertext: row.ciphertext,
+            iv: row.iv,
+          })
+          return {
+            id: row.id,
+            displayName: row.display_name,
+            urlOrApp: plain?.urlOrApp ?? '',
+            accounts: Array.isArray(plain?.accounts) ? plain.accounts : [],
+            notes: plain?.notes ?? '',
+            updatedAt: row.updated_at,
+            createdAt: row.created_at,
+            error: false,
           }
+        },
+        mapError: (row) => ({
+          id: row.id,
+          displayName: row.display_name,
+          urlOrApp: '',
+          accounts: [],
+          notes: '',
+          updatedAt: row.updated_at,
+          createdAt: row.created_at,
+          error: true,
         }),
-      )
-      if (!cancelled) {
-        setDecrypted(results)
-        setDecrypting(false)
-      }
+      })
+
+      if (!isCurrent() || results == null) return
+      setDecrypted(results)
+      setDecrypting(false)
     }
+
     run()
     return () => {
-      cancelled = true
+      // Invalidate this pass so a late Promise.all cannot publish.
+      if (generationRef.current === generation) {
+        generationRef.current += 1
+      }
     }
-  }, [listQuery.data, vault])
+  }, [
+    listQuery.data,
+    isUnlocked,
+    isRekeying,
+    decryptRecord,
+    keyEpoch,
+  ])
 
   return {
     decrypted,
     isLoading: listQuery.isLoading,
     isDecrypting: decrypting,
+    integrityFailed: isVaultIntegrityFailed(decrypted),
     error: listQuery.error ?? null,
     listQuery,
   }

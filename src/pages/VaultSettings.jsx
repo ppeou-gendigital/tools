@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Check,
+  Download,
   Eye,
   EyeOff,
   Loader2,
   Lock,
   TriangleAlert,
+  Upload,
 } from 'lucide-react'
 import { PageHeader } from '@/patterns/PageHeader'
 import { Button } from '@/molecules/Button'
@@ -41,7 +43,246 @@ export function VaultSettings() {
           <ChangePassphraseSection />
         </div>
       </div>
+      <VaultMetaBackupSection />
+      <ResetVaultSection />
     </div>
+  )
+}
+
+function VaultMetaBackupSection() {
+  const vault = useVault()
+  const fileRef = useRef(null)
+  const [busy, setBusy] = useState(null)
+  const [error, setError] = useState(null)
+  const [message, setMessage] = useState(null)
+  const [confirmRestore, setConfirmRestore] = useState(false)
+  const [pendingFile, setPendingFile] = useState(null)
+
+  const canExport =
+    !vault.needsSetup && vault.status !== 'loading' && vault.status !== 'error'
+
+  async function handleExport() {
+    if (busy) return
+    setBusy('export')
+    setError(null)
+    setMessage(null)
+    try {
+      await vault.exportVaultMetaBackup()
+      setMessage('Vault meta backup downloaded. Store it somewhere safe.')
+    } catch (err) {
+      setError(err?.message ?? String(err))
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  function handlePickRestore() {
+    if (busy) return
+    setError(null)
+    setMessage(null)
+    fileRef.current?.click()
+  }
+
+  async function handleFileChange(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setPendingFile(file)
+    setConfirmRestore(true)
+  }
+
+  async function handleConfirmRestore() {
+    if (!pendingFile || busy) return
+    setBusy('restore')
+    setError(null)
+    setMessage(null)
+    try {
+      const text = await pendingFile.text()
+      await vault.restoreVaultMetaBackup(text)
+      setConfirmRestore(false)
+      setPendingFile(null)
+      setMessage(
+        'Vault metadata restored. Unlock with the passphrase that matches this backup.',
+      )
+      vault.requestUnlock({ dismissible: false })
+    } catch (err) {
+      setError(err?.message ?? String(err))
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  return (
+    <section className={styles.section}>
+      <div className={styles.sectionHead}>
+        <h2 className={styles.sectionTitle}>Vault meta backup</h2>
+        <p className={styles.sectionBody}>
+          Export salt and verifier so you can restore unlock if prefs sync ever
+          wipes vault metadata. This file is not your passphrase and does not
+          contain passwords — keep it with your passphrase recovery notes.
+        </p>
+      </div>
+      <div className={styles.dangerActions}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleExport}
+          disabled={!canExport || !!busy || vault.isRekeying}
+        >
+          {busy === 'export' ? (
+            <Loader2 size={14} className={styles.spin} aria-hidden="true" />
+          ) : (
+            <Download size={14} aria-hidden="true" />
+          )}
+          Export meta
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={handlePickRestore}
+          disabled={!!busy || vault.isRekeying}
+        >
+          <Upload size={14} aria-hidden="true" />
+          Restore meta…
+        </Button>
+      </div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="application/json,.json"
+        hidden
+        onChange={handleFileChange}
+      />
+      {confirmRestore && (
+        <div className={styles.dangerConfirm}>
+          <p className={cx(styles.status, styles.statusError)}>
+            <TriangleAlert size={14} aria-hidden="true" />
+            Replace current vault metadata with{' '}
+            <strong>{pendingFile?.name ?? 'this file'}</strong>? You must unlock
+            afterward with the passphrase that matches the backup.
+          </p>
+          <div className={styles.dangerActions}>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={!!busy}
+              onClick={() => {
+                setConfirmRestore(false)
+                setPendingFile(null)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleConfirmRestore}
+              disabled={!!busy}
+            >
+              {busy === 'restore' ? (
+                <>
+                  <Loader2 size={14} className={styles.spin} aria-hidden="true" />
+                  Restoring…
+                </>
+              ) : (
+                'Restore'
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
+      {message && (
+        <div className={cx(styles.status, styles.statusOk)} role="status">
+          {message}
+        </div>
+      )}
+      {error && (
+        <div className={cx(styles.status, styles.statusError)} role="alert">
+          {error}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function ResetVaultSection() {
+  const vault = useVault()
+  const [confirming, setConfirming] = useState(false)
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function handleWipe() {
+    if (pending) return
+    setPending(true)
+    setError(null)
+    try {
+      await vault.wipeVaultData()
+      setConfirming(false)
+    } catch (err) {
+      setError(err?.message ?? String(err))
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <section className={cx(styles.section, styles.dangerSection)}>
+      <div className={styles.sectionHead}>
+        <h2 className={styles.sectionTitle}>Reset vault data</h2>
+        <p className={styles.sectionBody}>
+          Permanently delete all credentials, credit cards, and Accesso vault
+          crypto metadata for this account. Shared prefs and other apps (e.g.
+          Notas) are not touched. You will set up a new passphrase afterward.
+        </p>
+      </div>
+      {!confirming ? (
+        <Button
+          size="sm"
+          variant="destructive"
+          onClick={() => setConfirming(true)}
+          disabled={pending || vault.isRekeying}
+        >
+          Delete all vault data…
+        </Button>
+      ) : (
+        <div className={styles.dangerConfirm}>
+          <p className={cx(styles.status, styles.statusError)}>
+            <TriangleAlert size={14} aria-hidden="true" />
+            This cannot be undone. Orphaned ciphertext will be removed so you
+            can create a fresh vault.
+          </p>
+          <div className={styles.dangerActions}>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setConfirming(false)}
+              disabled={pending}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleWipe}
+              disabled={pending}
+            >
+              {pending ? (
+                <>
+                  <Loader2 size={14} className={styles.spin} aria-hidden="true" />
+                  Deleting…
+                </>
+              ) : (
+                'Yes, delete everything'
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
+      {error && (
+        <div className={cx(styles.status, styles.statusError)} role="alert">
+          {error}
+        </div>
+      )}
+    </section>
   )
 }
 

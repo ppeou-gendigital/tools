@@ -1,18 +1,18 @@
-// Thin wrappers over supabaseSync for vault / legacy callers.
-// New code should import applySyncOp / pullSync from @/lib/supabaseSync.
+// Thin wrappers over supabaseSync for prefs / legacy callers.
+// Vault crypto meta lives in public.vault_meta — see vaultMetaApi.js.
 
+import { applySyncOp, pullSync } from '@/lib/supabaseSync'
 import {
-  applySyncOp,
-  opPatchVaultMeta,
-  pullSync,
-} from '@/lib/supabaseSync'
+  saveVaultMeta as saveVaultMetaRow,
+  VAULT_APP_ACCESSO,
+} from '@/lib/vaultMetaApi'
 
 export async function fetchUserData(userId) {
   return pullSync({ stream: 'prefs', userId })
 }
 
 // Full-blob replace via a pure op. Prefer field operators
-// (opSetTheme, opPatchVaultMeta, …) for new code.
+// (opSetTheme, …) for new code. Do not put vault salt/verifier here.
 export async function saveUserData(userId, { data }) {
   return applySyncOp({
     stream: 'prefs',
@@ -26,12 +26,7 @@ export async function saveUserData(userId, { data }) {
   })
 }
 
-// Persist a patch into data.vault via CAS so prefs keys survive.
+/** @deprecated Prefer importing saveVaultMeta from vaultMetaApi.js */
 export async function saveVaultMeta(userId, patch) {
-  if (!userId) throw new Error('saveVaultMeta: userId is required')
-  return applySyncOp({
-    stream: 'prefs',
-    userId,
-    op: opPatchVaultMeta(patch),
-  })
+  return saveVaultMetaRow(userId, patch, VAULT_APP_ACCESSO)
 }

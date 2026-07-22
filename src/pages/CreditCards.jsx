@@ -14,6 +14,7 @@ import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { CreditCardRow } from '@/patterns/CreditCardRow'
 import { HeaderIconButton, PageHeader } from '@/patterns/PageHeader'
+import { VaultIntegrityBanner } from '@/patterns/VaultIntegrityBanner'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { useVault } from '@/providers/VaultProvider'
@@ -78,8 +79,14 @@ export function CreditCards() {
   const [capturing, setCapturing] = useState(false)
   const [captureError, setCaptureError] = useState(null)
 
-  const { decrypted, isLoading, isDecrypting, error, listQuery } =
-    useDecryptedCreditCards()
+  const {
+    decrypted,
+    isLoading,
+    isDecrypting,
+    integrityFailed,
+    error,
+    listQuery,
+  } = useDecryptedCreditCards()
 
   const favoriteMutation = useMutation({
     mutationFn: async ({ card, nextFavorite }) => {
@@ -277,6 +284,10 @@ export function CreditCards() {
           </>
         }
       />
+
+      {!loading && integrityFailed && (
+        <VaultIntegrityBanner itemLabel="cards" />
+      )}
 
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>

@@ -80,7 +80,8 @@ export function opSetFabCorner(corner) {
   }
 }
 
-// Shallow-merge a patch into data.vault without touching prefs keys.
+// Legacy: vault meta now lives in public.vault_meta (vaultMetaApi.js).
+// Kept so old callers / docs references do not break; do not use for new code.
 export function opPatchVaultMeta(patch) {
   const safePatch =
     patch && typeof patch === 'object' && !Array.isArray(patch) ? patch : {}

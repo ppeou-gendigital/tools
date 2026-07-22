@@ -9,10 +9,20 @@ import {
 } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/providers/AuthProvider'
-import { fetchUserData, saveVaultMeta } from '@/lib/userDataApi'
 import { listCredentials, updateCredential } from '@/lib/credentialsApi'
 import { listCreditCards, updateCreditCard } from '@/lib/creditCardsApi'
-import { extractVaultMeta, normalizePassphraseHint } from '@/lib/prefs'
+import { normalizePassphraseHint } from '@/lib/prefs'
+import {
+  VAULT_APP_ACCESSO,
+  fetchVaultMeta,
+  saveVaultMeta,
+  vaultMetaQueryKey,
+  wipeAccessoVaultData,
+} from '@/lib/vaultMetaApi'
+import {
+  exportAccessoVaultMetaBackup,
+  restoreAccessoVaultMetaBackup,
+} from '@/lib/vaultMetaBackup'
 import { sessionAsyncStorage } from '@/lib/sessionStorage'
 import {
   KDF_ITERATIONS,
@@ -141,6 +151,10 @@ export function VaultProvider({ children }) {
   // True while changePassphrase is re-encrypting rows / flipping meta.
   // Gates encrypt/decrypt so nothing else writes under the old key.
   const [isRekeying, setIsRekeying] = useState(false)
+  // Bumped whenever keyRef is (re)derived successfully so decrypt
+  // hooks re-run after unlock-time meta refresh without depending on
+  // the whole vault context object.
+  const [keyEpoch, setKeyEpoch] = useState(0)
   const [biometrics, setBiometrics] = useState({
     capability: null,
     enrollment: null,
@@ -155,6 +169,8 @@ export function VaultProvider({ children }) {
   // Kept only while unlocked so Vault settings can enroll biometrics
   // without re-typing the passphrase. Cleared on lock.
   const passphraseRef = useRef(null)
+  // Dedupes the post-unlock prefs pull (same pattern as VaultItemsSync).
+  const metaSyncedForUnlockRef = useRef(null)
 
   const userId = user?.id ?? null
 
@@ -251,15 +267,20 @@ export function VaultProvider({ children }) {
       setStatus(STATUS.LOADING)
       setError(null)
       setPassphraseHintState(null)
+      metaSyncedForUnlockRef.current = null
 
       try {
-        const row = await queryClient.fetchQuery({
-          queryKey: ['user_data', userId],
-          queryFn: () => fetchUserData(userId),
+        // Vault crypto lives in public.vault_meta (per app_id), not in
+        // the shared user_data prefs blob — sibling tools must not be
+        // able to wipe salt/verifier via prefs CAS.
+        await queryClient.invalidateQueries({
+          queryKey: vaultMetaQueryKey(userId),
         })
+        const fetched = await fetchVaultMeta(userId, VAULT_APP_ACCESSO)
         if (cancelled) return
-        const meta = extractVaultMeta(row?.data)
-        const nextIdleMs = normalizeIdleTimeoutMs(row?.data?.vault?.idleTimeoutMs)
+        queryClient.setQueryData(vaultMetaQueryKey(userId), fetched)
+        const meta = fetched?.meta ?? null
+        const nextIdleMs = normalizeIdleTimeoutMs(meta?.idleTimeoutMs)
         setIdleTimeoutMsState(nextIdleMs)
         idleTimeoutMsRef.current = nextIdleMs
 
@@ -288,6 +309,7 @@ export function VaultProvider({ children }) {
               passphraseRef.current = cached.passphrase
               // Refresh the expiry so a hydrate counts as activity.
               await writeCache(userId, cached.passphrase, idleTimeoutMsRef.current)
+              setKeyEpoch((n) => n + 1)
               setStatus(STATUS.UNLOCKED)
               return
             }
@@ -335,6 +357,17 @@ export function VaultProvider({ children }) {
           `Passphrase must be at least ${MIN_PASSPHRASE_LENGTH} characters.`,
         )
       }
+      // Refuse to mint a new salt/verifier when encrypted rows already
+      // exist — that orphans every credential/card under the old key.
+      const [existingCreds, existingCards] = await Promise.all([
+        listCredentials(userId),
+        listCreditCards(userId),
+      ])
+      if (existingCreds.length > 0 || existingCards.length > 0) {
+        throw new Error(
+          'Vault items already exist for this account. Unlock with your existing passphrase. If vault metadata was lost, restore it or wipe items before creating a new vault.',
+        )
+      }
       const salt = generateSalt()
       const iterations = KDF_ITERATIONS
       const key = await deriveKey(passphrase, salt, iterations)
@@ -343,14 +376,19 @@ export function VaultProvider({ children }) {
       const meta = hint
         ? { salt, iterations, verifier, hint }
         : { salt, iterations, verifier }
-      const row = await saveVaultMeta(userId, meta)
-      queryClient.setQueryData(['user_data', userId], row)
+      const saved = await saveVaultMeta(userId, meta, VAULT_APP_ACCESSO)
+      queryClient.setQueryData(vaultMetaQueryKey(userId), saved)
+      const nextMeta = saved?.meta ?? meta
       keyRef.current = key
-      metaRef.current = meta
+      metaRef.current = nextMeta
       failedAttemptsRef.current = 0
       await writeCache(userId, passphrase, idleTimeoutMsRef.current)
       passphraseRef.current = passphrase
       setPassphraseHintState(hint)
+      setIdleTimeoutMsState(
+        normalizeIdleTimeoutMs(nextMeta.idleTimeoutMs),
+      )
+      setKeyEpoch((n) => n + 1)
       setStatus(STATUS.UNLOCKED)
       setError(null)
       setUnlockPrompt(null)
@@ -388,6 +426,7 @@ export function VaultProvider({ children }) {
           setBiometrics((prev) => ({ ...prev, enrollment }))
         }
       })
+      setKeyEpoch((n) => n + 1)
       setStatus(STATUS.UNLOCKED)
       setError(null)
       setUnlockPrompt(null)
@@ -446,6 +485,7 @@ export function VaultProvider({ children }) {
     keyRef.current = null
     passphraseRef.current = null
     failedAttemptsRef.current = 0
+    metaSyncedForUnlockRef.current = null
     queryClient.removeQueries({ queryKey: ['credentials', userId] })
     queryClient.removeQueries({ queryKey: ['credit_cards', userId] })
     setStatus(metaRef.current ? STATUS.LOCKED : STATUS.NEEDS_SETUP)
@@ -454,11 +494,87 @@ export function VaultProvider({ children }) {
     clearCache()
   }, [queryClient, userId])
 
+  // After unlock (including session hydrate), force-pull vault_meta and
+  // re-verify the in-memory passphrase against fresh salt/verifier.
+  useEffect(() => {
+    if (status !== STATUS.UNLOCKED || !userId) {
+      if (status !== STATUS.UNLOCKED) {
+        metaSyncedForUnlockRef.current = null
+      }
+      return
+    }
+    const sessionKey = `${userId}:unlocked`
+    if (metaSyncedForUnlockRef.current === sessionKey) return
+
+    let cancelled = false
+    ;(async () => {
+      try {
+        const fetched = await fetchVaultMeta(userId, VAULT_APP_ACCESSO)
+        if (cancelled) return
+        queryClient.setQueryData(vaultMetaQueryKey(userId), fetched)
+
+        const meta = fetched?.meta ?? null
+        const nextIdleMs = normalizeIdleTimeoutMs(meta?.idleTimeoutMs)
+        setIdleTimeoutMsState(nextIdleMs)
+        idleTimeoutMsRef.current = nextIdleMs
+
+        if (!meta) {
+          keyRef.current = null
+          passphraseRef.current = null
+          metaRef.current = null
+          setPassphraseHintState(null)
+          await clearCache()
+          setStatus(STATUS.NEEDS_SETUP)
+          return
+        }
+
+        metaRef.current = meta
+        setPassphraseHintState(meta.hint ?? null)
+
+        const passphrase = passphraseRef.current
+        if (!passphrase) {
+          keyRef.current = null
+          await clearCache()
+          setStatus(STATUS.LOCKED)
+          return
+        }
+
+        const key = await deriveKey(passphrase, meta.salt, meta.iterations)
+        const ok = await checkVerifier(key, meta.verifier)
+        if (cancelled) return
+        if (!ok) {
+          keyRef.current = null
+          passphraseRef.current = null
+          await clearCache()
+          setStatus(STATUS.LOCKED)
+          return
+        }
+
+        keyRef.current = key
+        await writeCache(userId, passphrase, idleTimeoutMsRef.current)
+        // Mark this unlock session only after a successful re-verify so
+        // Strict Mode remounts / cancelled pulls can retry.
+        metaSyncedForUnlockRef.current = sessionKey
+        setKeyEpoch((n) => n + 1)
+      } catch (err) {
+        if (cancelled) return
+        console.warn(
+          '[accesso] vault meta refresh failed:',
+          err?.message ?? err,
+        )
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [status, userId, queryClient])
+
   // Persist a new idle-timeout preference. Updates local state
   // immediately (so the timer effect re-registers), then upserts the
-  // Supabase row via saveVaultMeta's shallow-merge. If the vault is
-  // currently unlocked we also refresh the cache expiry with the new
-  // window so the change takes effect on the very next activity tick.
+  // vault_meta row. If the vault is currently unlocked we also refresh
+  // the cache expiry with the new window so the change takes effect on
+  // the very next activity tick.
   const setIdleTimeoutMs = useCallback(
     async (ms) => {
       const normalized = normalizeIdleTimeoutMs(ms)
@@ -466,8 +582,13 @@ export function VaultProvider({ children }) {
       idleTimeoutMsRef.current = normalized
       setIdleTimeoutMsState(normalized)
       if (userId) {
-        const row = await saveVaultMeta(userId, { idleTimeoutMs: normalized })
-        queryClient.setQueryData(['user_data', userId], row)
+        const saved = await saveVaultMeta(
+          userId,
+          { idleTimeoutMs: normalized },
+          VAULT_APP_ACCESSO,
+        )
+        queryClient.setQueryData(vaultMetaQueryKey(userId), saved)
+        if (saved?.meta) metaRef.current = saved.meta
         if (keyRef.current) {
           const cached = await readCache()
           if (cached?.userId === userId) {
@@ -493,8 +614,12 @@ export function VaultProvider({ children }) {
       const hint = normalizePassphraseHint(nextHint)
       const current = metaRef.current.hint ?? null
       if (hint === current) return
-      const row = await saveVaultMeta(userId, { hint })
-      queryClient.setQueryData(['user_data', userId], row)
+      const saved = await saveVaultMeta(
+        userId,
+        { hint },
+        VAULT_APP_ACCESSO,
+      )
+      queryClient.setQueryData(vaultMetaQueryKey(userId), saved)
       if (hint) {
         metaRef.current = { ...metaRef.current, hint }
       } else {
@@ -609,12 +734,16 @@ export function VaultProvider({ children }) {
         }
 
         // Flip the unlock key only after every row is under the new key.
-        const prefsRow = await saveVaultMeta(userId, {
-          salt: newSalt,
-          iterations,
-          verifier: newVerifier,
-        })
-        queryClient.setQueryData(['user_data', userId], prefsRow)
+        const saved = await saveVaultMeta(
+          userId,
+          {
+            salt: newSalt,
+            iterations,
+            verifier: newVerifier,
+          },
+          VAULT_APP_ACCESSO,
+        )
+        queryClient.setQueryData(vaultMetaQueryKey(userId), saved)
 
         metaRef.current = {
           ...meta,
@@ -629,6 +758,7 @@ export function VaultProvider({ children }) {
         // Old biometric wrap was under the previous passphrase.
         await clearBiometricEnrollment(userId)
         setBiometrics((prev) => ({ ...prev, enrollment: null }))
+        setKeyEpoch((n) => n + 1)
 
         queryClient.setQueryData(['credentials', userId], nextCredRows)
         queryClient.setQueryData(['credit_cards', userId], nextCardRows)
@@ -734,6 +864,75 @@ export function VaultProvider({ children }) {
     return decryptJson(keyRef.current, ciphertext, iv)
   }, [])
 
+  // Download salt/verifier backup (no passphrase, no plaintext secrets).
+  const exportVaultMetaBackup = useCallback(async () => {
+    if (!userId) throw new Error('exportVaultMetaBackup: not signed in')
+    return exportAccessoVaultMetaBackup(userId)
+  }, [userId])
+
+  // Restore salt/verifier from a backup file, then force re-unlock.
+  const restoreVaultMetaBackup = useCallback(
+    async (raw) => {
+      if (!userId) throw new Error('restoreVaultMetaBackup: not signed in')
+      if (rekeyingRef.current) {
+        throw new Error('restoreVaultMetaBackup: passphrase change in progress')
+      }
+      const { saved } = await restoreAccessoVaultMetaBackup(userId, raw)
+      queryClient.setQueryData(vaultMetaQueryKey(userId), saved)
+      keyRef.current = null
+      passphraseRef.current = null
+      failedAttemptsRef.current = 0
+      metaSyncedForUnlockRef.current = null
+      await clearCache()
+      try {
+        await clearBiometricEnrollment(userId)
+      } catch {
+        // best-effort — bio wrap was under previous meta generation
+      }
+      setBiometrics((prev) => ({ ...prev, enrollment: null }))
+      setUnlockPrompt(null)
+      setError(null)
+      setKeyEpoch((n) => n + 1)
+      // Reload meta from network and land on locked (or needs-setup).
+      setReloadCounter((n) => n + 1)
+      return saved
+    },
+    [queryClient, userId],
+  )
+
+  // Destructive reset: delete credentials/cards + Accesso vault_meta,
+  // strip legacy user_data.vault, clear local session, land on setup.
+  const wipeVaultData = useCallback(async () => {
+    if (!userId) throw new Error('wipeVaultData: not signed in')
+    if (rekeyingRef.current) {
+      throw new Error('wipeVaultData: passphrase change in progress')
+    }
+    await wipeAccessoVaultData(userId)
+    try {
+      await clearBiometricEnrollment(userId)
+    } catch {
+      // best-effort
+    }
+    keyRef.current = null
+    passphraseRef.current = null
+    metaRef.current = null
+    failedAttemptsRef.current = 0
+    metaSyncedForUnlockRef.current = null
+    await clearCache()
+    queryClient.removeQueries({ queryKey: ['credentials', userId] })
+    queryClient.removeQueries({ queryKey: ['credit_cards', userId] })
+    queryClient.removeQueries({ queryKey: vaultMetaQueryKey(userId) })
+    queryClient.removeQueries({ queryKey: ['user_data', userId] })
+    setBiometrics((prev) => ({ ...prev, enrollment: null }))
+    setPassphraseHintState(null)
+    setIdleTimeoutMsState(VAULT_IDLE_DEFAULT_MS)
+    idleTimeoutMsRef.current = VAULT_IDLE_DEFAULT_MS
+    setUnlockPrompt(null)
+    setError(null)
+    setKeyEpoch((n) => n + 1)
+    setStatus(STATUS.NEEDS_SETUP)
+  }, [queryClient, userId])
+
   const value = useMemo(
     () => ({
       status,
@@ -743,6 +942,7 @@ export function VaultProvider({ children }) {
       needsSetup: status === STATUS.NEEDS_SETUP,
       isLocked: status === STATUS.LOCKED,
       isRekeying,
+      keyEpoch,
       passphraseHint,
       setPassphraseHint,
       idleTimeoutMs,
@@ -760,6 +960,9 @@ export function VaultProvider({ children }) {
       biometrics,
       changePassphrase,
       lock,
+      exportVaultMetaBackup,
+      restoreVaultMetaBackup,
+      wipeVaultData,
       retryLoad,
       encryptRecord,
       decryptRecord,
@@ -768,6 +971,7 @@ export function VaultProvider({ children }) {
       status,
       error,
       isRekeying,
+      keyEpoch,
       passphraseHint,
       setPassphraseHint,
       idleTimeoutMs,
@@ -785,6 +989,9 @@ export function VaultProvider({ children }) {
       biometrics,
       changePassphrase,
       lock,
+      exportVaultMetaBackup,
+      restoreVaultMetaBackup,
+      wipeVaultData,
       retryLoad,
       encryptRecord,
       decryptRecord,

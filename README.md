@@ -245,7 +245,7 @@ create policy "user_data self-update" on public.user_data for update using (auth
 
 Row-scoped RLS covers all columns automatically. No trigger needed — the app upserts on first change, so rows only exist for users who have actually signed in and touched a pref.
 
-The `data` blob also carries the vault metadata (`vault.salt`, `vault.iterations`, `vault.verifier`) that powers the app-wide E2EE vault — see [Vault (app-wide E2EE)](#vault-app-wide-e2ee) below.
+Vault crypto metadata (salt / verifier) does **not** live in this blob — see [`public.vault_meta`](supabase/vault_meta.sql) and [Vault (app-wide E2EE)](#vault-app-wide-e2ee) below.
 
 **Sync contract** — all synced I/O goes through [`src/lib/supabaseSync.js`](src/lib/supabaseSync.js) (same Fav Links CAS recipe as Loopy):
 
@@ -253,9 +253,9 @@ The `data` blob also carries the vault metadata (`vault.salt`, `vault.iterations
 - `pullSync({ stream, userId })` — force-network pull
 - Streams: `'prefs'` (`user_data`), `'credentials'`, `'credit_cards'`
 
-**Prefs** (theme / fontSize / fabCorner): each provider owns its mutations — optimistic local write, then `applySyncOp` with a field op from [`userDataOps.js`](src/lib/userDataOps.js) (`opSetTheme`, `opSetFontSize`, `opSetFabCorner`). On CAS miss the op re-applies against the latest remote row so concurrent edits to *different* keys (including `vault`) both survive.
+**Prefs** (theme / fontSize / fabCorner): each provider owns its mutations — optimistic local write, then `applySyncOp` with a field op from [`userDataOps.js`](src/lib/userDataOps.js) (`opSetTheme`, `opSetFontSize`, `opSetFabCorner`). On CAS miss the op re-applies against the latest remote row so concurrent edits to different keys both survive.
 
-**Vault meta** (`data.vault`): [`saveVaultMeta`](src/lib/userDataApi.js) calls `applySyncOp` with `opPatchVaultMeta` so idle-timeout / setup writes cannot wipe theme (and vice versa).
+**Vault meta** (`public.vault_meta`, one row per `(user_id, app_id)`): [`vaultMetaApi.js`](src/lib/vaultMetaApi.js) reads/writes Accesso's row (`app_id = 'accesso'`). Sibling tools must use their own `app_id` — never store salt/verifier inside `user_data`.
 
 [`PrefsSync`](src/providers/PrefsSync.jsx) is **pull-only** on sign-in. Fields the user changed while the fetch was in flight are skipped (dirty-field guard).
 
@@ -290,25 +290,23 @@ Because the derivation is deterministic (passphrase + per-user salt → same 256
 
 > **Warning**: if you forget the master passphrase, every encrypted feature is unrecoverable — that is the point of E2EE. Optional **biometric unlock** (WebAuthn + PRF) is a per-device convenience after one passphrase unlock; it does not replace the passphrase on new devices. See [src/providers/VaultProvider.jsx](src/providers/VaultProvider.jsx), [src/lib/vaultCrypto.js](src/lib/vaultCrypto.js), and [src/lib/biometrics.js](src/lib/biometrics.js).
 
-### 1. Vault metadata (rides on `user_data.data`)
+### 1. Vault metadata (`public.vault_meta`)
 
-No dedicated table for vault meta — it piggybacks on the existing `user_data` row's `data` JSONB blob:
+Per-app crypto row — Accesso uses `app_id = 'accesso'`. Run [`supabase/vault_meta.sql`](supabase/vault_meta.sql) in the SQL Editor once on the shared project.
 
-```json
-{
-  "theme": "system",
-  "fontSize": 16,
-  "fabCorner": "bottom-right",
-  "vault": {
-    "salt": "<base64 16 bytes>",
-    "iterations": 310000,
-    "verifier": { "ciphertext": "<base64>", "iv": "<base64>" },
-    "idleTimeoutMs": 86400000
-  }
-}
-```
+| Column | Purpose |
+|--------|---------|
+| `user_id` + `app_id` | Primary key (one row per tool per user) |
+| `salt` / `iterations` | PBKDF2 inputs |
+| `verifier` | JSON `{ ciphertext, iv }` canary |
+| `hint` | Optional plaintext memory jog |
+| `idle_timeout_ms` | Auto-lock preference |
 
 The `verifier` is a small known constant encrypted with the derived key. On unlock the app decrypts it and checks it matches, which is how we distinguish a wrong passphrase from a network error without ever storing the passphrase.
+
+Do **not** put salt/verifier back into `user_data.data` — sibling prefs CAS (Notas / Loopy) historically wiped that key.
+
+**Meta backup** — Settings → Vault → **Export meta** downloads a JSON file (`kind: "vault_meta_backup"`) with salt/verifier/hint/idle only (not the passphrase, not credentials). **Restore meta** writes it back to `vault_meta` so an existing passphrase can unlock ciphertext again after a wipe. Store that file offline with your passphrase notes. Notas has the same flow under Lockboxes (one entry per lockbox).
 
 ### 2. First consumer: the `credentials` table + RLS
 
