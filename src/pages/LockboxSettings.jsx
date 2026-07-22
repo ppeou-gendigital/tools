@@ -1,5 +1,14 @@
-import { useState } from 'react'
-import { ArrowLeft, Fingerprint, Plus, RotateCcwKey, Trash2, X } from 'lucide-react'
+import { useRef, useState } from 'react'
+import {
+  ArrowLeft,
+  Download,
+  Fingerprint,
+  Plus,
+  RotateCcwKey,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -8,6 +17,7 @@ import { Modal } from '@/patterns/Modal'
 import { PageHeader } from '@/patterns/PageHeader'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { useAuth } from '@/providers/AuthProvider'
 import { useNotes } from '@/providers/NotesProvider'
 import { useLockbox } from '@/providers/LockboxProvider'
 import { usePrompt } from '@/providers/PromptProvider'
@@ -16,11 +26,17 @@ import {
   labelForIdleTimeoutMs,
 } from '@/lib/lockboxIdleOptions'
 import { BIO_REAUTH_OPTIONS } from '@/lib/biometrics'
+import {
+  exportNotasVaultMetaBackup,
+  restoreNotasVaultMetaBackup,
+} from '@/lib/vaultMetaBackup'
 import styles from './LockboxSettings.module.scss'
 
 export function LockboxSettings() {
   const { goBack, previousRouteLabel } = useNavigation()
-  const { lockboxes, notebooks } = useNotes()
+  const { user } = useAuth()
+  const userId = user?.id ?? null
+  const { lockboxes, notebooks, upsertLockboxMeta } = useNotes()
   const {
     createLockbox,
     unlock,
@@ -198,6 +214,15 @@ export function LockboxSettings() {
             when the browser quits.
           </p>
         </section>
+
+        <VaultMetaBackupSection
+          userId={userId}
+          lockboxes={lockboxes}
+          upsertLockboxMeta={upsertLockboxMeta}
+          confirm={confirm}
+          onError={setError}
+          onMessage={setMessage}
+        />
 
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Your lockboxes</h2>
@@ -520,5 +545,134 @@ function LockboxCard({
         </p>
       </div>
     </li>
+  )
+}
+
+function VaultMetaBackupSection({
+  userId,
+  lockboxes,
+  upsertLockboxMeta,
+  confirm,
+  onError,
+  onMessage,
+}) {
+  const fileRef = useRef(null)
+  const [busy, setBusy] = useState(null)
+
+  async function handleExport() {
+    if (!userId || busy) return
+    setBusy('export')
+    onError(null)
+    onMessage(null)
+    try {
+      const doc = await exportNotasVaultMetaBackup(userId, lockboxes)
+      onMessage(
+        `Exported ${doc.vaults.length} lockbox meta entr${
+          doc.vaults.length === 1 ? 'y' : 'ies'
+        }. Store the file somewhere safe with your passphrases.`,
+      )
+    } catch (err) {
+      onError(err?.message ?? String(err))
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  function handlePickRestore() {
+    if (!userId || busy) return
+    onError(null)
+    onMessage(null)
+    fileRef.current?.click()
+  }
+
+  async function handleFileChange(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !userId) return
+    const ok = await confirm({
+      title: 'Restore lockbox metadata?',
+      message: `Replace vault_meta for lockboxes in “${file.name}”? You will need each lockbox’s original passphrase afterward. Existing note ciphertext is not deleted.`,
+      confirmLabel: 'Restore',
+      cancelLabel: 'Cancel',
+    })
+    if (!ok) return
+
+    setBusy('restore')
+    onError(null)
+    onMessage(null)
+    try {
+      const text = await file.text()
+      const { restored, missingLocal } = await restoreNotasVaultMetaBackup(
+        userId,
+        text,
+        lockboxes,
+      )
+      // Refresh in-memory lockbox crypto for ids we already know.
+      for (const entry of restored) {
+        const existing = lockboxes.find((l) => l.id === entry.id)
+        if (!existing) continue
+        await upsertLockboxMeta({
+          ...existing,
+          salt: entry.salt,
+          iterations: entry.iterations,
+          verifier: entry.verifier,
+          hint: entry.hint ?? existing.hint ?? null,
+        })
+      }
+      const parts = [
+        `Restored ${restored.length} lockbox meta entr${
+          restored.length === 1 ? 'y' : 'ies'
+        }.`,
+      ]
+      if (missingLocal.length > 0) {
+        parts.push(
+          `${missingLocal.length} id(s) are not in this workspace (crypto saved in vault_meta only).`,
+        )
+      }
+      parts.push('Unlock each lockbox with its original passphrase.')
+      onMessage(parts.join(' '))
+    } catch (err) {
+      onError(err?.message ?? String(err))
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  return (
+    <section className={styles.section}>
+      <h2 className={styles.sectionTitle}>Lockbox meta backup</h2>
+      <p className={styles.hint}>
+        Export salt/verifier for every lockbox so you can restore unlock if
+        cloud metadata is wiped. Does not include passphrases or note bodies —
+        keep the file with your passphrase notes.
+      </p>
+      <div className={styles.backupActions}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleExport}
+          disabled={!userId || !!busy}
+        >
+          <Download size={14} aria-hidden="true" />
+          {busy === 'export' ? 'Exporting…' : 'Export meta'}
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={handlePickRestore}
+          disabled={!userId || !!busy}
+        >
+          <Upload size={14} aria-hidden="true" />
+          {busy === 'restore' ? 'Restoring…' : 'Restore meta…'}
+        </Button>
+      </div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="application/json,.json"
+        hidden
+        onChange={handleFileChange}
+      />
+    </section>
   )
 }

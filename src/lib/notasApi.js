@@ -3,6 +3,11 @@
 
 import { supabase } from '@/lib/supabase'
 import {
+  deleteOrphanNotasLockboxVaultMeta,
+  listNotasLockboxVaultMeta,
+  saveNotasLockboxVaultMeta,
+} from '@/lib/vaultMetaApi'
+import {
   isDefaultNotebookName,
   notebookIdsForNote,
   normalizeWorkspace,
@@ -215,6 +220,48 @@ export async function fetchRemoteWorkspace(userId) {
     return null
   }
 
+  let lockboxes = lockboxRows.map(lockboxFromRow).filter(Boolean)
+
+  // Authoritative crypto lives in public.vault_meta (app_id = notas:<id>).
+  // Prefer those rows; migrate from notas_lockboxes columns when missing.
+  try {
+    const vaultById = await listNotasLockboxVaultMeta(userId)
+    const migrated = []
+    lockboxes = lockboxes.map((lb) => {
+      const fromVault = vaultById.get(lb.id)
+      if (fromVault) {
+        return {
+          ...lb,
+          salt: fromVault.salt,
+          iterations: fromVault.iterations,
+          verifier: fromVault.verifier,
+          hint: fromVault.hint ?? lb.hint ?? null,
+        }
+      }
+      if (lb.salt && lb.verifier?.ciphertext && lb.verifier?.iv) {
+        migrated.push(lb)
+      }
+      return lb
+    })
+    await Promise.all(
+      migrated.map((lb) =>
+        saveNotasLockboxVaultMeta(userId, lb).catch((err) => {
+          console.warn(
+            '[notas] vault_meta migrate failed for lockbox',
+            lb.id,
+            err?.message ?? err,
+          )
+        }),
+      ),
+    )
+  } catch (err) {
+    // Table may not exist yet — fall back to notas_lockboxes columns.
+    console.warn(
+      '[notas] vault_meta list failed; using notas_lockboxes crypto:',
+      err?.message ?? err,
+    )
+  }
+
   const ws = {
     version: 1,
     activeNotebookId: null,
@@ -224,7 +271,7 @@ export async function fetchRemoteWorkspace(userId) {
     tags: tagRows.map(tagFromRow).filter(Boolean),
     noteTags: noteTagRows.map(noteTagFromRow).filter(Boolean),
     noteNotebooks: noteNotebookRows.map(noteNotebookFromRow).filter(Boolean),
-    lockboxes: lockboxRows.map(lockboxFromRow).filter(Boolean),
+    lockboxes,
     lockboxIdleTimeoutMs: null,
   }
 
@@ -507,6 +554,18 @@ export async function pushWorkspace(userId, workspace) {
     'notas_lockboxes',
     ws.lockboxes.map((lb) => lockboxToRow(userId, lb)),
   )
+  // Dual-write crypto to vault_meta so sibling prefs CAS cannot wipe it.
+  // Best-effort if the table is not created yet on this project.
+  try {
+    await Promise.all(
+      ws.lockboxes.map((lb) => saveNotasLockboxVaultMeta(userId, lb)),
+    )
+  } catch (err) {
+    console.warn(
+      '[notas] vault_meta push failed (run supabase/vault_meta.sql?):',
+      err?.message ?? err,
+    )
+  }
   await upsertRows(
     'notas_notebooks',
     ws.notebooks.map((nb) => notebookToRow(userId, nb)),
@@ -557,4 +616,12 @@ export async function pushWorkspace(userId, workspace) {
   await deleteMissing('notas_tags', userId, 'id', keepTagIds)
   await deleteMissing('notas_notebooks', userId, 'id', keepNotebookIds)
   await deleteMissing('notas_lockboxes', userId, 'id', keepLockboxIds)
+  try {
+    await deleteOrphanNotasLockboxVaultMeta(userId, keepLockboxIds)
+  } catch (err) {
+    console.warn(
+      '[notas] vault_meta orphan cleanup failed:',
+      err?.message ?? err,
+    )
+  }
 }
