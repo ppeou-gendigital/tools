@@ -3,7 +3,8 @@
 // `(row) => nextRow` that:
 //   - Never mutates the input.
 //   - Only touches the field(s) it owns so a CAS miss + re-apply
-//     preserves concurrent edits to other columns.
+//     preserves concurrent edits to other columns and sibling-tool
+//     keys (e.g. Accesso `vault` via normalizeRemotePrefs pass-through).
 //   - Returns the same row reference when the op is a no-op.
 
 import {

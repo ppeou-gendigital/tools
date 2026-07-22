@@ -19,7 +19,11 @@
 // the stream in STREAMS below.
 
 import { supabase } from '@/lib/supabase'
-import { normalizeRemotePrefs } from '@/lib/prefs'
+import {
+  extractForeignPrefs,
+  normalizeRemotePrefs,
+  PREFS_OWNED_KEYS,
+} from '@/lib/prefs'
 
 const CAS_MAX_ATTEMPTS = 5
 const PG_UNIQUE_VIOLATION = '23505'
@@ -58,23 +62,16 @@ function rowFromDb(row) {
 }
 
 function normalizePrefsRow(row) {
-  const prefs = normalizeRemotePrefs(row?.data)
-  const data = {
-    theme: prefs.theme,
-    fontSize: prefs.fontSize,
-    fabCorner: prefs.fabCorner,
-  }
-  if (prefs.workspace != null) {
-    data.workspace = prefs.workspace
-  }
   return {
-    data,
+    data: normalizeRemotePrefs(row?.data),
     updated_at: row?.updated_at ?? null,
   }
 }
 
 function prefsRowsEqual(a, b) {
   if (!a || !b) return false
+  // Compare only Notas-owned fields. Sibling keys (e.g. vault) must not
+  // force a prefs rewrite or be treated as local dirty state.
   return (
     a.data.theme === b.data.theme &&
     a.data.fontSize === b.data.fontSize &&
@@ -86,6 +83,7 @@ function prefsRowsEqual(a, b) {
 
 function toDbPrefsPayload(userId, row) {
   const data = {
+    ...extractForeignPrefs(row.data),
     theme: row.data.theme,
     fontSize: row.data.fontSize,
     fabCorner: row.data.fabCorner,
@@ -99,6 +97,14 @@ function toDbPrefsPayload(userId, row) {
     data,
     updated_at: new Date().toISOString(),
   }
+}
+
+/** Replace sibling-tool keys on `data` with the remote snapshot's. */
+function applyRemoteForeignPrefs(data, remoteData) {
+  for (const key of Object.keys(data)) {
+    if (!PREFS_OWNED_KEYS.has(key)) delete data[key]
+  }
+  Object.assign(data, extractForeignPrefs(remoteData))
 }
 
 function inServiceWorker() {
@@ -263,6 +269,10 @@ export async function pullSync({ stream, userId, local, dirtyKeys } = {}) {
       } else {
         delete next.data.workspace
       }
+    }
+    // Notas never dirties sibling keys — always take them from remote.
+    if (!dirty.has('data')) {
+      applyRemoteForeignPrefs(next.data, remote.data)
     }
     next.updated_at = remote.updated_at
     const normalized = normalizePrefsRow(next)

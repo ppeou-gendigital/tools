@@ -1,6 +1,10 @@
 // Normalizers for the user_data `data` blob. Kept in one place so the
 // provider setters and PrefsSync agree on what a sane value looks like
 // when clamping remote / imported payloads.
+//
+// This row is shared with sibling tools (Accesso / Loopy). Notas owns a
+// small set of keys; everything else (e.g. Accesso's `vault`) is passed
+// through opaquely so prefs CAS never wipes sibling crypto meta.
 
 import { normalizeWorkspace } from '@/lib/workspaceModel'
 
@@ -16,6 +20,29 @@ const DEFAULTS = {
   theme: 'system',
   fontSize: FONT_DEFAULT,
   fabCorner: 'bottom-right',
+}
+
+/** Keys Notas normalizes and may rewrite on the shared prefs blob. */
+export const PREFS_OWNED_KEYS = new Set([
+  'theme',
+  'fontSize',
+  'fabCorner',
+  'workspace',
+  'updatedAt',
+])
+
+/** Opaque sibling-tool fields (e.g. Accesso `vault`) — never validate. */
+export function extractForeignPrefs(remote) {
+  if (!remote || typeof remote !== 'object' || Array.isArray(remote)) {
+    return {}
+  }
+  const foreign = {}
+  for (const [key, value] of Object.entries(remote)) {
+    if (!PREFS_OWNED_KEYS.has(key) && value !== undefined) {
+      foreign[key] = value
+    }
+  }
+  return foreign
 }
 
 export function normalizeTheme(v) {
@@ -44,10 +71,11 @@ export function normalizeRemoteWorkspace(remote) {
 }
 
 // Sanitize a (possibly untrusted / partial) remote prefs blob before
-// applying it via the provider setters. Drops unknown keys and clamps bad
-// values. Preserves `workspace` when present.
+// applying it via the provider setters. Clamps owned keys; preserves
+// sibling-tool keys opaquely; preserves `workspace` when present.
 export function normalizeRemotePrefs(remote) {
   const prefs = {
+    ...extractForeignPrefs(remote),
     theme: normalizeTheme(remote?.theme),
     fontSize: normalizeFontSize(remote?.fontSize),
     fabCorner: normalizeFabCorner(remote?.fabCorner),

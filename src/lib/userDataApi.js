@@ -2,12 +2,15 @@
 // Prefer applySyncOp / pullSync directly from new code.
 //
 // The user_data row has one JSONB column in the template:
-//   data — the prefs blob: { theme, fontSize, fabCorner, updatedAt }
+//   data — prefs blob: { theme, fontSize, fabCorner, updatedAt, ... }
+// Sibling tools may store opaque fields on the same blob (e.g. Accesso
+// `vault`). Saves must preserve those keys.
 //
 // Add more JSONB columns as your tool grows, then extend normalizePrefsRow
 // + op factories in userDataOps.js / supabaseSync.js. Keep columns
 // independent so any single one can be promoted to a real table later.
 
+import { extractForeignPrefs } from '@/lib/prefs'
 import { applySyncOp, pullSync } from '@/lib/supabaseSync'
 
 export async function fetchUserData(userId) {
@@ -23,6 +26,8 @@ export async function saveUserData(userId, { data }) {
     op: (row) => {
       const prev = row?.data ?? {}
       const next = {
+        ...extractForeignPrefs(prev),
+        ...extractForeignPrefs(data),
         theme: data.theme,
         fontSize: data.fontSize,
         fabCorner: data.fabCorner,
