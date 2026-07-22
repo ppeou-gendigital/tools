@@ -2,6 +2,12 @@
 <html lang="en" data-surface="web">
   <head>
     <meta charset="utf-8" />
+    <!--
+      Do NOT add viewport-fit=cover unless you also pad with
+      env(safe-area-inset-*). With black-translucent below, cover pulls
+      titles under the iOS status bar / Dynamic Island on Add to Home Screen.
+      Loopy / Accesso / this template omit cover on purpose.
+    -->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0a0a0a" />
     <meta name="mobile-web-app-capable" content="yes" />
