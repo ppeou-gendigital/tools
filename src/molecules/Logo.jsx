@@ -1,21 +1,26 @@
-import toolLogo from '../../icons/tool.svg'
+import { Wrench } from 'lucide-react'
 import { cx } from '@/lib/cx'
 import styles from './Logo.module.scss'
 
 /**
- * In-app brand mark. Uses the same SVG source as the extension / PWA icons
- * (`icons/tool.svg`). Swap that file and re-run `npm run icons` when
- * branding a new tool — this component picks up the new art automatically.
+ * In-app brand mark: white glyph on a rounded brand square.
+ *
+ * Extension / PWA / favicon assets come from `icons/tool.svg` (same
+ * rounded-square shape) via `npm run icons`. When branding a new tool:
+ * 1. Replace `icons/tool.svg` and update BRAND_BG in generate-icons.mjs
+ * 2. Swap the Lucide icon here (and in FloatingMenu) to match
+ * 3. Run `npm run icons`
  */
 export function Logo({ size = 40, className, alt = 'TOOLNAME' }) {
+  const glyph = Math.max(12, Math.round(size * 0.58))
   return (
-    <img
-      src={toolLogo}
-      alt={alt}
-      width={size}
-      height={size}
+    <span
       className={cx(styles.logo, className)}
-      draggable={false}
-    />
+      style={{ width: size, height: size }}
+      aria-label={alt}
+      role="img"
+    >
+      <Wrench size={glyph} strokeWidth={2.25} aria-hidden="true" />
+    </span>
   )
 }

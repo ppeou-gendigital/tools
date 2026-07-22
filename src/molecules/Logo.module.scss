@@ -1,6 +1,9 @@
 .logo {
-  display: block;
+  display: grid;
+  place-items: center;
   flex-shrink: 0;
-  border-radius: 50%;
+  border-radius: 22%;
+  background: var(--fab-bg);
+  color: #fff;
   user-select: none;
 }

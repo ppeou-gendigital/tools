@@ -14,6 +14,15 @@
   white-space: nowrap;
 }
 
+.sectionLabel {
+  margin: var(--space-1) var(--space-2) 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+}
+
 .panel {
   // Positioned relative to the FloatingMenu block's .wrap (which spans the
   // shell). data-corner mirrors the FAB corner and offsets past the FAB by

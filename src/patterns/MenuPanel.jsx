@@ -5,8 +5,7 @@ import { Logo } from '@/molecules/Logo'
 import { AboutRow } from '@/patterns/AboutRow'
 import { AccountRow } from '@/patterns/AccountRow'
 import { AppearanceRow } from '@/patterns/AppearanceRow'
-import { DeckDemoItem } from '@/patterns/DeckDemoItem'
-import { RichTextDemoItem } from '@/patterns/RichTextDemoItem'
+import { AppNavItems } from '@/patterns/AppNavItems'
 import { DevBadgeItem } from '@/patterns/DevBadgeItem'
 import styles from './MenuPanel.module.scss'
 
@@ -26,9 +25,13 @@ export function MenuPanel({ corner, onClose }) {
       <AppearanceRow onClose={onClose} />
       {signedIn && <Divider />}
       {signedIn && <AccountRow onClose={onClose} />}
-      <Divider />
-      <DeckDemoItem onClose={onClose} />
-      <RichTextDemoItem onClose={onClose} />
+      {signedIn && (
+        <>
+          <Divider />
+          <p className={styles.sectionLabel}>App</p>
+          <AppNavItems onClose={onClose} />
+        </>
+      )}
       <DevBadgeItem />
       <AboutRow name={TOOL_NAME} version={APP_VERSION} />
     </div>

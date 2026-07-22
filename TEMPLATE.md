@@ -42,13 +42,17 @@ Verify with `git diff` before committing.
 
 ## 3. Replace the icon
 
-1. Drop your 128x128 SVG at `icons/tool.svg` (transparent background, viewBox="0 0 128 128"). The in-app [`Logo`](src/molecules/Logo.jsx) component reads this same file.
-2. Regenerate PNGs (transparent extension **16 / 32 / 48 / 128** in `icons/`, opaque iOS/PWA **180 / 192 / 512** in `public/icons/`):
+1. Drop your 128x128 SVG at `icons/tool.svg` (transparent background, viewBox="0 0 128 128"). Prefer a **rounded square** mark (`rx≈28` on a 120×120 inset) — circles look fine in the extension toolbar, but favicons need soft corners. Match the fill to `--fab-bg` / `BRAND_BG` in [`scripts/generate-icons.mjs`](scripts/generate-icons.mjs).
+2. Update the Lucide glyph in [`Logo`](src/molecules/Logo.jsx) and [`FloatingMenu`](src/blocks/FloatingMenu.jsx) to match the SVG icon.
+3. Regenerate PNGs:
    ```bash
    npm run icons
    ```
-   Opaque fill is required for iOS home-screen icons (transparent corners paint black) and PWA maskable icons.
-3. Commit `icons/tool.svg`, the four extension PNGs, and the three `public/icons/` PNGs.
+   Writes:
+   - transparent extension **16 / 32 / 48 / 128** → `icons/icon-*.png`
+   - opaque iOS/PWA **180 / 192 / 512** → `public/icons/icon-*.png` (opaque fill required; transparent corners paint black on iOS)
+   - favicon **16 / 32** → `public/favicon-*.png` (transparent canvas so rounded corners show in browser tabs)
+4. Commit `icons/tool.svg`, the extension PNGs, `public/icons/*`, and `public/favicon-*.png`.
 
 ## 4. Set up Supabase
 
@@ -169,7 +173,7 @@ Reference: [`tool/notas`](../../tree/tool/notas) lockbox biometrics (`src/lib/bi
 
 The template ships with a bare skeleton (Home, Profile, Settings, DeckDemo, RichTextDemo). Common next steps:
 
-- **Add a page** — create `src/pages/YourPage.jsx` + `.module.scss`, register the route in [NavigationProvider](src/providers/NavigationProvider.jsx), wrap the header in [PageHeader](src/patterns/PageHeader.jsx) + [PageShortcuts](src/patterns/PageShortcuts.jsx), and add a menu entry in [MenuPanel](src/patterns/MenuPanel.jsx) (or a `SettingsCard` in [Settings](src/pages/Settings.jsx)).
+- **Add a page** — create `src/pages/YourPage.jsx` + `.module.scss`, register the route in [NavigationProvider](src/providers/NavigationProvider.jsx), add it to [AppNavItems](src/patterns/AppNavItems.jsx) (feeds the page-header icon toolbar + FAB “App” section), wrap the header in [PageHeader](src/patterns/PageHeader.jsx) + [PageShortcuts](src/patterns/PageShortcuts.jsx), and/or add a `SettingsCard` in [Settings](src/pages/Settings.jsx). Last route is remembered in `toolname:lastRoute` (renamed by init-tool). Home shows a list/tiles layout toggle (`toolname:homeLayout`) as a reference pattern.
 - **Rich text field** — drop in [`RichNoteEditor`](src/molecules/RichNoteEditor.jsx); persist with [`richBody.js`](src/lib/richBody.js) (`serializeRichBody` / `parseRichBody`). Demo: menu → **Rich text demo**.
 - **File attachments (Supabase Storage)** — run [`supabase/template_attachments.sql`](supabase/template_attachments.sql), then call [`attachmentsApi.js`](src/lib/attachmentsApi.js) (`uploadAttachment`, `listAttachments`, …) with your domain `parentId`. Paste/drop from the editor is forwarded via `onFiles` — do not embed binaries in the TipTap JSON. Full notes + lockbox encryption: [`tool/notas`](../../tree/tool/notas) `NoteEdit.jsx`.
 - **Add a synced field** — add the key to `PREFS_OWNED_KEYS` in [prefs.js](src/lib/prefs.js), an `opSet*` in [userDataOps.js](src/lib/userDataOps.js), push from the provider via `applySyncOp`, and teach [PrefsSync](src/providers/PrefsSync.jsx) how to apply the remote value on pull. See the `theme` / `fontSize` / `fabCorner` triple as the pattern to copy.

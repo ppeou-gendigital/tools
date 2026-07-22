@@ -152,7 +152,7 @@ Pages own their own reading inset via `.is-fluid-width` / `.is-static-width` wra
 
 - **`AppShell`** ([src/templates/AppShell.jsx](src/templates/AppShell.jsx)) — grid header/main/footer that fills its parent.
 - **`FloatingMenu`** ([src/blocks/FloatingMenu.jsx](src/blocks/FloatingMenu.jsx)) — draggable FAB that snaps to the nearest corner. Position is persisted via `FabCornerProvider` and synced across devices via `PrefsSync`. Uses the [`useCornerDrag`](src/hooks/useCornerDrag.js) hook, which is reusable on any element.
-- **`MenuPanel`** ([src/patterns/MenuPanel.jsx](src/patterns/MenuPanel.jsx)) — the popover the FAB opens. Composes `AppearanceRow` (theme + font size), `AccountRow` (profile + settings + sign out), `DeckDemoItem`, `RichTextDemoItem`, `DevBadgeItem`, `AboutRow`. Add your tool's menu entries here.
+- **`MenuPanel`** ([src/patterns/MenuPanel.jsx](src/patterns/MenuPanel.jsx)) — the popover the FAB opens. Composes `AppearanceRow` (theme + font size), `AccountRow` (profile + settings + sign out), `AppNavItems` (FAB “App” section + page-header icon toolbar via `PageShortcuts`), `DevBadgeItem`, `AboutRow`. Extend destinations in [AppNavItems](src/patterns/AppNavItems.jsx).
 - **`Deck`** + **`Slide`** ([src/blocks/Deck.jsx](src/blocks/Deck.jsx)) — horizontal, snap-scrolling deck container with responsive column spans. See [`DeckDemo`](src/pages/DeckDemo.jsx) for a live example.
 - **`RichNoteEditor`** ([src/molecules/RichNoteEditor.jsx](src/molecules/RichNoteEditor.jsx)) — TipTap text RTE; files via `onFiles` + [`attachmentsApi`](src/lib/attachmentsApi.js). Demo: [`RichTextDemo`](src/pages/RichTextDemo.jsx).
 

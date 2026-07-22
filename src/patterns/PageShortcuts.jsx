@@ -1,41 +1,25 @@
-import { FilePenLine, House, LayoutGrid } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { APP_NAV } from '@/patterns/AppNavItems'
 import styles from './PageShortcuts.module.scss'
 
-// Default sibling shortcuts for the template demo pages. Replace or pass
-// a custom `shortcuts` array when your tool grows past the demos.
-const DEFAULT_SHORTCUTS = [
-  {
-    id: 'home',
-    label: 'Home',
-    icon: House,
-    pick: (nav) => nav.goHome,
-  },
-  {
-    id: 'deck-demo',
-    label: 'Deck demo',
-    icon: LayoutGrid,
-    pick: (nav) => nav.goDeckDemo,
-  },
-  {
-    id: 'rich-text-demo',
-    label: 'Rich text demo',
-    icon: FilePenLine,
-    pick: (nav) => nav.goRichTextDemo,
-  },
-]
+// Sibling shortcuts for the app-nav toolbar strip (page header).
+const DEFAULT_SHORTCUTS = APP_NAV.map(({ id, label, icon, go }) => ({
+  id,
+  label,
+  icon,
+  pick: (nav) => nav[go],
+}))
 
 /**
  * Cross-page shortcuts rendered at the tail of a page's toolbar.
  *
- * The `.separator` uses `margin-left: auto` so the whole group hugs the
- * right edge — the pipe becomes the visual boundary between the page's
- * own toolbar (left) and this nav cluster (right).
+ * Ghost icon-only buttons in a right-aligned strip (separator + icons).
+ * Pass `className` (typically a muted `.iconBtn`) for icon color.
  *
  * @param {string} current — route id to filter out of the strip
  * @param {string} [className] — applied to each shortcut button
- * @param {Array} [shortcuts] — override the default Home / DeckDemo set
+ * @param {Array} [shortcuts] — override the default app-nav set
  */
 export function PageShortcuts({
   current,
@@ -47,7 +31,7 @@ export function PageShortcuts({
   if (visible.length === 0) return null
 
   return (
-    <>
+    <div className={styles.strip} role="toolbar" aria-label="App">
       <span
         aria-hidden="true"
         role="separator"
@@ -67,6 +51,6 @@ export function PageShortcuts({
           <Icon size={14} aria-hidden="true" />
         </Button>
       ))}
-    </>
+    </div>
   )
 }

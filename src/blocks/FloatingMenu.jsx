@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Repeat } from 'lucide-react'
+import { Wrench } from 'lucide-react'
 import { useCornerDrag } from '@/hooks/useCornerDrag'
 import { MenuPanel } from '@/patterns/MenuPanel'
 import styles from './FloatingMenu.module.scss'
@@ -57,7 +57,7 @@ export function FloatingMenu() {
         onPointerDown={handlePointerDown}
         onClick={handleClick}
       >
-        <Repeat size={20} aria-hidden="true" />
+        <Wrench size={20} aria-hidden="true" />
       </button>
       {open && !isDragging && (
         <MenuPanel corner={corner} onClose={() => setOpen(false)} />

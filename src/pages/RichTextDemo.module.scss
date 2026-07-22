@@ -22,6 +22,7 @@
 
 .iconBtn {
   color: var(--muted-fg);
+  flex-shrink: 0;
 
   &:hover {
     color: var(--fg);

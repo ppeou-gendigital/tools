@@ -2,20 +2,20 @@
   <!--
     Template placeholder icon.
 
-    Filled violet circle (Tailwind Violet 500, matching the `fab-bg` token
-    in src/tokens/_tokens.scss) with the lucide `Wrench` glyph in white on
-    top. The glyph is rendered inside a nested 24-unit coordinate space via
-    transform="translate scale" so the original lucide path data stays
+    Filled violet rounded square (Tailwind Violet 500, matching the fab-bg
+    token in src/tokens/_tokens.scss) with the lucide Wrench glyph in white
+    on top. The glyph is rendered inside a nested 24-unit coordinate space
+    via transform="translate scale" so the original lucide path data stays
     verbatim and easy to swap for another icon later.
 
     Replace this file with your tool's own SVG (any 128x128, transparent
-    background) and re-run:
+    background, prefer a rounded square mark) and re-run:
       npm run icons
 
     IMPORTANT: Keep this comment free of consecutive hyphens. XML forbids
     them inside comments.
   -->
-  <circle cx="64" cy="64" r="60" fill="#8b5cf6" />
+  <rect x="4" y="4" width="120" height="120" rx="28" ry="28" fill="#8b5cf6" />
   <g
     transform="translate(25.6 25.6) scale(3.2)"
     fill="none"
