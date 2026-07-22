@@ -23,7 +23,7 @@ import {
 import { formatByteSize } from '@/lib/attachmentsApi'
 import styles from './RichTextDemo.module.scss'
 
-const STORAGE_KEY = 'toolname.richTextDemo.body'
+const STORAGE_KEY = 'docto.richTextDemo.body'
 
 function previewKind(mimeType, fileName = '') {
   const mime = String(mimeType || '').toLowerCase()
@@ -143,7 +143,7 @@ export function RichTextDemo() {
 
       <div className={styles.body}>
         <p className={styles.lead}>
-          Formatting is stored as JSON (<code>toolname-tiptap-v1</code>).
+          Formatting is stored as JSON (<code>docto-tiptap-v1</code>).
           Pasted or dropped files stay out of the document — use Upload or
           paste/drop, then wire{' '}
           <code>attachmentsApi</code> to Supabase Storage for persistence

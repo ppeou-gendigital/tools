@@ -73,7 +73,7 @@ export function SignInForm() {
       <Card className={styles.card}>
         <CardHeader>
           <div className={styles.brand}>
-            <Logo size={48} alt="TOOLNAME" />
+            <Logo size={48} alt="docto" />
           </div>
           <div className={styles.stepIndicator}>
             <span className={styles.stepLabel}>
@@ -81,7 +81,7 @@ export function SignInForm() {
             </span>
           </div>
           <CardTitle>
-            {step === 'email' ? 'Sign in to TOOLNAME' : 'Check your email'}
+            {step === 'email' ? 'Sign in to Docto' : 'Check your email'}
           </CardTitle>
           <CardDescription>
             {step === 'email'

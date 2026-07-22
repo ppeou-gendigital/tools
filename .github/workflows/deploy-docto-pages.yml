@@ -1,0 +1,115 @@
+name: Deploy docto to GitHub Pages
+
+# Builds Docto plus sibling tools into one Pages artifact so a deploy
+# from tool/docto does not wipe /tools/loopy/, /tools/accesso/, or /tools/notas/.
+# Live URL: https://ppeou-gendigital.github.io/tools/docto/
+
+on:
+  push:
+    branches: [tool/docto]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout docto (this branch)
+        uses: actions/checkout@v4
+        with:
+          path: docto
+
+      - name: Checkout loopy
+        uses: actions/checkout@v4
+        with:
+          ref: tool/loopy
+          path: loopy
+
+      - name: Checkout accesso
+        uses: actions/checkout@v4
+        with:
+          ref: tool/accesso
+          path: accesso
+
+      - name: Checkout notas
+        uses: actions/checkout@v4
+        with:
+          ref: tool/notas
+          path: notas
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            docto/package-lock.json
+            loopy/package-lock.json
+            accesso/package-lock.json
+            notas/package-lock.json
+
+      - name: Build docto
+        working-directory: docto
+        run: |
+          npm ci
+          npm run build:web
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Build loopy
+        working-directory: loopy
+        run: |
+          npm ci
+          npm run build:web
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Build accesso
+        working-directory: accesso
+        run: |
+          npm ci
+          npm run build:web
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Build notas
+        working-directory: notas
+        run: |
+          npm ci
+          npm run build:web
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Assemble site
+        run: |
+          mkdir -p site
+          cp -R docto/dist-web/docto site/docto
+          cp -R loopy/dist-web/loopy site/loopy
+          cp -R accesso/dist-web/accesso site/accesso
+          cp -R notas/dist-web/notas site/notas
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -16,7 +16,7 @@ import { useAuth } from '@/providers/AuthProvider'
 
 const FabCornerContext = createContext(null)
 
-const STORAGE_KEY = 'toolname.fabCorner'
+const STORAGE_KEY = 'docto.fabCorner'
 const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
 const DEFAULT_CORNER = 'bottom-right'
 
@@ -64,7 +64,7 @@ export function FabCornerProvider({ children }) {
             }),
         })
       } catch (err) {
-        console.warn('[toolname] fabCorner sync failed:', err?.message ?? err)
+        console.warn('[docto] fabCorner sync failed:', err?.message ?? err)
       }
     },
     [userId],

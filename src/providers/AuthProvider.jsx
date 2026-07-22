@@ -71,9 +71,9 @@ export function AuthProvider({ children }) {
         })
         if (verErr) throw verErr
 
-        console.info('[toolname] dev auto-login succeeded')
+        console.info('[docto] dev auto-login succeeded')
       } catch (err) {
-        console.warn('[toolname] dev auto-login failed:', err?.message ?? err)
+        console.warn('[docto] dev auto-login failed:', err?.message ?? err)
       }
     })()
   }, [loading, session])

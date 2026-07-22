@@ -1,4 +1,4 @@
-# TOOLNAME
+# docto
 
 A Chrome extension **and** web app in one codebase. React (ES6, no TypeScript) + Vite + SCSS modules, with Supabase email-OTP auth and light/dark theming.
 
@@ -78,7 +78,7 @@ Inspect:
 ## Project layout
 
 ```
-TOOLNAME/
+docto/
 ├── manifest.json               # MV3 manifest (host permission for supabase.co)
 ├── background.js               # MV3 service worker (minimal stub)
 ├── index.html                  # web entry
@@ -164,7 +164,7 @@ Create a project at https://supabase.com (free tier — 50k MAU / 500MB Postgres
 
 ### 1. Configure email OTP (6-digit code, not magic-link)
 
-TOOLNAME uses `signInWithOtp` + `verifyOtp` with `type: 'email'`. The default Supabase email template uses a `ConfirmationURL` — replace it with the OTP token.
+docto uses `signInWithOtp` + `verifyOtp` with `type: 'email'`. The default Supabase email template uses a `ConfirmationURL` — replace it with the OTP token.
 
 - **Dashboard** → **Authentication** → **Email Templates** → **Magic Link**
 - Replace the body with something like:
@@ -258,8 +258,8 @@ For end-to-end encryption, store salt / verifier / hint / idle in **`public.vaul
 
 | `app_id` pattern | Use |
 |------------------|-----|
-| `TOOLNAME` (single) | One vault per user (Accesso-style) |
-| `TOOLNAME:<scopeId>` | Multi-vault (Notas lockboxes) |
+| `docto` (single) | One vault per user (Accesso-style) |
+| `docto:<scopeId>` | Multi-vault (Notas lockboxes) |
 
 Ciphertext stays in feature tables (`ciphertext` + `iv`). Full reference: [`tool/accesso`](../../tree/tool/accesso).
 
@@ -293,17 +293,17 @@ Add more as your tool needs them (`activeTab`, `tabs`, `scripting`, `webNavigati
 
 ## CI / GitHub Pages
 
-Branch naming drives the live path. After `npm run init -- --name TOOLNAME`:
+Branch naming drives the live path. After `npm run init -- --name docto`:
 
 | | |
 | --- | --- |
-| Branch | `tool/TOOLNAME` |
-| Vite `base` / `outDir` | `/tools/TOOLNAME/` · `dist-web/TOOLNAME` |
-| Live URL | `https://<user>.github.io/tools/TOOLNAME/` |
+| Branch | `tool/docto` |
+| Vite `base` / `outDir` | `/tools/docto/` · `dist-web/docto` |
+| Live URL | `https://<user>.github.io/tools/docto/` |
 
-- **Workflow**: [`.github/workflows/deploy-TOOLNAME-pages.yml`](.github/workflows/deploy-TOOLNAME-pages.yml)
-- **Trigger**: push to `tool/TOOLNAME` (or manual `workflow_dispatch` from the Actions tab)
-- **Build**: `npm run build:web` → `dist-web/TOOLNAME/` (nested so the uploaded artifact serves at `/tools/TOOLNAME/`)
+- **Workflow**: [`.github/workflows/deploy-docto-pages.yml`](.github/workflows/deploy-docto-pages.yml)
+- **Trigger**: push to `tool/docto` (or manual `workflow_dispatch` from the Actions tab)
+- **Build**: `npm run build:web` → `dist-web/docto/` (nested so the uploaded artifact serves at `/tools/docto/`)
 - **Repo secrets required** (Settings → Secrets and variables → Actions):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`

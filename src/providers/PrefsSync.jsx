@@ -74,7 +74,7 @@ export function PrefsSync() {
       } catch (err) {
         if (cancelled) return
         initialPulledForUserRef.current = null
-        console.warn('[toolname] prefs auto-pull failed:', err?.message ?? err)
+        console.warn('[docto] prefs auto-pull failed:', err?.message ?? err)
       }
     })()
 

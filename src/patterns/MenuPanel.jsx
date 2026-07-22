@@ -10,7 +10,7 @@ import { RichTextDemoItem } from '@/patterns/RichTextDemoItem'
 import { DevBadgeItem } from '@/patterns/DevBadgeItem'
 import styles from './MenuPanel.module.scss'
 
-const TOOL_NAME = 'TOOLNAME'
+const TOOL_NAME = 'Docto'
 
 export function MenuPanel({ corner, onClose }) {
   const { user } = useAuth()

@@ -23,9 +23,9 @@ The renamer touches:
 - `manifest.json` — `name`, `description`, `action.default_title`
 - `vite.config.js` — `base: '/tools/foo/'`, `outDir: 'dist-web/foo'`, and PWA manifest `name` / `short_name` / `description`
 - `index.html` / `popup.html` — `<title>` and `apple-mobile-web-app-title`
-- `.github/workflows/deploy-TOOLNAME-pages.yml` → `deploy-foo-pages.yml` (updates branch trigger to `tool/foo`)
-- `.github/workflows/release-TOOLNAME-extension.yml` → `release-foo-extension.yml` (updates tag prefix to `foo-v*`)
-- Any remaining `TOOLNAME` / `toolname` in source files (storage keys, aria labels, console prefixes, About row name)
+- `.github/workflows/deploy-docto-pages.yml` → `deploy-foo-pages.yml` (updates branch trigger to `tool/foo`)
+- `.github/workflows/release-docto-extension.yml` → `release-foo-extension.yml` (updates tag prefix to `foo-v*`)
+- Any remaining `docto` / `docto` in source files (storage keys, aria labels, console prefixes, About row name)
 
 **Branch → Pages URL formula** (keep these aligned):
 
@@ -60,7 +60,7 @@ Follow [README.md → Supabase setup](README.md#supabase-setup):
 - [ ] Run the `profiles` table + RLS + `handle_new_user` trigger SQL.
 - [ ] Run the `user_data` table + RLS SQL.
 - [ ] (Optional, E2EE tools) Run [`supabase/vault_meta.sql`](supabase/vault_meta.sql) for per-app salt/verifier storage. **Do not** put crypto meta in `user_data.data`.
-- [ ] (Optional) Rich text attachments: run [`supabase/template_attachments.sql`](supabase/template_attachments.sql) after init (renames `toolname_*` → your tool). Add an FK from `parent_id` to your domain table when you have one.
+- [ ] (Optional) Rich text attachments: run [`supabase/template_attachments.sql`](supabase/template_attachments.sql) after init (renames `docto_*` → your tool). Add an FK from `parent_id` to your domain table when you have one.
 - [ ] (Optional) Configure a Test OTP and set `VITE_DEV_AUTOLOGIN_EMAIL` / `_TOKEN` in `.env.local` for dev auto-login.
 
 ## 5. Add repo secrets
