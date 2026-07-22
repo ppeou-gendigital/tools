@@ -2,24 +2,24 @@
   <!--
     Loopy extension icon.
 
-    Filled violet circle (Tailwind Violet 500, matching the `fab-bg` token
-    in src/tokens/_tokens.scss) with the lucide `Repeat` glyph in white on
-    top. The glyph is rendered inside a nested 24-unit coordinate space via
-    transform="translate scale" so the original lucide path data stays
+    Filled violet rounded square (Tailwind Violet 500, matching the fab-bg
+    token in src/tokens/_tokens.scss) with the lucide Repeat glyph in white
+    on top. The glyph is rendered inside a nested 24-unit coordinate space
+    via transform="translate scale" so the original lucide path data stays
     verbatim and easy to swap for another icon later.
 
     IMPORTANT: Keep this comment free of consecutive hyphens. XML forbids
-    "\u002d\u002d" inside comments, and macOS `qlmanage` will silently
-    rasterize the resulting XML parse error page into your PNG instead of
-    the icon. If you must reference a CSS custom property here, spell it
-    like `fab-bg` or `(dash dash)fab-bg`.
+    them inside comments, and macOS qlmanage will silently rasterize the
+    resulting XML parse error page into your PNG instead of the icon. If
+    you must reference a CSS custom property here, spell it like fab-bg
+    or (dash dash)fab-bg.
 
     To regenerate PNG assets after editing this file, run:
       npm run icons
     That writes extension sizes to icons/ (transparent) and PWA sizes
     to public/icons/ (opaque violet so iOS home-screen icons stay clean).
   -->
-  <circle cx="64" cy="64" r="60" fill="#8b5cf6" />
+  <rect x="4" y="4" width="120" height="120" rx="28" ry="28" fill="#8b5cf6" />
   <g
     transform="translate(25.6 25.6) scale(3.2)"
     fill="none"

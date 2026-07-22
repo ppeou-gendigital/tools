@@ -9,6 +9,8 @@
 //     Opaque brand fill. iOS does not honor transparency on
 //     apple-touch-icon / home-screen icons (empty corners paint black);
 //     PWA maskable icons also need a full-bleed opaque square.
+//   - Favicons (16/32) → public/favicon-{size}.png
+//     Transparent canvas so the SVG rounded-rect corners show in tabs.
 //
 // Usage:
 //   npm run icons
@@ -31,19 +33,27 @@ const BRAND_BG = '#8b5cf6'
 const TARGETS = [
   {
     dir: 'icons',
+    prefix: 'icon',
     sizes: [16, 32, 48, 128],
     background: 'rgba(0, 0, 0, 0)',
   },
   {
     dir: 'public/icons',
+    prefix: 'icon',
     sizes: [180, 192, 512],
     background: BRAND_BG,
+  },
+  {
+    dir: 'public',
+    prefix: 'favicon',
+    sizes: [16, 32],
+    background: 'rgba(0, 0, 0, 0)',
   },
 ]
 
 const svg = readFileSync(SRC, 'utf8')
 
-for (const { dir, sizes, background } of TARGETS) {
+for (const { dir, prefix, sizes, background } of TARGETS) {
   const outDir = resolve(ROOT, dir)
   mkdirSync(outDir, { recursive: true })
 
@@ -53,8 +63,8 @@ for (const { dir, sizes, background } of TARGETS) {
       background,
     })
     const png = resvg.render().asPng()
-    const out = resolve(outDir, `icon-${size}.png`)
+    const out = resolve(outDir, `${prefix}-${size}.png`)
     writeFileSync(out, png)
-    console.log(`wrote ${dir}/icon-${size}.png (${size}x${size}, bg=${background})`)
+    console.log(`wrote ${dir}/${prefix}-${size}.png (${size}x${size}, bg=${background})`)
   }
 }
