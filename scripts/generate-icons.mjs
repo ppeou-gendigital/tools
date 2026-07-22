@@ -1,16 +1,20 @@
 #!/usr/bin/env node
 //
-// Rasterize icons/tool.svg into Chrome extension + PWA PNG sizes using
+// Rasterize icons/tool.svg into Chrome extension + PWA + favicon PNGs using
 // @resvg/resvg-js. resvg reads `width`/`height`/`viewBox` faithfully and
 // produces true transparent PNGs at any target size.
 //
 // Extension: 16, 32, 48, 128 — transparent background (toolbar).
 // PWA / Apple: 180 (apple-touch-icon), 192, 512 — opaque brand fill.
+// Favicons: favicon-16.png, favicon-32.png — transparent canvas so the
+// SVG rounded-rect corners show in browser tabs.
 //
 // iOS does not honor transparency on apple-touch-icon / home-screen
 // icons; empty corners paint black. PWA maskable icons also need a
 // full-bleed opaque square. We fill those sizes with the same rose as
-// the SVG circle / --fab-bg (#f43f5e).
+// the SVG rounded square / --fab-bg (#f43f5e).
+//
+// Accesso serves `icons/` as the web publicDir, so favicons live here too.
 //
 // Replace `icons/tool.svg` with your own SVG (keep the file name or
 // update SRC below), then run:
@@ -34,24 +38,29 @@ const BRAND_BG = '#f43f5e'
 
 const EXTENSION_SIZES = [16, 32, 48, 128]
 const PWA_SIZES = [180, 192, 512]
+const FAVICON_SIZES = [16, 32]
 
 const svg = readFileSync(SRC, 'utf8')
 
-function writeIcon(size, background) {
+function writeIcon(filename, size, background) {
   const resvg = new Resvg(svg, {
     fitTo: { mode: 'width', value: size },
     background,
   })
   const png = resvg.render().asPng()
-  const out = resolve(ROOT, `icons/icon-${size}.png`)
+  const out = resolve(ROOT, `icons/${filename}`)
   writeFileSync(out, png)
-  console.log(`wrote icons/icon-${size}.png (${size}x${size}, bg=${background})`)
+  console.log(`wrote icons/${filename} (${size}x${size}, bg=${background})`)
 }
 
 for (const size of EXTENSION_SIZES) {
-  writeIcon(size, 'rgba(0, 0, 0, 0)')
+  writeIcon(`icon-${size}.png`, size, 'rgba(0, 0, 0, 0)')
 }
 
 for (const size of PWA_SIZES) {
-  writeIcon(size, BRAND_BG)
+  writeIcon(`icon-${size}.png`, size, BRAND_BG)
+}
+
+for (const size of FAVICON_SIZES) {
+  writeIcon(`favicon-${size}.png`, size, 'rgba(0, 0, 0, 0)')
 }
