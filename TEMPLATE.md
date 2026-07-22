@@ -97,6 +97,12 @@ After deploy:
 - **iPhone / iPad**: open the live URL in Safari → Share → **Add to Home Screen** (opens standalone).
 - **Desktop Chrome / Edge**: use the install icon in the address bar, or the browser’s Install app menu.
 
+## iOS home-screen layout gotcha (READ THIS)
+
+`index.html` uses `apple-mobile-web-app-status-bar-style=black-translucent` **without** `viewport-fit=cover`. That matches Loopy and Accesso: iOS keeps the layout viewport in the safe area, so page titles are not under the status bar / Dynamic Island.
+
+Do **not** add `viewport-fit=cover` to the viewport meta unless you also inset the shell (and overlays) with `env(safe-area-inset-*)`. Cover alone makes Add-to-Home-Screen content sit too high.
+
 ## Pages gotcha (READ THIS)
 
 A GitHub repo publishes exactly **one** Pages site. Every deploy to the `github-pages` environment **replaces the entire site**. If `tool/loopy` deploys today and `tool/foo` deploys tomorrow, `/tools/loopy/` will 404 until loopy is redeployed.

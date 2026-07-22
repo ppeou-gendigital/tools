@@ -302,6 +302,7 @@ The web deploy is an installable Progressive Web App (manifest + service worker 
 - **iPhone / iPad**: Safari → Share → **Add to Home Screen**.
 - **Desktop Chrome / Edge**: address-bar install icon or Install app menu.
 - **Updates:** [`src/pwaRegister.js`](src/pwaRegister.js) checks for a new service worker on app focus / visibility and reloads automatically (`registerType: 'autoUpdate'`). Home-screen apps have no hard-reload control; if a build still looks stuck after deploy, force-quit the PWA once and reopen.
+- **iOS layout:** keep the viewport meta **without** `viewport-fit=cover` (see comment in [`index.html`](index.html)). Cover + `black-translucent` pulls titles under the status bar unless you pad with `env(safe-area-inset-*)`.
 
 ### One Pages site per repo — important
 
