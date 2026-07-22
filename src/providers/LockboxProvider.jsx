@@ -41,6 +41,7 @@ import {
   notebookIdsForNote,
   notesInNotebook,
 } from '@/lib/workspaceModel'
+import { deleteNotasLockboxVaultMeta } from '@/lib/vaultMetaApi'
 
 const MIN_PASSPHRASE_LENGTH = 8
 const SESSION_KEY = 'notas.lockboxes.session'
@@ -939,6 +940,17 @@ export function LockboxProvider({ children }) {
         }
       }
       await removeLockboxMeta(lockboxId)
+      if (userId) {
+        try {
+          await deleteNotasLockboxVaultMeta(userId, lockboxId)
+        } catch (err) {
+          console.warn(
+            '[notas] vault_meta delete failed for lockbox',
+            lockboxId,
+            err?.message ?? err,
+          )
+        }
+      }
       keysRef.current.delete(lockboxId)
       passphrasesRef.current.delete(lockboxId)
       bumpUnlocked()

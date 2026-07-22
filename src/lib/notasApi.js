@@ -3,7 +3,7 @@
 
 import { supabase } from '@/lib/supabase'
 import {
-  deleteOrphanNotasLockboxVaultMeta,
+  deleteAllNotasVaultMeta,
   listNotasLockboxVaultMeta,
   saveNotasLockboxVaultMeta,
 } from '@/lib/vaultMetaApi'
@@ -12,6 +12,13 @@ import {
   notebookIdsForNote,
   normalizeWorkspace,
 } from '@/lib/workspaceModel'
+import {
+  isWipeSemver,
+  normalizeSemver,
+  SEMVER_FRESH,
+  SEMVER_SEEDED,
+  SEMVER_WIPE,
+} from '@/lib/workspaceSemver'
 
 /** Cached probe: does notas_notes still have legacy notebook_id? */
 let legacyNotebookIdColumn = null
@@ -186,29 +193,29 @@ export async function fetchRemoteWorkspace(userId) {
   }
 
   const results = await Promise.all(requests)
-  const [lockboxes, notebooks, notes, tags, noteTags] = results
-  const noteNotebooks = joinTableOk
+  const [lockboxRes, notebookRes, noteRes, tagRes, noteTagRes] = results
+  const noteNotebookRes = joinTableOk
     ? results[5]
     : { data: [], error: null }
 
-  if (noteNotebooks.error && !isMissingRelationError(noteNotebooks.error)) {
-    throw noteNotebooks.error
+  if (noteNotebookRes.error && !isMissingRelationError(noteNotebookRes.error)) {
+    throw noteNotebookRes.error
   }
-  if (noteNotebooks.error && isMissingRelationError(noteNotebooks.error)) {
+  if (noteNotebookRes.error && isMissingRelationError(noteNotebookRes.error)) {
     noteNotebooksTableAvailable = false
   }
 
-  for (const res of [lockboxes, notebooks, notes, tags, noteTags]) {
+  for (const res of [lockboxRes, notebookRes, noteRes, tagRes, noteTagRes]) {
     if (res.error) throw res.error
   }
 
-  const notebookRows = notebooks.data ?? []
-  const noteRows = notes.data ?? []
-  const tagRows = tags.data ?? []
-  const lockboxRows = lockboxes.data ?? []
-  const noteTagRows = noteTags.data ?? []
+  const notebookRows = notebookRes.data ?? []
+  const noteRows = noteRes.data ?? []
+  const tagRows = tagRes.data ?? []
+  const lockboxRows = lockboxRes.data ?? []
+  const noteTagRows = noteTagRes.data ?? []
   const noteNotebookRows =
-    noteNotebooks.error || !joinTableOk ? [] : (noteNotebooks.data ?? [])
+    noteNotebookRes.error || !joinTableOk ? [] : (noteNotebookRes.data ?? [])
 
   // No domain rows yet — caller should seed from local.
   if (
@@ -222,48 +229,33 @@ export async function fetchRemoteWorkspace(userId) {
 
   let lockboxes = lockboxRows.map(lockboxFromRow).filter(Boolean)
 
-  // Authoritative crypto lives in public.vault_meta (app_id = notas:<id>).
-  // Prefer those rows; migrate from notas_lockboxes columns when missing.
+  // Prefer vault_meta when present; otherwise keep notas_lockboxes columns.
+  // No migrate / backfill — clean slate.
   try {
     const vaultById = await listNotasLockboxVaultMeta(userId)
-    const migrated = []
     lockboxes = lockboxes.map((lb) => {
       const fromVault = vaultById.get(lb.id)
-      if (fromVault) {
-        return {
-          ...lb,
-          salt: fromVault.salt,
-          iterations: fromVault.iterations,
-          verifier: fromVault.verifier,
-          hint: fromVault.hint ?? lb.hint ?? null,
-        }
+      if (!fromVault) return lb
+      return {
+        ...lb,
+        salt: fromVault.salt,
+        iterations: fromVault.iterations,
+        verifier: fromVault.verifier,
+        hint: fromVault.hint ?? lb.hint ?? null,
       }
-      if (lb.salt && lb.verifier?.ciphertext && lb.verifier?.iv) {
-        migrated.push(lb)
-      }
-      return lb
     })
-    await Promise.all(
-      migrated.map((lb) =>
-        saveNotasLockboxVaultMeta(userId, lb).catch((err) => {
-          console.warn(
-            '[notas] vault_meta migrate failed for lockbox',
-            lb.id,
-            err?.message ?? err,
-          )
-        }),
-      ),
-    )
   } catch (err) {
-    // Table may not exist yet — fall back to notas_lockboxes columns.
     console.warn(
       '[notas] vault_meta list failed; using notas_lockboxes crypto:',
       err?.message ?? err,
     )
   }
 
+  const semver = await fetchWorkspaceSemver(userId)
+
   const ws = {
     version: 1,
+    semver,
     activeNotebookId: null,
     pinnedNotebookIds: [],
     notebooks: notebookRows.map(notebookFromRow).filter(Boolean),
@@ -280,6 +272,81 @@ export async function fetchRemoteWorkspace(userId) {
     return null
   }
   return normalizeWorkspace(ws)
+}
+
+export async function fetchWorkspaceSemver(userId) {
+  if (!userId) return SEMVER_FRESH
+  const { data, error } = await supabase
+    .from('notas_workspace_meta')
+    .select('semver')
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (error) {
+    if (isMissingRelationError(error)) {
+      console.warn(
+        '[notas] notas_workspace_meta missing (run supabase/notas_workspace_meta.sql?)',
+      )
+      return SEMVER_FRESH
+    }
+    throw error
+  }
+  return normalizeSemver(data?.semver)
+}
+
+export async function saveWorkspaceSemver(userId, semver) {
+  if (!userId) throw new Error('saveWorkspaceSemver: userId is required')
+  const value = isWipeSemver(semver) ? SEMVER_WIPE : normalizeSemver(semver)
+  const now = new Date().toISOString()
+  const { error } = await supabase.from('notas_workspace_meta').upsert(
+    {
+      user_id: userId,
+      semver: value,
+      updated_at: now,
+    },
+    { onConflict: 'user_id' },
+  )
+  if (error) {
+    if (isMissingRelationError(error)) {
+      console.warn(
+        '[notas] notas_workspace_meta missing (run supabase/notas_workspace_meta.sql?)',
+      )
+      return value
+    }
+    throw error
+  }
+  return value
+}
+
+async function deleteAllRows(table, userId) {
+  const { error } = await supabase.from(table).delete().eq('user_id', userId)
+  if (error) {
+    if (isMissingRelationError(error)) return
+    throw error
+  }
+}
+
+/**
+ * Intentional full wipe: delete all Notas cloud rows, then reset semver to 0.0.0.
+ * Call only when meta is (or was just set to) -1.
+ */
+export async function wipeUserCloudWorkspace(userId) {
+  if (!userId) throw new Error('wipeUserCloudWorkspace: userId is required')
+  // FK-safe order (children first).
+  await deleteAllRows('notas_note_tags', userId)
+  await deleteAllRows('notas_note_notebooks', userId)
+  await deleteAllRows('notas_notes', userId)
+  await deleteAllRows('notas_tags', userId)
+  await deleteAllRows('notas_notebooks', userId)
+  await deleteAllRows('notas_lockboxes', userId)
+  try {
+    await deleteAllNotasVaultMeta(userId)
+  } catch (err) {
+    console.warn(
+      '[notas] vault_meta wipe failed:',
+      err?.message ?? err,
+    )
+  }
+  await saveWorkspaceSemver(userId, SEMVER_FRESH)
 }
 
 function lockboxToRow(userId, lb) {
@@ -537,6 +604,18 @@ async function reassignLegacyNoteNotebookIds(
 export async function pushWorkspace(userId, workspace) {
   if (!userId) throw new Error('pushWorkspace: userId is required')
   const ws = normalizeWorkspace(workspace)
+
+  // Hard stop for new-device stock seeds: never deleteMissing cloud rows
+  // when local has no real content and remote still does.
+  if (!workspaceHasUserContent(ws)) {
+    const remote = await fetchRemoteWorkspace(userId)
+    if (remote && workspaceHasUserContent(remote)) {
+      throw new Error(
+        'Refusing to push empty local workspace over remote user content',
+      )
+    }
+  }
+
   const keepNotebookIds = new Set(ws.notebooks.map((n) => n.id))
   const keepNoteIds = new Set(ws.notes.map((n) => n.id))
   const keepTagIds = new Set(ws.tags.map((t) => t.id))
@@ -616,12 +695,11 @@ export async function pushWorkspace(userId, workspace) {
   await deleteMissing('notas_tags', userId, 'id', keepTagIds)
   await deleteMissing('notas_notebooks', userId, 'id', keepNotebookIds)
   await deleteMissing('notas_lockboxes', userId, 'id', keepLockboxIds)
-  try {
-    await deleteOrphanNotasLockboxVaultMeta(userId, keepLockboxIds)
-  } catch (err) {
-    console.warn(
-      '[notas] vault_meta orphan cleanup failed:',
-      err?.message ?? err,
-    )
-  }
+
+  // Persist sync semver (no vault_meta orphan sweeps).
+  const semver =
+    normalizeSemver(ws.semver) === SEMVER_FRESH && workspaceHasUserContent(ws)
+      ? SEMVER_SEEDED
+      : normalizeSemver(ws.semver)
+  await saveWorkspaceSemver(userId, semver)
 }

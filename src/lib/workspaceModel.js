@@ -2,6 +2,8 @@
 // lockbox metadata). No React, no I/O — safe to unit-test and reuse from
 // providers + sync.
 
+import { normalizeSemver, SEMVER_FRESH } from '@/lib/workspaceSemver'
+
 export const WORKSPACE_STORAGE_KEY = 'notas:workspace'
 export const LEGACY_NOTES_KEY = 'notas:notes'
 
@@ -184,20 +186,23 @@ export function normalizeLockboxMeta(raw) {
 }
 
 export function emptyWorkspace() {
-  const now = new Date().toISOString()
+  // Epoch timestamps so a fresh-device stock seed never looks "newer" than
+  // real cloud content (persist() stamps revisedAt=now on real edits).
+  const epoch = new Date(0).toISOString()
   const notebookId = createId()
   return {
     version: 1,
+    semver: SEMVER_FRESH,
     activeNotebookId: notebookId,
     // Bumped on every local persist (including deletes) so sync can tell
     // that a removal is newer than a stale remote snapshot.
-    revisedAt: now,
+    revisedAt: epoch,
     notebooks: [
       {
         id: notebookId,
         name: DEFAULT_NOTEBOOK_NAME,
-        createdAt: now,
-        updatedAt: now,
+        createdAt: epoch,
+        updatedAt: epoch,
         defaultView: 'timeline',
         timelineField: 'updatedAt',
         lockboxId: null,
@@ -336,6 +341,7 @@ export function normalizeWorkspace(raw) {
 
   return {
     version: 1,
+    semver: normalizeSemver(raw.semver),
     activeNotebookId,
     revisedAt,
     notebooks,

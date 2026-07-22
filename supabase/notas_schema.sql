@@ -4,6 +4,8 @@
 -- Run in Supabase → SQL Editor. Safe to re-run (IF NOT EXISTS / drop policy).
 -- If you already have notas_notes.notebook_id, also run
 -- supabase/migrate_note_notebooks.sql once.
+-- Also run supabase/notas_workspace_meta.sql (sync semver) and
+-- supabase/vault_meta.sql (lockbox crypto) if not already applied.
 
 -- ---------------------------------------------------------------------------
 -- Lockboxes (passphrase meta only — never store the passphrase)

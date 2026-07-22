@@ -32,6 +32,7 @@ import {
   tagsForNote,
   unpinNotebookId,
 } from '@/lib/workspaceModel'
+import { bumpMinor, bumpPatch, normalizeSemver } from '@/lib/workspaceSemver'
 
 const NotesContext = createContext(null)
 
@@ -640,7 +641,11 @@ export function NotesProvider({ children }) {
       const lockboxes = existing
         ? ws.lockboxes.map((l) => (l.id === meta.id ? { ...l, ...meta } : l))
         : [...ws.lockboxes, meta]
-      await persist({ ...ws, lockboxes })
+      // Add lockbox → minor; update existing → patch.
+      const semver = existing
+        ? bumpPatch(normalizeSemver(ws.semver))
+        : bumpMinor(normalizeSemver(ws.semver))
+      await persist({ ...ws, lockboxes, semver })
       return meta
     },
     [persist],
@@ -659,7 +664,8 @@ export function NotesProvider({ children }) {
         // via recovery is out of scope — clear lock pointer only).
         return { ...n, lockboxId: null }
       })
-      await persist({ ...ws, lockboxes, notebooks, notes })
+      const semver = bumpMinor(normalizeSemver(ws.semver))
+      await persist({ ...ws, lockboxes, notebooks, notes, semver })
     },
     [persist],
   )

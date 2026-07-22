@@ -187,32 +187,20 @@ export async function deleteVaultMeta(userId, appId) {
   if (error) throw error
 }
 
-/** Delete every notas:<lockboxId> row whose id is not in keepLockboxIds. */
-export async function deleteOrphanNotasLockboxVaultMeta(
-  userId,
-  keepLockboxIds,
-) {
+/** Delete every notas:* vault_meta row for a user (intentional wipe only). */
+export async function deleteAllNotasVaultMeta(userId) {
   if (!userId) return
-  const keep = keepLockboxIds instanceof Set ? keepLockboxIds : new Set(keepLockboxIds)
-  const { data, error } = await supabase
-    .from('vault_meta')
-    .select('app_id')
-    .eq('user_id', userId)
-    .like('app_id', `${VAULT_APP_NOTAS_PREFIX}%`)
-  if (error) throw error
-  const toDelete = (data ?? [])
-    .map((r) => r.app_id)
-    .filter((appId) => {
-      const id = lockboxIdFromNotasAppId(appId)
-      return id && !keep.has(id)
-    })
-  if (toDelete.length === 0) return
-  const { error: delErr } = await supabase
+  const { error } = await supabase
     .from('vault_meta')
     .delete()
     .eq('user_id', userId)
-    .in('app_id', toDelete)
-  if (delErr) throw delErr
+    .like('app_id', `${VAULT_APP_NOTAS_PREFIX}%`)
+  if (error) throw error
+}
+
+export async function deleteNotasLockboxVaultMeta(userId, lockboxId) {
+  if (!userId || !lockboxId) return
+  await deleteVaultMeta(userId, notasLockboxAppId(lockboxId))
 }
 
 /**

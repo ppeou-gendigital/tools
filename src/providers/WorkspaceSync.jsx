@@ -4,41 +4,34 @@ import { useNotes } from '@/providers/NotesProvider'
 import { enqueueSyncOp } from '@/lib/supabaseSync'
 import {
   fetchRemoteWorkspace,
+  fetchWorkspaceSemver,
   pushWorkspace,
+  saveWorkspaceSemver,
+  wipeUserCloudWorkspace,
   workspaceContentFingerprint,
   workspaceHasUserContent,
   workspaceMaxUpdatedAt,
 } from '@/lib/notasApi'
 import {
+  emptyWorkspace,
   normalizeWorkspace,
   serializeWorkspace,
   WORKSPACE_STORAGE_KEY,
 } from '@/lib/workspaceModel'
+import {
+  isWipeSemver,
+  normalizeSemver,
+  SEMVER_FRESH,
+  SEMVER_SEEDED,
+} from '@/lib/workspaceSemver'
 import { asyncStorage } from '@/lib/storage'
 
 const PUSH_MAX_ATTEMPTS = 3
 const PULL_FOCUS_MIN_MS = 5_000
 
-/**
- * True when every remote notebook/note id exists locally and remote has
- * fewer of at least one — typical of deletes applied in Supabase (or
- * another client) that this device has not absorbed yet.
- */
-function remoteIsStrictSubset(local, remote) {
-  const localNb = new Set(local.notebooks.map((n) => n.id))
-  const localNotes = new Set(local.notes.map((n) => n.id))
-  if (!remote.notebooks.every((n) => localNb.has(n.id))) return false
-  if (!remote.notes.every((n) => localNotes.has(n.id))) return false
-  return (
-    remote.notebooks.length < local.notebooks.length ||
-    remote.notes.length < local.notes.length ||
-    (remote.noteNotebooks?.length ?? 0) < (local.noteNotebooks?.length ?? 0) ||
-    remote.tags.length < local.tags.length
-  )
-}
-
 // Sync local workspace ↔ notas_* tables (not user_data).
-// Biometric wraps stay device-local.
+// Login always pulls cloud content. Semver guards seed/wipe; never push a
+// stock empty seed over remote data.
 export function WorkspaceSync() {
   const { user, loading: authLoading } = useAuth()
   const { ready, workspace, setWorkspaceFromRemote, registerPersistHook } =
@@ -83,6 +76,7 @@ export function WorkspaceSync() {
         lockboxIdleTimeoutMs: live.lockboxIdleTimeoutMs,
         pinnedNotebookIds: live.pinnedNotebookIds,
         revisedAt: remote.revisedAt ?? remoteMax,
+        semver: normalizeSemver(remote.semver ?? live.semver),
       }
       const normalized = normalizeWorkspace(merged)
       setWorkspaceFromRemote(normalized)
@@ -92,6 +86,20 @@ export function WorkspaceSync() {
       )
       lastPushedFpRef.current = workspaceContentFingerprint(normalized)
       userDirtyRef.current = false
+    },
+    [setWorkspaceFromRemote],
+  )
+
+  const persistLocal = useCallback(
+    async (next) => {
+      const normalized = normalizeWorkspace(next)
+      setWorkspaceFromRemote(normalized)
+      await asyncStorage.setItem(
+        WORKSPACE_STORAGE_KEY,
+        serializeWorkspace(normalized),
+      )
+      workspaceRef.current = normalized
+      return normalized
     },
     [setWorkspaceFromRemote],
   )
@@ -152,57 +160,76 @@ export function WorkspaceSync() {
       if (!activeUserId || pullingRef.current) return
       pullingRef.current = true
       try {
-        const localBefore = normalizeWorkspace(workspaceRef.current)
-        const remote = await fetchRemoteWorkspace(activeUserId)
-        if (!remote) {
-          if (
-            userDirtyRef.current ||
-            workspaceHasUserContent(localBefore) ||
-            localBefore.notebooks.length > 0
-          ) {
-            await schedulePush(`${reason}-empty-remote`)
-          }
-          return
-        }
-
         const live = normalizeWorkspace(workspaceRef.current)
-        const liveFp = workspaceContentFingerprint(live)
-        const remoteFp = workspaceContentFingerprint(remote)
+        const remoteSemver = await fetchWorkspaceSemver(activeUserId)
 
-        if (liveFp === remoteFp) {
-          lastPushedFpRef.current = liveFp
+        // Intentional wipe sentinel — clear cloud + local, never invent -1 here.
+        if (isWipeSemver(remoteSemver)) {
+          await wipeUserCloudWorkspace(activeUserId)
+          const wiped = emptyWorkspace()
+          await persistLocal(wiped)
+          lastPushedFpRef.current = workspaceContentFingerprint(wiped)
           userDirtyRef.current = false
           return
         }
 
-        if (userDirtyRef.current) {
-          await schedulePush(`${reason}-dirty`)
+        const remote = await fetchRemoteWorkspace(activeUserId)
+
+        // Empty cloud: seed Napkin Notes at 0.0.1 (or push existing local content).
+        if (!remote) {
+          let seed = live
+          if (!workspaceHasUserContent(seed)) {
+            seed = emptyWorkspace()
+          }
+          if (normalizeSemver(seed.semver) === SEMVER_FRESH) {
+            seed = { ...seed, semver: SEMVER_SEEDED }
+          }
+          seed = await persistLocal(seed)
+          await saveWorkspaceSemver(activeUserId, seed.semver)
+          await schedulePush(`${reason}-seed`)
           return
         }
 
-        // No local edits: cloud missing rows we still have → take cloud
-        // (Supabase dashboard / other-client deletes). Do not push ghosts.
-        if (remoteIsStrictSubset(live, remote)) {
-          await applyRemote(remote, live)
+        // Existing cloud content with missing/fresh meta → mark seeded once.
+        let remoteWs = normalizeWorkspace(remote)
+        if (
+          normalizeSemver(remoteSemver) === SEMVER_FRESH &&
+          workspaceHasUserContent(remoteWs)
+        ) {
+          await saveWorkspaceSemver(activeUserId, SEMVER_SEEDED)
+          remoteWs = { ...remoteWs, semver: SEMVER_SEEDED }
+        } else {
+          remoteWs = {
+            ...remoteWs,
+            semver: normalizeSemver(remoteWs.semver || remoteSemver),
+          }
+        }
+
+        const liveFp = workspaceContentFingerprint(live)
+        const remoteFp = workspaceContentFingerprint(remoteWs)
+        if (liveFp === remoteFp) {
+          lastPushedFpRef.current = liveFp
+          userDirtyRef.current = false
+          // Keep local semver aligned with cloud.
+          if (normalizeSemver(live.semver) !== normalizeSemver(remoteWs.semver)) {
+            await persistLocal({ ...live, semver: remoteWs.semver })
+          }
           return
         }
 
-        const localMax = workspaceMaxUpdatedAt(live)
-        const remoteMax = workspaceMaxUpdatedAt(remote)
-        const localMs = localMax ? Date.parse(localMax) : 0
-        const remoteMs = remoteMax ? Date.parse(remoteMax) : 0
-
-        if (localMs >= remoteMs) {
-          await schedulePush(`${reason}-local-newer`)
+        // Login / idle focus: always take cloud. Never push stock empty over it.
+        if (reason === 'initial' || !userDirtyRef.current) {
+          await applyRemote(remoteWs, live)
           return
         }
 
-        await applyRemote(remote, live)
+        // Local note/notebook edits pending — push those.
+        await schedulePush(`${reason}-dirty`)
       } finally {
         pullingRef.current = false
       }
     },
-    [applyRemote, schedulePush],
+    [applyRemote, persistLocal, schedulePush],
   )
 
   useEffect(() => {

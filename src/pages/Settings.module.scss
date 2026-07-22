@@ -102,3 +102,24 @@
   color: var(--muted-fg);
   flex-shrink: 0;
 }
+
+.cardDanger {
+  .cardIcon {
+    color: var(--danger, #ef4444);
+    background: color-mix(in srgb, var(--danger, #ef4444) 12%, var(--card) 88%);
+  }
+
+  .cardTitle {
+    color: var(--danger, #ef4444);
+  }
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--danger, #ef4444) 35%, var(--border) 65%);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
