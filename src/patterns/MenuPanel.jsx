@@ -1,4 +1,5 @@
 import { useAuth } from '@/providers/AuthProvider'
+import { APP_VERSION } from '@/env'
 import { Divider } from '@/molecules/Divider'
 import { AboutRow } from '@/patterns/AboutRow'
 import { AccountRow } from '@/patterns/AccountRow'
@@ -12,8 +13,6 @@ import { SiteTreeItem } from '@/patterns/SiteTreeItem'
 import { TrackThisSiteItem } from '@/patterns/TrackThisSiteItem'
 import { VisitedUrlsItem } from '@/patterns/VisitedUrlsItem'
 import styles from './MenuPanel.module.scss'
-
-const VERSION = '0.1.0'
 
 export function MenuPanel({ corner, onClose }) {
   const { user } = useAuth()
@@ -33,7 +32,7 @@ export function MenuPanel({ corner, onClose }) {
       <FavLinksItem onClose={onClose} />
       <ProjectSiteItem onClose={onClose} />
       <DevBadgeItem />
-      <AboutRow version={VERSION} />
+      <AboutRow version={APP_VERSION} />
     </div>
   )
 }

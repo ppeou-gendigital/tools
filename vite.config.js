@@ -2,18 +2,39 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { crx } from '@crxjs/vite-plugin'
 import { VitePWA } from 'vite-plugin-pwa'
+import { execSync } from 'node:child_process'
 import { resolve } from 'node:path'
 import manifest from './manifest.json' with { type: 'json' }
+import pkg from './package.json' with { type: 'json' }
 
 // Two build targets share this single Vite config:
 //   npm run dev          -> web dev server (index.html)
 //   npm run build        -> extension prod build (uses manifest.json via CRXJS)  [mode=extension]
 //   npm run build:web    -> web prod build to dist-web/                          [mode=web]
+
+/** package.json version + short git SHA, e.g. 0.1.0+4ae2c00 */
+function buildAppVersion() {
+  let sha = 'local'
+  try {
+    sha = execSync('git rev-parse --short HEAD', {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim()
+  } catch {
+    // Outside a git checkout (rare) — keep "+local".
+  }
+  return `${pkg.version}+${sha}`
+}
+
 export default defineConfig(({ command, mode }) => {
   const isExtension = mode === 'extension'
   const isBuild = command === 'build'
+  const appVersion = buildAppVersion()
 
   return {
+    define: {
+      'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
+    },
     // Web PROD build is served from
     // https://ppeou-gendigital.github.io/tools/loopy/, so every asset URL
     // must be prefixed with the repo-and-tool subpath. Dev server

@@ -29,8 +29,10 @@ import {
   normalizeVisitedByDomain,
 } from '@/lib/visitedUrls'
 import {
+  extractForeignPrefs,
   normalizeAemDomains,
   normalizeRemotePrefs,
+  PREFS_OWNED_KEYS,
 } from '@/lib/prefs'
 import {
   normalizeFavoritesOrder,
@@ -132,13 +134,8 @@ function rowFromDb(row) {
 }
 
 function normalizePrefsRow(row) {
-  const prefs = normalizeRemotePrefs(row?.data)
   return {
-    data: {
-      theme: prefs.theme,
-      fontSize: prefs.fontSize,
-      fabCorner: prefs.fabCorner,
-    },
+    data: normalizeRemotePrefs(row?.data),
     aemDomains: normalizeAemDomains(row?.aemDomains),
     trackedHostnames: normalizeTrackedHostnames(row?.trackedHostnames),
     pinnedSites: normalizePinnedSites(row?.pinnedSites),
@@ -149,6 +146,8 @@ function normalizePrefsRow(row) {
 
 function prefsRowsEqual(a, b) {
   if (!a || !b) return false
+  // Compare only owned fields (+ Loopy columns). Sibling keys must not
+  // force a rewrite.
   return (
     a.data.theme === b.data.theme &&
     a.data.fontSize === b.data.fontSize &&
@@ -162,18 +161,30 @@ function prefsRowsEqual(a, b) {
 }
 
 function toDbPrefsPayload(userId, row) {
+  const data = {
+    ...extractForeignPrefs(row.data),
+    theme: row.data.theme,
+    fontSize: row.data.fontSize,
+    fabCorner: row.data.fabCorner,
+    updatedAt: new Date().toISOString(),
+  }
   return {
     id: userId,
-    data: {
-      ...row.data,
-      updatedAt: new Date().toISOString(),
-    },
+    data,
     aem_domains: row.aemDomains ?? [],
     tracked_hostnames: row.trackedHostnames ?? {},
     pinned_sites: row.pinnedSites ?? [],
     favorites_order: row.favoritesOrder ?? [],
     updated_at: new Date().toISOString(),
   }
+}
+
+/** Replace sibling-tool keys on `data` with the remote snapshot's. */
+function applyRemoteForeignPrefs(data, remoteData) {
+  for (const key of Object.keys(data)) {
+    if (!PREFS_OWNED_KEYS.has(key)) delete data[key]
+  }
+  Object.assign(data, extractForeignPrefs(remoteData))
 }
 
 function inServiceWorker() {
@@ -602,6 +613,10 @@ export async function pullSync({ stream, userId, local, dirtyKeys } = {}) {
     }
     if (!dirty.has('fabCorner') && !dirty.has('data')) {
       next.data.fabCorner = remote.data.fabCorner
+    }
+    // Never dirty sibling keys — always take them from remote.
+    if (!dirty.has('data')) {
+      applyRemoteForeignPrefs(next.data, remote.data)
     }
     if (!dirty.has('aemDomains')) next.aemDomains = remote.aemDomains
     if (!dirty.has('trackedHostnames')) {

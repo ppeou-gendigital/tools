@@ -1,6 +1,11 @@
 // Normalizers for the user_data pref fields. Kept in one place so the
 // provider setters and PrefsSync agree on what a sane value looks like when
 // clamping remote / imported payloads.
+//
+// This row is shared across sibling tools on the same Supabase project.
+// Own only theme/font/fab (plus updatedAt). Pass every other key through
+// opaquely so prefs CAS never wipes sibling fields (e.g. legacy Accesso
+// vault blobs). Crypto salt/verifier must NOT live here — use vault_meta.
 
 const THEMES = ['light', 'dark', 'system']
 const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
@@ -9,6 +14,28 @@ const FONT_MIN = 12
 const FONT_MAX = 24
 const FONT_STEP = 2
 const FONT_DEFAULT = 16
+
+/** Keys this tool normalizes and may rewrite on the shared prefs blob. */
+export const PREFS_OWNED_KEYS = new Set([
+  'theme',
+  'fontSize',
+  'fabCorner',
+  'updatedAt',
+])
+
+/** Opaque sibling-tool fields — never validate or drop. */
+export function extractForeignPrefs(remote) {
+  if (!remote || typeof remote !== 'object' || Array.isArray(remote)) {
+    return {}
+  }
+  const foreign = {}
+  for (const [key, value] of Object.entries(remote)) {
+    if (!PREFS_OWNED_KEYS.has(key) && value !== undefined) {
+      foreign[key] = value
+    }
+  }
+  return foreign
+}
 
 // AEM Jump domain enums. Kept together so Settings selects, the block
 // header chips, and the normalizer all agree on the allowed values.
@@ -252,14 +279,15 @@ export function isDomainRenderable(entry) {
 }
 
 // Sanitize a (possibly untrusted / partial) remote prefs blob before
-// applying it via the provider setters. Drops unknown keys and clamps bad
-// values.
+// applying it via the provider setters. Clamps owned keys; preserves
+// sibling-tool keys opaquely.
 //
 // Only the `data` column shape is normalized here. The AEM domain list
 // lives in its own `aem_domains` column on `user_data` and is handled by
 // `normalizeAemDomains` directly.
 export function normalizeRemotePrefs(remote) {
   return {
+    ...extractForeignPrefs(remote),
     theme: normalizeTheme(remote?.theme),
     fontSize: normalizeFontSize(remote?.fontSize),
     fabCorner: normalizeFabCorner(remote?.fabCorner),

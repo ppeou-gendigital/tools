@@ -7,6 +7,9 @@ export function isExtension() {
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+/** Injected at build time: package.json version + git SHA (e.g. 0.1.0+4ae2c00). */
+export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '0.0.0+local'
+
 // Sentinel values shipped in `.env.example`. If they leak into a real `.env`,
 // every Supabase call fails with an opaque DNS/CORS error. Fail fast instead.
 const PLACEHOLDER_URL = 'https://YOUR-PROJECT-REF.supabase.co'

@@ -24,13 +24,9 @@ import { AemEnvironments } from '@/pages/AemEnvironments'
 import { SiteTree } from '@/pages/SiteTree'
 import { TrackedHosts } from '@/pages/TrackedHosts'
 import { VisitedUrls } from '@/pages/VisitedUrls'
+import { APP_VERSION } from '@/env'
 import { queryClient } from '@/lib/queryClient'
 import { queryPersister } from '@/lib/queryPersister'
-
-// Bump this whenever the cached shape changes so stale entries get busted
-// on next popup open. Reads naturally from package.json in the future if
-// we start importing it.
-const APP_VERSION = '0.1.0'
 
 function Router() {
   const { route } = useNavigation()

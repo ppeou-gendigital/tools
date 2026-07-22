@@ -3,8 +3,11 @@
 // `(row) => nextRow` that:
 //   - Never mutates the input.
 //   - Only touches the field(s) it owns so a CAS miss + re-apply
-//     preserves concurrent edits to other columns.
+//     preserves concurrent edits and sibling-tool keys on `data`.
 //   - Returns the same row reference when the op is a no-op.
+//
+// When you add a new owned prefs key, add it to PREFS_OWNED_KEYS in
+// prefs.js and an op factory here.
 
 import {
   normalizeAemDomains,
