@@ -27,24 +27,26 @@ import {
 import { asyncStorage } from '@/lib/storage'
 
 const PUSH_MAX_ATTEMPTS = 3
-const PULL_FOCUS_MIN_MS = 5_000
 
-// Sync local workspace ↔ notas_* tables (not user_data).
-// Login always pulls cloud content. Semver guards seed/wipe; never push a
-// stock empty seed over remote data.
+// Login: pull / seed / wipe only.
+// Mutations: pull-before-op in NotesProvider (workspaceSyncOps).
+// Focus: flush dirty push only — never applyRemote (avoids wiping new lockboxes).
 export function WorkspaceSync() {
   const { user, loading: authLoading } = useAuth()
-  const { ready, workspace, setWorkspaceFromRemote, registerPersistHook } =
-    useNotes()
+  const {
+    ready,
+    workspace,
+    setWorkspaceFromRemote,
+    registerPersistHook,
+    registerMarkPushed,
+  } = useNotes()
 
   const userId = user?.id ?? null
   const initialPulledForUserRef = useRef(null)
-  // Set only by local user edits (persist hook) — not by push/pull itself.
   const userDirtyRef = useRef(false)
   const workspaceRef = useRef(workspace)
   const lastPushedFpRef = useRef(null)
   const userIdRef = useRef(userId)
-  const lastFocusPullAtRef = useRef(0)
   const pullingRef = useRef(false)
 
   useEffect(() => {
@@ -62,6 +64,13 @@ export function WorkspaceSync() {
       lastPushedFpRef.current = null
     }
   }, [userId])
+
+  useEffect(() => {
+    return registerMarkPushed((fp) => {
+      lastPushedFpRef.current = fp
+      userDirtyRef.current = false
+    })
+  }, [registerMarkPushed])
 
   const applyRemote = useCallback(
     async (remote, live) => {
@@ -84,6 +93,7 @@ export function WorkspaceSync() {
         WORKSPACE_STORAGE_KEY,
         serializeWorkspace(normalized),
       )
+      workspaceRef.current = normalized
       lastPushedFpRef.current = workspaceContentFingerprint(normalized)
       userDirtyRef.current = false
     },
@@ -154,83 +164,58 @@ export function WorkspaceSync() {
     })
   }, [])
 
-  const reconcileWithRemote = useCallback(
-    async (reason) => {
-      const activeUserId = userIdRef.current
-      if (!activeUserId || pullingRef.current) return
-      pullingRef.current = true
-      try {
-        const live = normalizeWorkspace(workspaceRef.current)
-        const remoteSemver = await fetchWorkspaceSemver(activeUserId)
+  /** Login-only reconcile: wipe / seed / pull. Never used on focus. */
+  const pullOnLogin = useCallback(async () => {
+    const activeUserId = userIdRef.current
+    if (!activeUserId || pullingRef.current) return
+    pullingRef.current = true
+    try {
+      const live = normalizeWorkspace(workspaceRef.current)
+      const remoteSemver = await fetchWorkspaceSemver(activeUserId)
 
-        // Intentional wipe sentinel — clear cloud + local, never invent -1 here.
-        if (isWipeSemver(remoteSemver)) {
-          await wipeUserCloudWorkspace(activeUserId)
-          const wiped = emptyWorkspace()
-          await persistLocal(wiped)
-          lastPushedFpRef.current = workspaceContentFingerprint(wiped)
-          userDirtyRef.current = false
-          return
-        }
-
-        const remote = await fetchRemoteWorkspace(activeUserId)
-
-        // Empty cloud: seed Napkin Notes at 0.0.1 (or push existing local content).
-        if (!remote) {
-          let seed = live
-          if (!workspaceHasUserContent(seed)) {
-            seed = emptyWorkspace()
-          }
-          if (normalizeSemver(seed.semver) === SEMVER_FRESH) {
-            seed = { ...seed, semver: SEMVER_SEEDED }
-          }
-          seed = await persistLocal(seed)
-          await saveWorkspaceSemver(activeUserId, seed.semver)
-          await schedulePush(`${reason}-seed`)
-          return
-        }
-
-        // Existing cloud content with missing/fresh meta → mark seeded once.
-        let remoteWs = normalizeWorkspace(remote)
-        if (
-          normalizeSemver(remoteSemver) === SEMVER_FRESH &&
-          workspaceHasUserContent(remoteWs)
-        ) {
-          await saveWorkspaceSemver(activeUserId, SEMVER_SEEDED)
-          remoteWs = { ...remoteWs, semver: SEMVER_SEEDED }
-        } else {
-          remoteWs = {
-            ...remoteWs,
-            semver: normalizeSemver(remoteWs.semver || remoteSemver),
-          }
-        }
-
-        const liveFp = workspaceContentFingerprint(live)
-        const remoteFp = workspaceContentFingerprint(remoteWs)
-        if (liveFp === remoteFp) {
-          lastPushedFpRef.current = liveFp
-          userDirtyRef.current = false
-          // Keep local semver aligned with cloud.
-          if (normalizeSemver(live.semver) !== normalizeSemver(remoteWs.semver)) {
-            await persistLocal({ ...live, semver: remoteWs.semver })
-          }
-          return
-        }
-
-        // Login / idle focus: always take cloud. Never push stock empty over it.
-        if (reason === 'initial' || !userDirtyRef.current) {
-          await applyRemote(remoteWs, live)
-          return
-        }
-
-        // Local note/notebook edits pending — push those.
-        await schedulePush(`${reason}-dirty`)
-      } finally {
-        pullingRef.current = false
+      if (isWipeSemver(remoteSemver)) {
+        await wipeUserCloudWorkspace(activeUserId)
+        const wiped = emptyWorkspace()
+        await persistLocal(wiped)
+        lastPushedFpRef.current = workspaceContentFingerprint(wiped)
+        userDirtyRef.current = false
+        return
       }
-    },
-    [applyRemote, persistLocal, schedulePush],
-  )
+
+      const remote = await fetchRemoteWorkspace(activeUserId)
+      if (!remote) {
+        let seed = live
+        if (!workspaceHasUserContent(seed)) {
+          seed = emptyWorkspace()
+        }
+        if (normalizeSemver(seed.semver) === SEMVER_FRESH) {
+          seed = { ...seed, semver: SEMVER_SEEDED }
+        }
+        seed = await persistLocal(seed)
+        await saveWorkspaceSemver(activeUserId, seed.semver)
+        await schedulePush('login-seed')
+        return
+      }
+
+      let remoteWs = normalizeWorkspace(remote)
+      if (
+        normalizeSemver(remoteSemver) === SEMVER_FRESH &&
+        workspaceHasUserContent(remoteWs)
+      ) {
+        await saveWorkspaceSemver(activeUserId, SEMVER_SEEDED)
+        remoteWs = { ...remoteWs, semver: SEMVER_SEEDED }
+      } else {
+        remoteWs = {
+          ...remoteWs,
+          semver: normalizeSemver(remoteWs.semver || remoteSemver),
+        }
+      }
+
+      await applyRemote(remoteWs, live)
+    } finally {
+      pullingRef.current = false
+    }
+  }, [applyRemote, persistLocal, schedulePush])
 
   useEffect(() => {
     if (!userId || !ready) return undefined
@@ -248,26 +233,17 @@ export function WorkspaceSync() {
   useEffect(() => {
     if (!userId || !ready) return undefined
     const onFocus = () => {
-      const now = Date.now()
-      if (now - lastFocusPullAtRef.current < PULL_FOCUS_MIN_MS) {
-        if (userDirtyRef.current) {
-          schedulePush('focus-dirty').catch((err) => {
-            console.warn(
-              '[notas] focus workspace flush failed:',
-              err?.message ?? err,
-            )
-          })
-        }
-        return
-      }
-      lastFocusPullAtRef.current = now
-      reconcileWithRemote('focus').catch((err) => {
-        console.warn('[notas] focus workspace pull failed:', err?.message ?? err)
+      if (!userDirtyRef.current) return
+      schedulePush('focus-dirty').catch((err) => {
+        console.warn(
+          '[notas] focus workspace flush failed:',
+          err?.message ?? err,
+        )
       })
     }
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
-  }, [userId, ready, reconcileWithRemote, schedulePush])
+  }, [userId, ready, schedulePush])
 
   useEffect(() => {
     if (authLoading || !userId || !ready) return
@@ -277,7 +253,7 @@ export function WorkspaceSync() {
     let cancelled = false
     ;(async () => {
       try {
-        await reconcileWithRemote('initial')
+        await pullOnLogin()
       } catch (err) {
         if (cancelled) return
         initialPulledForUserRef.current = null
@@ -288,7 +264,7 @@ export function WorkspaceSync() {
     return () => {
       cancelled = true
     }
-  }, [authLoading, userId, ready, reconcileWithRemote])
+  }, [authLoading, userId, ready, pullOnLogin])
 
   return null
 }

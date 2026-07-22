@@ -1,4 +1,5 @@
 import { useAuth } from '@/providers/AuthProvider'
+import { APP_VERSION } from '@/env'
 import { Divider } from '@/molecules/Divider'
 import { Logo } from '@/molecules/Logo'
 import { AboutRow } from '@/patterns/AboutRow'
@@ -8,7 +9,6 @@ import { AppNavItems } from '@/patterns/AppNavItems'
 import { DevBadgeItem } from '@/patterns/DevBadgeItem'
 import styles from './MenuPanel.module.scss'
 
-const VERSION = '0.1.0'
 const TOOL_NAME = 'Notas'
 
 export function MenuPanel({ corner, onClose }) {
@@ -28,7 +28,7 @@ export function MenuPanel({ corner, onClose }) {
       <Divider />
       <AppNavItems onClose={onClose} />
       <DevBadgeItem />
-      <AboutRow name={TOOL_NAME} version={VERSION} />
+      <AboutRow name={TOOL_NAME} version={APP_VERSION} />
     </div>
   )
 }

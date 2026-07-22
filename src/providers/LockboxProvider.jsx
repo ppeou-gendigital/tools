@@ -47,6 +47,8 @@ const MIN_PASSPHRASE_LENGTH = 8
 const SESSION_KEY = 'notas.lockboxes.session'
 const FAILED_UNLOCK_DELAYS_MS = [0, 250, 500, 1000, 2000, 4000]
 const ACTIVITY_THROTTLE_MS = 30_000
+/** Nested mutators inside runPulledWorkspaceOp — skip a second pull/push. */
+const LOCAL_SYNC = { skipRemoteSync: true }
 
 const LockboxContext = createContext(null)
 
@@ -102,6 +104,7 @@ export function LockboxProvider({ children }) {
     updateNotebook,
     setNoteNotebooks,
     setLockboxIdleTimeoutMs,
+    runPulledWorkspaceOp,
   } = useNotes()
 
   const userId = user?.id ?? null
@@ -562,100 +565,125 @@ export function LockboxProvider({ children }) {
       noteId,
       { title, body, notebookId, notebookIds, lockboxId: explicitLb } = {},
     ) => {
-      const note = noteId ? getNote(noteId) : null
-      const requested = Array.isArray(notebookIds)
-        ? notebookIds
-        : notebookId
-          ? [notebookId]
-          : noteId
-            ? notebookIdsForNote(workspace, noteId)
-            : [workspace.activeNotebookId]
-      const targetIds = [
-        ...new Set(
-          requested.filter((id) =>
-            workspace.notebooks.some((n) => n.id === id),
-          ),
-        ),
-      ]
-      if (targetIds.length === 0 && workspace.activeNotebookId) {
-        targetIds.push(workspace.activeNotebookId)
-      }
-      if (targetIds.length === 0) {
-        throw new Error('Select at least one notebook.')
-      }
-
-      const memberLockboxes = targetIds
-        .map((id) => workspace.notebooks.find((n) => n.id === id)?.lockboxId)
-        .filter(Boolean)
-      const inheritedLb =
-        memberLockboxes.length > 0 && new Set(memberLockboxes).size === 1
-          ? memberLockboxes[0]
-          : null
-
-      // Note-level lockbox when set; otherwise inherit when memberships agree.
-      // Stored note.lockboxId is only the explicit override (null = inherit).
-      const storedNoteLb =
+      // Unlock before pull so we don't hold the sync queue during passphrase UI.
+      const previewNote = noteId ? getNote(noteId) : null
+      const previewLb =
         explicitLb !== undefined
           ? explicitLb || null
-          : (note?.lockboxId ?? null)
-      const encryptWithLb = storedNoteLb || inheritedLb
-
-      if (encryptWithLb && !keysRef.current.has(encryptWithLb)) {
-        await requestUnlock(encryptWithLb)
+          : (previewNote?.lockboxId ?? null)
+      if (previewLb && !keysRef.current.has(previewLb)) {
+        await requestUnlock(previewLb)
       }
 
-      let saved
-      if (encryptWithLb) {
-        const { ciphertext, iv } = await encryptPayload(encryptWithLb, {
-          title: String(title ?? '').trim() || 'Untitled',
-          body: String(body ?? ''),
-        })
-        if (noteId) {
-          saved = await updateNote(noteId, {
-            title: 'Locked note',
-            body: '',
-            lockboxId: storedNoteLb,
-            ciphertext,
-            iv,
-            clearPlaintext: true,
-          })
-        } else {
-          saved = await createNote({
-            notebookIds: targetIds,
-            lockboxId: storedNoteLb,
-            ciphertext,
-            iv,
-          })
+      return runPulledWorkspaceOp(async () => {
+        const note = noteId ? getNote(noteId) : null
+        const requested = Array.isArray(notebookIds)
+          ? notebookIds
+          : notebookId
+            ? [notebookId]
+            : noteId
+              ? notebookIdsForNote(workspace, noteId)
+              : [workspace.activeNotebookId]
+        const targetIds = [
+          ...new Set(
+            requested.filter((id) =>
+              workspace.notebooks.some((n) => n.id === id),
+            ),
+          ),
+        ]
+        if (targetIds.length === 0 && workspace.activeNotebookId) {
+          targetIds.push(workspace.activeNotebookId)
         }
-      } else if (noteId) {
-        saved = await updateNote(noteId, {
-          title,
-          body,
-          lockboxId: null,
-          ciphertext: null,
-          iv: null,
-          decryptPlaintext: true,
-        })
-      } else {
-        saved = await createNote({
-          title,
-          body,
-          notebookIds: targetIds,
-          lockboxId: null,
-        })
-      }
+        if (targetIds.length === 0) {
+          throw new Error('Select at least one notebook.')
+        }
 
-      const id = saved?.id ?? noteId
-      if (id && noteId) {
-        await setNoteNotebooks(id, targetIds)
-      }
-      return saved
+        const memberLockboxes = targetIds
+          .map((id) => workspace.notebooks.find((n) => n.id === id)?.lockboxId)
+          .filter(Boolean)
+        const inheritedLb =
+          memberLockboxes.length > 0 && new Set(memberLockboxes).size === 1
+            ? memberLockboxes[0]
+            : null
+
+        const storedNoteLb =
+          explicitLb !== undefined
+            ? explicitLb || null
+            : (note?.lockboxId ?? null)
+        const encryptWithLb = storedNoteLb || inheritedLb
+
+        if (encryptWithLb && !keysRef.current.has(encryptWithLb)) {
+          await requestUnlock(encryptWithLb)
+        }
+
+        let saved
+        if (encryptWithLb) {
+          const { ciphertext, iv } = await encryptPayload(encryptWithLb, {
+            title: String(title ?? '').trim() || 'Untitled',
+            body: String(body ?? ''),
+          })
+          if (noteId) {
+            saved = await updateNote(
+              noteId,
+              {
+                title: 'Locked note',
+                body: '',
+                lockboxId: storedNoteLb,
+                ciphertext,
+                iv,
+                clearPlaintext: true,
+              },
+              LOCAL_SYNC,
+            )
+          } else {
+            saved = await createNote(
+              {
+                notebookIds: targetIds,
+                lockboxId: storedNoteLb,
+                ciphertext,
+                iv,
+              },
+              LOCAL_SYNC,
+            )
+          }
+        } else if (noteId) {
+          saved = await updateNote(
+            noteId,
+            {
+              title,
+              body,
+              lockboxId: null,
+              ciphertext: null,
+              iv: null,
+              decryptPlaintext: true,
+            },
+            LOCAL_SYNC,
+          )
+        } else {
+          saved = await createNote(
+            {
+              title,
+              body,
+              notebookIds: targetIds,
+              lockboxId: null,
+            },
+            LOCAL_SYNC,
+          )
+        }
+
+        const id = saved?.id ?? noteId
+        if (id && noteId) {
+          await setNoteNotebooks(id, targetIds, LOCAL_SYNC)
+        }
+        return saved
+      })
     },
     [
       createNote,
       encryptPayload,
       getNote,
       requestUnlock,
+      runPulledWorkspaceOp,
       setNoteNotebooks,
       updateNote,
       workspace,
@@ -669,7 +697,6 @@ export function LockboxProvider({ children }) {
       const nextLb = lockboxId || null
       if (prevLb === nextLb) return
 
-      // Need the current key to decrypt, and the new key to encrypt.
       if (prevLb && !keysRef.current.has(prevLb)) {
         await requestUnlock(prevLb)
       }
@@ -677,102 +704,118 @@ export function LockboxProvider({ children }) {
         await requestUnlock(nextLb)
       }
 
-      const members = notesInNotebook(workspace, notebookId).filter(
-        (n) => !n.lockboxId,
-      )
+      return runPulledWorkspaceOp(async () => {
+        const members = notesInNotebook(workspace, notebookId).filter(
+          (n) => !n.lockboxId,
+        )
 
-      // Removing notebook protection: decrypt notes that would lose inheritance
-      if (!nextLb && prevLb) {
-        for (const note of members) {
-          if (!note.ciphertext || !note.iv) continue
-          const otherLbs = notebookIdsForNote(workspace, note.id)
-            .filter((id) => id !== notebookId)
-            .map((id) => workspace.notebooks.find((n) => n.id === id)?.lockboxId)
-            .filter(Boolean)
-          const stillInherits =
-            otherLbs.length > 0 &&
-            new Set(otherLbs).size === 1 &&
-            otherLbs[0] === prevLb
-          if (stillInherits) continue
-          const payload = await decryptPayload(
-            prevLb,
-            note.ciphertext,
-            note.iv,
-          )
-          await updateNote(note.id, {
-            title: payload?.title ?? 'Untitled',
-            body: payload?.body ?? '',
-            ciphertext: null,
-            iv: null,
-            decryptPlaintext: true,
-          })
-        }
-        await updateNotebook(notebookId, { lockboxId: null })
-        return
-      }
-
-      // Attach or switch lockbox: decrypt with previous key (if any), then
-      // encrypt with the new key so ciphertext matches notebook inheritance.
-      for (const note of members) {
-        const otherLbs = notebookIdsForNote(workspace, note.id)
-          .filter((id) => id !== notebookId)
-          .map((id) => workspace.notebooks.find((n) => n.id === id)?.lockboxId)
-          .filter(Boolean)
-        const afterLbs = nextLb ? [...otherLbs, nextLb] : otherLbs
-        const inheritsNext =
-          afterLbs.length > 0 &&
-          new Set(afterLbs).size === 1 &&
-          afterLbs[0] === nextLb
-
-        let title = note.title
-        let body = note.body
-        if (note.ciphertext && note.iv) {
-          const decryptWith =
-            (prevLb && keysRef.current.has(prevLb) && prevLb) ||
-            effectiveLockboxId(workspace, note)
-          if (!decryptWith || !keysRef.current.has(decryptWith)) {
-            throw new Error(
-              'Unlock the current lockbox before changing notebook protection.',
+        if (!nextLb && prevLb) {
+          for (const note of members) {
+            if (!note.ciphertext || !note.iv) continue
+            const otherLbs = notebookIdsForNote(workspace, note.id)
+              .filter((id) => id !== notebookId)
+              .map(
+                (id) => workspace.notebooks.find((n) => n.id === id)?.lockboxId,
+              )
+              .filter(Boolean)
+            const stillInherits =
+              otherLbs.length > 0 &&
+              new Set(otherLbs).size === 1 &&
+              otherLbs[0] === prevLb
+            if (stillInherits) continue
+            const payload = await decryptPayload(
+              prevLb,
+              note.ciphertext,
+              note.iv,
+            )
+            await updateNote(
+              note.id,
+              {
+                title: payload?.title ?? 'Untitled',
+                body: payload?.body ?? '',
+                ciphertext: null,
+                iv: null,
+                decryptPlaintext: true,
+              },
+              LOCAL_SYNC,
             )
           }
-          const payload = await decryptPayload(
-            decryptWith,
-            note.ciphertext,
-            note.iv,
-          )
-          title = payload?.title ?? 'Untitled'
-          body = payload?.body ?? ''
+          await updateNotebook(notebookId, { lockboxId: null }, LOCAL_SYNC)
+          return
         }
 
-        if (inheritsNext && nextLb) {
-          const { ciphertext, iv } = await encryptPayload(nextLb, {
-            title,
-            body,
-          })
-          await updateNote(note.id, {
-            title: 'Locked note',
-            body: '',
-            ciphertext,
-            iv,
-            clearPlaintext: true,
-          })
-        } else if (note.ciphertext && note.iv) {
-          await updateNote(note.id, {
-            title,
-            body,
-            ciphertext: null,
-            iv: null,
-            decryptPlaintext: true,
-          })
-        }
-      }
+        for (const note of members) {
+          const otherLbs = notebookIdsForNote(workspace, note.id)
+            .filter((id) => id !== notebookId)
+            .map(
+              (id) => workspace.notebooks.find((n) => n.id === id)?.lockboxId,
+            )
+            .filter(Boolean)
+          const afterLbs = nextLb ? [...otherLbs, nextLb] : otherLbs
+          const inheritsNext =
+            afterLbs.length > 0 &&
+            new Set(afterLbs).size === 1 &&
+            afterLbs[0] === nextLb
 
-      await updateNotebook(notebookId, { lockboxId: nextLb })
+          let title = note.title
+          let body = note.body
+          if (note.ciphertext && note.iv) {
+            const decryptWith =
+              (prevLb && keysRef.current.has(prevLb) && prevLb) ||
+              effectiveLockboxId(workspace, note)
+            if (!decryptWith || !keysRef.current.has(decryptWith)) {
+              throw new Error(
+                'Unlock the current lockbox before changing notebook protection.',
+              )
+            }
+            const payload = await decryptPayload(
+              decryptWith,
+              note.ciphertext,
+              note.iv,
+            )
+            title = payload?.title ?? 'Untitled'
+            body = payload?.body ?? ''
+          }
+
+          if (inheritsNext && nextLb) {
+            const { ciphertext, iv } = await encryptPayload(nextLb, {
+              title,
+              body,
+            })
+            await updateNote(
+              note.id,
+              {
+                title: 'Locked note',
+                body: '',
+                ciphertext,
+                iv,
+                clearPlaintext: true,
+              },
+              LOCAL_SYNC,
+            )
+          } else if (note.ciphertext && note.iv) {
+            await updateNote(
+              note.id,
+              {
+                title,
+                body,
+                ciphertext: null,
+                iv: null,
+                decryptPlaintext: true,
+              },
+              LOCAL_SYNC,
+            )
+          }
+        }
+
+        await updateNotebook(notebookId, { lockboxId: nextLb }, LOCAL_SYNC)
+      })
     },
     [
       decryptPayload,
       encryptPayload,
       requestUnlock,
+      runPulledWorkspaceOp,
       updateNote,
       updateNotebook,
       workspace,
@@ -863,30 +906,36 @@ export function LockboxProvider({ children }) {
       const newKey = await deriveKey(nextPassphrase, salt, iterations)
       const verifier = await makeVerifier(newKey)
 
-      // Re-encrypt every note that uses this lockbox (note-level or notebook)
-      for (const note of workspace.notes) {
-        const lb = effectiveLockboxId(workspace, note)
-        if (lb !== lockboxId) continue
-        if (!note.ciphertext || !note.iv) continue
-        const payload = await decryptJson(oldKey, note.ciphertext, note.iv)
-        const enc = await encryptJson(newKey, payload)
-        await updateNote(note.id, {
-          title: 'Locked note',
-          body: '',
-          ciphertext: enc.ciphertext,
-          iv: enc.iv,
-          clearPlaintext: true,
-        })
-      }
+      await runPulledWorkspaceOp(async () => {
+        for (const note of workspace.notes) {
+          const lb = effectiveLockboxId(workspace, note)
+          if (lb !== lockboxId) continue
+          if (!note.ciphertext || !note.iv) continue
+          const payload = await decryptJson(oldKey, note.ciphertext, note.iv)
+          const enc = await encryptJson(newKey, payload)
+          await updateNote(
+            note.id,
+            {
+              title: 'Locked note',
+              body: '',
+              ciphertext: enc.ciphertext,
+              iv: enc.iv,
+              clearPlaintext: true,
+            },
+            LOCAL_SYNC,
+          )
+        }
 
-      const nextMeta = {
-        ...meta,
-        salt,
-        iterations,
-        verifier,
-        updatedAt: new Date().toISOString(),
-      }
-      await upsertLockboxMeta(nextMeta)
+        const nextMeta = {
+          ...meta,
+          salt,
+          iterations,
+          verifier,
+          updatedAt: new Date().toISOString(),
+        }
+        await upsertLockboxMeta(nextMeta, LOCAL_SYNC)
+      })
+
       keysRef.current.set(lockboxId, newKey)
       passphrasesRef.current.set(lockboxId, nextPassphrase)
       bumpUnlocked()
@@ -898,6 +947,7 @@ export function LockboxProvider({ children }) {
       bumpUnlocked,
       lockboxes,
       persistSession,
+      runPulledWorkspaceOp,
       updateNote,
       upsertLockboxMeta,
       userId,
@@ -913,33 +963,39 @@ export function LockboxProvider({ children }) {
       const ok = await checkVerifier(key, meta.verifier)
       if (!ok) throw new Error('Wrong passphrase.')
 
-      // Decrypt notes to plaintext before removing lockbox
-      for (const note of workspace.notes) {
-        const noteUses =
-          note.lockboxId === lockboxId ||
-          (!note.lockboxId &&
-            effectiveLockboxId(workspace, note) === lockboxId)
-        if (!noteUses) continue
-        if (note.ciphertext && note.iv) {
-          const payload = await decryptJson(key, note.ciphertext, note.iv)
-          await updateNote(note.id, {
-            title: payload?.title ?? 'Untitled',
-            body: payload?.body ?? '',
-            lockboxId: null,
-            ciphertext: null,
-            iv: null,
-            decryptPlaintext: true,
-          })
-        } else {
-          await updateNote(note.id, { lockboxId: null })
+      await runPulledWorkspaceOp(async () => {
+        for (const note of workspace.notes) {
+          const noteUses =
+            note.lockboxId === lockboxId ||
+            (!note.lockboxId &&
+              effectiveLockboxId(workspace, note) === lockboxId)
+          if (!noteUses) continue
+          if (note.ciphertext && note.iv) {
+            const payload = await decryptJson(key, note.ciphertext, note.iv)
+            await updateNote(
+              note.id,
+              {
+                title: payload?.title ?? 'Untitled',
+                body: payload?.body ?? '',
+                lockboxId: null,
+                ciphertext: null,
+                iv: null,
+                decryptPlaintext: true,
+              },
+              LOCAL_SYNC,
+            )
+          } else {
+            await updateNote(note.id, { lockboxId: null }, LOCAL_SYNC)
+          }
         }
-      }
-      for (const nb of workspace.notebooks) {
-        if (nb.lockboxId === lockboxId) {
-          await updateNotebook(nb.id, { lockboxId: null })
+        for (const nb of workspace.notebooks) {
+          if (nb.lockboxId === lockboxId) {
+            await updateNotebook(nb.id, { lockboxId: null }, LOCAL_SYNC)
+          }
         }
-      }
-      await removeLockboxMeta(lockboxId)
+        await removeLockboxMeta(lockboxId, LOCAL_SYNC)
+      })
+
       if (userId) {
         try {
           await deleteNotasLockboxVaultMeta(userId, lockboxId)
@@ -962,6 +1018,7 @@ export function LockboxProvider({ children }) {
       lockboxes,
       persistSession,
       removeLockboxMeta,
+      runPulledWorkspaceOp,
       updateNote,
       updateNotebook,
       userId,
