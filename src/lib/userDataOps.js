@@ -28,15 +28,10 @@ function emptyRow() {
 
 function cloneRow(row) {
   const base = row ?? emptyRow()
-  const raw = base.data && typeof base.data === 'object' ? base.data : {}
-  const prefs = normalizeRemotePrefs(raw)
+  // normalizeRemotePrefs clamps owned keys and passes sibling keys through.
+  const prefs = normalizeRemotePrefs(base.data)
   return {
-    data: {
-      ...raw,
-      theme: prefs.theme,
-      fontSize: prefs.fontSize,
-      fabCorner: prefs.fabCorner,
-    },
+    data: { ...prefs },
     updated_at: base.updated_at ?? null,
   }
 }

@@ -122,15 +122,8 @@ function touchVaultItemCaches(stream, userId, { row, deletedId } = {}) {
 
 function normalizePrefsRow(row) {
   if (!row) return null
-  const raw = row.data && typeof row.data === 'object' ? row.data : {}
-  const prefs = normalizeRemotePrefs(raw)
   return {
-    data: {
-      ...raw,
-      theme: prefs.theme,
-      fontSize: prefs.fontSize,
-      fabCorner: prefs.fabCorner,
-    },
+    data: normalizeRemotePrefs(row.data),
     updated_at: row.updated_at ?? null,
   }
 }

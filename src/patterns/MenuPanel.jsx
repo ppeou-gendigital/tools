@@ -1,5 +1,6 @@
 import { useAuth } from '@/providers/AuthProvider'
 import { useVault } from '@/providers/VaultProvider'
+import { APP_VERSION } from '@/env'
 import { Divider } from '@/molecules/Divider'
 import { AboutRow } from '@/patterns/AboutRow'
 import { AccountRow } from '@/patterns/AccountRow'
@@ -11,7 +12,6 @@ import { ProjectSiteItem } from '@/patterns/ProjectSiteItem'
 import { DevBadgeItem } from '@/patterns/DevBadgeItem'
 import styles from './MenuPanel.module.scss'
 
-const VERSION = '0.1.0'
 const TOOL_NAME = 'Accesso'
 
 export function MenuPanel({ corner, onClose }) {
@@ -34,7 +34,7 @@ export function MenuPanel({ corner, onClose }) {
       {showUnlock && <UnlockVaultItem onClose={onClose} />}
       <ProjectSiteItem onClose={onClose} />
       <DevBadgeItem />
-      <AboutRow name={TOOL_NAME} version={VERSION} />
+      <AboutRow name={TOOL_NAME} version={APP_VERSION} />
     </div>
   )
 }
