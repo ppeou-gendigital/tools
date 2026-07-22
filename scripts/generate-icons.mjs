@@ -26,7 +26,7 @@ const ROOT = resolve(__dirname, '..')
 const SRC = resolve(ROOT, 'icons/tool.svg')
 
 // Matches icons/tool.svg circle fill and src/tokens --fab-bg.
-const BRAND_BG = '#8b5cf6'
+const BRAND_BG = '#0ea5e9'
 
 const TARGETS = [
   {
