@@ -12,12 +12,9 @@ import { Profile } from '@/pages/Profile'
 import { DeckDemo } from '@/pages/DeckDemo'
 import { RichTextDemo } from '@/pages/RichTextDemo'
 import { Settings } from '@/pages/Settings'
+import { APP_VERSION } from '@/env'
 import { queryClient } from '@/lib/queryClient'
 import { queryPersister } from '@/lib/queryPersister'
-
-// Bump this whenever the cached shape changes so stale entries get busted
-// on next popup open.
-const APP_VERSION = '0.1.0'
 
 function Router() {
   const { route } = useNavigation()

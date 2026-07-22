@@ -96,7 +96,9 @@ TOOLNAME/
 │   │   ├── cx.js               # className concatenator
 │   │   ├── queryClient.js      # React Query client
 │   │   ├── queryPersister.js   # Async storage persister
-│   │   ├── prefs.js            # normalizers for the user_data blob
+│   │   ├── prefs.js            # normalizers for the user_data blob (+ sibling key pass-through)
+│   │   ├── vaultMetaApi.js     # public.vault_meta read/write (E2EE salt/verifier)
+│   │   ├── vaultMetaBackup.js  # offline vault-meta export/restore helpers
 │   │   └── userDataApi.js      # thin wrappers → supabaseSync
 │   ├── providers/
 │   │   ├── AuthProvider.jsx    # session, requestOtp, verifyOtp, signOut
@@ -221,6 +223,8 @@ create trigger on_auth_user_created
 
 Backs the auto-sync layer in [PrefsSync.jsx](src/providers/PrefsSync.jsx). One row per user, with a single JSONB `data` column carrying the small prefs blob (`theme`, `fontSize`, `fabCorner`, `updatedAt`).
 
+This row is **shared** with sibling tools on the same Supabase project. Prefs CAS preserves unknown keys via `extractForeignPrefs` — never rewrite `data` with only owned fields.
+
 Add more JSONB columns as your tool grows (e.g. a synced list, a rules object). Keep each column's normalizer isolated so any single column can be promoted to a real table later without touching the others — the loopy branch does exactly that with three columns.
 
 In **SQL Editor**, run:
@@ -246,7 +250,18 @@ Row-scoped RLS covers all columns automatically. No trigger needed — the app u
 - **On sign-in** [PrefsSync](src/providers/PrefsSync.jsx) pulls the row and applies it via provider setters with `{ fromRemote: true }`. Fields the user changed mid-fetch are skipped (dirty-key guard).
 - **On any local change** (theme toggle, +/- font size, FAB corner drag) the owning provider writes local storage first, then pushes through `enqueueSyncOp` → `applySyncOp` with a pure op from [userDataOps.js](src/lib/userDataOps.js). CAS retries on `updated_at` so concurrent edits to other fields are preserved.
 
-Recipe for a new synced field: add a normalizer in `prefs.js`, an `opSet*` factory in `userDataOps.js`, push from the provider, and teach PrefsSync's pull how to apply the remote value. For domain-keyed streams (favorites / visits), copy the helpers from [`tool/loopy`](../../tree/tool/loopy).
+Recipe for a new synced field: add the key to `PREFS_OWNED_KEYS` in `prefs.js`, an `opSet*` factory in `userDataOps.js`, push from the provider, and teach PrefsSync's pull how to apply the remote value. For domain-keyed streams (favorites / visits), copy the helpers from [`tool/loopy`](../../tree/tool/loopy).
+
+### 4b. Vault crypto table (`vault_meta`) — optional E2EE
+
+For end-to-end encryption, store salt / verifier / hint / idle in **`public.vault_meta`**, not in `user_data`. Run [`supabase/vault_meta.sql`](supabase/vault_meta.sql). Use [`vaultMetaApi.js`](src/lib/vaultMetaApi.js) (`VAULT_APP_ID` becomes your tool name after init) and optionally [`vaultMetaBackup.js`](src/lib/vaultMetaBackup.js) for offline meta export/restore.
+
+| `app_id` pattern | Use |
+|------------------|-----|
+| `TOOLNAME` (single) | One vault per user (Accesso-style) |
+| `TOOLNAME:<scopeId>` | Multi-vault (Notas lockboxes) |
+
+Ciphertext stays in feature tables (`ciphertext` + `iv`). Full reference: [`tool/accesso`](../../tree/tool/accesso).
 
 ### 5. Dev auto-login (optional)
 
