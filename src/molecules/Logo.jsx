@@ -3,18 +3,20 @@ import { cx } from '@/lib/cx'
 import styles from './Logo.module.scss'
 
 /**
- * In-app brand mark: emerald Lucide `LineStyle` glyph.
- * Extension / PWA toolbar icons come from `icons/notas.svg`
- * (filled emerald circle + white glyph) via `npm run icons`.
+ * In-app brand mark: white LineStyle on an emerald rounded square.
+ * Extension / PWA / favicon assets come from `icons/notas.svg`
+ * (same shape) via `npm run icons`.
  */
 export function Logo({ size = 40, className, alt = 'Notas' }) {
+  const glyph = Math.max(12, Math.round(size * 0.58))
   return (
-    <LineStyle
-      size={size}
-      strokeWidth={2.25}
+    <span
       className={cx(styles.logo, className)}
+      style={{ width: size, height: size }}
       aria-label={alt}
       role="img"
-    />
+    >
+      <LineStyle size={glyph} strokeWidth={2.25} aria-hidden="true" />
+    </span>
   )
 }

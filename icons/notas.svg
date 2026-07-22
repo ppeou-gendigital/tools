@@ -2,8 +2,8 @@
   <!--
     Notas extension icon.
 
-    Filled emerald circle (Tailwind Emerald 500, matching the fab-bg token
-    in src/tokens/_tokens.scss) with the lucide LineStyle glyph in white
+    Filled emerald rounded square (Tailwind Emerald 500, matching the fab-bg
+    token in src/tokens/_tokens.scss) with the lucide LineStyle glyph in white
     on top. The glyph is rendered inside a nested 24-unit coordinate space
     via transform="translate scale" so the original lucide path data stays
     verbatim and easy to swap for another icon later.
@@ -19,7 +19,7 @@
     That writes extension sizes to icons/ (transparent) and PWA sizes
     to public/icons/ (opaque emerald so iOS home-screen icons stay clean).
   -->
-  <circle cx="64" cy="64" r="60" fill="#10b981" />
+  <rect x="4" y="4" width="120" height="120" rx="28" ry="28" fill="#10b981" />
   <g
     transform="translate(25.6 25.6) scale(3.2)"
     fill="none"
