@@ -1,0 +1,28 @@
+{
+  "id": "leisure_trip",
+  "type": "trip",
+  "sortOrder": 10,
+  "label": "Vacation (flights & stays)",
+  "description": "Plan flights, hotels, and days out together.",
+  "titlePlaceholder": "Japan spring break",
+  "emptyState": "Add a flight and hotel to get started.",
+  "icon": "Plane",
+  "primaryActivities": [
+    "flight",
+    "hotel",
+    "train",
+    "ferry",
+    "car_rental",
+    "restaurant",
+    "sightseeing",
+    "expense",
+    "note"
+  ],
+  "defaultExpenseCategories": [
+    "flights",
+    "lodging",
+    "food",
+    "transport",
+    "other"
+  ]
+}

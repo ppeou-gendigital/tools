@@ -1,3 +1,5 @@
+@use 'tokens/mixins' as m;
+
 .backdrop {
   position: fixed;
   inset: 0;
@@ -22,9 +24,17 @@
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--card-fg);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-popover);
   outline: none;
   animation: slideIn 160ms cubic-bezier(0.16, 0.85, 0.4, 1);
+}
+
+.panelWide {
+  max-width: min(36rem, 100%);
+
+  @include m.lg {
+    max-width: min(42rem, 100%);
+  }
 }
 
 .header {
@@ -42,11 +52,13 @@
 }
 
 .closeBtn {
+  @include m.focus-ring;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: none;
   background: transparent;
@@ -57,6 +69,10 @@
   &:hover {
     color: var(--fg);
     background: var(--accent);
+  }
+
+  &:active {
+    transform: scale(0.96);
   }
 }
 

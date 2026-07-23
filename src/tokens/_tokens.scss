@@ -31,6 +31,8 @@
 
   --destructive: #ef4444;
   --destructive-fg: #fafafa;
+  // Inline error / validation text. Distinct from --destructive (filled buttons).
+  --error-text: #b91c1c;
 
   // Semantic accent groups. Use these when you need a small palette of
   // categorical colors (e.g. tag chips, icon families). Rename freely for
@@ -67,6 +69,7 @@
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.18);
 
   // Floating FAB geometry. Shared by the FAB block and the MenuPanel pattern
   // so they line up without cross-tier SCSS coupling.
@@ -121,6 +124,7 @@
 
   --destructive: #7f1d1d;
   --destructive-fg: #fafafa;
+  --error-text: #f87171;
 
   // Slightly lighter / less saturated in dark mode so the icons stay
   // legible against the near-black card background.
@@ -131,4 +135,5 @@
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.55);
 }

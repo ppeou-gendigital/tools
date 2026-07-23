@@ -1,0 +1,23 @@
+{
+  "id": "life_log",
+  "type": "journal",
+  "sortOrder": 70,
+  "label": "Life / education log",
+  "description": "College, bootcamp, health, and other long-running journeys.",
+  "titlePlaceholder": "CS degree / bootcamp",
+  "emptyState": "Add a milestone or appointment.",
+  "icon": "BookOpen",
+  "primaryActivities": [
+    "doctor_visit",
+    "appointment",
+    "milestone",
+    "expense",
+    "note"
+  ],
+  "defaultExpenseCategories": [
+    "tuition",
+    "supplies",
+    "health",
+    "other"
+  ]
+}

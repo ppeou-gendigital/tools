@@ -1,0 +1,24 @@
+{
+  "id": "household",
+  "type": "journal",
+  "sortOrder": 40,
+  "label": "Roommates / shared household",
+  "description": "Shared bills, chores, and household expenses.",
+  "titlePlaceholder": "Apartment 4B",
+  "emptyState": "Add a shared bill or expense.",
+  "icon": "Home",
+  "primaryActivities": [
+    "bill",
+    "expense",
+    "chore",
+    "appointment",
+    "note"
+  ],
+  "defaultExpenseCategories": [
+    "rent",
+    "utilities",
+    "groceries",
+    "internet",
+    "other"
+  ]
+}

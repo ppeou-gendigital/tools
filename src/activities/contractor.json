@@ -1,0 +1,12 @@
+{
+  "id": "contractor",
+  "schema": "appointment",
+  "label": "Contractor visit",
+  "icon": "HardHat",
+  "detailHints": [
+    {
+      "key": "provider",
+      "label": "Contractor"
+    }
+  ]
+}

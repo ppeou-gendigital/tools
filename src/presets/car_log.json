@@ -1,0 +1,23 @@
+{
+  "id": "car_log",
+  "type": "journal",
+  "sortOrder": 60,
+  "label": "Car / vehicle log",
+  "description": "Service, repairs, and ownership costs over time.",
+  "titlePlaceholder": "2018 Civic",
+  "emptyState": "Add service or a repair appointment.",
+  "icon": "Wrench",
+  "primaryActivities": [
+    "car_service",
+    "car_repair",
+    "expense",
+    "note"
+  ],
+  "defaultExpenseCategories": [
+    "service",
+    "repairs",
+    "fuel",
+    "insurance",
+    "other"
+  ]
+}

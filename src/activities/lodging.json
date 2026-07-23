@@ -1,0 +1,12 @@
+{
+  "id": "lodging",
+  "schema": "lodging",
+  "label": "Lodging / stay",
+  "icon": "BedDouble",
+  "detailHints": [
+    {
+      "key": "confirmation",
+      "label": "Confirmation #"
+    }
+  ]
+}

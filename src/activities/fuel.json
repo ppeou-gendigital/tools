@@ -1,0 +1,18 @@
+{
+  "id": "fuel",
+  "schema": "expense",
+  "label": "Fuel / gas",
+  "icon": "Fuel",
+  "detailHints": [
+    {
+      "key": "gallons_or_liters",
+      "label": "Gallons / liters",
+      "input": "number"
+    },
+    {
+      "key": "odometer",
+      "label": "Odometer",
+      "input": "number"
+    }
+  ]
+}

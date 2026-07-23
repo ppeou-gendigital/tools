@@ -1,0 +1,12 @@
+{
+  "id": "rideshare",
+  "schema": "transit",
+  "label": "Rideshare / taxi",
+  "icon": "CarTaxiFront",
+  "detailHints": [
+    {
+      "key": "provider",
+      "label": "Provider"
+    }
+  ]
+}

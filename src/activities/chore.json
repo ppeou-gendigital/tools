@@ -1,0 +1,12 @@
+{
+  "id": "chore",
+  "schema": "chore",
+  "label": "Chore",
+  "icon": "ListChecks",
+  "detailHints": [
+    {
+      "key": "assignee",
+      "label": "Assignee"
+    }
+  ]
+}

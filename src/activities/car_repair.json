@@ -1,0 +1,17 @@
+{
+  "id": "car_repair",
+  "schema": "maintenance",
+  "label": "Car repair",
+  "icon": "Cog",
+  "detailHints": [
+    {
+      "key": "shop",
+      "label": "Shop"
+    },
+    {
+      "key": "odometer",
+      "label": "Odometer",
+      "input": "number"
+    }
+  ]
+}

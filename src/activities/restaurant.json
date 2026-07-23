@@ -1,0 +1,12 @@
+{
+  "id": "restaurant",
+  "schema": "meal",
+  "label": "Restaurant",
+  "icon": "UtensilsCrossed",
+  "detailHints": [
+    {
+      "key": "reservation",
+      "label": "Reservation #"
+    }
+  ]
+}

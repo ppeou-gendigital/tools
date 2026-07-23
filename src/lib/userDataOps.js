@@ -19,7 +19,7 @@ import {
 
 function emptyRow() {
   return {
-    data: { theme: 'system', fontSize: 16, fabCorner: 'bottom-right' },
+    data: { theme: 'daynight', fontSize: 16, fabCorner: 'bottom-right' },
   }
 }
 

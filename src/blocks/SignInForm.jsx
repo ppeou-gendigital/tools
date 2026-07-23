@@ -12,6 +12,7 @@ import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { Logo } from '@/molecules/Logo'
+import { formatAuthError } from '@/lib/authErrors'
 import { useAuth } from '@/providers/AuthProvider'
 import styles from './SignInForm.module.scss'
 
@@ -37,7 +38,10 @@ export function SignInForm() {
       await requestOtp(email)
       setStep('token')
     } catch (err) {
-      setError(err?.message ?? 'Could not send the login code.')
+      console.warn('[viaggio] requestOtp failed:', err)
+      setError(
+        formatAuthError(err, 'Could not send the login code. Try again.'),
+      )
     } finally {
       setSubmitting(false)
     }
@@ -56,7 +60,8 @@ export function SignInForm() {
       await verifyOtp(email, clean)
       // AuthProvider's onAuthStateChange will flip the gate.
     } catch (err) {
-      setError(err?.message ?? 'That code did not work. Try again.')
+      console.warn('[viaggio] verifyOtp failed:', err)
+      setError(formatAuthError(err, 'That code did not work. Try again.'))
     } finally {
       setSubmitting(false)
     }

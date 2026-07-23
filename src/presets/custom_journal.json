@@ -1,0 +1,21 @@
+{
+  "id": "custom_journal",
+  "type": "journal",
+  "sortOrder": 90,
+  "label": "Something else (journal)",
+  "description": "A long-running record that does not match the templates above.",
+  "titlePlaceholder": "My journal",
+  "emptyState": "Add your first activity.",
+  "icon": "Notebook",
+  "primaryActivities": [
+    "appointment",
+    "expense",
+    "milestone",
+    "place",
+    "note"
+  ],
+  "defaultExpenseCategories": [
+    "general",
+    "other"
+  ]
+}

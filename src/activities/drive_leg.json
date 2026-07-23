@@ -1,0 +1,16 @@
+{
+  "id": "drive_leg",
+  "schema": "transit",
+  "label": "Drive / day leg",
+  "icon": "Car",
+  "detailHints": [
+    {
+      "key": "from",
+      "label": "From"
+    },
+    {
+      "key": "to",
+      "label": "To"
+    }
+  ]
+}

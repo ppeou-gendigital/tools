@@ -4,11 +4,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
+import { LoadingState } from '@/molecules/LoadingState'
+import { PageHeader } from '@/patterns/PageHeader'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { supabase } from '@/lib/supabase'
-import { cx } from '@/lib/cx'
-import styles from './Profile.module.scss'
+import styles from './Page.module.scss'
 
 export function Profile() {
   const { user } = useAuth()
@@ -69,82 +70,74 @@ export function Profile() {
 
   function handleChange(next) {
     setDisplayName(next)
-    // Drop any lingering success/error state as soon as the user edits.
     if (saveProfile.isSuccess || saveProfile.isError) saveProfile.reset()
   }
 
   const isLoading = profileQuery.isLoading
   const isSaving = saveProfile.isPending
   const dirty = displayName !== initialName
-
-  // Success sticks only while the field still matches what we just saved.
   const showSuccess = saveProfile.isSuccess && !dirty && !saveProfile.isPending
   const errorMessage =
     saveProfile.error?.message ?? profileQuery.error?.message ?? null
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={goBack}
-          className={styles.back}
-        >
-          <ArrowLeft size={14} aria-hidden="true" />
-          {previousRouteLabel ?? 'Back'}
-        </Button>
-        <h1 className={styles.title}>Profile</h1>
-      </div>
-
-      <form className={styles.form} onSubmit={handleSave}>
-        <div className={styles.field}>
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" value={user?.email ?? ''} readOnly disabled />
-        </div>
-
-        <div className={styles.field}>
-          <Label htmlFor="displayName">Display name</Label>
-          <Input
-            id="displayName"
-            placeholder={isLoading ? 'Loading…' : 'How should we call you?'}
-            value={displayName}
-            onChange={(e) => handleChange(e.target.value)}
-            disabled={isLoading || isSaving}
-            maxLength={80}
-          />
-        </div>
-
-        {(errorMessage || showSuccess) && (
-          <div
-            className={cx(
-              styles.status,
-              showSuccess && styles.statusOk,
-              errorMessage && styles.statusError,
-            )}
-          >
-            {showSuccess ? (
-              <Check size={12} aria-hidden="true" />
-            ) : (
-              <TriangleAlert size={12} aria-hidden="true" />
-            )}
-            <span>{showSuccess ? 'Saved.' : errorMessage}</span>
-          </div>
-        )}
-
-        <div className={styles.actions}>
-          <Button type="submit" disabled={isLoading || isSaving || !dirty}>
-            {isSaving ? (
-              <>
-                <Loader2 size={14} aria-hidden="true" />
-                Saving
-              </>
-            ) : (
-              'Save changes'
-            )}
+      <PageHeader
+        title="Profile"
+        subtitle="How you appear to co-travelers."
+        leading={
+          <Button variant="ghost" size="sm" onClick={goBack}>
+            <ArrowLeft size={14} aria-hidden="true" />
+            {previousRouteLabel ?? 'Back'}
           </Button>
-        </div>
-      </form>
+        }
+      />
+
+      <div className={styles.body}>
+        {isLoading && <LoadingState>Loading profile…</LoadingState>}
+        <form className={styles.form} onSubmit={handleSave}>
+          <div className={styles.field}>
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" value={user?.email ?? ''} readOnly disabled />
+          </div>
+
+          <div className={styles.field}>
+            <Label htmlFor="displayName">Display name</Label>
+            <Input
+              id="displayName"
+              placeholder={isLoading ? 'Loading…' : 'How should we call you?'}
+              value={displayName}
+              onChange={(e) => handleChange(e.target.value)}
+              disabled={isLoading || isSaving}
+              maxLength={80}
+            />
+          </div>
+
+          {showSuccess && (
+            <p className={styles.hint} role="status">
+              <Check size={12} aria-hidden="true" /> Saved.
+            </p>
+          )}
+          {errorMessage && (
+            <p className={styles.error} role="alert">
+              <TriangleAlert size={12} aria-hidden="true" /> {errorMessage}
+            </p>
+          )}
+
+          <div className={styles.actionsSticky}>
+            <Button type="submit" disabled={isLoading || isSaving || !dirty}>
+              {isSaving ? (
+                <>
+                  <Loader2 size={14} aria-hidden="true" />
+                  Saving
+                </>
+              ) : (
+                'Save changes'
+              )}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

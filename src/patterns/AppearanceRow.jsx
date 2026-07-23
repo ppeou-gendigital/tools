@@ -1,25 +1,27 @@
-import { AArrowDown, AArrowUp, Monitor, Moon, Sun } from 'lucide-react'
+import { AArrowDown, AArrowUp, Monitor, Moon, Sun, Sunrise } from 'lucide-react'
 import { IconButton } from '@/molecules/IconButton'
 import { useTheme } from '@/providers/ThemeProvider'
 import { useFontSize } from '@/providers/FontSizeProvider'
 import styles from './AppearanceRow.module.scss'
 
-const THEME_CYCLE = ['light', 'dark', 'system']
+const THEME_CYCLE = ['light', 'dark', 'system', 'daynight']
 
 function nextTheme(current) {
   const i = THEME_CYCLE.indexOf(current)
-  return THEME_CYCLE[(i + 1) % THEME_CYCLE.length] ?? 'system'
+  return THEME_CYCLE[(i + 1) % THEME_CYCLE.length] ?? 'daynight'
 }
 
 function themeIcon(theme) {
   if (theme === 'light') return Sun
   if (theme === 'dark') return Moon
+  if (theme === 'daynight') return Sunrise
   return Monitor
 }
 
 function themeLabel(theme) {
   if (theme === 'light') return 'Light'
   if (theme === 'dark') return 'Dark'
+  if (theme === 'daynight') return 'Day/night'
   return 'System'
 }
 

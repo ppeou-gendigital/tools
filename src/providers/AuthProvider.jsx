@@ -9,7 +9,10 @@ import {
 } from 'react'
 import { supabase } from '@/lib/supabase'
 import { queryClient } from '@/lib/queryClient'
+import { asyncStorage } from '@/lib/storage'
 import { devAutoLoginConfig } from '@/env'
+
+const LAST_ROUTE_KEY = 'viaggio:lastRoute'
 
 const AuthContext = createContext(null)
 
@@ -33,7 +36,11 @@ export function AuthProvider({ children }) {
       // Drop all server-state cache when the user signs out so a re-login
       // (as the same or a different user) never sees stale data. Covers the
       // manual signOut() path and any provider-triggered sign-outs.
-      if (event === 'SIGNED_OUT') queryClient.clear()
+      if (event === 'SIGNED_OUT') {
+        queryClient.clear()
+        // Avoid restoring the previous account's deep link after the next login.
+        asyncStorage.removeItem(LAST_ROUTE_KEY)
+      }
     })
 
     return () => {

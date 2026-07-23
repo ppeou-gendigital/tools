@@ -1,0 +1,16 @@
+{
+  "id": "doctor_visit",
+  "schema": "appointment",
+  "label": "Doctor visit",
+  "icon": "Stethoscope",
+  "detailHints": [
+    {
+      "key": "provider",
+      "label": "Clinic / doctor"
+    },
+    {
+      "key": "confirmation",
+      "label": "Confirmation #"
+    }
+  ]
+}

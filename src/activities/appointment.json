@@ -1,0 +1,12 @@
+{
+  "id": "appointment",
+  "schema": "appointment",
+  "label": "Appointment",
+  "icon": "CalendarClock",
+  "detailHints": [
+    {
+      "key": "provider",
+      "label": "With"
+    }
+  ]
+}

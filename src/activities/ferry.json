@@ -1,0 +1,24 @@
+{
+  "id": "ferry",
+  "schema": "transit",
+  "label": "Ferry",
+  "icon": "Ship",
+  "detailHints": [
+    {
+      "key": "from",
+      "label": "From"
+    },
+    {
+      "key": "to",
+      "label": "To"
+    },
+    {
+      "key": "confirmation",
+      "label": "Confirmation #"
+    },
+    {
+      "key": "vessel",
+      "label": "Vessel / line"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "car_rental",
+  "schema": "rental",
+  "label": "Car rental",
+  "icon": "CarFront",
+  "detailHints": [
+    {
+      "key": "provider",
+      "label": "Company"
+    },
+    {
+      "key": "confirmation",
+      "label": "Confirmation #"
+    },
+    {
+      "key": "pickup_location",
+      "label": "Pickup location"
+    },
+    {
+      "key": "dropoff_location",
+      "label": "Drop-off location"
+    }
+  ]
+}

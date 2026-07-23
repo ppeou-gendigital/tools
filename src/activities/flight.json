@@ -1,0 +1,24 @@
+{
+  "id": "flight",
+  "schema": "transit",
+  "label": "Flight",
+  "icon": "Plane",
+  "detailHints": [
+    {
+      "key": "airline",
+      "label": "Airline"
+    },
+    {
+      "key": "confirmation",
+      "label": "Confirmation #"
+    },
+    {
+      "key": "from",
+      "label": "From"
+    },
+    {
+      "key": "to",
+      "label": "To"
+    }
+  ]
+}

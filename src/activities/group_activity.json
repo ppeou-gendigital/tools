@@ -1,0 +1,7 @@
+{
+  "id": "group_activity",
+  "schema": "event",
+  "label": "Group activity",
+  "icon": "PartyPopper",
+  "detailHints": []
+}

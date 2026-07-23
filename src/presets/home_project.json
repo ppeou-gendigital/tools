@@ -1,0 +1,23 @@
+{
+  "id": "home_project",
+  "type": "journal",
+  "sortOrder": 50,
+  "label": "Home project / remodel",
+  "description": "Budget, contractors, and milestones for a home project.",
+  "titlePlaceholder": "Kitchen remodel",
+  "emptyState": "Add a budget expense or contractor visit.",
+  "icon": "Hammer",
+  "primaryActivities": [
+    "expense",
+    "contractor",
+    "milestone",
+    "note"
+  ],
+  "defaultExpenseCategories": [
+    "materials",
+    "labor",
+    "permits",
+    "furniture",
+    "other"
+  ]
+}

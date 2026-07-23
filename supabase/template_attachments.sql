@@ -1,3 +1,6 @@
+-- DEPRECATED for Viaggio: use viaggio_schema.sql instead (entry-scoped
+-- attachments with membership RLS). Kept only as a template reference.
+--
 -- Generic attachments table + private Storage bucket for tools from template/base.
 --
 -- After `npm run init -- --name foo`, replace placeholders (or rely on init

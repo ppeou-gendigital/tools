@@ -19,3 +19,34 @@ createRoot(root).render(
     <App />
   </StrictMode>,
 )
+
+if (import.meta.env.DEV) {
+  void import('./dev/seedScenarios.js').then((mod) => {
+    globalThis.__viaggioSeed = {
+      seedSpainWorldCup: mod.seedSpainWorldCup,
+      seedEuApacRoadTrip: mod.seedEuApacRoadTrip,
+      enrichSpainWorldCup: mod.enrichSpainWorldCup,
+      seedScandiReunion: mod.seedScandiReunion,
+      enrichScandiReunion: mod.enrichScandiReunion,
+      asBenjaminEnrichScandi: mod.asBenjaminEnrichScandi,
+      asCharlieEnrichScandi: mod.asCharlieEnrichScandi,
+    }
+    void import('./lib/viaggioApi.js').then((api) => {
+      globalThis.__viaggioSeed.acceptInvite = api.acceptInvite
+    })
+
+    // Firefox DevTools has no evaluate_script — allow ?devRun=<fn> in DEV.
+    const run = new URLSearchParams(location.search).get('devRun')
+    const fn = run && globalThis.__viaggioSeed?.[run]
+    if (typeof fn === 'function') {
+      void fn()
+        .then((result) => {
+          console.info(`[viaggio] devRun=${run}`, result)
+          const url = new URL(location.href)
+          url.searchParams.delete('devRun')
+          history.replaceState({}, '', url.pathname + url.search + url.hash)
+        })
+        .catch((err) => console.error(`[viaggio] devRun=${run} failed`, err))
+    }
+  })
+}

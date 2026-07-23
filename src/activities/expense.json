@@ -1,0 +1,7 @@
+{
+  "id": "expense",
+  "schema": "expense",
+  "label": "Expense",
+  "icon": "Wallet",
+  "detailHints": []
+}

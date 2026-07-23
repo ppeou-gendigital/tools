@@ -1,0 +1,25 @@
+{
+  "id": "league_season",
+  "type": "trip",
+  "sortOrder": 20,
+  "label": "Sports season / league travel",
+  "description": "Track games and the travel around them.",
+  "titlePlaceholder": "Fall soccer season",
+  "emptyState": "Add the next game and travel.",
+  "icon": "Trophy",
+  "primaryActivities": [
+    "game",
+    "flight",
+    "hotel",
+    "restaurant",
+    "expense",
+    "note"
+  ],
+  "defaultExpenseCategories": [
+    "travel",
+    "lodging",
+    "food",
+    "fees",
+    "other"
+  ]
+}

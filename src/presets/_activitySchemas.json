@@ -1,0 +1,199 @@
+{
+  "schemas": [
+    {
+      "id": "transit",
+      "label": "Transit",
+      "fields": [
+        "title",
+        "occurs_at",
+        "ends_at",
+        "place_name",
+        "body"
+      ],
+      "timezoneFields": [
+        "start_timezone",
+        "end_timezone",
+        "timezone"
+      ],
+      "detailKeys": [
+        "from",
+        "to",
+        "confirmation",
+        "airline",
+        "provider",
+        "vessel"
+      ]
+    },
+    {
+      "id": "rental",
+      "label": "Rental",
+      "fields": [
+        "title",
+        "occurs_at",
+        "ends_at",
+        "place_name",
+        "address",
+        "lat",
+        "lng",
+        "body"
+      ],
+      "timezoneFields": [
+        "start_timezone",
+        "end_timezone",
+        "timezone"
+      ],
+      "detailKeys": [
+        "confirmation",
+        "provider",
+        "pickup_location",
+        "dropoff_location"
+      ],
+      "note": "Car/scooter rental: occurs_at=pickup, ends_at=dropoff. Money on viaggio_expenses."
+    },
+    {
+      "id": "lodging",
+      "label": "Lodging",
+      "fields": [
+        "title",
+        "occurs_at",
+        "ends_at",
+        "place_name",
+        "address",
+        "lat",
+        "lng",
+        "body"
+      ],
+      "detailKeys": [
+        "confirmation"
+      ]
+    },
+    {
+      "id": "meal",
+      "label": "Meal",
+      "fields": [
+        "title",
+        "occurs_at",
+        "place_name",
+        "address",
+        "lat",
+        "lng",
+        "body"
+      ],
+      "detailKeys": [
+        "reservation"
+      ]
+    },
+    {
+      "id": "place",
+      "label": "Place",
+      "fields": [
+        "title",
+        "occurs_at",
+        "place_name",
+        "address",
+        "lat",
+        "lng",
+        "body"
+      ],
+      "detailKeys": []
+    },
+    {
+      "id": "event",
+      "label": "Event",
+      "fields": [
+        "title",
+        "occurs_at",
+        "ends_at",
+        "place_name",
+        "address",
+        "lat",
+        "lng",
+        "body"
+      ],
+      "detailKeys": [
+        "opponent",
+        "home_away"
+      ]
+    },
+    {
+      "id": "appointment",
+      "label": "Appointment",
+      "fields": [
+        "title",
+        "occurs_at",
+        "ends_at",
+        "place_name",
+        "address",
+        "lat",
+        "lng",
+        "body"
+      ],
+      "detailKeys": [
+        "provider",
+        "confirmation"
+      ]
+    },
+    {
+      "id": "maintenance",
+      "label": "Maintenance",
+      "fields": [
+        "title",
+        "occurs_at",
+        "place_name",
+        "body"
+      ],
+      "detailKeys": [
+        "shop",
+        "odometer",
+        "provider"
+      ]
+    },
+    {
+      "id": "chore",
+      "label": "Chore",
+      "fields": [
+        "title",
+        "occurs_at",
+        "body"
+      ],
+      "detailKeys": [
+        "assignee"
+      ]
+    },
+    {
+      "id": "expense",
+      "label": "Expense",
+      "fields": [
+        "title",
+        "occurs_at",
+        "body"
+      ],
+      "detailKeys": [
+        "due_date",
+        "gallons_or_liters",
+        "odometer"
+      ],
+      "note": "Money lives in viaggio_expenses (+ splits), not on the entry row. UI typically creates one expense when saving an expense/bill/fuel activity."
+    },
+    {
+      "id": "milestone",
+      "label": "Milestone",
+      "fields": [
+        "title",
+        "occurs_at",
+        "body"
+      ],
+      "detailKeys": []
+    },
+    {
+      "id": "note",
+      "label": "Note",
+      "fields": [
+        "title",
+        "occurs_at",
+        "body"
+      ],
+      "detailKeys": []
+    }
+  ]
+}

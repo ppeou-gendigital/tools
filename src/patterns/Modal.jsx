@@ -22,6 +22,7 @@ export function Modal({
   title,
   children,
   className,
+  wide = false,
 }) {
   const panelRef = useRef(null)
   const previouslyFocusedRef = useRef(null)
@@ -128,7 +129,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         tabIndex={-1}
-        className={cx(styles.panel, className)}
+        className={cx(styles.panel, wide && styles.panelWide, className)}
         onMouseDown={(e) => e.stopPropagation()}
       >
         {(title || dismissible) && (

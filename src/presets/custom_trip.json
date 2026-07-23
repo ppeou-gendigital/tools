@@ -1,0 +1,24 @@
+{
+  "id": "custom_trip",
+  "type": "trip",
+  "sortOrder": 80,
+  "label": "Something else (trip)",
+  "description": "A trip that does not match the templates above.",
+  "titlePlaceholder": "My trip",
+  "emptyState": "Add your first activity.",
+  "icon": "Map",
+  "primaryActivities": [
+    "flight",
+    "hotel",
+    "place",
+    "expense",
+    "appointment",
+    "note"
+  ],
+  "defaultExpenseCategories": [
+    "travel",
+    "lodging",
+    "food",
+    "other"
+  ]
+}

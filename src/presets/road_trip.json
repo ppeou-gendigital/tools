@@ -1,0 +1,29 @@
+{
+  "id": "road_trip",
+  "type": "trip",
+  "sortOrder": 15,
+  "label": "Road trip (driving)",
+  "description": "Plan drive days, overnight stops, fuel, and roadside meals.",
+  "titlePlaceholder": "Pacific Coast Highway",
+  "emptyState": "Add your first drive day or overnight stop.",
+  "icon": "Car",
+  "primaryActivities": [
+    "drive_leg",
+    "car_rental",
+    "lodging",
+    "fuel",
+    "ferry",
+    "restaurant",
+    "sightseeing",
+    "expense",
+    "note"
+  ],
+  "defaultExpenseCategories": [
+    "fuel",
+    "lodging",
+    "food",
+    "tolls",
+    "rental",
+    "other"
+  ]
+}

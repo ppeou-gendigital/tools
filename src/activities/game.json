@@ -1,0 +1,16 @@
+{
+  "id": "game",
+  "schema": "event",
+  "label": "Game / match",
+  "icon": "Trophy",
+  "detailHints": [
+    {
+      "key": "opponent",
+      "label": "Opponent"
+    },
+    {
+      "key": "home_away",
+      "label": "Home / away"
+    }
+  ]
+}

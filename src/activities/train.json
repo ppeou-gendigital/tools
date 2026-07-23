@@ -1,0 +1,20 @@
+{
+  "id": "train",
+  "schema": "transit",
+  "label": "Train",
+  "icon": "TrainFront",
+  "detailHints": [
+    {
+      "key": "confirmation",
+      "label": "Confirmation #"
+    },
+    {
+      "key": "from",
+      "label": "From"
+    },
+    {
+      "key": "to",
+      "label": "To"
+    }
+  ]
+}

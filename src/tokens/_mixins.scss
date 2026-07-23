@@ -7,6 +7,22 @@
   }
 }
 
+// Hover / press / focus for custom click targets (list rows, chips, toggles).
+@mixin interactive-control {
+  @include focus-ring;
+
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    opacity 0.12s ease,
+    transform 0.12s ease;
+
+  &:active:not(:disabled) {
+    transform: scale(0.995);
+  }
+}
+
 @mixin stack($gap: var(--space-3)) {
   display: flex;
   flex-direction: column;

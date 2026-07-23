@@ -1,0 +1,7 @@
+{
+  "id": "note",
+  "schema": "note",
+  "label": "Note",
+  "icon": "StickyNote",
+  "detailHints": []
+}

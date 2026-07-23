@@ -23,6 +23,6 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "permissions": ["storage"],
+  "permissions": ["storage", "geolocation"],
   "host_permissions": ["https://*.supabase.co/*"]
 }

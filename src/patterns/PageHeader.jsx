@@ -5,12 +5,8 @@ import styles from './PageHeader.module.scss'
  * Shared page chrome: title row + optional actions + optional trailing
  * shortcuts (typically <PageShortcuts />).
  *
- * Layout contract for the header row:
- *   [ title (flex:1) ] [ page actions ] [ shortcuts → right via separator ]
- *
- * Pass `leading` for a back button (sub-pages). Pass `actions` for
- * page-specific toolbar buttons (info, filters, …). Pass `shortcuts` for
- * the right-hand nav cluster.
+ * Mobile: back + actions/shortcuts on first row; title full-width below.
+ * md+: single row [leading][title][actions][shortcuts].
  */
 export function PageHeader({
   title,
@@ -24,12 +20,16 @@ export function PageHeader({
   return (
     <header className={cx(styles.header, className)}>
       <div className={styles.headerRow}>
-        {leading}
+        {leading && <div className={styles.leading}>{leading}</div>}
         {title != null && title !== '' && (
           <h1 className={styles.title}>{title}</h1>
         )}
-        {actions}
-        {shortcuts}
+        {(actions || shortcuts) && (
+          <div className={styles.trailing}>
+            {actions}
+            {shortcuts}
+          </div>
+        )}
       </div>
       {subtitle != null && subtitle !== '' && (
         <p className={styles.subtitle}>{subtitle}</p>

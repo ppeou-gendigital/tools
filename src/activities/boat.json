@@ -1,0 +1,24 @@
+{
+  "id": "boat",
+  "schema": "transit",
+  "label": "Boat / water taxi",
+  "icon": "Sailboat",
+  "detailHints": [
+    {
+      "key": "from",
+      "label": "From"
+    },
+    {
+      "key": "to",
+      "label": "To"
+    },
+    {
+      "key": "provider",
+      "label": "Operator"
+    },
+    {
+      "key": "confirmation",
+      "label": "Confirmation #"
+    }
+  ]
+}

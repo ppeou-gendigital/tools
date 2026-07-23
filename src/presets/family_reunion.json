@@ -1,0 +1,25 @@
+{
+  "id": "family_reunion",
+  "type": "trip",
+  "sortOrder": 30,
+  "label": "Family reunion",
+  "description": "Coordinate lodging, venues, meals, and group plans.",
+  "titlePlaceholder": "Smith family reunion 2026",
+  "emptyState": "Add lodging and the gathering venue.",
+  "icon": "Users",
+  "primaryActivities": [
+    "lodging",
+    "venue",
+    "meal",
+    "group_activity",
+    "expense",
+    "note"
+  ],
+  "defaultExpenseCategories": [
+    "lodging",
+    "food",
+    "venue",
+    "activities",
+    "other"
+  ]
+}

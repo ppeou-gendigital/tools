@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useAuth } from '@/providers/AuthProvider'
+import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { useFabCorner } from '@/providers/FabCornerProvider'
 import { useFontSize } from '@/providers/FontSizeProvider'
 import { useTheme } from '@/providers/ThemeProvider'
@@ -16,17 +17,39 @@ export function PrefsSync() {
     useFontSize()
   const { corner: fabCorner, setCorner: setFabCorner, ready: fabReady } =
     useFabCorner()
+  const {
+    ready: displayReady,
+    displayLocale,
+    defaultCurrency,
+    prefsConfirmed,
+    setDisplayLocale,
+    setDefaultCurrency,
+    setPrefsConfirmed,
+  } = useDisplayPrefs()
 
   const initialPulledForUserRef = useRef(null)
 
-  // Live refs so pull can detect dirty fields after the fetch starts.
   const prefsRef = useRef(null)
   useEffect(() => {
-    prefsRef.current = { theme, fontSize, fabCorner }
-  }, [theme, fontSize, fabCorner])
+    prefsRef.current = {
+      theme,
+      fontSize,
+      fabCorner,
+      displayLocale,
+      defaultCurrency,
+      prefsConfirmed,
+    }
+  }, [
+    theme,
+    fontSize,
+    fabCorner,
+    displayLocale,
+    defaultCurrency,
+    prefsConfirmed,
+  ])
 
   const userId = user?.id ?? null
-  const providersReady = themeReady && fontReady && fabReady
+  const providersReady = themeReady && fontReady && fabReady && displayReady
 
   useEffect(() => {
     if (!userId) {
@@ -34,7 +57,6 @@ export function PrefsSync() {
     }
   }, [userId])
 
-  // Initial prefs pull — force network, skip fields dirtied mid-fetch.
   useEffect(() => {
     if (authLoading || !userId || !providersReady) return
     if (initialPulledForUserRef.current === userId) return
@@ -48,13 +70,20 @@ export function PrefsSync() {
         if (cancelled) return
         if (!remote) return
 
-        // Fields the user changed while the fetch was in flight stay local;
-        // providers already CAS those via applySyncOp.
         const dirtyKeys = new Set()
         const live = prefsRef.current
         if (live.theme !== snapshot.theme) dirtyKeys.add('theme')
         if (live.fontSize !== snapshot.fontSize) dirtyKeys.add('fontSize')
         if (live.fabCorner !== snapshot.fabCorner) dirtyKeys.add('fabCorner')
+        if (live.displayLocale !== snapshot.displayLocale) {
+          dirtyKeys.add('displayLocale')
+        }
+        if (live.defaultCurrency !== snapshot.defaultCurrency) {
+          dirtyKeys.add('defaultCurrency')
+        }
+        if (live.prefsConfirmed !== snapshot.prefsConfirmed) {
+          dirtyKeys.add('prefsConfirmed')
+        }
 
         if (!dirtyKeys.has('theme') && remote.data.theme !== live.theme) {
           await setTheme(remote.data.theme, { fromRemote: true })
@@ -70,6 +99,31 @@ export function PrefsSync() {
           remote.data.fabCorner !== live.fabCorner
         ) {
           await setFabCorner(remote.data.fabCorner, { fromRemote: true })
+        }
+        if (
+          !dirtyKeys.has('displayLocale') &&
+          remote.data.displayLocale != null &&
+          remote.data.displayLocale !== live.displayLocale
+        ) {
+          await setDisplayLocale(remote.data.displayLocale, {
+            fromRemote: true,
+          })
+        }
+        if (
+          !dirtyKeys.has('defaultCurrency') &&
+          remote.data.defaultCurrency != null &&
+          remote.data.defaultCurrency !== live.defaultCurrency
+        ) {
+          await setDefaultCurrency(remote.data.defaultCurrency, {
+            fromRemote: true,
+          })
+        }
+        if (
+          !dirtyKeys.has('prefsConfirmed') &&
+          remote.data.prefsConfirmed === true &&
+          !live.prefsConfirmed
+        ) {
+          await setPrefsConfirmed(true, { fromRemote: true })
         }
       } catch (err) {
         if (cancelled) return

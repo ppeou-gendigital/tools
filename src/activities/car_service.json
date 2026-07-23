@@ -1,0 +1,17 @@
+{
+  "id": "car_service",
+  "schema": "maintenance",
+  "label": "Car service",
+  "icon": "Wrench",
+  "detailHints": [
+    {
+      "key": "shop",
+      "label": "Shop"
+    },
+    {
+      "key": "odometer",
+      "label": "Odometer",
+      "input": "number"
+    }
+  ]
+}

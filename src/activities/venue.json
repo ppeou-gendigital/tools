@@ -1,0 +1,7 @@
+{
+  "id": "venue",
+  "schema": "place",
+  "label": "Venue",
+  "icon": "Landmark",
+  "detailHints": []
+}

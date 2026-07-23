@@ -7,7 +7,7 @@
 // opaquely so prefs CAS never wipes sibling fields. Crypto salt/verifier
 // must NOT live here — use public.vault_meta (see vaultMetaApi.js).
 
-const THEMES = ['light', 'dark', 'system']
+const THEMES = ['light', 'dark', 'system', 'daynight']
 const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
 
 const FONT_MIN = 12
@@ -16,9 +16,12 @@ const FONT_STEP = 2
 const FONT_DEFAULT = 16
 
 const DEFAULTS = {
-  theme: 'system',
+  theme: 'daynight',
   fontSize: FONT_DEFAULT,
   fabCorner: 'bottom-right',
+  displayLocale: null,
+  defaultCurrency: null,
+  prefsConfirmed: false,
 }
 
 /** Keys this tool normalizes and may rewrite on the shared prefs blob. */
@@ -26,6 +29,9 @@ export const PREFS_OWNED_KEYS = new Set([
   'theme',
   'fontSize',
   'fabCorner',
+  'displayLocale',
+  'defaultCurrency',
+  'prefsConfirmed',
   'updatedAt',
 ])
 
@@ -62,6 +68,21 @@ export function normalizeFontSize(v) {
   return Math.min(FONT_MAX, Math.max(FONT_MIN, snapped))
 }
 
+export function normalizeDisplayLocale(v) {
+  if (typeof v !== 'string' || !v.trim()) return DEFAULTS.displayLocale
+  return v.trim()
+}
+
+export function normalizeDefaultCurrency(v) {
+  if (typeof v !== 'string') return DEFAULTS.defaultCurrency
+  const c = v.trim().toUpperCase()
+  return /^[A-Z]{3}$/.test(c) ? c : DEFAULTS.defaultCurrency
+}
+
+export function normalizePrefsConfirmed(v) {
+  return v === true
+}
+
 // Sanitize a (possibly untrusted / partial) remote prefs blob before
 // applying it via the provider setters. Clamps owned keys; preserves
 // sibling-tool keys opaquely.
@@ -71,5 +92,8 @@ export function normalizeRemotePrefs(remote) {
     theme: normalizeTheme(remote?.theme),
     fontSize: normalizeFontSize(remote?.fontSize),
     fabCorner: normalizeFabCorner(remote?.fabCorner),
+    displayLocale: normalizeDisplayLocale(remote?.displayLocale),
+    defaultCurrency: normalizeDefaultCurrency(remote?.defaultCurrency),
+    prefsConfirmed: normalizePrefsConfirmed(remote?.prefsConfirmed),
   }
 }

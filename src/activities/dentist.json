@@ -1,0 +1,16 @@
+{
+  "id": "dentist",
+  "schema": "appointment",
+  "label": "Dentist",
+  "icon": "Smile",
+  "detailHints": [
+    {
+      "key": "provider",
+      "label": "Dentist / clinic"
+    },
+    {
+      "key": "confirmation",
+      "label": "Confirmation #"
+    }
+  ]
+}

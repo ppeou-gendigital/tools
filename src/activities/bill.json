@@ -1,0 +1,13 @@
+{
+  "id": "bill",
+  "schema": "expense",
+  "label": "Bill",
+  "icon": "Receipt",
+  "detailHints": [
+    {
+      "key": "due_date",
+      "label": "Due date",
+      "input": "date"
+    }
+  ]
+}

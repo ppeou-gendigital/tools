@@ -1,0 +1,7 @@
+{
+  "id": "sightseeing",
+  "schema": "place",
+  "label": "Sightseeing",
+  "icon": "Camera",
+  "detailHints": []
+}

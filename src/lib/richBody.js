@@ -34,9 +34,31 @@ export function plainToDoc(text) {
 /**
  * @returns {{ format: string, doc: object }}
  */
+function coerceRichObject(parsed) {
+  if (
+    parsed &&
+    typeof parsed.format === 'string' &&
+    parsed.format.endsWith('-tiptap-v1') &&
+    parsed.doc &&
+    typeof parsed.doc === 'object'
+  ) {
+    return { format: parsed.format, doc: parsed.doc }
+  }
+  if (parsed?.type === 'doc') {
+    return { format: RICH_BODY_FORMAT, doc: parsed }
+  }
+  return null
+}
+
 export function parseRichBody(raw) {
   if (raw == null || raw === '') {
     return { format: RICH_BODY_FORMAT, doc: emptyDoc() }
+  }
+  if (typeof raw === 'object') {
+    return coerceRichObject(raw) ?? {
+      format: RICH_BODY_FORMAT,
+      doc: emptyDoc(),
+    }
   }
   if (typeof raw !== 'string') {
     return { format: RICH_BODY_FORMAT, doc: emptyDoc() }
@@ -45,18 +67,8 @@ export function parseRichBody(raw) {
   if (trimmed.startsWith('{')) {
     try {
       const parsed = JSON.parse(trimmed)
-      if (
-        parsed &&
-        typeof parsed.format === 'string' &&
-        parsed.format.endsWith('-tiptap-v1') &&
-        parsed.doc &&
-        typeof parsed.doc === 'object'
-      ) {
-        return { format: parsed.format, doc: parsed.doc }
-      }
-      if (parsed?.type === 'doc') {
-        return { format: RICH_BODY_FORMAT, doc: parsed }
-      }
+      const coerced = coerceRichObject(parsed)
+      if (coerced) return coerced
     } catch {
       // fall through
     }
