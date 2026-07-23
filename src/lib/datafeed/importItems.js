@@ -123,7 +123,7 @@ export async function importDatafeedItems({
         userId,
         patientId,
         key,
-        isActive: item.isActive,
+        isActive: item.status ? item.status === 'active' : item.isActive,
         refillDate: item.refillDate,
         payload: {
           name: item.name,
@@ -131,6 +131,8 @@ export async function importDatafeedItems({
           doctorId: mapId(doctorIdMap, item.doctorId),
           schedule: item.schedule,
           refill: item.refill,
+          status: item.status,
+          suspension: item.suspension,
         },
       })
       if (item.id) medicationIdMap.set(item.id, row.id)

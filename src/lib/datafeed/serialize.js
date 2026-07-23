@@ -72,6 +72,8 @@ function serializeMedication(m) {
     name: m.name ?? '',
     strength: m.strength,
     isActive: m.isActive !== false,
+    status: m.status,
+    suspension: m.suspension,
     refillDate: m.refillDate || undefined,
     doctorId: m.doctorId,
     schedule: m.schedule,

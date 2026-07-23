@@ -102,3 +102,93 @@
   color: var(--muted-fg);
   font-size: var(--text-xs);
 }
+
+.select {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.doseSlots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.doseSlot,
+.doseSlotFilled {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--muted-fg);
+  font: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.7;
+  }
+
+  &:not(:disabled):hover {
+    border-color: var(--fg);
+    color: var(--fg);
+  }
+}
+
+.doseSlotFilled {
+  border-style: solid;
+  border-color: var(--fab-bg);
+  background: color-mix(in srgb, var(--fab-bg) 18%, transparent);
+  color: var(--fg);
+}
+
+.prnBlock {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.prnList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.prnItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+}
+
+.suspendNote {
+  margin: 0;
+  padding: var(--space-2);
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, #f59e0b 40%, var(--border));
+  background: color-mix(in srgb, #f59e0b 12%, transparent);
+  font-size: var(--text-xs);
+  color: var(--fg);
+}
+
+.suspendForm {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}

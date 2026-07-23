@@ -267,6 +267,10 @@ export async function logDose({ userId, patientId, medicationId, key, note }) {
   })
 }
 
+export async function deleteDose(userId, id) {
+  return softDeleteRow('docto_doses', userId, id)
+}
+
 // —— Readings ——
 export async function listReadings(patientId, key) {
   const rows = await listActiveRows('docto_readings', patientId, 'measured_at')

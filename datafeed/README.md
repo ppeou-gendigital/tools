@@ -156,11 +156,23 @@ When importing a typed feed that references `doctorId` / `medicationId`, either
 | `id` | string | no | For dose `medicationId`. |
 | `name` | string | yes | |
 | `strength` | string | no | e.g. `"10 mg"`. |
-| `isActive` | boolean | no | Default `true`. |
+| `isActive` | boolean | no | Default `true`. Prefer `status` when present. |
+| `status` | string | no | `active` \| `suspended` \| `stopped`. Default from `isActive`. |
+| `suspension` | object | no | `{ note, suspendedAt }` when `status` is `suspended`. |
 | `refillDate` | string | no | `YYYY-MM-DD`. |
-| `doctorId` | string | no | |
-| `schedule` | object | no | `{ timesPerDay, times[], instructions }`. |
+| `doctorId` | string | no | Optional. Omit for over-the-counter / no doctor. |
+| `schedule` | object | no | See schedule shape below. |
 | `refill` | object | no | `{ quantity, pillsLeft, rxNumber }`. |
+
+#### Medication schedule
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `frequency` | string | `daily` \| `weekly` \| `monthly` \| `as_needed`. Default `daily`. |
+| `timesPerPeriod` | number | Doses per day/week/month. Ignored for `as_needed`. |
+| `timesPerDay` | number | Legacy alias for daily `timesPerPeriod` (still accepted). |
+| `times` | string[] | Optional `HH:mm` labels (mainly daily). |
+| `instructions` | string | Free text. |
 
 ### Dose
 

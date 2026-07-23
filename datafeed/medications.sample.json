@@ -10,7 +10,8 @@
       "isActive": true,
       "refillDate": "2026-08-15",
       "schedule": {
-        "timesPerDay": 1,
+        "frequency": "daily",
+        "timesPerPeriod": 1,
         "times": ["08:00"],
         "instructions": "Take with water"
       }

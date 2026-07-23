@@ -129,17 +129,33 @@ export function normalizeVisit(raw) {
   }
 }
 
+const MED_FREQUENCIES = new Set(['daily', 'weekly', 'monthly', 'as_needed'])
+const MED_STATUSES = new Set(['active', 'suspended', 'stopped'])
+
 export function normalizeMedication(raw) {
-  const schedule =
-    raw?.schedule && typeof raw.schedule === 'object'
-      ? {
-          timesPerDay: numOrUndef(raw.schedule.timesPerDay) ?? 1,
-          times: Array.isArray(raw.schedule.times)
-            ? raw.schedule.times.map((t) => str(t)).filter(Boolean)
-            : ['08:00'],
-          instructions: optStr(raw.schedule.instructions),
-        }
-      : undefined
+  let schedule
+  if (raw?.schedule && typeof raw.schedule === 'object') {
+    let frequency = str(raw.schedule.frequency).toLowerCase()
+    if (!MED_FREQUENCIES.has(frequency)) frequency = 'daily'
+    const times = Array.isArray(raw.schedule.times)
+      ? raw.schedule.times.map((t) => str(t)).filter(Boolean)
+      : []
+    let timesPerPeriod =
+      numOrUndef(raw.schedule.timesPerPeriod) ??
+      numOrUndef(raw.schedule.timesPerDay) ??
+      (times.length > 0 ? times.length : 1)
+    if (frequency === 'as_needed') timesPerPeriod = 0
+    schedule = {
+      frequency,
+      timesPerPeriod,
+      // Keep legacy field so older readers still see a count for daily meds
+      timesPerDay:
+        frequency === 'daily' ? timesPerPeriod || 1 : undefined,
+      times,
+      instructions: optStr(raw.schedule.instructions),
+    }
+  }
+
   const refill =
     raw?.refill && typeof raw.refill === 'object'
       ? {
@@ -148,11 +164,27 @@ export function normalizeMedication(raw) {
           rxNumber: optStr(raw.refill.rxNumber),
         }
       : undefined
+
+  let status = str(raw?.status).toLowerCase()
+  if (!MED_STATUSES.has(status)) {
+    status = raw?.isActive === false ? 'stopped' : 'active'
+  }
+
+  const suspension =
+    raw?.suspension && typeof raw.suspension === 'object'
+      ? {
+          note: optStr(raw.suspension.note),
+          suspendedAt: optStr(raw.suspension.suspendedAt),
+        }
+      : undefined
+
   return {
     id: optId(raw?.id),
     name: str(raw?.name),
     strength: optStr(raw?.strength),
-    isActive: raw?.isActive !== false,
+    isActive: status === 'active',
+    status,
+    suspension: status === 'suspended' ? suspension : undefined,
     refillDate: optStr(raw?.refillDate) ?? null,
     doctorId: optId(raw?.doctorId),
     schedule,

@@ -165,11 +165,13 @@
       "id": "med-lisinopril",
       "name": "Lisinopril",
       "strength": "10 mg",
+      "status": "active",
       "isActive": true,
       "refillDate": "2026-08-08",
       "doctorId": "doc-pcp",
       "schedule": {
-        "timesPerDay": 1,
+        "frequency": "daily",
+        "timesPerPeriod": 1,
         "times": ["08:00"],
         "instructions": "Take in the morning with water"
       },
@@ -183,11 +185,13 @@
       "id": "med-metformin",
       "name": "Metformin",
       "strength": "500 mg",
+      "status": "active",
       "isActive": true,
       "refillDate": "2026-07-30",
       "doctorId": "doc-pcp",
       "schedule": {
-        "timesPerDay": 2,
+        "frequency": "daily",
+        "timesPerPeriod": 2,
         "times": ["08:00", "20:00"],
         "instructions": "Take with meals"
       },
@@ -201,21 +205,70 @@
       "id": "med-vitd",
       "name": "Vitamin D3",
       "strength": "2000 IU",
+      "status": "active",
       "isActive": true,
       "schedule": {
-        "timesPerDay": 1,
+        "frequency": "daily",
+        "timesPerPeriod": 1,
         "times": ["09:00"],
-        "instructions": "With breakfast"
+        "instructions": "With breakfast — OTC"
+      }
+    },
+    {
+      "id": "med-ibuprofen",
+      "name": "Ibuprofen",
+      "strength": "200 mg",
+      "status": "active",
+      "isActive": true,
+      "schedule": {
+        "frequency": "as_needed",
+        "timesPerPeriod": 0,
+        "times": [],
+        "instructions": "For headache or fever; max 3 in 24h"
+      }
+    },
+    {
+      "id": "med-b12",
+      "name": "Vitamin B12",
+      "strength": "1000 mcg",
+      "status": "active",
+      "isActive": true,
+      "doctorId": "doc-pcp",
+      "schedule": {
+        "frequency": "weekly",
+        "timesPerPeriod": 1,
+        "times": [],
+        "instructions": "One tablet each Monday"
+      }
+    },
+    {
+      "id": "med-allergy",
+      "name": "Cetirizine",
+      "strength": "10 mg",
+      "status": "suspended",
+      "isActive": false,
+      "doctorId": "doc-pcp",
+      "suspension": {
+        "note": "Paused — drowsiness conflict with new sleep aid",
+        "suspendedAt": "2026-07-18T15:00:00.000Z"
+      },
+      "schedule": {
+        "frequency": "daily",
+        "timesPerPeriod": 1,
+        "times": ["21:00"],
+        "instructions": "Evening allergy tablet"
       }
     },
     {
       "id": "med-old",
       "name": "Amoxicillin",
       "strength": "500 mg",
+      "status": "stopped",
       "isActive": false,
       "doctorId": "doc-pcp",
       "schedule": {
-        "timesPerDay": 3,
+        "frequency": "daily",
+        "timesPerPeriod": 3,
         "times": ["08:00", "14:00", "20:00"],
         "instructions": "Completed course Jan 2026"
       }
