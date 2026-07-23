@@ -9,7 +9,7 @@ import { AppNavItems } from '@/patterns/AppNavItems'
 import { DevBadgeItem } from '@/patterns/DevBadgeItem'
 import styles from './MenuPanel.module.scss'
 
-const TOOL_NAME = 'TOOLNAME'
+const TOOL_NAME = 'Viaggio'
 
 export function MenuPanel({ corner, onClose }) {
   const { user } = useAuth()

@@ -1,16 +1,16 @@
 -- Generic attachments table + private Storage bucket for tools from template/base.
 --
 -- After `npm run init -- --name foo`, replace placeholders (or rely on init
--- sweeping `toolname` in this file if you keep it under the tool tree):
---   toolname_attachments  →  foo_attachments
---   toolname-attachments  →  foo-attachments
+-- sweeping `viaggio` in this file if you keep it under the tool tree):
+--   viaggio_attachments  →  foo_attachments
+--   viaggio-attachments  →  foo-attachments
 --
 -- Wire `parent_id` to your owning table (notes, cards, …), e.g.:
 --   parent_id uuid not null references public.foo_notes(id) on delete cascade
 --
 -- Run in Supabase → SQL Editor. Safe to re-run.
 
-create table if not exists public.toolname_attachments (
+create table if not exists public.viaggio_attachments (
   id            uuid        primary key default gen_random_uuid(),
   user_id       uuid        not null references auth.users(id) on delete cascade,
   -- Owning domain row. Add an FK once your parent table exists.
@@ -26,64 +26,64 @@ create table if not exists public.toolname_attachments (
   unique (storage_path)
 );
 
-create index if not exists toolname_attachments_parent_idx
-  on public.toolname_attachments (user_id, parent_id, created_at desc);
+create index if not exists viaggio_attachments_parent_idx
+  on public.viaggio_attachments (user_id, parent_id, created_at desc);
 
-alter table public.toolname_attachments enable row level security;
+alter table public.viaggio_attachments enable row level security;
 
-drop policy if exists "toolname_attachments self-read"   on public.toolname_attachments;
-drop policy if exists "toolname_attachments self-insert" on public.toolname_attachments;
-drop policy if exists "toolname_attachments self-update" on public.toolname_attachments;
-drop policy if exists "toolname_attachments self-delete" on public.toolname_attachments;
+drop policy if exists "viaggio_attachments self-read"   on public.viaggio_attachments;
+drop policy if exists "viaggio_attachments self-insert" on public.viaggio_attachments;
+drop policy if exists "viaggio_attachments self-update" on public.viaggio_attachments;
+drop policy if exists "viaggio_attachments self-delete" on public.viaggio_attachments;
 
-create policy "toolname_attachments self-read"
-  on public.toolname_attachments for select using (auth.uid() = user_id);
-create policy "toolname_attachments self-insert"
-  on public.toolname_attachments for insert with check (auth.uid() = user_id);
-create policy "toolname_attachments self-update"
-  on public.toolname_attachments for update
+create policy "viaggio_attachments self-read"
+  on public.viaggio_attachments for select using (auth.uid() = user_id);
+create policy "viaggio_attachments self-insert"
+  on public.viaggio_attachments for insert with check (auth.uid() = user_id);
+create policy "viaggio_attachments self-update"
+  on public.viaggio_attachments for update
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "toolname_attachments self-delete"
-  on public.toolname_attachments for delete using (auth.uid() = user_id);
+create policy "viaggio_attachments self-delete"
+  on public.viaggio_attachments for delete using (auth.uid() = user_id);
 
 insert into storage.buckets (id, name, public)
-values ('toolname-attachments', 'toolname-attachments', false)
+values ('viaggio-attachments', 'viaggio-attachments', false)
 on conflict (id) do update set public = excluded.public;
 
-drop policy if exists "toolname_attachments storage read" on storage.objects;
-drop policy if exists "toolname_attachments storage insert" on storage.objects;
-drop policy if exists "toolname_attachments storage update" on storage.objects;
-drop policy if exists "toolname_attachments storage delete" on storage.objects;
+drop policy if exists "viaggio_attachments storage read" on storage.objects;
+drop policy if exists "viaggio_attachments storage insert" on storage.objects;
+drop policy if exists "viaggio_attachments storage update" on storage.objects;
+drop policy if exists "viaggio_attachments storage delete" on storage.objects;
 
 -- Paths: {user_id}/{parent_id}/{attachment_id}
-create policy "toolname_attachments storage read"
+create policy "viaggio_attachments storage read"
   on storage.objects for select
   using (
-    bucket_id = 'toolname-attachments'
+    bucket_id = 'viaggio-attachments'
     and auth.uid()::text = (storage.foldername(name))[1]
   );
 
-create policy "toolname_attachments storage insert"
+create policy "viaggio_attachments storage insert"
   on storage.objects for insert
   with check (
-    bucket_id = 'toolname-attachments'
+    bucket_id = 'viaggio-attachments'
     and auth.uid()::text = (storage.foldername(name))[1]
   );
 
-create policy "toolname_attachments storage update"
+create policy "viaggio_attachments storage update"
   on storage.objects for update
   using (
-    bucket_id = 'toolname-attachments'
+    bucket_id = 'viaggio-attachments'
     and auth.uid()::text = (storage.foldername(name))[1]
   )
   with check (
-    bucket_id = 'toolname-attachments'
+    bucket_id = 'viaggio-attachments'
     and auth.uid()::text = (storage.foldername(name))[1]
   );
 
-create policy "toolname_attachments storage delete"
+create policy "viaggio_attachments storage delete"
   on storage.objects for delete
   using (
-    bucket_id = 'toolname-attachments'
+    bucket_id = 'viaggio-attachments'
     and auth.uid()::text = (storage.foldername(name))[1]
   );

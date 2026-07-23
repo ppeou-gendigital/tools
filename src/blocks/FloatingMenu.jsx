@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Wrench } from 'lucide-react'
+import { PlaneTakeoff } from 'lucide-react'
 import { useCornerDrag } from '@/hooks/useCornerDrag'
 import { MenuPanel } from '@/patterns/MenuPanel'
 import styles from './FloatingMenu.module.scss'
@@ -49,7 +49,7 @@ export function FloatingMenu() {
         className={styles.fab}
         data-corner={corner}
         data-dragging={isDragging ? 'true' : undefined}
-        aria-label="TOOLNAME menu"
+        aria-label="Viaggio menu"
         aria-haspopup="menu"
         aria-expanded={open}
         style={fabStyle}
@@ -57,7 +57,7 @@ export function FloatingMenu() {
         onPointerDown={handlePointerDown}
         onClick={handleClick}
       >
-        <Wrench size={20} aria-hidden="true" />
+        <PlaneTakeoff size={20} aria-hidden="true" />
       </button>
       {open && !isDragging && (
         <MenuPanel corner={corner} onClose={() => setOpen(false)} />

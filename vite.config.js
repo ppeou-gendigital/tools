@@ -32,7 +32,7 @@ function buildAppVersion() {
 export default defineConfig(({ command, mode }) => {
   const isExtension = mode === 'extension'
   const isBuild = command === 'build'
-  const webBase = '/tools/TOOLNAME/'
+  const webBase = '/tools/viaggio/'
   const appVersion = buildAppVersion()
 
   return {
@@ -40,7 +40,7 @@ export default defineConfig(({ command, mode }) => {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
     },
     // Web PROD build is intended to be served from
-    // https://<user>.github.io/tools/TOOLNAME/, so every asset URL must
+    // https://<user>.github.io/tools/viaggio/, so every asset URL must
     // be prefixed with the repo-and-tool subpath. Dev server (`npm run
     // dev`) keeps '/' so http://localhost:5173/ works, and the extension
     // build always resolves at the extension root.
@@ -64,9 +64,9 @@ export default defineConfig(({ command, mode }) => {
                 'icons/icon-512.png',
               ],
               manifest: {
-                name: 'TOOLNAME',
-                short_name: 'TOOLNAME',
-                description: 'TOOLNAME — React + Supabase web app',
+                name: 'Viaggio',
+                short_name: 'Viaggio',
+                description: 'Viaggio — React + Supabase web app',
                 theme_color: '#0a0a0a',
                 background_color: '#0a0a0a',
                 display: 'standalone',
@@ -131,9 +131,9 @@ export default defineConfig(({ command, mode }) => {
         }
       : {
           // Nested so the uploaded Pages artifact serves at
-          // /tools/TOOLNAME/ (matching `base` above). The workflow uploads
+          // /tools/viaggio/ (matching `base` above). The workflow uploads
           // the parent `dist-web/` folder as the site.
-          outDir: 'dist-web/TOOLNAME',
+          outDir: 'dist-web/viaggio',
           emptyOutDir: true,
           rollupOptions: {
             input: {

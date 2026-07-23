@@ -23,9 +23,9 @@ The renamer touches:
 - `manifest.json` — `name`, `description`, `action.default_title`
 - `vite.config.js` — `base: '/tools/foo/'`, `outDir: 'dist-web/foo'`, and PWA manifest `name` / `short_name` / `description`
 - `index.html` / `popup.html` — `<title>` and `apple-mobile-web-app-title`
-- `.github/workflows/deploy-TOOLNAME-pages.yml` → `deploy-foo-pages.yml` (updates branch trigger to `tool/foo`)
-- `.github/workflows/release-TOOLNAME-extension.yml` → `release-foo-extension.yml` (updates tag prefix to `foo-v*`)
-- Any remaining `TOOLNAME` / `toolname` in source files (storage keys, aria labels, console prefixes, About row name)
+- `.github/workflows/deploy-viaggio-pages.yml` → `deploy-foo-pages.yml` (updates branch trigger to `tool/foo`)
+- `.github/workflows/release-viaggio-extension.yml` → `release-foo-extension.yml` (updates tag prefix to `foo-v*`)
+- Any remaining `viaggio` / `viaggio` in source files (storage keys, aria labels, console prefixes, About row name)
 
 **Branch → Pages URL formula** (keep these aligned):
 
@@ -64,7 +64,7 @@ Follow [README.md → Supabase setup](README.md#supabase-setup):
 - [ ] Run the `profiles` table + RLS + `handle_new_user` trigger SQL.
 - [ ] Run the `user_data` table + RLS SQL.
 - [ ] (Optional, E2EE tools) Run [`supabase/vault_meta.sql`](supabase/vault_meta.sql) for per-app salt/verifier storage. **Do not** put crypto meta in `user_data.data`.
-- [ ] (Optional) Rich text attachments: run [`supabase/template_attachments.sql`](supabase/template_attachments.sql) after init (renames `toolname_*` → your tool). Add an FK from `parent_id` to your domain table when you have one.
+- [ ] (Optional) Rich text attachments: run [`supabase/template_attachments.sql`](supabase/template_attachments.sql) after init (renames `viaggio_*` → your tool). Add an FK from `parent_id` to your domain table when you have one.
 - [ ] (Optional) Configure a Test OTP and set `VITE_DEV_AUTOLOGIN_EMAIL` / `_TOKEN` in `.env.local` for dev auto-login.
 
 ## 5. Add repo secrets
@@ -173,7 +173,7 @@ Reference: [`tool/notas`](../../tree/tool/notas) lockbox biometrics (`src/lib/bi
 
 The template ships with a bare skeleton (Home, Profile, Settings, DeckDemo, RichTextDemo). Common next steps:
 
-- **Add a page** — create `src/pages/YourPage.jsx` + `.module.scss`, register the route in [NavigationProvider](src/providers/NavigationProvider.jsx), add it to [AppNavItems](src/patterns/AppNavItems.jsx) (feeds the page-header icon toolbar + FAB “App” section), wrap the header in [PageHeader](src/patterns/PageHeader.jsx) + [PageShortcuts](src/patterns/PageShortcuts.jsx), and/or add a `SettingsCard` in [Settings](src/pages/Settings.jsx). Last route is remembered in `toolname:lastRoute` (renamed by init-tool). Home shows a list/tiles layout toggle (`toolname:homeLayout`) as a reference pattern.
+- **Add a page** — create `src/pages/YourPage.jsx` + `.module.scss`, register the route in [NavigationProvider](src/providers/NavigationProvider.jsx), add it to [AppNavItems](src/patterns/AppNavItems.jsx) (feeds the page-header icon toolbar + FAB “App” section), wrap the header in [PageHeader](src/patterns/PageHeader.jsx) + [PageShortcuts](src/patterns/PageShortcuts.jsx), and/or add a `SettingsCard` in [Settings](src/pages/Settings.jsx). Last route is remembered in `viaggio:lastRoute` (renamed by init-tool). Home shows a list/tiles layout toggle (`viaggio:homeLayout`) as a reference pattern.
 - **Rich text field** — drop in [`RichNoteEditor`](src/molecules/RichNoteEditor.jsx); persist with [`richBody.js`](src/lib/richBody.js) (`serializeRichBody` / `parseRichBody`). Demo: menu → **Rich text demo**.
 - **File attachments (Supabase Storage)** — run [`supabase/template_attachments.sql`](supabase/template_attachments.sql), then call [`attachmentsApi.js`](src/lib/attachmentsApi.js) (`uploadAttachment`, `listAttachments`, …) with your domain `parentId`. Paste/drop from the editor is forwarded via `onFiles` — do not embed binaries in the TipTap JSON. Full notes + lockbox encryption: [`tool/notas`](../../tree/tool/notas) `NoteEdit.jsx`.
 - **Add a synced field** — add the key to `PREFS_OWNED_KEYS` in [prefs.js](src/lib/prefs.js), an `opSet*` in [userDataOps.js](src/lib/userDataOps.js), push from the provider via `applySyncOp`, and teach [PrefsSync](src/providers/PrefsSync.jsx) how to apply the remote value on pull. See the `theme` / `fontSize` / `fabCorner` triple as the pattern to copy.

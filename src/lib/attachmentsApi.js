@@ -1,8 +1,8 @@
 // File attachments → Supabase Storage + metadata table.
 //
 // After `npm run init -- --name foo`:
-//   bucket  toolname-attachments → foo-attachments
-//   table   toolname_attachments → foo_attachments
+//   bucket  viaggio-attachments → foo-attachments
+//   table   viaggio_attachments → foo_attachments
 //
 // `parent_id` is the owning row (note, card, …). Rename the column / FK in
 // supabase/template_attachments.sql to match your domain table.
@@ -13,8 +13,8 @@
 import { supabase } from '@/lib/supabase'
 import { createId } from '@/lib/id'
 
-export const ATTACHMENTS_BUCKET = 'toolname-attachments'
-export const ATTACHMENTS_TABLE = 'toolname_attachments'
+export const ATTACHMENTS_BUCKET = 'viaggio-attachments'
+export const ATTACHMENTS_TABLE = 'viaggio_attachments'
 export const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024
 
 const COLUMNS =

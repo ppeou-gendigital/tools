@@ -6,7 +6,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'
 
-export const RICH_BODY_FORMAT = 'toolname-tiptap-v1'
+export const RICH_BODY_FORMAT = 'viaggio-tiptap-v1'
 
 const PREVIEW_EXTENSIONS = [
   StarterKit,

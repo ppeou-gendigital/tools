@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "TOOLNAME",
+  "name": "Viaggio",
   "version": "0.1.0",
-  "description": "TOOLNAME — React + Supabase Chrome extension",
+  "description": "Viaggio — React + Supabase Chrome extension",
   "action": {
-    "default_title": "TOOLNAME",
+    "default_title": "Viaggio",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",
