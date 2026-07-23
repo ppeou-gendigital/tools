@@ -1,25 +1,9 @@
 @use 'tokens/mixins' as m;
 
 .header {
-  padding-inline: var(--layout-pad);
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  width: 100%;
-  max-width: 42rem;
-  margin-inline: auto;
-
-  @include m.md {
-    max-width: 48rem;
-  }
-
-  @include m.lg {
-    max-width: 56rem;
-  }
-
-  @include m.xl {
-    max-width: 64rem;
-  }
 }
 
 .headerRow {

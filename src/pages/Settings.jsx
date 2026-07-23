@@ -9,6 +9,7 @@ import { COMMON_CURRENCIES } from '@/lib/catalog'
 import { formatMoney, formatWallDate } from '@/lib/format'
 import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function Settings() {
@@ -42,7 +43,7 @@ export function Settings() {
         }
       />
 
-      <div className={styles.body}>
+      <div className={cx('is-fluid-width', styles.body)}>
         <div className={styles.form}>
           <ul className={styles.list}>
             <li>

@@ -15,6 +15,7 @@ import {
 import { createJourney } from '@/lib/viaggioApi'
 import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function JourneyCreate() {
@@ -71,7 +72,7 @@ export function JourneyCreate() {
             </Button>
           }
         />
-        <div className={styles.body}>
+        <div className={cx('is-fluid-width', styles.body)}>
           <ul className={styles.list}>
             {PRESETS.map((p) => (
               <li key={p.id}>
@@ -105,7 +106,7 @@ export function JourneyCreate() {
           </Button>
         }
       />
-      <div className={styles.body}>
+      <div className={cx('is-fluid-width', styles.body)}>
         <div className={styles.form}>
           <div className={styles.field}>
             <Label htmlFor="title">Title</Label>

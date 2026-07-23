@@ -37,6 +37,7 @@ import {
 import { useAuth } from '@/providers/AuthProvider'
 import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function EntryEdit() {
@@ -108,7 +109,7 @@ export function EntryEdit() {
   if (!journeyId || (!paramActivityId && !entryId)) {
     return (
       <div className={styles.page}>
-        <div className={styles.body}>
+        <div className={cx('is-fluid-width', styles.body)}>
           <p className={styles.error}>Missing activity context.</p>
         </div>
       </div>
@@ -127,7 +128,7 @@ export function EntryEdit() {
             </Button>
           }
         />
-        <div className={styles.body}>
+        <div className={cx('is-fluid-width', styles.body)}>
           <LoadingState>Loading activity…</LoadingState>
         </div>
       </div>
@@ -146,7 +147,7 @@ export function EntryEdit() {
             </Button>
           }
         />
-        <div className={styles.body}>
+        <div className={cx('is-fluid-width', styles.body)}>
           <p className={styles.error}>
             This activity was not found, or you no longer have access.
           </p>
@@ -348,7 +349,7 @@ function EntryEditForm({
         }
       />
 
-      <div className={styles.body}>
+      <div className={cx('is-fluid-width', styles.body)}>
         <div className={styles.form}>
           {readOnly && (
             <p className={styles.readOnlyBanner}>

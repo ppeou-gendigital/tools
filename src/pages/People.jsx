@@ -12,6 +12,7 @@ import {
   upsertPerson,
 } from '@/lib/viaggioApi'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function People() {
@@ -75,7 +76,7 @@ export function People() {
           </Button>
         }
       />
-      <div className={styles.body}>
+      <div className={cx('is-fluid-width', styles.body)}>
         {error && <p className={styles.error}>{error}</p>}
 
         <div className={styles.form}>

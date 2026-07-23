@@ -6,6 +6,7 @@ import { PageHeader } from '@/patterns/PageHeader'
 import { labelForRole } from '@/lib/catalog'
 import { acceptInvite, peekInvite } from '@/lib/viaggioApi'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function AcceptInvite() {
@@ -31,7 +32,7 @@ export function AcceptInvite() {
   if (!token) {
     return (
       <div className={styles.page}>
-        <div className={styles.body}>
+        <div className={cx('is-fluid-width', styles.body)}>
           <div className={styles.empty}>
             <p className={styles.error}>Missing invite token.</p>
             <Button onClick={goHome}>Go home</Button>
@@ -51,7 +52,7 @@ export function AcceptInvite() {
         title="Join journey"
         subtitle="You've been invited to collaborate."
       />
-      <div className={styles.body}>
+      <div className={cx('is-fluid-width', styles.body)}>
         {isLoading && <LoadingState>Checking invite…</LoadingState>}
         {(peekError || (!isLoading && !peek)) && (
           <div className={styles.empty}>

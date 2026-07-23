@@ -14,6 +14,7 @@ import {
 import { useAuth } from '@/providers/AuthProvider'
 import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function Spending() {
@@ -92,7 +93,7 @@ export function Spending() {
           </Button>
         }
       />
-      <div className={styles.body}>
+      <div className={cx('is-fluid-width', styles.body)}>
         {isLoading && <LoadingState>Loading spending…</LoadingState>}
         {error && (
           <>

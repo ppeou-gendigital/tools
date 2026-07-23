@@ -16,6 +16,7 @@ import {
 } from '@/lib/viaggioApi'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 const PLATFORM_LABELS = {
@@ -104,7 +105,7 @@ export function Playlist() {
           </Button>
         }
       />
-      <div className={styles.body}>
+      <div className={cx('is-fluid-width', styles.body)}>
         {isLoading && <LoadingState>Loading playlist…</LoadingState>}
         {!isLoading && items.length === 0 && (
           <div className={styles.empty}>

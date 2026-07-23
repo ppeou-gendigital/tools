@@ -23,6 +23,7 @@ import {
 } from '@/lib/viaggioApi'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function JourneySettings() {
@@ -45,7 +46,7 @@ export function JourneySettings() {
   if (!journeyId) {
     return (
       <div className={styles.page}>
-        <div className={styles.body}>
+        <div className={cx('is-fluid-width', styles.body)}>
           <p className={styles.error}>Missing journey.</p>
           <Button variant="outline" onClick={goHome} fullWidth>
             Back to journeys
@@ -67,7 +68,7 @@ export function JourneySettings() {
             </Button>
           }
         />
-        <div className={styles.body}>
+        <div className={cx('is-fluid-width', styles.body)}>
           <LoadingState>Loading journey settings…</LoadingState>
         </div>
       </div>
@@ -86,7 +87,7 @@ export function JourneySettings() {
             </Button>
           }
         />
-        <div className={styles.body}>
+        <div className={cx('is-fluid-width', styles.body)}>
           <p className={styles.error}>
             {isError
               ? `Could not load this journey. (${error.message})`
@@ -159,7 +160,7 @@ function JourneySettingsForm({
           </Button>
         }
       />
-      <div className={styles.body}>
+      <div className={cx('is-fluid-width', styles.body)}>
         <div className={styles.form}>
           <div className={styles.field}>
             <Label htmlFor="title">Title</Label>

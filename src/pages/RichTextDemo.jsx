@@ -21,6 +21,7 @@ import {
   emptyDoc,
 } from '@/lib/richBody'
 import { formatByteSize } from '@/lib/attachmentsApi'
+import { cx } from '@/lib/cx'
 import styles from './RichTextDemo.module.scss'
 
 const STORAGE_KEY = 'viaggio.richTextDemo.body'
@@ -141,7 +142,7 @@ export function RichTextDemo() {
         }
       />
 
-      <div className={styles.body}>
+      <div className={cx('is-fluid-width', styles.body)}>
         <p className={styles.lead}>
           Formatting is stored as JSON (<code>viaggio-tiptap-v1</code>).
           Pasted or dropped files stay out of the document — use Upload or

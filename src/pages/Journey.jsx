@@ -85,16 +85,23 @@ function EntryRowActions({
   peopleById,
   displayLocale,
   currentUserId,
+  displayNames,
   canEdit,
-  onInfo,
   onOpenExpense,
   onAddExpense,
 }) {
-  const [panel, setPanel] = useState(null) // 'expenses' | 'people' | null
+  const [panel, setPanel] = useState(null) // 'expenses' | 'people' | 'details' | null
   const expensesBtnRef = useRef(null)
   const peopleBtnRef = useRef(null)
+  const detailsBtnRef = useRef(null)
   const showExpenses = entryExpenses.length > 0
   const showPeople = whoIds.length > 1
+  const activity = getActivity(entry.activityId)
+  const showUpdated =
+    entry.updatedBy &&
+    entry.updatedAt &&
+    (entry.updatedBy !== entry.createdBy ||
+      entry.updatedAt !== entry.createdAt)
 
   return (
     <div className={styles.rowActions}>
@@ -129,14 +136,14 @@ function EntryRowActions({
         </button>
       )}
       <button
+        ref={detailsBtnRef}
         type="button"
         className={styles.rowInfo}
         aria-label="Activity details"
         title="Activity details"
-        onClick={() => {
-          setPanel(null)
-          onInfo(entry)
-        }}
+        aria-expanded={panel === 'details'}
+        aria-haspopup="dialog"
+        onClick={() => setPanel((p) => (p === 'details' ? null : 'details'))}
       >
         <Info size={16} aria-hidden="true" />
       </button>
@@ -209,6 +216,36 @@ function EntryRowActions({
           </ul>
         </EntrySidePopover>
       )}
+
+      <EntrySidePopover
+        open={panel === 'details'}
+        onClose={() => setPanel(null)}
+        title="Details"
+        anchorRef={detailsBtnRef}
+      >
+        <div className={styles.entryPopoverRow}>
+          <span className={styles.entryPopoverName}>
+            {entry.title || activity?.label || 'Activity'}
+          </span>
+          {activity?.label && entry.title && (
+            <span className={styles.entryPopoverMeta}>{activity.label}</span>
+          )}
+        </div>
+        <p className={styles.entryPopoverHint}>
+          Created by{' '}
+          {labelForUserId(entry.createdBy, currentUserId, displayNames)}
+          {entry.createdAt
+            ? ` · ${formatWhen(entry.createdAt, displayLocale)}`
+            : ''}
+        </p>
+        {showUpdated && (
+          <p className={styles.entryPopoverHint}>
+            Updated by{' '}
+            {labelForUserId(entry.updatedBy, currentUserId, displayNames)}
+            {` · ${formatWhen(entry.updatedAt, displayLocale)}`}
+          </p>
+        )}
+      </EntrySidePopover>
     </div>
   )
 }
@@ -232,7 +269,6 @@ export function Journey() {
   const [addOpen, setAddOpen] = useState(false)
   const [browse, setBrowse] = useState(false)
   const [packsOpen, setPacksOpen] = useState(false)
-  const [infoEntry, setInfoEntry] = useState(null)
 
   const { data: journey, isLoading } = useQuery({
     queryKey: ['viaggio', 'journey', journeyId],
@@ -328,16 +364,6 @@ export function Journey() {
     return [...groups.entries()]
   }, [entries])
 
-  const infoParticipants = infoEntry
-    ? participantsByEntry.get(infoEntry.id) || []
-    : []
-  const showUpdated =
-    infoEntry &&
-    infoEntry.updatedBy &&
-    infoEntry.updatedAt &&
-    (infoEntry.updatedBy !== infoEntry.createdBy ||
-      infoEntry.updatedAt !== infoEntry.createdAt)
-
   const packsMut = useMutation({
     mutationFn: (packs) => updateJourneyPacks(journeyId, packs),
     onSuccess: () => {
@@ -355,7 +381,7 @@ export function Journey() {
   if (!journeyId) {
     return (
       <div className={styles.page}>
-        <div className={styles.body}>
+        <div className={cx('is-fluid-width', styles.body)}>
           <p className={styles.error}>Missing journey.</p>
         </div>
       </div>
@@ -374,14 +400,18 @@ export function Journey() {
           </Button>
         }
         actions={
-          <div className={styles.actions}>
-            {canEdit && (
-              <Button size="sm" onClick={() => setAddOpen(true)}>
-                <Plus size={14} aria-hidden="true" />
-                Add
-              </Button>
-            )}
-          </div>
+          canEdit ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={styles.iconBtn}
+              onClick={() => setAddOpen(true)}
+              aria-label="Add activity"
+              title="Add activity"
+            >
+              <Plus size={14} aria-hidden="true" />
+            </Button>
+          ) : null
         }
         shortcuts={
           <PageShortcuts
@@ -417,7 +447,7 @@ export function Journey() {
         }
       />
 
-      <div className={cx(styles.body, styles.bodyWide)}>
+      <div className={cx('is-fluid-width', styles.body)}>
         {(isLoading || entriesLoading) && (
           <LoadingState>Loading journey…</LoadingState>
         )}
@@ -448,64 +478,65 @@ export function Journey() {
                   .map((x) => formatMoney(x.amountCents, x.currency, displayLocale))
                   .join(' · ')
                 const whoIds = participantsByEntry.get(entry.id) || []
-                const whoHint = formatParticipantHint(
-                  whoIds,
-                  peopleById,
-                  user?.id,
-                )
+                const whoHint = formatParticipantHint(whoIds)
+                const openEntry = () =>
+                  goEntryEdit({
+                    journeyId,
+                    entryId: entry.id,
+                    activityId: entry.activityId,
+                  })
+                const title =
+                  entry.title || activity?.label || 'Activity'
+                const meta = [
+                  activity?.label,
+                  formatEntryTimeLine(entry, displayLocale),
+                  entry.placeName,
+                  moneyHint,
+                  whoHint,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
                 return (
                   <li key={entry.id} className={styles.entryRow}>
+                    <div className={styles.entryHeader}>
+                      <button
+                        type="button"
+                        className={styles.rowTitleBtn}
+                        onClick={openEntry}
+                      >
+                        <span className={styles.rowTitle}>{title}</span>
+                      </button>
+                      <EntryRowActions
+                        entry={entry}
+                        entryExpenses={entryExpenses}
+                        whoIds={whoIds}
+                        peopleById={peopleById}
+                        displayLocale={displayLocale}
+                        currentUserId={user?.id}
+                        displayNames={displayNames}
+                        canEdit={canEdit}
+                        onOpenExpense={(ex) =>
+                          goExpenseEdit({
+                            journeyId,
+                            entryId: entry.id,
+                            expenseId: ex.id,
+                          })
+                        }
+                        onAddExpense={() =>
+                          goExpenseEdit({
+                            journeyId,
+                            entryId: entry.id,
+                          })
+                        }
+                      />
+                    </div>
                     <button
                       type="button"
-                      className={styles.rowBtn}
-                      onClick={() =>
-                        goEntryEdit({
-                          journeyId,
-                          entryId: entry.id,
-                          activityId: entry.activityId,
-                        })
-                      }
+                      className={styles.rowMetaBtn}
+                      onClick={openEntry}
                     >
-                      <span className={styles.rowBody}>
-                        <span className={styles.rowTitle}>
-                          {entry.title || activity?.label || 'Activity'}
-                        </span>
-                        <span className={styles.rowMeta}>
-                          {[
-                            activity?.label,
-                            formatEntryTimeLine(entry, displayLocale),
-                            entry.placeName,
-                            moneyHint,
-                            whoHint,
-                          ]
-                            .filter(Boolean)
-                            .join(' · ')}
-                        </span>
-                      </span>
+                      <span className={styles.rowMeta}>{meta}</span>
                     </button>
-                    <EntryRowActions
-                      entry={entry}
-                      entryExpenses={entryExpenses}
-                      whoIds={whoIds}
-                      peopleById={peopleById}
-                      displayLocale={displayLocale}
-                      currentUserId={user?.id}
-                      canEdit={canEdit}
-                      onInfo={setInfoEntry}
-                      onOpenExpense={(ex) =>
-                        goExpenseEdit({
-                          journeyId,
-                          entryId: entry.id,
-                          expenseId: ex.id,
-                        })
-                      }
-                      onAddExpense={() =>
-                        goExpenseEdit({
-                          journeyId,
-                          entryId: entry.id,
-                        })
-                      }
-                    />
                   </li>
                 )
               })}
@@ -513,56 +544,6 @@ export function Journey() {
           </div>
         ))}
       </div>
-
-      <Modal
-        open={!!infoEntry}
-        onDismiss={() => setInfoEntry(null)}
-        title="Activity details"
-      >
-        {infoEntry && (
-          <div className={styles.sheet}>
-            <p className={styles.hint}>
-              <strong>
-                {infoEntry.title ||
-                  getActivity(infoEntry.activityId)?.label ||
-                  'Activity'}
-              </strong>
-            </p>
-            <p className={styles.hint}>
-              Created by{' '}
-              {labelForUserId(infoEntry.createdBy, user?.id, displayNames)}
-              {infoEntry.createdAt
-                ? ` · ${formatWhen(infoEntry.createdAt, displayLocale)}`
-                : ''}
-            </p>
-            {showUpdated && (
-              <p className={styles.hint}>
-                Updated by{' '}
-                {labelForUserId(infoEntry.updatedBy, user?.id, displayNames)}
-                {` · ${formatWhen(infoEntry.updatedAt, displayLocale)}`}
-              </p>
-            )}
-            <p className={styles.sectionTitle}>Participants</p>
-            {infoParticipants.length === 0 ? (
-              <p className={styles.hint}>None</p>
-            ) : (
-              <ul className={styles.list}>
-                {infoParticipants.map((pid) => (
-                  <li key={pid} className={styles.hint}>
-                    {labelForJourneyPerson(
-                      peopleById.get(pid) || { id: pid },
-                      user?.id,
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Button variant="outline" onClick={() => setInfoEntry(null)}>
-              Close
-            </Button>
-          </div>
-        )}
-      </Modal>
 
       <Modal
         open={addOpen}

@@ -44,6 +44,7 @@ import {
 } from '@/lib/viaggioApi'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 function isInviteOpen(inv) {
@@ -181,7 +182,7 @@ export function Members() {
           </Button>
         }
       />
-      <div className={styles.body}>
+      <div className={cx('is-fluid-width', styles.body)}>
         {error && <p className={styles.error}>{error}</p>}
         {message && <p className={styles.hint}>{message}</p>}
         {rosterLoading && <LoadingState>Loading travelers…</LoadingState>}

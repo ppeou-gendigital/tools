@@ -12,6 +12,7 @@ import {
 import { formatMoney, formatWallDate } from '@/lib/format'
 import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function OnboardingPrefs() {
@@ -45,7 +46,7 @@ export function OnboardingPrefs() {
         title="How should Viaggio look?"
         subtitle="Confirm locale and default currency. You can change these later in Settings."
       />
-      <div className={styles.body}>
+      <div className={cx('is-fluid-width', styles.body)}>
         <div className={styles.form}>
           <div className={styles.field}>
             <Label htmlFor="locale">Display locale</Label>

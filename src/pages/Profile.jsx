@@ -9,6 +9,7 @@ import { PageHeader } from '@/patterns/PageHeader'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { supabase } from '@/lib/supabase'
+import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function Profile() {
@@ -93,7 +94,7 @@ export function Profile() {
         }
       />
 
-      <div className={styles.body}>
+      <div className={cx('is-fluid-width', styles.body)}>
         {isLoading && <LoadingState>Loading profile…</LoadingState>}
         <form className={styles.form} onSubmit={handleSave}>
           <div className={styles.field}>

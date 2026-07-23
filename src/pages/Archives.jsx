@@ -17,6 +17,7 @@ import {
 } from '@/lib/journeySnapshot'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 function formatBytes(n) {
@@ -98,7 +99,7 @@ export function Archives() {
           </Button>
         }
       />
-      <div className={styles.body}>
+      <div className={cx('is-fluid-width', styles.body)}>
         {error && <p className={styles.error}>{error}</p>}
         {message && <p className={styles.hint}>{message}</p>}
 

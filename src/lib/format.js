@@ -176,21 +176,12 @@ export function labelForUserId(userId, currentUserId, displayNames) {
   )
 }
 
-/** Compact participant list for timeline meta (≤3 names, else count). */
-export function formatParticipantHint(
-  journeyPersonIds,
-  peopleById,
-  currentUserId,
-) {
+/** Compact traveler count for timeline meta (names live in the people popover). */
+export function formatParticipantHint(journeyPersonIds) {
   const ids = journeyPersonIds ?? []
   if (ids.length === 0) return ''
-  if (ids.length > 3) return `${ids.length} travelers`
-  return ids
-    .map((id) =>
-      labelForJourneyPerson(peopleById?.get?.(id) || { id }, currentUserId),
-    )
-    .filter(Boolean)
-    .join(' · ')
+  if (ids.length === 1) return '1 traveler'
+  return `${ids.length} travelers`
 }
 
 export function formatWhen(iso, locale) {

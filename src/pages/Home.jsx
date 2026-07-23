@@ -299,7 +299,7 @@ export function Home() {
         }
       />
 
-      <div className={pageStyles.body}>
+      <div className={cx('is-fluid-width', pageStyles.body)}>
         {isLoading && <LoadingState>Loading journeys…</LoadingState>}
         {error && (
           <p className={pageStyles.error}>

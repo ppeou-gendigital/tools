@@ -7,6 +7,8 @@ import styles from './PageHeader.module.scss'
  *
  * Mobile: back + actions/shortcuts on first row; title full-width below.
  * md+: single row [leading][title][actions][shortcuts].
+ *
+ * Width comes from the global `.is-fluid-width` layout utility.
  */
 export function PageHeader({
   title,
@@ -18,7 +20,7 @@ export function PageHeader({
   children,
 }) {
   return (
-    <header className={cx(styles.header, className)}>
+    <header className={cx('is-fluid-width', styles.header, className)}>
       <div className={styles.headerRow}>
         {leading && <div className={styles.leading}>{leading}</div>}
         {title != null && title !== '' && (

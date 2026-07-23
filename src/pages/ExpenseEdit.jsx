@@ -26,6 +26,7 @@ import {
 import { useAuth } from '@/providers/AuthProvider'
 import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function ExpenseEdit() {
@@ -84,7 +85,7 @@ export function ExpenseEdit() {
   if (!journeyId || !entryId) {
     return (
       <div className={styles.page}>
-        <div className={styles.body}>
+        <div className={cx('is-fluid-width', styles.body)}>
           <p className={styles.error}>Missing expense context.</p>
         </div>
       </div>
@@ -103,7 +104,7 @@ export function ExpenseEdit() {
             </Button>
           }
         />
-        <div className={styles.body}>
+        <div className={cx('is-fluid-width', styles.body)}>
           <LoadingState>Loading expense…</LoadingState>
         </div>
       </div>
@@ -122,7 +123,7 @@ export function ExpenseEdit() {
             </Button>
           }
         />
-        <div className={styles.body}>
+        <div className={cx('is-fluid-width', styles.body)}>
           <p className={styles.error}>
             {!journey || (expenseId && !existing)
               ? 'This expense was not found, or you no longer have access.'
@@ -275,7 +276,7 @@ function ExpenseEditForm({
           </Button>
         }
       />
-      <div className={styles.body}>
+      <div className={cx('is-fluid-width', styles.body)}>
         <div className={styles.form}>
           <div className={styles.field}>
             <Label htmlFor="title">Title</Label>
