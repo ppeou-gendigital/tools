@@ -21,6 +21,7 @@ import {
   opSetTheme,
 } from '@/lib/supabaseSync'
 import { useAuth } from '@/providers/AuthProvider'
+import { useOfflineOptional } from '@/providers/OfflineProvider'
 
 const ThemeContext = createContext(null)
 
@@ -55,6 +56,10 @@ function applyTheme(resolved) {
 export function ThemeProvider({ children, defaultTheme = 'daynight' }) {
   const { user } = useAuth()
   const userId = user?.id ?? null
+  const offline = useOfflineOptional()
+  // Offline path: sunrise/sunset uses device clock, not geolocation.
+  const forceClock =
+    offline?.isOfflineMode || offline?.isOfflineEmpty || offline?.online === false
 
   const [pref, setPref] = useState(defaultTheme)
   const [coords, setCoords] = useState(null)
@@ -80,11 +85,13 @@ export function ThemeProvider({ children, defaultTheme = 'daynight' }) {
     }
   }, [defaultTheme])
 
+  const effectiveCoords = forceClock ? null : coords
+
   // Apply resolved theme whenever pref / coords / scheduled tick changes.
   useEffect(() => {
     if (!ready) return
-    applyTheme(resolveTheme(pref, coords))
-  }, [pref, coords, ready, tick])
+    applyTheme(resolveTheme(pref, effectiveCoords))
+  }, [pref, effectiveCoords, ready, tick])
 
   // OS system preference listener.
   useEffect(() => {
@@ -96,9 +103,9 @@ export function ThemeProvider({ children, defaultTheme = 'daynight' }) {
     return () => mq.removeEventListener?.('change', handler)
   }, [pref])
 
-  // Day/night: cache → live geolocation → clock fallback.
+  // Day/night: cache → live geolocation → clock fallback (skipped when offline).
   useEffect(() => {
-    if (!ready || pref !== 'daynight') return
+    if (!ready || pref !== 'daynight' || forceClock) return
 
     let cancelled = false
 
@@ -137,7 +144,10 @@ export function ThemeProvider({ children, defaultTheme = 'daynight' }) {
       cancelled = true
       document.removeEventListener('visibilitychange', onVisible)
     }
-  }, [pref, ready])
+  }, [pref, ready, forceClock])
+
+  // effectiveCoords already nulls coords when forceClock; keep stored coords for
+  // when we come back online without an extra setState in the effect above.
 
   // Schedule re-resolve at the next sunrise/sunset (or clock) boundary.
   useEffect(() => {
@@ -148,7 +158,7 @@ export function ThemeProvider({ children, defaultTheme = 'daynight' }) {
 
     const arm = () => {
       if (cancelled) return
-      const c = coordsRef.current
+      const c = forceClock ? null : coordsRef.current
       const delay =
         c != null
           ? msUntilNextSolarBoundary(c.lat, c.lng)
@@ -165,7 +175,7 @@ export function ThemeProvider({ children, defaultTheme = 'daynight' }) {
       cancelled = true
       globalThis.clearTimeout(timerId)
     }
-  }, [pref, ready, coords])
+  }, [pref, ready, coords, forceClock])
 
   const setTheme = useCallback(
     async (next, { fromRemote = false } = {}) => {
@@ -196,12 +206,12 @@ export function ThemeProvider({ children, defaultTheme = 'daynight' }) {
     () => ({
       theme: pref,
       // `tick` forces a re-resolve at sunrise/sunset (or clock) boundaries.
-      resolvedTheme: resolveTheme(pref, coords),
+      resolvedTheme: resolveTheme(pref, effectiveCoords),
       setTheme,
       ready,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- tick is intentional
-    [pref, coords, setTheme, ready, tick],
+    [pref, effectiveCoords, setTheme, ready, tick],
   )
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

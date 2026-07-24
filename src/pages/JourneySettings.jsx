@@ -1,6 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Archive, ArrowLeft, Check, Download, Loader2, Save } from 'lucide-react'
+import {
+  Archive,
+  ArrowLeft,
+  Check,
+  Download,
+  HardDriveDownload,
+  Loader2,
+  Save,
+  Trash2,
+} from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -24,6 +33,7 @@ import {
 } from '@/lib/viaggioApi'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
+import { useOffline } from '@/providers/OfflineProvider'
 import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
@@ -122,13 +132,35 @@ function JourneySettingsForm({
   goHome,
 }) {
   const qc = useQueryClient()
+  const { user } = useAuth()
+  const {
+    isPackAvailable,
+    makeAvailableOffline,
+    removeAvailableOffline,
+    getPack,
+    refreshPacks,
+  } = useOffline()
   const [error, setError] = useState('')
   const [savedFlash, setSavedFlash] = useState(false)
   const [confirm, setConfirm] = useState(null) // 'archive' | 'delete' | null
   const [busy, setBusy] = useState(false)
+  const [offlineBusy, setOfflineBusy] = useState(false)
+  const [offlineSyncedAt, setOfflineSyncedAt] = useState(null)
+  const packReady = isPackAvailable(journey.id)
   const canEdit =
     membership?.role === 'owner' || membership?.role === 'editor'
   const isOwner = membership?.role === 'owner'
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      const pack = await getPack(journey.id)
+      if (mounted) setOfflineSyncedAt(pack?.syncedAt ?? null)
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [journey.id, getPack, packReady])
 
   const [title, setTitle] = useState(journey.title || '')
   const [startsOn, setStartsOn] = useState(journey.startsOn || '')
@@ -334,6 +366,71 @@ function JourneySettingsForm({
             <p className={styles.hint} role="status">
               <Check size={12} aria-hidden="true" /> Saved.
             </p>
+          )}
+
+          <p className={styles.sectionTitle}>Available offline</p>
+          <p className={styles.hint}>
+            Save this journey on this device for airplane mode. Includes
+            timeline, spending, to-dos, travelers, places, playlist links, and
+            prefetched currency rates.
+          </p>
+          {packReady && offlineSyncedAt && (
+            <p className={styles.hint} role="status">
+              Last synced{' '}
+              {new Date(offlineSyncedAt).toLocaleString(undefined, {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              })}
+            </p>
+          )}
+          <Button
+            variant="outline"
+            fullWidth
+            disabled={offlineBusy}
+            onClick={async () => {
+              setError('')
+              setOfflineBusy(true)
+              try {
+                const pack = await makeAvailableOffline(journey.id, {
+                  userId: user?.id,
+                })
+                setOfflineSyncedAt(pack.syncedAt)
+                await refreshPacks()
+              } catch (err) {
+                setError(err.message)
+              } finally {
+                setOfflineBusy(false)
+              }
+            }}
+          >
+            {offlineBusy ? (
+              <Loader2 size={16} className={styles.spin} aria-hidden="true" />
+            ) : (
+              <HardDriveDownload size={16} aria-hidden="true" />
+            )}
+            {packReady ? 'Refresh offline copy' : 'Make available offline'}
+          </Button>
+          {packReady && (
+            <Button
+              variant="ghost"
+              fullWidth
+              disabled={offlineBusy}
+              onClick={async () => {
+                setError('')
+                setOfflineBusy(true)
+                try {
+                  await removeAvailableOffline(journey.id)
+                  setOfflineSyncedAt(null)
+                } catch (err) {
+                  setError(err.message)
+                } finally {
+                  setOfflineBusy(false)
+                }
+              }}
+            >
+              <Trash2 size={16} aria-hidden="true" />
+              Remove offline copy
+            </Button>
           )}
 
           <p className={styles.sectionTitle}>Export</p>
