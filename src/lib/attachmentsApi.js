@@ -1,14 +1,6 @@
-// File attachments → Supabase Storage + metadata table.
-//
-// After `npm run init -- --name foo`:
-//   bucket  viaggio-attachments → foo-attachments
-//   table   viaggio_attachments → foo_attachments
-//
-// `parent_id` is the owning row (note, card, …). Rename the column / FK in
-// supabase/template_attachments.sql to match your domain table.
-//
-// Optional encryptBytes / decryptBytes hooks support client-side E2EE
-// (see tool/notas LockboxProvider) — omit them for plaintext uploads.
+// File attachments → Supabase Storage + viaggio_attachments.
+// Path convention (matches RLS): {entry_id}/{attachment_id}
+// Optional expense_id links a receipt to a specific expense.
 
 import { supabase } from '@/lib/supabase'
 import { createId } from '@/lib/id'
@@ -18,14 +10,15 @@ export const ATTACHMENTS_TABLE = 'viaggio_attachments'
 export const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024
 
 const COLUMNS =
-  'id, user_id, parent_id, file_name, mime_type, byte_size, storage_path, iv, created_at, updated_at'
+  'id, entry_id, expense_id, uploaded_by, file_name, mime_type, byte_size, storage_path, iv, created_at, updated_at'
 
 function mapRow(row) {
   if (!row) return null
   return {
     id: row.id,
-    userId: row.user_id,
-    parentId: row.parent_id,
+    entryId: row.entry_id,
+    expenseId: row.expense_id ?? null,
+    uploadedBy: row.uploaded_by,
     fileName: row.file_name,
     mimeType: row.mime_type,
     byteSize: Number(row.byte_size) || 0,
@@ -36,37 +29,42 @@ function mapRow(row) {
   }
 }
 
-export async function listAttachments(userId, parentId) {
-  if (!userId || !parentId) return []
-  const { data, error } = await supabase
+/**
+ * @param {string} entryId
+ * @param {{ expenseId?: string | null }} [opts]
+ */
+export async function listAttachments(entryId, { expenseId } = {}) {
+  if (!entryId) return []
+  let q = supabase
     .from(ATTACHMENTS_TABLE)
     .select(COLUMNS)
-    .eq('user_id', userId)
-    .eq('parent_id', parentId)
+    .eq('entry_id', entryId)
     .order('created_at', { ascending: true })
+  if (expenseId) {
+    q = q.eq('expense_id', expenseId)
+  }
+  const { data, error } = await q
   if (error) throw error
   return (data ?? []).map(mapRow).filter(Boolean)
 }
 
 /**
  * @param {object} opts
+ * @param {string} opts.entryId
  * @param {string} opts.userId
- * @param {string} opts.parentId
  * @param {File|Blob} opts.file
  * @param {string} [opts.fileName]
- * @param {string|null} [opts.lockboxId]
- * @param {(lockboxId: string, bytes: Uint8Array) => Promise<{ ciphertext: Uint8Array, iv: string }>} [opts.encryptBytes]
+ * @param {string|null} [opts.expenseId]
  */
 export async function uploadAttachment({
+  entryId,
   userId,
-  parentId,
   file,
   fileName,
-  lockboxId = null,
-  encryptBytes,
+  expenseId = null,
 }) {
   if (!userId) throw new Error('uploadAttachment: not signed in')
-  if (!parentId) throw new Error('uploadAttachment: parentId required')
+  if (!entryId) throw new Error('uploadAttachment: entryId required')
   if (!file) throw new Error('uploadAttachment: file required')
 
   const name =
@@ -83,29 +81,13 @@ export async function uploadAttachment({
   }
 
   const id = createId()
-  const storagePath = `${userId}/${parentId}/${id}`
+  const storagePath = `${entryId}/${id}`
   const rawBuf = new Uint8Array(await file.arrayBuffer())
-
-  let uploadBody = rawBuf
-  let contentType = mime
-  let iv = null
-  let byteSize = rawSize
-
-  if (lockboxId) {
-    if (typeof encryptBytes !== 'function') {
-      throw new Error('Unlock before attaching encrypted files.')
-    }
-    const enc = await encryptBytes(lockboxId, rawBuf)
-    uploadBody = enc.ciphertext
-    iv = enc.iv
-    contentType = 'application/octet-stream'
-    byteSize = enc.ciphertext.byteLength
-  }
 
   const { error: upErr } = await supabase.storage
     .from(ATTACHMENTS_BUCKET)
-    .upload(storagePath, uploadBody, {
-      contentType,
+    .upload(storagePath, rawBuf, {
+      contentType: mime,
       upsert: false,
     })
   if (upErr) throw upErr
@@ -115,13 +97,13 @@ export async function uploadAttachment({
     .from(ATTACHMENTS_TABLE)
     .insert({
       id,
-      user_id: userId,
-      parent_id: parentId,
+      entry_id: entryId,
+      expense_id: expenseId || null,
+      uploaded_by: userId,
       file_name: name,
       mime_type: mime,
-      byte_size: byteSize,
+      byte_size: rawSize,
       storage_path: storagePath,
-      iv,
       created_at: now,
       updated_at: now,
     })
@@ -135,13 +117,12 @@ export async function uploadAttachment({
   return mapRow(data)
 }
 
-export async function deleteAttachment(userId, attachment) {
-  if (!userId || !attachment?.id) return
+export async function deleteAttachment(attachment) {
+  if (!attachment?.id) return
   const path = attachment.storagePath
   const { error } = await supabase
     .from(ATTACHMENTS_TABLE)
     .delete()
-    .eq('user_id', userId)
     .eq('id', attachment.id)
   if (error) throw error
   if (path) {
@@ -149,32 +130,7 @@ export async function deleteAttachment(userId, attachment) {
   }
 }
 
-export async function deleteAttachmentsForParent(userId, parentId) {
-  if (!userId || !parentId) return
-  const rows = await listAttachments(userId, parentId)
-  if (rows.length === 0) return
-  const paths = rows.map((r) => r.storagePath).filter(Boolean)
-  const { error } = await supabase
-    .from(ATTACHMENTS_TABLE)
-    .delete()
-    .eq('user_id', userId)
-    .eq('parent_id', parentId)
-  if (error) throw error
-  if (paths.length > 0) {
-    await supabase.storage.from(ATTACHMENTS_BUCKET).remove(paths)
-  }
-}
-
-/**
- * @param {object} opts
- * @param {(lockboxId: string, bytes: Uint8Array, iv: string) => Promise<Uint8Array>} [opts.decryptBytes]
- * @param {string|null} [opts.lockboxId]
- */
-export async function downloadAttachment({
-  attachment,
-  lockboxId = null,
-  decryptBytes,
-}) {
+export async function downloadAttachment(attachment) {
   if (!attachment?.storagePath) {
     throw new Error('downloadAttachment: missing path')
   }
@@ -183,16 +139,6 @@ export async function downloadAttachment({
     .download(attachment.storagePath)
   if (error) throw error
   const buf = new Uint8Array(await data.arrayBuffer())
-
-  if (attachment.iv) {
-    if (!lockboxId || typeof decryptBytes !== 'function') {
-      throw new Error('Unlock to download this file.')
-    }
-    const plain = await decryptBytes(lockboxId, buf, attachment.iv)
-    return new Blob([plain], {
-      type: attachment.mimeType || 'application/octet-stream',
-    })
-  }
   return new Blob([buf], {
     type: attachment.mimeType || 'application/octet-stream',
   })
@@ -203,4 +149,8 @@ export function formatByteSize(n) {
   if (size < 1024) return `${size} B`
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
   return `${(size / (1024 * 1024)).toFixed(1)} MB`
+}
+
+export function isImageMime(mime) {
+  return typeof mime === 'string' && mime.startsWith('image/')
 }

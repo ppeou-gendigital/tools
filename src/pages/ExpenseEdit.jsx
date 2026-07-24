@@ -1,14 +1,21 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Loader2, Trash2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Save, Trash2 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { LoadingState } from '@/molecules/LoadingState'
 import { ParticipantChips } from '@/molecules/ParticipantChips'
+import { ReceiptField } from '@/molecules/ReceiptField'
 import { Select } from '@/molecules/Select'
 import { ConfirmDialog } from '@/patterns/ConfirmDialog'
 import { PageHeader } from '@/patterns/PageHeader'
+import {
+  deleteAttachment,
+  listAttachments,
+  MAX_ATTACHMENT_BYTES,
+  uploadAttachment,
+} from '@/lib/attachmentsApi'
 import { COMMON_CURRENCIES } from '@/lib/catalog'
 import {
   centsToDollarsInput,
@@ -173,6 +180,8 @@ function ExpenseEditForm({
   const qc = useQueryClient()
   const [error, setError] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [pendingReceipts, setPendingReceipts] = useState([])
+  const [receiptBusy, setReceiptBusy] = useState(false)
   const canEdit =
     membership?.role === 'owner' || membership?.role === 'editor'
 
@@ -203,6 +212,67 @@ function ExpenseEditForm({
     ),
   )
 
+  const receiptsQueryKey = [
+    'viaggio',
+    'expense-receipts',
+    entryId,
+    expenseId,
+  ]
+  const { data: receipts = [] } = useQuery({
+    queryKey: receiptsQueryKey,
+    queryFn: () => listAttachments(entryId, { expenseId }),
+    enabled: !!entryId && !!expenseId,
+  })
+
+  async function uploadReceiptFiles(files, forExpenseId) {
+    const list = [...(files || [])]
+    for (const file of list) {
+      if ((file.size ?? 0) > MAX_ATTACHMENT_BYTES) {
+        throw new Error(
+          `“${file.name || 'File'}” is too large (max ${Math.round(MAX_ATTACHMENT_BYTES / (1024 * 1024))} MB).`,
+        )
+      }
+      await uploadAttachment({
+        entryId,
+        userId: user.id,
+        file,
+        expenseId: forExpenseId,
+      })
+    }
+  }
+
+  async function handleAddReceiptFiles(files) {
+    setError('')
+    if (!canEdit) return
+    if (expenseId) {
+      setReceiptBusy(true)
+      try {
+        await uploadReceiptFiles(files, expenseId)
+        await qc.invalidateQueries({ queryKey: receiptsQueryKey })
+      } catch (err) {
+        setError(err.message || 'Could not upload receipt.')
+      } finally {
+        setReceiptBusy(false)
+      }
+      return
+    }
+    setPendingReceipts((prev) => [...prev, ...files])
+  }
+
+  async function handleRemoveAttachment(att) {
+    if (!canEdit || !att) return
+    setError('')
+    setReceiptBusy(true)
+    try {
+      await deleteAttachment(att)
+      await qc.invalidateQueries({ queryKey: receiptsQueryKey })
+    } catch (err) {
+      setError(err.message || 'Could not remove receipt.')
+    } finally {
+      setReceiptBusy(false)
+    }
+  }
+
   const amountCents = dollarsToCents(amount)
 
   const computedSplits = useMemo(() => {
@@ -232,8 +302,8 @@ function ExpenseEditForm({
     splitSum === amountCents
 
   const saveMut = useMutation({
-    mutationFn: () =>
-      upsertExpenseWithSplits({
+    mutationFn: async () => {
+      const saved = await upsertExpenseWithSplits({
         id: expenseId || null,
         entryId,
         title,
@@ -243,10 +313,16 @@ function ExpenseEditForm({
         splitMode,
         category: category || null,
         splits: computedSplits,
-      }),
+      })
+      if (!expenseId && pendingReceipts.length > 0 && saved?.id) {
+        await uploadReceiptFiles(pendingReceipts, saved.id)
+      }
+      return saved
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['viaggio', 'entry-expenses', entryId] })
       qc.invalidateQueries({ queryKey: ['viaggio', 'expenses', journey.id] })
+      qc.invalidateQueries({ queryKey: ['viaggio', 'expense-receipts'] })
       // Pop back to the entry — replace() was duplicating entry-edit on the stack
       // so the header "Back" button appeared stuck.
       goBack()
@@ -283,18 +359,40 @@ function ExpenseEditForm({
           </Button>
         }
         actions={
-          canEdit && expenseId ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className={styles.iconBtnDanger}
-              onClick={() => setConfirmDelete(true)}
-              disabled={deleteMut.isPending}
-              aria-label={deleteMut.isPending ? 'Deleting…' : 'Delete'}
-              title={deleteMut.isPending ? 'Deleting…' : 'Delete'}
-            >
-              <Trash2 size={14} aria-hidden="true" />
-            </Button>
+          canEdit ? (
+            <div className={styles.toolbar}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={styles.iconBtn}
+                disabled={!splitOk || saveMut.isPending}
+                onClick={() => {
+                  setError('')
+                  saveMut.mutate()
+                }}
+                aria-label={saveMut.isPending ? 'Saving…' : 'Save expense'}
+                title={saveMut.isPending ? 'Saving…' : 'Save expense'}
+              >
+                {saveMut.isPending ? (
+                  <Loader2 size={14} aria-hidden="true" className={styles.spin} />
+                ) : (
+                  <Save size={14} aria-hidden="true" />
+                )}
+              </Button>
+              {expenseId ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={styles.iconBtnDanger}
+                  onClick={() => setConfirmDelete(true)}
+                  disabled={deleteMut.isPending}
+                  aria-label={deleteMut.isPending ? 'Deleting…' : 'Delete'}
+                  title={deleteMut.isPending ? 'Deleting…' : 'Delete'}
+                >
+                  <Trash2 size={14} aria-hidden="true" />
+                </Button>
+              ) : null}
+            </div>
           ) : null
         }
       />
@@ -456,6 +554,20 @@ function ExpenseEditForm({
             )}
           </div>
 
+          <div className={cx(styles.field, styles.formSpan2)}>
+            <ReceiptField
+              pendingFiles={pendingReceipts}
+              attachments={expenseId ? receipts : []}
+              readOnly={!canEdit}
+              busy={receiptBusy || saveMut.isPending}
+              onAddFiles={handleAddReceiptFiles}
+              onRemovePending={(idx) =>
+                setPendingReceipts((prev) => prev.filter((_, i) => i !== idx))
+              }
+              onRemoveAttachment={handleRemoveAttachment}
+            />
+          </div>
+
           {!splitOk && amountCents != null && splitMode === 'equal' && (
             <p className={cx(styles.error, styles.formSpan2)}>
               Add at least one participant to split the total.
@@ -467,26 +579,6 @@ function ExpenseEditForm({
             </p>
           )}
 
-          {canEdit && (
-            <div className={cx(styles.actionsSticky, styles.formSpan2)}>
-              <Button
-                disabled={!splitOk || saveMut.isPending}
-                onClick={() => {
-                  setError('')
-                  saveMut.mutate()
-                }}
-              >
-                {saveMut.isPending ? (
-                  <>
-                    <Loader2 size={14} aria-hidden="true" />
-                    Saving
-                  </>
-                ) : (
-                  'Save expense'
-                )}
-              </Button>
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -9,27 +9,40 @@ import {
 } from '@vis.gl/react-google-maps'
 import {
   ArrowLeft,
+  Banknote,
   BedDouble,
   Camera,
   Check,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   ChevronUp,
+  CircleParking,
+  Clapperboard,
+  Coffee,
   ExternalLink,
+  Fuel,
+  Grip,
+  Hospital,
   Landmark,
   ListMusic,
   MapPin,
+  Pill,
   Plus,
   RefreshCw,
   Settings,
+  Shield,
+  ShoppingBag,
+  ShoppingCart,
   Star,
+  Store,
+  Toilet,
+  TrainFront,
   Trash2,
   Utensils,
   Users,
   CircleDollarSign,
   X,
 } from 'lucide-react'
+import { AnchoredPopover } from '@/molecules/AnchoredPopover'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -62,6 +75,19 @@ const QUICK_SEARCHES = [
   { id: 'hotels', label: 'Hotels', query: 'hotels', Icon: BedDouble },
   { id: 'things', label: 'Things to do', query: 'things to do', Icon: Camera },
   { id: 'museums', label: 'Museums', query: 'museums', Icon: Landmark },
+  { id: 'coffee', label: 'Cafés', query: 'cafe coffee', Icon: Coffee },
+  { id: 'convenience', label: 'Convenience', query: 'convenience store', Icon: Store },
+  { id: 'supermarket', label: 'Supermarket', query: 'supermarket', Icon: ShoppingCart },
+  { id: 'pharmacy', label: 'Pharmacy', query: 'pharmacy', Icon: Pill },
+  { id: 'gas', label: 'Gas station', query: 'gas station', Icon: Fuel },
+  { id: 'shopping', label: 'Shopping', query: 'shopping mall', Icon: ShoppingBag },
+  { id: 'movies', label: 'Movies', query: 'movie theater', Icon: Clapperboard },
+  { id: 'restroom', label: 'Restroom', query: 'public restroom', Icon: Toilet },
+  { id: 'atm', label: 'ATM', query: 'ATM', Icon: Banknote },
+  { id: 'parking', label: 'Parking', query: 'parking', Icon: CircleParking },
+  { id: 'transit', label: 'Transit', query: 'train station subway', Icon: TrainFront },
+  { id: 'hospital', label: 'Hospital', query: 'hospital', Icon: Hospital },
+  { id: 'police', label: 'Police', query: 'police station', Icon: Shield },
 ]
 
 const PLACE_SEARCH_FIELDS = [
@@ -496,74 +522,6 @@ function PlaceAutocompleteBar({ bounds, disabled, onPlacePick, onRawSearch }) {
   return <div ref={hostRef} className={styles.mapAutocompleteHost} />
 }
 
-/** Horizontal chip row with edge chevrons when content overflows. */
-function MapChipScroller({ children }) {
-  const trackRef = useRef(null)
-  const [canLeft, setCanLeft] = useState(false)
-  const [canRight, setCanRight] = useState(false)
-
-  useEffect(() => {
-    const el = trackRef.current
-    if (!el) return undefined
-
-    const update = () => {
-      const { scrollLeft, scrollWidth, clientWidth } = el
-      setCanLeft(scrollLeft > 1)
-      setCanRight(scrollLeft + clientWidth < scrollWidth - 1)
-    }
-
-    update()
-    const ro = new ResizeObserver(update)
-    ro.observe(el)
-    // Track content size changes (chips added/removed or label reflow).
-    const mo = new MutationObserver(update)
-    mo.observe(el, { childList: true, subtree: true, characterData: true })
-    el.addEventListener('scroll', update, { passive: true })
-    window.addEventListener('resize', update)
-    return () => {
-      ro.disconnect()
-      mo.disconnect()
-      el.removeEventListener('scroll', update)
-      window.removeEventListener('resize', update)
-    }
-  }, [])
-
-  function scrollByDir(dir) {
-    const el = trackRef.current
-    if (!el) return
-    const step = Math.max(160, el.clientWidth * 0.65)
-    el.scrollBy({ left: dir * step, behavior: 'smooth' })
-  }
-
-  return (
-    <div className={styles.mapChipScroller}>
-      {canLeft ? (
-        <button
-          type="button"
-          className={styles.mapChipScrollBtn}
-          onClick={() => scrollByDir(-1)}
-          aria-label="Scroll categories left"
-        >
-          <ChevronLeft size={16} aria-hidden="true" />
-        </button>
-      ) : null}
-      <div ref={trackRef} className={styles.mapChipTrack} role="list">
-        {children}
-      </div>
-      {canRight ? (
-        <button
-          type="button"
-          className={styles.mapChipScrollBtn}
-          onClick={() => scrollByDir(1)}
-          aria-label="Scroll categories right"
-        >
-          <ChevronRight size={16} aria-hidden="true" />
-        </button>
-      ) : null}
-    </div>
-  )
-}
-
 /**
  * Explore panel: autocomplete + category search + inspect sheet (POI / result).
  */
@@ -586,12 +544,15 @@ function PlacesExplorePanel({
   const searchGenRef = useRef(0)
   const detailsGenRef = useRef(0)
   const onFocusMapRef = useRef(onFocusMap)
+  const chipMenuBtnRef = useRef(null)
+  const searchHostRef = useRef(null)
 
   const [searchError, setSearchError] = useState('')
   const [searching, setSearching] = useState(false)
   const [results, setResults] = useState([])
   const [detailsLoading, setDetailsLoading] = useState(false)
   const [detailsFallback, setDetailsFallback] = useState(null)
+  const [chipMenuOpen, setChipMenuOpen] = useState(false)
   const [richDetailsLoaded, setRichDetailsLoaded] = useState(false)
 
   useEffect(() => {
@@ -807,6 +768,10 @@ function PlacesExplorePanel({
   const libReady = Boolean(placesLib?.Place?.searchByText)
   const detailsMapsUrl = googleMapsPlaceUrl(activeDetails)
 
+  useEffect(() => {
+    if (showingDetails) setChipMenuOpen(false)
+  }, [showingDetails])
+
   return (
     <aside
       className={cx(
@@ -817,7 +782,7 @@ function PlacesExplorePanel({
     >
       {/* Top chrome stays outside the scrolling sheet. */}
       <div className={styles.mapExploreTop}>
-        <div className={styles.mapExploreSearch}>
+        <div ref={searchHostRef} className={styles.mapExploreSearch}>
           <PlaceAutocompleteBar
             bounds={bounds}
             disabled={false}
@@ -827,23 +792,49 @@ function PlacesExplorePanel({
         </div>
 
         {!showingDetails && (
-          <MapChipScroller>
-            {QUICK_SEARCHES.map(({ id, label, query: chipQuery, Icon }) => (
-              <button
-                key={id}
-                type="button"
-                role="listitem"
-                className={styles.mapExploreChip}
-                onClick={() =>
-                  void runTextSearch(chipQuery, { biasToMap: true })
-                }
-                disabled={!libReady || searching}
-              >
-                <Icon size={14} aria-hidden="true" />
-                <span>{label}</span>
-              </button>
-            ))}
-          </MapChipScroller>
+          <>
+            <button
+              ref={chipMenuBtnRef}
+              type="button"
+              className={styles.mapChipMenuBtn}
+              onClick={() => setChipMenuOpen((open) => !open)}
+              aria-label="Place categories"
+              aria-expanded={chipMenuOpen}
+              aria-haspopup="dialog"
+              disabled={!libReady}
+            >
+              <Grip size={16} aria-hidden="true" />
+            </button>
+            <AnchoredPopover
+              open={chipMenuOpen}
+              onClose={() => setChipMenuOpen(false)}
+              anchorRef={searchHostRef}
+              guardRef={chipMenuBtnRef}
+              matchAnchorWidth
+              align="start"
+              aria-label="Place categories"
+              className={styles.mapChipMenuPanel}
+            >
+              <div className={styles.mapChipMenuGrid} role="list">
+                {QUICK_SEARCHES.map(({ id, label, query: chipQuery, Icon }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    role="listitem"
+                    className={styles.mapChipMenuItem}
+                    onClick={() => {
+                      setChipMenuOpen(false)
+                      void runTextSearch(chipQuery, { biasToMap: true })
+                    }}
+                    disabled={!libReady || searching}
+                  >
+                    <Icon size={14} aria-hidden="true" />
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </AnchoredPopover>
+          </>
         )}
       </div>
 

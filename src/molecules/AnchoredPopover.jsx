@@ -14,6 +14,10 @@ export function AnchoredPopover({
   open,
   onClose,
   anchorRef,
+  /** Extra element(s) that should not dismiss the popover (e.g. a separate trigger). */
+  guardRef,
+  /** Stretch panel width to match the anchor. */
+  matchAnchorWidth = false,
   title,
   children,
   className,
@@ -22,13 +26,17 @@ export function AnchoredPopover({
   'aria-label': ariaLabel,
 }) {
   const panelRef = useRef(null)
-  const [pos, setPos] = useState({ top: 0, left: 0, ready: false })
+  const [pos, setPos] = useState({ top: 0, left: 0, width: null, ready: false })
 
   const place = useCallback(() => {
     const anchor = anchorRef?.current
     const panel = panelRef.current
     if (!anchor || !panel) return
     const a = anchor.getBoundingClientRect()
+    const width = matchAnchorWidth ? a.width : null
+    if (width != null) panel.style.width = `${width}px`
+    else panel.style.width = ''
+
     const p = panel.getBoundingClientRect()
     const vw = window.innerWidth
     const vh = window.innerHeight
@@ -43,8 +51,8 @@ export function AnchoredPopover({
       align === 'start' ? a.left : align === 'center' ? a.left + a.width / 2 - p.width / 2 : a.right - p.width
     left = Math.max(VIEW_PAD, Math.min(left, vw - p.width - VIEW_PAD))
 
-    setPos({ top, left, ready: true })
-  }, [anchorRef, align])
+    setPos({ top, left, width, ready: true })
+  }, [anchorRef, align, matchAnchorWidth])
 
   useLayoutEffect(() => {
     if (!open) {
@@ -66,6 +74,7 @@ export function AnchoredPopover({
     const onDown = (e) => {
       if (panelRef.current?.contains(e.target)) return
       if (anchorRef?.current?.contains(e.target)) return
+      if (guardRef?.current?.contains(e.target)) return
       onClose?.()
     }
     const onKey = (e) => {
@@ -80,7 +89,7 @@ export function AnchoredPopover({
       document.removeEventListener('mousedown', onDown)
       document.removeEventListener('keydown', onKey, true)
     }
-  }, [open, onClose, anchorRef])
+  }, [open, onClose, anchorRef, guardRef])
 
   if (!open || typeof document === 'undefined') return null
 
@@ -93,6 +102,8 @@ export function AnchoredPopover({
       style={{
         top: pos.top,
         left: pos.left,
+        width: pos.width ?? undefined,
+        maxWidth: pos.width != null ? pos.width : undefined,
         visibility: pos.ready ? 'visible' : 'hidden',
       }}
     >

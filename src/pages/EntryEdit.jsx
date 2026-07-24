@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Loader2, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Plus, Save, Trash2 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -356,18 +356,40 @@ function EntryEditForm({
           </Button>
         }
         actions={
-          !readOnly && entryId ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className={styles.iconBtnDanger}
-              onClick={() => setConfirmDelete(true)}
-              disabled={deleteMut.isPending}
-              aria-label={deleteMut.isPending ? 'Deleting…' : 'Delete'}
-              title={deleteMut.isPending ? 'Deleting…' : 'Delete'}
-            >
-              <Trash2 size={14} aria-hidden="true" />
-            </Button>
+          !readOnly ? (
+            <div className={styles.toolbar}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={styles.iconBtn}
+                onClick={() => {
+                  setError('')
+                  saveMut.mutate()
+                }}
+                disabled={saveMut.isPending}
+                aria-label={saveMut.isPending ? 'Saving…' : 'Save activity'}
+                title={saveMut.isPending ? 'Saving…' : 'Save activity'}
+              >
+                {saveMut.isPending ? (
+                  <Loader2 size={14} aria-hidden="true" className={styles.spin} />
+                ) : (
+                  <Save size={14} aria-hidden="true" />
+                )}
+              </Button>
+              {entryId ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={styles.iconBtnDanger}
+                  onClick={() => setConfirmDelete(true)}
+                  disabled={deleteMut.isPending}
+                  aria-label={deleteMut.isPending ? 'Deleting…' : 'Delete'}
+                  title={deleteMut.isPending ? 'Deleting…' : 'Delete'}
+                >
+                  <Trash2 size={14} aria-hidden="true" />
+                </Button>
+              ) : null}
+            </div>
           ) : null
         }
       />
@@ -644,26 +666,6 @@ function EntryEditForm({
             </section>
           )}
 
-          {!readOnly && (
-            <div className={cx(styles.actionsSticky, styles.formSpan2)}>
-              <Button
-                onClick={() => {
-                  setError('')
-                  saveMut.mutate()
-                }}
-                disabled={saveMut.isPending}
-              >
-                {saveMut.isPending ? (
-                  <>
-                    <Loader2 size={14} aria-hidden="true" />
-                    Saving
-                  </>
-                ) : (
-                  'Save activity'
-                )}
-              </Button>
-            </div>
-          )}
         </div>
       </div>
     </div>

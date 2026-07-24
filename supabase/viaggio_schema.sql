@@ -275,6 +275,7 @@ end $$;
 create table if not exists public.viaggio_attachments (
   id            uuid primary key default gen_random_uuid(),
   entry_id      uuid not null references public.viaggio_entries(id) on delete cascade,
+  expense_id    uuid references public.viaggio_expenses(id) on delete cascade,
   uploaded_by   uuid not null references auth.users(id) on delete restrict,
   file_name     text not null,
   mime_type     text not null default 'application/octet-stream',
@@ -287,6 +288,9 @@ create table if not exists public.viaggio_attachments (
 
 create index if not exists viaggio_attachments_entry_idx
   on public.viaggio_attachments (entry_id);
+create index if not exists viaggio_attachments_expense_idx
+  on public.viaggio_attachments (expense_id)
+  where expense_id is not null;
 
 -- ---------------------------------------------------------------------------
 -- Helpers (membership)
