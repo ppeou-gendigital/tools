@@ -26,15 +26,28 @@ export function FloatingMenu() {
     }
   }, [open])
 
+  // pointerdown closes an open menu so a drag does not leave the panel stranded;
+  // skip the following click toggle so we do not immediately reopen it.
+  const skipClickToggleRef = useRef(false)
+
   const handlePointerDown = (e) => {
     // Starting a drag while the menu is open would leave the panel anchored to
     // the old corner mid-move. Close it before drag begins.
-    if (open) setOpen(false)
+    if (open) {
+      setOpen(false)
+      skipClickToggleRef.current = true
+    } else {
+      skipClickToggleRef.current = false
+    }
     dragPointerDown(e)
   }
 
   const handleClick = () => {
     if (wasDragged()) return
+    if (skipClickToggleRef.current) {
+      skipClickToggleRef.current = false
+      return
+    }
     setOpen((v) => !v)
   }
 
