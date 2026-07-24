@@ -15,6 +15,7 @@ import { Modal } from '@/patterns/Modal'
 import { PageHeader } from '@/patterns/PageHeader'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
 import { cx } from '@/lib/cx'
+import { activityIcon } from '@/lib/activityIcons'
 import {
   ACTIVITIES,
   PRESETS,
@@ -487,6 +488,7 @@ export function Journey() {
                   })
                 const title =
                   entry.title || activity?.label || 'Activity'
+                const ActivityIcon = activityIcon(entry.activityId)
                 const meta = [
                   activity?.label,
                   formatEntryTimeLine(entry, displayLocale),
@@ -498,45 +500,54 @@ export function Journey() {
                   .join(' · ')
                 return (
                   <li key={entry.id} className={styles.entryRow}>
-                    <div className={styles.entryHeader}>
+                    <span
+                      className={styles.entryIcon}
+                      aria-hidden="true"
+                      title={activity?.label || 'Activity'}
+                    >
+                      <ActivityIcon size={18} strokeWidth={1.75} />
+                    </span>
+                    <div className={styles.entryMain}>
+                      <div className={styles.entryHeader}>
+                        <button
+                          type="button"
+                          className={styles.rowTitleBtn}
+                          onClick={openEntry}
+                        >
+                          <span className={styles.rowTitle}>{title}</span>
+                        </button>
+                        <EntryRowActions
+                          entry={entry}
+                          entryExpenses={entryExpenses}
+                          whoIds={whoIds}
+                          peopleById={peopleById}
+                          displayLocale={displayLocale}
+                          currentUserId={user?.id}
+                          displayNames={displayNames}
+                          canEdit={canEdit}
+                          onOpenExpense={(ex) =>
+                            goExpenseEdit({
+                              journeyId,
+                              entryId: entry.id,
+                              expenseId: ex.id,
+                            })
+                          }
+                          onAddExpense={() =>
+                            goExpenseEdit({
+                              journeyId,
+                              entryId: entry.id,
+                            })
+                          }
+                        />
+                      </div>
                       <button
                         type="button"
-                        className={styles.rowTitleBtn}
+                        className={styles.rowMetaBtn}
                         onClick={openEntry}
                       >
-                        <span className={styles.rowTitle}>{title}</span>
+                        <span className={styles.rowMeta}>{meta}</span>
                       </button>
-                      <EntryRowActions
-                        entry={entry}
-                        entryExpenses={entryExpenses}
-                        whoIds={whoIds}
-                        peopleById={peopleById}
-                        displayLocale={displayLocale}
-                        currentUserId={user?.id}
-                        displayNames={displayNames}
-                        canEdit={canEdit}
-                        onOpenExpense={(ex) =>
-                          goExpenseEdit({
-                            journeyId,
-                            entryId: entry.id,
-                            expenseId: ex.id,
-                          })
-                        }
-                        onAddExpense={() =>
-                          goExpenseEdit({
-                            journeyId,
-                            entryId: entry.id,
-                          })
-                        }
-                      />
                     </div>
-                    <button
-                      type="button"
-                      className={styles.rowMetaBtn}
-                      onClick={openEntry}
-                    >
-                      <span className={styles.rowMeta}>{meta}</span>
-                    </button>
                   </li>
                 )
               })}
@@ -558,6 +569,7 @@ export function Journey() {
               <div className={styles.chipRow}>
                 {primaryIds.map((id) => {
                   const a = getActivity(id)
+                  const ChipIcon = activityIcon(id)
                   return (
                     <button
                       key={id}
@@ -565,6 +577,7 @@ export function Journey() {
                       className={styles.chip}
                       onClick={() => pickActivity(id)}
                     >
+                      <ChipIcon size={14} aria-hidden="true" />
                       {a?.label || id}
                     </button>
                   )
@@ -590,20 +603,26 @@ export function Journey() {
                 ← Primary
               </Button>
               <ul className={styles.list}>
-                {ACTIVITIES.map((a) => (
-                  <li key={a.id}>
-                    <button
-                      type="button"
-                      className={styles.rowBtn}
-                      onClick={() => pickActivity(a.id)}
-                    >
-                      <span className={styles.rowBody}>
-                        <span className={styles.rowTitle}>{a.label}</span>
-                        <span className={styles.rowMeta}>{a.schema}</span>
-                      </span>
-                    </button>
-                  </li>
-                ))}
+                {ACTIVITIES.map((a) => {
+                  const BrowseIcon = activityIcon(a.id)
+                  return (
+                    <li key={a.id}>
+                      <button
+                        type="button"
+                        className={styles.rowBtn}
+                        onClick={() => pickActivity(a.id)}
+                      >
+                        <span className={styles.entryIcon} aria-hidden="true">
+                          <BrowseIcon size={18} strokeWidth={1.75} />
+                        </span>
+                        <span className={styles.rowBody}>
+                          <span className={styles.rowTitle}>{a.label}</span>
+                          <span className={styles.rowMeta}>{a.schema}</span>
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
               </ul>
             </>
           )}

@@ -1,0 +1,80 @@
+/**
+ * Resolve Lucide icons declared on activity / preset JSON (`"icon": "Plane"`).
+ * Explicit imports keep the bundle to the catalog set only.
+ */
+
+import {
+  BedDouble,
+  CalendarClock,
+  Camera,
+  Car,
+  CarFront,
+  CarTaxiFront,
+  Circle,
+  Cog,
+  Flag,
+  Fuel,
+  HardHat,
+  Hotel,
+  Landmark,
+  ListChecks,
+  MapPin,
+  PartyPopper,
+  Plane,
+  Receipt,
+  Sailboat,
+  Salad,
+  Ship,
+  Smile,
+  Stethoscope,
+  StickyNote,
+  TrainFront,
+  Trophy,
+  UtensilsCrossed,
+  Wallet,
+  Wrench,
+} from 'lucide-react'
+import { getActivity } from '@/lib/catalog'
+
+const BY_NAME = {
+  BedDouble,
+  CalendarClock,
+  Camera,
+  Car,
+  CarFront,
+  CarTaxiFront,
+  Circle,
+  Cog,
+  Flag,
+  Fuel,
+  HardHat,
+  Hotel,
+  Landmark,
+  ListChecks,
+  MapPin,
+  PartyPopper,
+  Plane,
+  Receipt,
+  Sailboat,
+  Salad,
+  Ship,
+  Smile,
+  Stethoscope,
+  StickyNote,
+  TrainFront,
+  Trophy,
+  UtensilsCrossed,
+  Wallet,
+  Wrench,
+}
+
+/** Lucide component for a catalog icon name, or Circle if unknown. */
+export function iconByName(name) {
+  return BY_NAME[name] || Circle
+}
+
+/** Lucide component for an activity id. */
+export function activityIcon(activityId) {
+  const activity = getActivity(activityId)
+  return iconByName(activity?.icon)
+}

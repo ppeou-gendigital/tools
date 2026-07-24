@@ -47,7 +47,7 @@ export function OnboardingPrefs() {
         subtitle="Confirm locale and default currency. You can change these later in Settings."
       />
       <div className={cx('is-fluid-width', styles.body)}>
-        <div className={styles.form}>
+        <div className={cx(styles.form, styles.formNarrow)}>
           <div className={styles.field}>
             <Label htmlFor="locale">Display locale</Label>
             <LocaleAutocomplete

@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Trash2 } from 'lucide-react'
+import { ArrowLeft, Save, Trash2 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { LoadingState } from '@/molecules/LoadingState'
 import { Select } from '@/molecules/Select'
+import { ConfirmDialog } from '@/patterns/ConfirmDialog'
 import { PageHeader } from '@/patterns/PageHeader'
 import { COMMON_CURRENCIES } from '@/lib/catalog'
 import {
@@ -148,6 +149,7 @@ export function ExpenseEdit() {
       roster={roster}
       membership={membership}
       user={user}
+      displayLocale={displayLocale}
       goBack={goBack}
       previousRouteLabel={previousRouteLabel}
     />
@@ -163,11 +165,13 @@ function ExpenseEditForm({
   roster,
   membership,
   user,
+  displayLocale,
   goBack,
   previousRouteLabel,
 }) {
   const qc = useQueryClient()
   const [error, setError] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const canEdit =
     membership?.role === 'owner' || membership?.role === 'editor'
 
@@ -275,10 +279,54 @@ function ExpenseEditForm({
             {previousRouteLabel ?? 'Back'}
           </Button>
         }
+        actions={
+          canEdit ? (
+            <div className={styles.toolbar}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={styles.iconBtn}
+                disabled={!splitOk || saveMut.isPending}
+                onClick={() => {
+                  setError('')
+                  saveMut.mutate()
+                }}
+                aria-label={saveMut.isPending ? 'Saving…' : 'Save'}
+                title={saveMut.isPending ? 'Saving…' : 'Save'}
+              >
+                <Save size={14} aria-hidden="true" />
+              </Button>
+              {expenseId ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={styles.iconBtnDanger}
+                  onClick={() => setConfirmDelete(true)}
+                  disabled={deleteMut.isPending}
+                  aria-label={deleteMut.isPending ? 'Deleting…' : 'Delete'}
+                  title={deleteMut.isPending ? 'Deleting…' : 'Delete'}
+                >
+                  <Trash2 size={14} aria-hidden="true" />
+                </Button>
+              ) : null}
+            </div>
+          ) : null
+        }
       />
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onDismiss={() => setConfirmDelete(false)}
+        title="Delete expense?"
+        message="This removes the expense and its splits. This cannot be undone."
+        confirmLabel="Delete"
+        confirming={deleteMut.isPending}
+        onConfirm={() => deleteMut.mutate()}
+      />
+
       <div className={cx('is-fluid-width', styles.body)}>
-        <div className={styles.form}>
-          <div className={styles.field}>
+        <div className={cx(styles.form, styles.formNarrow, styles.formGrid)}>
+          <div className={cx(styles.field, styles.formSpan2)}>
             <Label htmlFor="title">Title</Label>
             <Input
               id="title"
@@ -337,7 +385,7 @@ function ExpenseEditForm({
               onChange={(e) => setCategory(e.target.value)}
             />
           </div>
-          <div className={styles.field}>
+          <div className={cx(styles.field, styles.formSpan2)}>
             <Label htmlFor="splitMode">Split mode</Label>
             <Select
               id="splitMode"
@@ -350,77 +398,54 @@ function ExpenseEditForm({
             </Select>
           </div>
 
-          <p className={styles.sectionTitle}>Participants</p>
-          <ul className={styles.list}>
-            {roster.map((p) => (
-              <li key={p.id}>
-                <div className={styles.splitRow}>
-                  <label className={styles.splitCheck}>
-                    <input
-                      type="checkbox"
-                      checked={selected.has(p.id)}
-                      disabled={!canEdit}
-                      onChange={() => togglePerson(p.id)}
-                    />
-                    <span className={styles.rowTitle}>
-                      {labelForJourneyPerson(p, user?.id)}
-                    </span>
-                  </label>
-                  {splitMode === 'custom' && selected.has(p.id) && (
-                    <Input
-                      className={styles.splitAmount}
-                      inputMode="decimal"
-                      value={customAmounts[p.id] || ''}
-                      disabled={!canEdit}
-                      onChange={(e) =>
-                        setCustomAmounts((prev) => ({
-                          ...prev,
-                          [p.id]: e.target.value,
-                        }))
-                      }
-                      placeholder="0.00"
-                      aria-label={`Split amount for ${labelForJourneyPerson(p, user?.id)}`}
-                    />
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className={styles.formSpan2}>
+            <p className={styles.sectionTitle}>Participants</p>
+            <ul className={styles.list}>
+              {roster.map((p) => (
+                <li key={p.id}>
+                  <div className={styles.splitRow}>
+                    <label className={styles.splitCheck}>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(p.id)}
+                        disabled={!canEdit}
+                        onChange={() => togglePerson(p.id)}
+                      />
+                      <span className={styles.rowTitle}>
+                        {labelForJourneyPerson(p, user?.id)}
+                      </span>
+                    </label>
+                    {splitMode === 'custom' && selected.has(p.id) && (
+                      <Input
+                        className={styles.splitAmount}
+                        inputMode="decimal"
+                        value={customAmounts[p.id] || ''}
+                        disabled={!canEdit}
+                        onChange={(e) =>
+                          setCustomAmounts((prev) => ({
+                            ...prev,
+                            [p.id]: e.target.value,
+                          }))
+                        }
+                        placeholder="0.00"
+                        aria-label={`Split amount for ${labelForJourneyPerson(p, user?.id)}`}
+                      />
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {!splitOk && amountCents != null && (
-            <p className={styles.error}>
+            <p className={cx(styles.error, styles.formSpan2)}>
               Splits must sum to the total (
               {formatMoney(splitSum, currency, displayLocale)} ≠{' '}
               {formatMoney(amountCents, currency, displayLocale)}).
             </p>
           )}
-          {error && <p className={styles.error}>{error}</p>}
-
-          {canEdit && (
-            <div className={styles.actionsSticky}>
-              <Button
-                disabled={!splitOk || saveMut.isPending}
-                onClick={() => {
-                  setError('')
-                  saveMut.mutate()
-                }}
-              >
-                {saveMut.isPending ? 'Saving…' : 'Save'}
-              </Button>
-              {expenseId && (
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    if (window.confirm('Delete this expense?')) {
-                      deleteMut.mutate()
-                    }
-                  }}
-                >
-                  <Trash2 size={14} />
-                  Delete
-                </Button>
-              )}
-            </div>
+          {error && (
+            <p className={cx(styles.error, styles.formSpan2)}>{error}</p>
           )}
         </div>
       </div>

@@ -3,12 +3,15 @@
 .page {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  padding: var(--space-3) 0;
+  // min-height (not height) so tall forms grow the scroll area and the
+  // shell's FAB clearance padding below the last control stays visible.
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: var(--space-3) 0 var(--space-8);
   gap: var(--space-2);
 
   @include m.md {
-    padding: var(--space-4) 0;
+    padding: var(--space-4) 0 var(--space-10);
     gap: var(--space-3);
   }
 }
@@ -33,9 +36,37 @@
   }
 }
 
+// Comfortable reading measure for edit forms (fluid shell stays full width).
+.formNarrow {
+  width: 100%;
+  max-width: 40rem;
+}
+
+// Pair short fields on md+; use .formSpan2 for full-width rows.
+.formGrid {
+  display: grid;
+  gap: var(--space-3);
+
+  @include m.md {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3) var(--space-4);
+  }
+
+  @include m.lg {
+    gap: var(--space-4);
+  }
+}
+
+.formSpan2 {
+  @include m.md {
+    grid-column: 1 / -1;
+  }
+}
+
 .field {
   display: grid;
   gap: var(--space-1);
+  min-width: 0;
 }
 
 .fieldLabel {
@@ -82,7 +113,9 @@
 .entryRow {
   position: relative;
   display: grid;
-  gap: var(--space-1);
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: start;
   padding: var(--space-2) var(--space-2) var(--space-3);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -93,6 +126,25 @@
   &:hover {
     border-color: color-mix(in srgb, var(--fg) 35%, var(--border) 65%);
   }
+}
+
+.entryIcon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin-top: var(--space-1);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--muted) 70%, transparent);
+  color: var(--muted-fg);
+}
+
+.entryMain {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
 }
 
 .entryHeader {
@@ -140,11 +192,15 @@
   @include m.interactive-control;
 
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-2);
   width: 100%;
   text-align: left;
   padding: var(--space-3);
+
+  .entryIcon {
+    margin-top: 0;
+  }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
@@ -209,7 +265,7 @@
   top: calc(100% + var(--space-1));
   right: 0;
   min-width: 220px;
-  max-width: min(300px, 85vw);
+  max-width: min(300px, 85dvw);
   margin: 0;
   padding: var(--space-1);
   list-style: none;
@@ -423,6 +479,16 @@
 
   &:hover {
     color: var(--fg);
+  }
+}
+
+.iconBtnDanger {
+  color: var(--destructive);
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) {
+    color: var(--destructive);
+    opacity: 0.85;
   }
 }
 

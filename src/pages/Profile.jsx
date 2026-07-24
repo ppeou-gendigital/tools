@@ -96,7 +96,7 @@ export function Profile() {
 
       <div className={cx('is-fluid-width', styles.body)}>
         {isLoading && <LoadingState>Loading profile…</LoadingState>}
-        <form className={styles.form} onSubmit={handleSave}>
+        <form className={cx(styles.form, styles.formNarrow)} onSubmit={handleSave}>
           <div className={styles.field}>
             <Label htmlFor="email">Email</Label>
             <Input id="email" value={user?.email ?? ''} readOnly disabled />

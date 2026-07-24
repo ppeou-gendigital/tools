@@ -107,7 +107,7 @@ export function JourneyCreate() {
         }
       />
       <div className={cx('is-fluid-width', styles.body)}>
-        <div className={styles.form}>
+        <div className={cx(styles.form, styles.formNarrow)}>
           <div className={styles.field}>
             <Label htmlFor="title">Title</Label>
             <Input

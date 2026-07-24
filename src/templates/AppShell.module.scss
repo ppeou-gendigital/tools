@@ -21,6 +21,9 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  // Clearance so the floating FAB never covers primary CTAs at the bottom.
-  padding-bottom: calc(var(--fab-size) + var(--fab-corner-offset) + var(--space-4));
+  // Clearance so the floating FAB never covers primary CTAs at the bottom,
+  // plus a little breathing room so the last control doesn’t feel clipped.
+  padding-bottom: calc(
+    var(--fab-size) + var(--fab-corner-offset) + var(--space-6)
+  );
 }

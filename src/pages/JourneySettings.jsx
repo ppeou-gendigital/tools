@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Archive, ArrowLeft, Download } from 'lucide-react'
+import { Archive, ArrowLeft, Download, Save } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -159,9 +159,27 @@ function JourneySettingsForm({
             {previousRouteLabel ?? 'Back'}
           </Button>
         }
+        actions={
+          canEdit ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={styles.iconBtn}
+              onClick={() => {
+                setError('')
+                saveMut.mutate()
+              }}
+              disabled={saveMut.isPending}
+              aria-label={saveMut.isPending ? 'Saving…' : 'Save'}
+              title={saveMut.isPending ? 'Saving…' : 'Save'}
+            >
+              <Save size={14} aria-hidden="true" />
+            </Button>
+          ) : null
+        }
       />
       <div className={cx('is-fluid-width', styles.body)}>
-        <div className={styles.form}>
+        <div className={cx(styles.form, styles.formNarrow)}>
           <div className={styles.field}>
             <Label htmlFor="title">Title</Label>
             <Input
@@ -216,20 +234,6 @@ function JourneySettingsForm({
             </Select>
           </div>
           {error && <p className={styles.error}>{error}</p>}
-          {canEdit && (
-            <div className={styles.actionsSticky}>
-              <Button
-                onClick={() => {
-                  setError('')
-                  saveMut.mutate()
-                }}
-                disabled={saveMut.isPending}
-                fullWidth
-              >
-                {saveMut.isPending ? 'Saving…' : 'Save'}
-              </Button>
-            </div>
-          )}
 
           <p className={styles.sectionTitle}>Export & archive</p>
           <p className={styles.hint}>

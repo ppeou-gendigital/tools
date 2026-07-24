@@ -111,13 +111,13 @@
 }
 
 .previewModal {
-  max-width: min(920px, 96vw);
+  max-width: min(920px, 96dvw);
 }
 
 .previewMedia {
   display: block;
   max-width: 100%;
-  max-height: min(70vh, 640px);
+  max-height: min(70dvh, 640px);
   margin: 0 auto;
   border-radius: var(--radius);
   object-fit: contain;
@@ -127,7 +127,7 @@
 .previewFrame {
   display: block;
   width: 100%;
-  height: min(70vh, 640px);
+  height: min(70dvh, 640px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--bg);
@@ -135,7 +135,7 @@
 
 .previewText {
   margin: 0;
-  max-height: min(70vh, 640px);
+  max-height: min(70dvh, 640px);
   overflow: auto;
   padding: var(--space-3);
   border: 1px solid var(--border);

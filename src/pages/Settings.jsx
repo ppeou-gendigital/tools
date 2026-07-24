@@ -44,7 +44,7 @@ export function Settings() {
       />
 
       <div className={cx('is-fluid-width', styles.body)}>
-        <div className={styles.form}>
+        <div className={cx(styles.form, styles.formNarrow)}>
           <ul className={styles.list}>
             <li>
               <button

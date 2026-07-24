@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Plus, Save, Trash2 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { LoadingState } from '@/molecules/LoadingState'
+import { ParticipantChips } from '@/molecules/ParticipantChips'
 import { RichNoteEditor } from '@/molecules/RichNoteEditor'
 import { TimezoneAutocomplete } from '@/molecules/TimezoneAutocomplete'
+import { ConfirmDialog } from '@/patterns/ConfirmDialog'
 import { PageHeader } from '@/patterns/PageHeader'
 import {
   defaultParticipantMode,
@@ -19,7 +21,6 @@ import { parseRichBody, serializeRichBody } from '@/lib/richBody'
 import {
   formatMoney,
   formatWhen,
-  labelForJourneyPerson,
   labelForUserId,
 } from '@/lib/format'
 import { utcIsoToWallTime, wallTimeToUtcIso } from '@/lib/timezone'
@@ -198,6 +199,7 @@ function EntryEditForm({
 }) {
   const qc = useQueryClient()
   const [error, setError] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const activity = getActivity(activityId)
   const schemaId = activity
     ? resolveSchemaForActivity(activityId)
@@ -347,17 +349,60 @@ function EntryEditForm({
             {previousRouteLabel ?? 'Back'}
           </Button>
         }
+        actions={
+          !readOnly ? (
+            <div className={styles.toolbar}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={styles.iconBtn}
+                onClick={() => {
+                  setError('')
+                  saveMut.mutate()
+                }}
+                disabled={saveMut.isPending}
+                aria-label={saveMut.isPending ? 'Saving…' : 'Save'}
+                title={saveMut.isPending ? 'Saving…' : 'Save'}
+              >
+                <Save size={14} aria-hidden="true" />
+              </Button>
+              {entryId ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={styles.iconBtnDanger}
+                  onClick={() => setConfirmDelete(true)}
+                  disabled={deleteMut.isPending}
+                  aria-label={deleteMut.isPending ? 'Deleting…' : 'Delete'}
+                  title={deleteMut.isPending ? 'Deleting…' : 'Delete'}
+                >
+                  <Trash2 size={14} aria-hidden="true" />
+                </Button>
+              ) : null}
+            </div>
+          ) : null
+        }
+      />
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onDismiss={() => setConfirmDelete(false)}
+        title="Delete activity?"
+        message="This removes the activity and its linked expenses. This cannot be undone."
+        confirmLabel="Delete"
+        confirming={deleteMut.isPending}
+        onConfirm={() => deleteMut.mutate()}
       />
 
       <div className={cx('is-fluid-width', styles.body)}>
-        <div className={styles.form}>
+        <div className={cx(styles.form, styles.formNarrow, styles.formGrid)}>
           {readOnly && (
-            <p className={styles.readOnlyBanner}>
+            <p className={cx(styles.readOnlyBanner, styles.formSpan2)}>
               You can view this activity but not edit it.
             </p>
           )}
           {fields.has('title') && (
-            <div className={styles.field}>
+            <div className={cx(styles.field, styles.formSpan2)}>
               <Label htmlFor="title">Title</Label>
               <Input
                 id="title"
@@ -382,7 +427,7 @@ function EntryEditForm({
           )}
 
           {dualZone ? (
-            <div className={styles.dualZone}>
+            <div className={cx(styles.dualZone, styles.formSpan2)}>
               <div className={styles.block}>
                 <p className={styles.blockTitle}>Depart / pickup</p>
                 <div className={styles.field}>
@@ -431,7 +476,7 @@ function EntryEditForm({
           ) : (
             <>
               {(fields.has('occurs_at') || fields.has('ends_at')) && (
-                <div className={styles.field}>
+                <div className={cx(styles.field, styles.formSpan2)}>
                   <Label htmlFor="tz">Timezone</Label>
                   <TimezoneAutocomplete
                     id="tz"
@@ -484,7 +529,7 @@ function EntryEditForm({
           )}
 
           {fields.has('address') && (
-            <div className={styles.field}>
+            <div className={cx(styles.field, styles.formSpan2)}>
               <Label htmlFor="address">Address</Label>
               <Input
                 id="address"
@@ -513,7 +558,7 @@ function EntryEditForm({
           ))}
 
           {fields.has('body') && (
-            <div className={styles.field}>
+            <div className={cx(styles.field, styles.formSpan2)}>
               <Label>Notes</Label>
               <RichNoteEditor
                 value={body}
@@ -523,65 +568,23 @@ function EntryEditForm({
             </div>
           )}
 
-          <p className={styles.sectionTitle}>Participants</p>
-          {roster.length === 0 ? (
-            <p className={styles.hint}>
-              No travelers on this journey yet. Add them under Travelers.
-            </p>
-          ) : (
-            <ul className={styles.list}>
-              {roster.map((p) => (
-                <li key={p.id}>
-                  <label className={styles.rowBtn}>
-                    <input
-                      type="checkbox"
-                      checked={selected.has(p.id)}
-                      disabled={readOnly}
-                      onChange={() => toggleUser(p.id)}
-                    />
-                    <span className={styles.rowBody}>
-                      <span className={styles.rowTitle}>
-                        {labelForJourneyPerson(p, user?.id)}
-                      </span>
-                    </span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          )}
+          <div className={styles.formSpan2}>
+            <p className={styles.sectionTitle}>Participants</p>
+            <ParticipantChips
+              roster={roster}
+              selected={selected}
+              onToggle={toggleUser}
+              currentUserId={user?.id}
+              readOnly={readOnly}
+            />
+          </div>
 
-          {error && <p className={styles.error}>{error}</p>}
-
-          {!readOnly && (
-            <div className={styles.actionsSticky}>
-              <Button
-                onClick={() => {
-                  setError('')
-                  saveMut.mutate()
-                }}
-                disabled={saveMut.isPending}
-              >
-                {saveMut.isPending ? 'Saving…' : 'Save'}
-              </Button>
-              {entryId && (
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    if (window.confirm('Delete this activity?')) {
-                      deleteMut.mutate()
-                    }
-                  }}
-                  disabled={deleteMut.isPending}
-                >
-                  <Trash2 size={14} />
-                  Delete
-                </Button>
-              )}
-            </div>
+          {error && (
+            <p className={cx(styles.error, styles.formSpan2)}>{error}</p>
           )}
 
           {existing && (
-            <p className={styles.hint}>
+            <p className={cx(styles.hint, styles.formSpan2)}>
               Created by{' '}
               {labelForUserId(existing.createdBy, user?.id, authorNames)}
               {existing.createdAt
@@ -602,7 +605,7 @@ function EntryEditForm({
           )}
 
           {entryId && (
-            <section className={styles.form}>
+            <section className={styles.formSpan2}>
               <p className={styles.sectionTitle}>Expenses on this activity</p>
               {expenses.length === 0 && (
                 <p className={styles.hint}>No expenses yet.</p>
