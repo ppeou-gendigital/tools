@@ -900,16 +900,22 @@
   color: var(--fg);
 }
 
-// Full-bleed map page: fills the shell main region under the header.
+// Full-bleed map page: same title chrome as other pages; map fills the rest.
 .mapPage {
   flex: 1;
   height: 100%;
   min-height: 0;
-  // No bottom padding — map stage claims all remaining height.
-  padding: 0;
-  gap: 0;
+  // Match `.page` top padding + gap so PageHeader aligns with Spending/etc.
+  // No bottom padding — map stage claims remaining height (FAB overlays map).
+  padding: var(--space-3) 0 0;
+  gap: var(--space-2);
   // Allow Places dropdown to paint; map canvas still clips its own tiles.
   overflow: visible;
+
+  @include m.md {
+    padding: var(--space-4) 0 0;
+    gap: var(--space-3);
+  }
 
   // PageHeader keeps its own spacing; stage eats the rest.
   > :global(header),

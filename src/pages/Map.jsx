@@ -1247,7 +1247,7 @@ export function Map() {
         subtitle={journey?.title || 'Brainstorm places'}
         leading={
           <Button variant="ghost" size="sm" onClick={goBack}>
-            <ArrowLeft size={14} />
+            <ArrowLeft size={14} aria-hidden="true" />
             {previousRouteLabel ?? 'Back'}
           </Button>
         }
