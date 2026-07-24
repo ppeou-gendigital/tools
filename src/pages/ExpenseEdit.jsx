@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Save, Trash2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Trash2 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { LoadingState } from '@/molecules/LoadingState'
+import { ParticipantChips } from '@/molecules/ParticipantChips'
 import { Select } from '@/molecules/Select'
 import { ConfirmDialog } from '@/patterns/ConfirmDialog'
 import { PageHeader } from '@/patterns/PageHeader'
@@ -223,6 +224,8 @@ function ExpenseEditForm({
   }, [selected, amountCents, splitMode, customAmounts])
 
   const splitSum = computedSplits.reduce((s, x) => s + x.amountCents, 0)
+  const remaining =
+    amountCents != null ? amountCents - splitSum : null
   const splitOk =
     amountCents != null &&
     computedSplits.length > 0 &&
@@ -280,36 +283,18 @@ function ExpenseEditForm({
           </Button>
         }
         actions={
-          canEdit ? (
-            <div className={styles.toolbar}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={styles.iconBtn}
-                disabled={!splitOk || saveMut.isPending}
-                onClick={() => {
-                  setError('')
-                  saveMut.mutate()
-                }}
-                aria-label={saveMut.isPending ? 'Saving…' : 'Save'}
-                title={saveMut.isPending ? 'Saving…' : 'Save'}
-              >
-                <Save size={14} aria-hidden="true" />
-              </Button>
-              {expenseId ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={styles.iconBtnDanger}
-                  onClick={() => setConfirmDelete(true)}
-                  disabled={deleteMut.isPending}
-                  aria-label={deleteMut.isPending ? 'Deleting…' : 'Delete'}
-                  title={deleteMut.isPending ? 'Deleting…' : 'Delete'}
-                >
-                  <Trash2 size={14} aria-hidden="true" />
-                </Button>
-              ) : null}
-            </div>
+          canEdit && expenseId ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={styles.iconBtnDanger}
+              onClick={() => setConfirmDelete(true)}
+              disabled={deleteMut.isPending}
+              aria-label={deleteMut.isPending ? 'Deleting…' : 'Delete'}
+              title={deleteMut.isPending ? 'Deleting…' : 'Delete'}
+            >
+              <Trash2 size={14} aria-hidden="true" />
+            </Button>
           ) : null
         }
       />
@@ -325,6 +310,11 @@ function ExpenseEditForm({
       />
 
       <div className={cx('is-fluid-width', styles.body)}>
+        {!canEdit && (
+          <p className={styles.readOnlyBanner}>
+            You can view this expense. Only editors can change it.
+          </p>
+        )}
         <div className={cx(styles.form, styles.formNarrow, styles.formGrid)}>
           <div className={cx(styles.field, styles.formSpan2)}>
             <Label htmlFor="title">Title</Label>
@@ -386,66 +376,116 @@ function ExpenseEditForm({
             />
           </div>
           <div className={cx(styles.field, styles.formSpan2)}>
-            <Label htmlFor="splitMode">Split mode</Label>
-            <Select
-              id="splitMode"
-              value={splitMode}
-              disabled={!canEdit}
-              onChange={(e) => setSplitMode(e.target.value)}
-            >
-              <option value="equal">Equal</option>
-              <option value="custom">Custom</option>
-            </Select>
+            <Label>Split mode</Label>
+            <div className={styles.segmented} role="group" aria-label="Split mode">
+              <button
+                type="button"
+                className={cx(
+                  styles.segment,
+                  splitMode === 'equal' && styles.segmentActive,
+                )}
+                disabled={!canEdit}
+                onClick={() => setSplitMode('equal')}
+              >
+                Equal
+              </button>
+              <button
+                type="button"
+                className={cx(
+                  styles.segment,
+                  splitMode === 'custom' && styles.segmentActive,
+                )}
+                disabled={!canEdit}
+                onClick={() => setSplitMode('custom')}
+              >
+                Custom
+              </button>
+            </div>
           </div>
 
           <div className={styles.formSpan2}>
             <p className={styles.sectionTitle}>Participants</p>
-            <ul className={styles.list}>
-              {roster.map((p) => (
-                <li key={p.id}>
-                  <div className={styles.splitRow}>
-                    <label className={styles.splitCheck}>
-                      <input
-                        type="checkbox"
-                        checked={selected.has(p.id)}
-                        disabled={!canEdit}
-                        onChange={() => togglePerson(p.id)}
-                      />
-                      <span className={styles.rowTitle}>
-                        {labelForJourneyPerson(p, user?.id)}
-                      </span>
-                    </label>
-                    {splitMode === 'custom' && selected.has(p.id) && (
-                      <Input
-                        className={styles.splitAmount}
-                        inputMode="decimal"
-                        value={customAmounts[p.id] || ''}
-                        disabled={!canEdit}
-                        onChange={(e) =>
-                          setCustomAmounts((prev) => ({
-                            ...prev,
-                            [p.id]: e.target.value,
-                          }))
-                        }
-                        placeholder="0.00"
-                        aria-label={`Split amount for ${labelForJourneyPerson(p, user?.id)}`}
-                      />
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <ParticipantChips
+              roster={roster}
+              selected={selected}
+              onToggle={togglePerson}
+              currentUserId={user?.id}
+              readOnly={!canEdit}
+            />
+            {splitMode === 'custom' && selected.size > 0 && (
+              <ul className={styles.list}>
+                {[...selected].map((id) => {
+                  const p = roster.find((r) => r.id === id)
+                  if (!p) return null
+                  return (
+                    <li key={id}>
+                      <div className={styles.splitRow}>
+                        <span className={styles.rowTitle}>
+                          {labelForJourneyPerson(p, user?.id)}
+                        </span>
+                        <Input
+                          className={styles.splitAmount}
+                          inputMode="decimal"
+                          value={customAmounts[id] || ''}
+                          disabled={!canEdit}
+                          onChange={(e) =>
+                            setCustomAmounts((prev) => ({
+                              ...prev,
+                              [id]: e.target.value,
+                            }))
+                          }
+                          placeholder="0.00"
+                          aria-label={`Split amount for ${labelForJourneyPerson(p, user?.id)}`}
+                        />
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+            {splitMode === 'custom' && remaining != null && (
+              <p
+                className={
+                  remaining === 0 ? styles.hint : styles.error
+                }
+              >
+                {remaining === 0
+                  ? 'Splits match the total.'
+                  : `Remaining ${formatMoney(remaining, currency, displayLocale)}`}
+              </p>
+            )}
           </div>
 
-          {!splitOk && amountCents != null && (
+          {!splitOk && amountCents != null && splitMode === 'equal' && (
             <p className={cx(styles.error, styles.formSpan2)}>
-              Splits must sum to the total (
-              {formatMoney(splitSum, currency, displayLocale)} ≠{' '}
-              {formatMoney(amountCents, currency, displayLocale)}).
+              Add at least one participant to split the total.
             </p>
           )}
           {error && (
-            <p className={cx(styles.error, styles.formSpan2)}>{error}</p>
+            <p className={cx(styles.error, styles.formSpan2)} role="alert">
+              {error}
+            </p>
+          )}
+
+          {canEdit && (
+            <div className={cx(styles.actionsSticky, styles.formSpan2)}>
+              <Button
+                disabled={!splitOk || saveMut.isPending}
+                onClick={() => {
+                  setError('')
+                  saveMut.mutate()
+                }}
+              >
+                {saveMut.isPending ? (
+                  <>
+                    <Loader2 size={14} aria-hidden="true" />
+                    Saving
+                  </>
+                ) : (
+                  'Save expense'
+                )}
+              </Button>
+            </div>
           )}
         </div>
       </div>

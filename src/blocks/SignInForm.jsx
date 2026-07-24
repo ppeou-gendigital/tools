@@ -18,7 +18,7 @@ import styles from './SignInForm.module.scss'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export function SignInForm() {
+export function SignInForm({ contextMessage, onBack } = {}) {
   const { requestOtp, verifyOtp } = useAuth()
   const [step, setStep] = useState('email')
   const [email, setEmail] = useState('')
@@ -89,9 +89,11 @@ export function SignInForm() {
             {step === 'email' ? 'Sign in to Viaggio' : 'Check your email'}
           </CardTitle>
           <CardDescription>
-            {step === 'email'
-              ? "We'll email you a 6-digit code. No password required."
-              : `We sent a 6-digit code to ${email}.`}
+            {contextMessage
+              ? contextMessage
+              : step === 'email'
+                ? "We'll email you a 6-digit code. No password required."
+                : `We sent a 6-digit code to ${email}.`}
           </CardDescription>
         </CardHeader>
 
@@ -112,9 +114,24 @@ export function SignInForm() {
                   autoFocus
                 />
               </div>
-              {error && <div className={styles.error}>{error}</div>}
+              {error && (
+                <div className={styles.error} role="alert">
+                  {error}
+                </div>
+              )}
             </CardBody>
             <CardFooter>
+              {onBack && step === 'email' && (
+                <button
+                  type="button"
+                  className={styles.backButton}
+                  onClick={onBack}
+                  disabled={submitting}
+                >
+                  <ArrowLeft size={12} aria-hidden="true" />
+                  Back to invite
+                </button>
+              )}
               <Button type="submit" fullWidth disabled={submitting}>
                 {submitting ? (
                   <>
@@ -155,7 +172,11 @@ export function SignInForm() {
                   It may take a minute to arrive. Check spam too.
                 </span>
               </div>
-              {error && <div className={styles.error}>{error}</div>}
+              {error && (
+                <div className={styles.error} role="alert">
+                  {error}
+                </div>
+              )}
             </CardBody>
             <CardFooter>
               <button

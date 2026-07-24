@@ -5,6 +5,7 @@ import { DisplayPrefsProvider, useDisplayPrefs } from '@/providers/DisplayPrefsP
 import { FabCornerProvider } from '@/providers/FabCornerProvider'
 import { FontSizeProvider } from '@/providers/FontSizeProvider'
 import { NavigationProvider, useNavigation } from '@/providers/NavigationProvider'
+import { PlaylistPlaybackProvider } from '@/providers/PlaylistPlaybackProvider'
 import { PrefsSync } from '@/providers/PrefsSync'
 import { ThemeProvider } from '@/providers/ThemeProvider'
 import { AppShell } from '@/templates/AppShell'
@@ -20,6 +21,7 @@ import { JourneySettings } from '@/pages/JourneySettings'
 import { Members } from '@/pages/Members'
 import { OnboardingPrefs } from '@/pages/OnboardingPrefs'
 import { People } from '@/pages/People'
+import { Map } from '@/pages/Map'
 import { Playlist } from '@/pages/Playlist'
 import { Profile } from '@/pages/Profile'
 import { Settings } from '@/pages/Settings'
@@ -54,6 +56,7 @@ function Router() {
   if (route === 'accept-invite') return <AcceptInvite />
   if (route === 'spending') return <Spending />
   if (route === 'playlist') return <Playlist />
+  if (route === 'map') return <Map />
   if (route === 'journey-settings') return <JourneySettings />
   if (route === 'profile') return <Profile />
   if (route === 'settings') return <Settings />
@@ -79,13 +82,15 @@ export function App() {
               <DisplayPrefsProvider>
                 <PrefsSync />
                 <NavigationProvider>
-                  <AppShell>
-                    <AuthGate>
-                      <OnboardingGate>
-                        <Router />
-                      </OnboardingGate>
-                    </AuthGate>
-                  </AppShell>
+                  <PlaylistPlaybackProvider>
+                    <AppShell>
+                      <AuthGate>
+                        <OnboardingGate>
+                          <Router />
+                        </OnboardingGate>
+                      </AuthGate>
+                    </AppShell>
+                  </PlaylistPlaybackProvider>
                 </NavigationProvider>
               </DisplayPrefsProvider>
             </FabCornerProvider>

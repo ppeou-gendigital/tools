@@ -23,7 +23,8 @@ Portable JSON for moving a journey between Viaggio instances or generating compa
   "entry_participants": [],
   "expenses": [],
   "expense_splits": [],
-  "playlist": []
+  "playlist": [],
+  "place_ideas": []
 }
 ```
 
@@ -128,6 +129,20 @@ Must sum to `amount_cents` for that expense. If missing or inconsistent, import 
 | `platform` | string \| null | `spotify`, `youtube`, or omit |
 | `sort_order` | integer | Ascending |
 
+## `place_ideas` (optional)
+
+Map brainstorming shortlist (shared per journey).
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `google_place_id` | string \| null | Google Places id (dedupe hint) |
+| `name` | string | Required on import |
+| `address` | string \| null | |
+| `lat`, `lng` | number | Required; skipped if missing |
+| `note` | string | Default `""` |
+| `sort_order` | integer | Ascending |
+| `entry_id` | string \| null | Local entry id if already promoted |
+
 ## Not included (by design)
 
 - Auth users / passwords / OTP
@@ -142,7 +157,7 @@ Must sum to `amount_cents` for that expense. If missing or inconsistent, import 
 2. Person with `member_role: "owner"`, or matching the importer’s email, maps to the owner’s roster seat; others are created as **guests** (no account).
 3. All local ids are remapped to new UUIDs.
 4. Entries use known `activity_id` values; unknown activities fail import.
-5. Import order: journey → people → contacts → entries (+ participants) → expenses (+ splits) → playlist.
+5. Import order: journey → people → contacts → entries (+ participants) → expenses (+ splits) → playlist → place ideas.
 
 ## Archive vs export
 

@@ -7,6 +7,9 @@ export function isExtension() {
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+/** Google Maps JavaScript API + Places (Map brainstorming page). Optional. */
+export const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
+
 /** Injected at build time: package.json version + git SHA (e.g. 0.1.0+ed7b435). */
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '0.0.0+local'
 

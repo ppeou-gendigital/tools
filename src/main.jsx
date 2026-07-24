@@ -30,6 +30,9 @@ if (import.meta.env.DEV) {
       enrichScandiReunion: mod.enrichScandiReunion,
       asBenjaminEnrichScandi: mod.asBenjaminEnrichScandi,
       asCharlieEnrichScandi: mod.asCharlieEnrichScandi,
+      repairScandiPartySplits: mod.repairScandiPartySplits,
+      seedPlaylistDemo: mod.seedPlaylistDemo,
+      DEMO_PLAYLIST_ITEMS: mod.DEMO_PLAYLIST_ITEMS,
     }
     void import('./lib/viaggioApi.js').then((api) => {
       globalThis.__viaggioSeed.acceptInvite = api.acceptInvite

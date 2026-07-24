@@ -5,6 +5,7 @@ import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { LoadingState } from '@/molecules/LoadingState'
+import { ConfirmDialog } from '@/patterns/ConfirmDialog'
 import { PageHeader } from '@/patterns/PageHeader'
 import {
   deletePerson,
@@ -23,6 +24,7 @@ export function People() {
   const [phone, setPhone] = useState('')
   const [editId, setEditId] = useState(null)
   const [error, setError] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(null)
 
   const { data: people = [], isLoading } = useQuery({
     queryKey: ['viaggio', 'my-people'],
@@ -79,38 +81,40 @@ export function People() {
       <div className={cx('is-fluid-width', styles.body)}>
         {error && <p className={styles.error}>{error}</p>}
 
-        <div className={styles.form}>
+        <div className={cx(styles.form, styles.formNarrow)}>
           <p className={styles.sectionTitle}>
             {editId ? 'Edit person' : 'Add person'}
           </p>
-          <div className={styles.field}>
-            <Label htmlFor="person-name">Name</Label>
-            <Input
-              id="person-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Display name"
-            />
-          </div>
-          <div className={styles.field}>
-            <Label htmlFor="person-email">Email (optional)</Label>
-            <Input
-              id="person-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="friend@example.com"
-            />
-          </div>
-          <div className={styles.field}>
-            <Label htmlFor="person-phone">Phone (optional)</Label>
-            <Input
-              id="person-phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+1 555 555 5555"
-            />
+          <div className={styles.formGrid}>
+            <div className={cx(styles.field, styles.formSpan2)}>
+              <Label htmlFor="person-name">Name</Label>
+              <Input
+                id="person-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Display name"
+              />
+            </div>
+            <div className={styles.field}>
+              <Label htmlFor="person-email">Email (optional)</Label>
+              <Input
+                id="person-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="friend@example.com"
+              />
+            </div>
+            <div className={styles.field}>
+              <Label htmlFor="person-phone">Phone (optional)</Label>
+              <Input
+                id="person-phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+1 555 555 5555"
+              />
+            </div>
           </div>
           <div className={styles.actions}>
             <Button
@@ -161,11 +165,7 @@ export function People() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => {
-                      if (window.confirm(`Remove ${p.displayName}?`)) {
-                        deleteMut.mutate(p.id)
-                      }
-                    }}
+                    onClick={() => setConfirmDelete(p)}
                   >
                     <Trash2 size={14} />
                     Delete
@@ -176,6 +176,25 @@ export function People() {
           ))}
         </ul>
       </div>
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onDismiss={() => setConfirmDelete(null)}
+        title="Remove from library?"
+        message={
+          confirmDelete
+            ? `Remove ${confirmDelete.displayName}? They stay on journeys where already added.`
+            : undefined
+        }
+        confirmLabel="Remove"
+        confirming={deleteMut.isPending}
+        onConfirm={() => {
+          if (!confirmDelete) return
+          deleteMut.mutate(confirmDelete.id, {
+            onSettled: () => setConfirmDelete(null),
+          })
+        }}
+      />
     </div>
   )
 }

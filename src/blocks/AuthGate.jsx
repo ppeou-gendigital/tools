@@ -1,10 +1,13 @@
 import { Loader2 } from 'lucide-react'
-import { useAuth } from '@/providers/AuthProvider'
+import { AcceptInvite } from '@/pages/AcceptInvite'
 import { SignInForm } from '@/blocks/SignInForm'
+import { useAuth } from '@/providers/AuthProvider'
+import { useNavigation } from '@/providers/NavigationProvider'
 import styles from './AuthGate.module.scss'
 
 export function AuthGate({ children }) {
   const { session, loading } = useAuth()
+  const { route } = useNavigation()
 
   if (loading) {
     return (
@@ -15,7 +18,9 @@ export function AuthGate({ children }) {
     )
   }
 
+  // Invite peek is visible before OTP so travellers see the journey first.
   if (!session) {
+    if (route === 'accept-invite') return <AcceptInvite />
     return <SignInForm />
   }
 

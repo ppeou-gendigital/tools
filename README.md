@@ -182,6 +182,22 @@ viaggio uses `signInWithOtp` + `verifyOtp` with `type: 'email'`. The default Sup
 
 Both belong in `.env`. They're safe to ship in the client bundle; row-level security (below) is what protects your data.
 
+### Google Maps (Map brainstorming page)
+
+Optional. Without a key, the Map page shows a setup message instead of a blank canvas.
+
+1. In [Google Cloud Console](https://console.cloud.google.com/) create (or pick) a project.
+2. Enable **Maps JavaScript API**, **Places API (New)**, and **Places UI Kit** (Map explore uses `PlaceSearchElement` + `PlaceDetailsElement` for results and reviews).
+3. Create an API key; restrict it by HTTP referrer (`http://localhost:5173/*` for local Vite, plus your deploy origin).
+4. Under the key’s **API restrictions**, allow Maps JavaScript API, Places API (New), and Places UI Kit.
+5. Add to `.env`:
+
+```
+VITE_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
+```
+
+For GitHub Pages deploys, add the same value as a repo Actions secret and pass it into the web build (alongside the Supabase vars).
+
 ### 3. Create the `profiles` table + RLS
 
 In **SQL Editor**, run:
@@ -307,6 +323,7 @@ Branch naming drives the live path. After `npm run init -- --name viaggio`:
 - **Repo secrets required** (Settings → Secrets and variables → Actions):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
+  - `VITE_GOOGLE_MAPS_API_KEY` (optional; Map brainstorming page)
 - **Repo Pages settings**: Settings → Pages → Source = **GitHub Actions**
 
 `scripts/init-tool.mjs` renames both this workflow file and the release workflow to match your tool's name, plus updates the branch triggers.

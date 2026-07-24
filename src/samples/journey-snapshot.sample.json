@@ -134,5 +134,17 @@
       "platform": "spotify",
       "sort_order": 0
     }
+  ],
+  "place_ideas": [
+    {
+      "google_place_id": null,
+      "name": "Miradouro da Senhora do Monte",
+      "address": "Largo da Senhora do Monte, Lisbon",
+      "lat": 38.7191,
+      "lng": -9.1327,
+      "note": "Sunset viewpoint — maybe Sunday evening",
+      "sort_order": 0,
+      "entry_id": null
+    }
   ]
 }

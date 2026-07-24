@@ -1,0 +1,87 @@
+@use 'tokens/mixins' as m;
+
+.panel {
+  position: fixed;
+  z-index: 1100;
+  display: grid;
+  gap: var(--space-2);
+  min-width: 220px;
+  max-width: min(300px, calc(100dvw - 1rem));
+  max-height: min(70dvh, 24rem);
+  overflow: auto;
+  padding: var(--space-2);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--card-fg);
+  box-shadow: var(--shadow-popover);
+}
+
+.title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-fg);
+  padding: var(--space-1) var(--space-2);
+}
+
+.row {
+  @include m.interactive-control;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--accent);
+  }
+}
+
+.name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+  flex-shrink: 0;
+}
+
+.hint {
+  margin: 0;
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+  line-height: 1.4;
+}
+
+.actions {
+  display: grid;
+  gap: var(--space-1);
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--border);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}

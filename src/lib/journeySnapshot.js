@@ -7,6 +7,7 @@
 
 import {
   addJourneyPerson,
+  addPlaceIdea,
   addPlaylistItem,
   createJourney,
   listEntries,
@@ -14,8 +15,10 @@ import {
   listExpensesForJourney,
   listJourneyPeople,
   listMembers,
+  listPlaceIdeas,
   listPlaylist,
   updateJourneyPerson,
+  updatePlaceIdea,
   upsertEntry,
   upsertExpenseWithSplits,
 } from '@/lib/viaggioApi'
@@ -62,6 +65,7 @@ export function validateJourneySnapshot(raw) {
     'expenses',
     'expense_splits',
     'playlist',
+    'place_ideas',
   ]) {
     if (raw[key] != null && !Array.isArray(raw[key])) {
       throw new Error(`${key} must be an array`)
@@ -102,16 +106,25 @@ export async function buildJourneySnapshot(journeyId) {
   if (jErr) throw jErr
   if (!journeyRow) throw new Error('Journey not found')
 
-  const [people, members, contacts, entries, participants, expenses, playlist] =
-    await Promise.all([
-      listJourneyPeople(journeyId),
-      listMembers(journeyId),
-      listContacts(journeyId),
-      listEntries(journeyId),
-      listEntryParticipants(journeyId),
-      listExpensesForJourney(journeyId),
-      listPlaylist(journeyId),
-    ])
+  const [
+    people,
+    members,
+    contacts,
+    entries,
+    participants,
+    expenses,
+    playlist,
+    placeIdeas,
+  ] = await Promise.all([
+    listJourneyPeople(journeyId),
+    listMembers(journeyId),
+    listContacts(journeyId),
+    listEntries(journeyId),
+    listEntryParticipants(journeyId),
+    listExpensesForJourney(journeyId),
+    listPlaylist(journeyId),
+    listPlaceIdeas(journeyId),
+  ])
 
   const roleByUser = new Map(members.map((m) => [m.userId, m.role]))
   const splits = await listSplitsForExpenses(expenses.map((e) => e.id))
@@ -191,6 +204,16 @@ export async function buildJourneySnapshot(journeyId) {
       title: p.title,
       platform: p.platform,
       sort_order: p.sortOrder,
+    })),
+    place_ideas: placeIdeas.map((p) => ({
+      google_place_id: p.googlePlaceId,
+      name: p.name,
+      address: p.address,
+      lat: p.lat,
+      lng: p.lng,
+      note: p.note,
+      sort_order: p.sortOrder,
+      entry_id: p.entryId,
     })),
   }
 }
@@ -382,6 +405,32 @@ export async function importJourneySnapshot(raw, { user } = {}) {
       },
       uid,
     )
+  }
+
+  const placeIdeas = [...(snap.place_ideas ?? [])].sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+  )
+  for (const item of placeIdeas) {
+    if (!item?.name) continue
+    const lat = Number(item.lat)
+    const lng = Number(item.lng)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue
+    const created = await addPlaceIdea(
+      journey.id,
+      {
+        googlePlaceId: item.google_place_id ?? null,
+        name: item.name,
+        address: item.address ?? null,
+        lat,
+        lng,
+        note: item.note ?? '',
+      },
+      uid,
+    )
+    const mappedEntryId = mapId(entryMap, item.entry_id)
+    if (mappedEntryId && created.entryId !== mappedEntryId) {
+      await updatePlaceIdea(created.id, { entryId: mappedEntryId })
+    }
   }
 
   return {

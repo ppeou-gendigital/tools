@@ -50,7 +50,7 @@ export function FloatingMenu() {
         data-corner={corner}
         data-dragging={isDragging ? 'true' : undefined}
         aria-label="Viaggio menu"
-        aria-haspopup="menu"
+        aria-haspopup="dialog"
         aria-expanded={open}
         style={fabStyle}
         {...restBind}

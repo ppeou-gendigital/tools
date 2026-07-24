@@ -1217,8 +1217,8 @@ export async function seedScandiReunion() {
   await addPlaylistItem(
     jid,
     {
-      url: 'https://open.spotify.com/playlist/37i9dQZF1DXbSbnqmZoPgk',
-      title: 'Nordic road trip — Class of ’16',
+      url: 'https://open.spotify.com/track/1rqqCSm0Qe4I9rUvWncaom',
+      title: 'High Hopes — Panic! At The Disco',
       platform: 'spotify',
     },
     u2.id,
@@ -1553,8 +1553,11 @@ export async function asBenjaminEnrichScandi(journeyId) {
   const me = byName('Benjamin Bing')
   const owner = byName('Piseth Peou') || people.find((p) => !p.linkedUserId || p.displayName?.includes('Piseth'))
   const charlie = byName('Charlie Charming')
+  const david = byName('David Doughlas')
   if (!me) throw new Error('Benjamin seat not on roster')
-  const all = [owner?.id, me.id, charlie?.id].filter(Boolean)
+  const all = [owner?.id, me.id, charlie?.id, david?.id].filter(Boolean)
+  // ×3 activities: Benjamin’s party — not the whole roster (keeps owner off the bill).
+  const party3 = [me.id, charlie?.id, david?.id].filter(Boolean).slice(0, 3)
 
   const entries = await listEntries(jid)
 
@@ -1667,17 +1670,29 @@ export async function asBenjaminEnrichScandi(journeyId) {
     }),
   )
 
-  const expenseTitles = new Set(
-    (await listExpensesForJourney(jid)).map((x) => x.title),
+  const existingExpenses = await listExpensesForJourney(jid)
+  const normalizeExpenseTitle = (t) =>
+    String(t || '')
+      .replace(/[×x]/gi, 'x')
+      .replace(/→/g, '->')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase()
+  const existingByNorm = new Map(
+    existingExpenses.map((x) => [normalizeExpenseTitle(x.title), x]),
   )
   async function ensureExpense(title, input) {
-    if (expenseTitles.has(title)) return null
-    const row = await upsertExpenseWithSplits({ ...input, title })
-    expenseTitles.add(title)
+    const prev = existingByNorm.get(normalizeExpenseTitle(title))
+    const row = await upsertExpenseWithSplits({
+      ...input,
+      id: prev?.id,
+      title,
+    })
+    existingByNorm.set(normalizeExpenseTitle(title), row)
     return row
   }
 
-  if (vasa) {
+  if (vasa && party3.length) {
     await ensureExpense('Vasa Museum tickets ×3', {
       entryId: vasa.id,
       amountCents: 5700,
@@ -1685,10 +1700,10 @@ export async function asBenjaminEnrichScandi(journeyId) {
       paidBy: me.id,
       splitMode: 'equal',
       category: 'tickets',
-      splits: equalSplits(all, 5700),
+      splits: equalSplits(party3, 5700),
     })
   }
-  if (abba) {
+  if (abba && party3.length) {
     await ensureExpense('ABBA Museum tickets ×3', {
       entryId: abba.id,
       amountCents: 8100,
@@ -1696,10 +1711,10 @@ export async function asBenjaminEnrichScandi(journeyId) {
       paidBy: me.id,
       splitMode: 'equal',
       category: 'tickets',
-      splits: equalSplits(all, 8100),
+      splits: equalSplits(party3, 8100),
     })
   }
-  if (sjOslo) {
+  if (sjOslo && party3.length) {
     await ensureExpense('SJ train Stockholm → Oslo', {
       entryId: sjOslo.id,
       amountCents: 21000,
@@ -1707,7 +1722,7 @@ export async function asBenjaminEnrichScandi(journeyId) {
       paidBy: me.id,
       splitMode: 'equal',
       category: 'transport',
-      splits: equalSplits(all, 21000),
+      splits: equalSplits(party3, 21000),
     })
   }
 
@@ -1715,8 +1730,8 @@ export async function asBenjaminEnrichScandi(journeyId) {
   const urls = new Set(playlist.map((p) => p.url))
   const wants = [
     {
-      url: 'https://open.spotify.com/track/2takcwOaAZWiXQijPHJx7j',
-      title: 'Time — Hans Zimmer',
+      url: 'https://open.spotify.com/track/0DiWol3AO6WpXZgp0goxAV',
+      title: 'One More Time — Daft Punk',
       platform: 'spotify',
     },
     {
@@ -1766,8 +1781,11 @@ export async function asCharlieEnrichScandi(journeyId) {
   const me = byName('Charlie Charming') || people.find((p) => p.linkedUserId === user.id)
   const owner = byName('Piseth Peou')
   const benjamin = byName('Benjamin Bing')
+  const david = byName('David Doughlas')
   if (!me) throw new Error('Charlie seat not on roster')
-  const all = [owner?.id, benjamin?.id, me.id].filter(Boolean)
+  const all = [owner?.id, benjamin?.id, me.id, david?.id].filter(Boolean)
+  // ×3 activities: Charlie’s party — not the whole roster (keeps owner off the bill).
+  const party3 = [me.id, benjamin?.id, david?.id].filter(Boolean).slice(0, 3)
 
   const entries = await listEntries(jid)
 
@@ -1940,17 +1958,29 @@ export async function asCharlieEnrichScandi(journeyId) {
     }),
   )
 
-  const expenseTitles = new Set(
-    (await listExpensesForJourney(jid)).map((x) => x.title),
+  const existingExpenses = await listExpensesForJourney(jid)
+  const normalizeExpenseTitle = (t) =>
+    String(t || '')
+      .replace(/[×x]/gi, 'x')
+      .replace(/→/g, '->')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase()
+  const existingByNorm = new Map(
+    existingExpenses.map((x) => [normalizeExpenseTitle(x.title), x]),
   )
   async function ensureExpense(title, input) {
-    if (expenseTitles.has(title)) return null
-    const row = await upsertExpenseWithSplits({ ...input, title })
-    expenseTitles.add(title)
+    const prev = existingByNorm.get(normalizeExpenseTitle(title))
+    const row = await upsertExpenseWithSplits({
+      ...input,
+      id: prev?.id,
+      title,
+    })
+    existingByNorm.set(normalizeExpenseTitle(title), row)
     return row
   }
 
-  if (munch) {
+  if (munch && party3.length) {
     await ensureExpense('Munch Museum tickets ×3', {
       entryId: munch.id,
       amountCents: 4800,
@@ -1958,10 +1988,10 @@ export async function asCharlieEnrichScandi(journeyId) {
       paidBy: me.id,
       splitMode: 'equal',
       category: 'tickets',
-      splits: equalSplits(all, 4800),
+      splits: equalSplits(party3, 4800),
     })
   }
-  if (fjordBoat) {
+  if (fjordBoat && party3.length) {
     await ensureExpense('Oslofjord boat cruise ×3', {
       entryId: fjordBoat.id,
       amountCents: 7500,
@@ -1969,10 +1999,10 @@ export async function asCharlieEnrichScandi(journeyId) {
       paidBy: me.id,
       splitMode: 'equal',
       category: 'transport',
-      splits: equalSplits(all, 7500),
+      splits: equalSplits(party3, 7500),
     })
   }
-  if (naeroy) {
+  if (naeroy && party3.length) {
     await ensureExpense('Norled Nærøyfjord ferry ×3', {
       entryId: naeroy.id,
       amountCents: 24000,
@@ -1980,10 +2010,10 @@ export async function asCharlieEnrichScandi(journeyId) {
       paidBy: me.id,
       splitMode: 'equal',
       category: 'transport',
-      splits: equalSplits(all, 24000),
+      splits: equalSplits(party3, 24000),
     })
   }
-  if (floyen) {
+  if (floyen && party3.length) {
     await ensureExpense('Fløibanen funicular ×3', {
       entryId: floyen.id,
       amountCents: 3600,
@@ -1991,10 +2021,10 @@ export async function asCharlieEnrichScandi(journeyId) {
       paidBy: me.id,
       splitMode: 'equal',
       category: 'tickets',
-      splits: equalSplits(all, 3600),
+      splits: equalSplits(party3, 3600),
     })
   }
-  if (maaemo) {
+  if (maaemo && party3.length) {
     await ensureExpense('Dinner at Maaemo (Charlie treat)', {
       entryId: maaemo.id,
       amountCents: 45000,
@@ -2002,7 +2032,7 @@ export async function asCharlieEnrichScandi(journeyId) {
       paidBy: me.id,
       splitMode: 'equal',
       category: 'food',
-      splits: equalSplits(all, 45000),
+      splits: equalSplits(party3, 45000),
     })
   }
 
@@ -2035,5 +2065,173 @@ export async function asCharlieEnrichScandi(journeyId) {
     playlist: (await listPlaylist(jid)).length,
   }
   console.info('[viaggio] asCharlieEnrichScandi', summary)
+  return summary
+}
+
+/**
+ * Repair Scandi ×3 / party expenses so the owner isn’t on every Charlie/Benjamin
+ * bill (My expenses then differs from Journey). Safe to re-run as any editor.
+ *
+ *   await __viaggioSeed.repairScandiPartySplits()
+ */
+export async function repairScandiPartySplits(journeyId) {
+  const journey = await resolveScandiJourney(journeyId)
+  const jid = journey.id
+  const people = await listJourneyPeople(jid)
+  const byName = (name) => people.find((p) => p.displayName === name)
+  const owner = byName('Piseth Peou')
+  const benjamin = byName('Benjamin Bing')
+  const charlie = byName('Charlie Charming')
+  const david = byName('David Doughlas')
+  const charlieParty = [charlie?.id, benjamin?.id, david?.id]
+    .filter(Boolean)
+    .slice(0, 3)
+  const benjaminParty = [benjamin?.id, charlie?.id, david?.id]
+    .filter(Boolean)
+    .slice(0, 3)
+
+  const charlieRx =
+    /munch|oslofjord|nærøyfjord|naeroyfjord|norled|fløibanen|floibanen|maaemo/i
+  const benjaminRx = /vasa|abba|sj train/i
+
+  const expenses = await listExpensesForJourney(jid)
+  let updated = 0
+  for (const ex of expenses) {
+    let party = null
+    if (charlie?.id && ex.paidBy === charlie.id && charlieRx.test(ex.title)) {
+      party = charlieParty
+    } else if (
+      benjamin?.id &&
+      ex.paidBy === benjamin.id &&
+      benjaminRx.test(ex.title)
+    ) {
+      party = benjaminParty
+    }
+    if (!party?.length) continue
+    // Skip when owner isn’t on the bill and party size already matches ×3.
+    if (owner?.id && !party.includes(owner.id)) {
+      // still rewrite so seed matches party3
+    }
+    await upsertExpenseWithSplits({
+      id: ex.id,
+      entryId: ex.entryId,
+      title: ex.title,
+      amountCents: ex.amountCents,
+      currency: ex.currency,
+      paidBy: ex.paidBy,
+      splitMode: 'equal',
+      category: ex.category,
+      splits: equalSplits(party, ex.amountCents),
+    })
+    updated += 1
+  }
+
+  const summary = { journeyId: jid, updated }
+  console.info('[viaggio] repairScandiPartySplits', summary)
+  return summary
+}
+
+/**
+ * Known-good embeds for player smoke tests (YT / Spotify / Vimeo / SoundCloud).
+ * Safe to re-run — skips URLs already on the journey playlist.
+ *
+ * Usage (DEV console, signed in):
+ *   await __viaggioSeed.seedPlaylistDemo('<journeyId>')
+ *   // or omit id to use the first journey you belong to
+ */
+export const DEMO_PLAYLIST_ITEMS = [
+  {
+    url: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
+    title: 'YouTube — Me at the zoo',
+    platform: 'youtube',
+  },
+  {
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    title: 'YouTube — Never Gonna Give You Up',
+    platform: 'youtube',
+  },
+  {
+    url: 'https://youtu.be/y6120QOlsfU',
+    title: 'YouTube — Sandstorm',
+    platform: 'youtube',
+  },
+  // Spotify IDs verified via oEmbed — prefer tracks over editorial playlists
+  // (playlists are often market-locked in the embed player).
+  {
+    url: 'https://open.spotify.com/track/11dFghVXANMlKmJXsNCbNl',
+    title: 'Spotify — Cut To The Feeling',
+    platform: 'spotify',
+  },
+  {
+    url: 'https://open.spotify.com/track/0VjIjW4GlUZAMYd2vXMi3b',
+    title: 'Spotify — Blinding Lights',
+    platform: 'spotify',
+  },
+  {
+    url: 'https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT',
+    title: 'Spotify — Never Gonna Give You Up',
+    platform: 'spotify',
+  },
+  {
+    url: 'https://open.spotify.com/track/7qiZfU4dY1lWllzX7mPBI3',
+    title: 'Spotify — Shape of You',
+    platform: 'spotify',
+  },
+  {
+    url: 'https://open.spotify.com/track/1rqqCSm0Qe4I9rUvWncaom',
+    title: 'Spotify — High Hopes',
+    platform: 'spotify',
+  },
+  {
+    url: 'https://vimeo.com/76979871',
+    title: 'Vimeo — The New Vimeo Player',
+    platform: 'vimeo',
+  },
+  {
+    url: 'https://vimeo.com/148751763',
+    title: 'Vimeo — sample short',
+    platform: 'vimeo',
+  },
+  {
+    url: 'https://soundcloud.com/forss/flickermood',
+    title: 'SoundCloud — Flickermood',
+    platform: 'soundcloud',
+  },
+  {
+    url: 'https://soundcloud.com/soundcloud/community-guidelines',
+    title: 'SoundCloud — Community Guidelines',
+    platform: 'soundcloud',
+  },
+]
+
+export async function seedPlaylistDemo(journeyId) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Sign in first')
+
+  let jid = journeyId
+  if (!jid) {
+    const journeys = await listJourneys()
+    jid = journeys[0]?.id
+  }
+  if (!jid) throw new Error('No journey found — open a journey first')
+
+  const existing = await listPlaylist(jid)
+  const urls = new Set(existing.map((p) => p.url))
+  let added = 0
+  for (const item of DEMO_PLAYLIST_ITEMS) {
+    if (urls.has(item.url)) continue
+    await addPlaylistItem(jid, item, user.id)
+    urls.add(item.url)
+    added += 1
+  }
+
+  const summary = {
+    journeyId: jid,
+    added,
+    playlist: (await listPlaylist(jid)).length,
+  }
+  console.info('[viaggio] seedPlaylistDemo done', summary)
   return summary
 }

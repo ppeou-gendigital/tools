@@ -31,6 +31,9 @@
 
   --destructive: #ef4444;
   --destructive-fg: #fafafa;
+  --control-sm: 32px;
+  --control-md: 36px;
+  --control-lg: 40px;
   // Inline error / validation text. Distinct from --destructive (filled buttons).
   --error-text: #b91c1c;
 
@@ -122,7 +125,7 @@
   --accent: #1f1f22;
   --accent-fg: #fafafa;
 
-  --destructive: #7f1d1d;
+  --destructive: #dc2626;
   --destructive-fg: #fafafa;
   --error-text: #f87171;
 

@@ -26,4 +26,19 @@
   padding-bottom: calc(
     var(--fab-size) + var(--fab-corner-offset) + var(--space-6)
   );
+
+  // Clearance for the transport mini bar (title + scrubber + controls).
+  .shell:has([data-playlist-dock='mini']) & {
+    padding-bottom: calc(
+      var(--fab-size) + var(--fab-corner-offset) + var(--space-4) + 9.5rem
+    );
+  }
+
+  // Full-bleed Map: fill the stage. FAB floats over the map (Google-style),
+  // so the usual bottom clearance would show up as an empty black band.
+  // Use data-attr — CSS module hashes make `:has(.mapPage)` a no-op.
+  &:has([data-map-page]) {
+    padding-bottom: 0;
+    overflow: hidden;
+  }
 }

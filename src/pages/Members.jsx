@@ -4,16 +4,22 @@ import {
   ArrowLeft,
   Copy,
   Link2,
+  ListMusic,
   Mail,
+  MapPin,
   MessageSquare,
+  Settings,
   Share2,
+  CircleDollarSign,
 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { LoadingState } from '@/molecules/LoadingState'
 import { Select } from '@/molecules/Select'
+import { ConfirmDialog } from '@/patterns/ConfirmDialog'
 import { PageHeader } from '@/patterns/PageHeader'
+import { PageShortcuts } from '@/patterns/PageShortcuts'
 import { labelForRole } from '@/lib/catalog'
 import { labelForJourneyPerson } from '@/lib/format'
 import {
@@ -54,8 +60,17 @@ function isInviteOpen(inv) {
 }
 
 export function Members() {
-  const { params, goBack, previousRouteLabel, goHome, goPeople } =
-    useNavigation()
+  const {
+    params,
+    goBack,
+    previousRouteLabel,
+    goHome,
+    goPeople,
+    goSpending,
+    goPlaylist,
+    goMap,
+    goJourneySettings,
+  } = useNavigation()
   const journeyId = params.journeyId
   const { user } = useAuth()
   const qc = useQueryClient()
@@ -69,6 +84,8 @@ export function Members() {
   const [libraryPersonId, setLibraryPersonId] = useState('')
   const [error, setError] = useState('')
   const [busyAction, setBusyAction] = useState('')
+  const [confirm, setConfirm] = useState(null)
+  // confirm: { type, label, run }
 
   const { data: journey } = useQuery({
     queryKey: ['viaggio', 'journey', journeyId],
@@ -181,6 +198,38 @@ export function Members() {
             {previousRouteLabel ?? 'Back'}
           </Button>
         }
+        shortcuts={
+          <PageShortcuts
+            current="members"
+            className={styles.iconBtn}
+            shortcuts={[
+              {
+                id: 'spending',
+                label: 'Spending',
+                icon: CircleDollarSign,
+                pick: () => () => goSpending(journeyId),
+              },
+              {
+                id: 'playlist',
+                label: 'Playlist',
+                icon: ListMusic,
+                pick: () => () => goPlaylist(journeyId),
+              },
+              {
+                id: 'map',
+                label: 'Map',
+                icon: MapPin,
+                pick: () => () => goMap(journeyId),
+              },
+              {
+                id: 'journey-settings',
+                label: 'Settings',
+                icon: Settings,
+                pick: () => () => goJourneySettings(journeyId),
+              },
+            ]}
+          />
+        }
       />
       <div className={cx('is-fluid-width', styles.body)}>
         {error && <p className={styles.error}>{error}</p>}
@@ -192,6 +241,14 @@ export function Members() {
           </div>
         )}
 
+        <p className={styles.hint}>
+          {roster.length} traveler{roster.length === 1 ? '' : 's'}
+          {members.length
+            ? ` · ${members.length} with account access`
+            : ''}
+        </p>
+
+        <div className={styles.dualZone}>
         <ul className={styles.list}>
           {roster.map((jp) => {
             const mem = jp.linkedUserId
@@ -206,7 +263,7 @@ export function Members() {
                   </span>
                   <span className={styles.rowMeta}>
                     {[
-                      jp.linkedUserId ? 'Has account' : 'Guest',
+                      jp.linkedUserId ? 'Joined' : 'Guest',
                       mem ? labelForRole(journey, mem.role) : null,
                       jp.email,
                     ]
@@ -250,28 +307,34 @@ export function Members() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={async () => {
-                            try {
-                              await removeMember(journeyId, jp.linkedUserId)
-                              invalidate()
-                            } catch (err) {
-                              setError(err.message)
-                            }
-                          }}
+                          onClick={() =>
+                            setConfirm({
+                              title: 'Remove access?',
+                              message: `${labelForJourneyPerson(jp, user?.id)} will lose access to this journey.`,
+                              confirmLabel: 'Remove access',
+                              run: async () => {
+                                await removeMember(journeyId, jp.linkedUserId)
+                                invalidate()
+                              },
+                            })
+                          }
                         >
                           Remove access
                         </Button>
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={async () => {
-                            try {
-                              await blockMember(journeyId, jp.linkedUserId)
-                              invalidate()
-                            } catch (err) {
-                              setError(err.message)
-                            }
-                          }}
+                          onClick={() =>
+                            setConfirm({
+                              title: 'Block this traveler?',
+                              message: `${labelForJourneyPerson(jp, user?.id)} will be removed and cannot rejoin with an invite.`,
+                              confirmLabel: 'Block',
+                              run: async () => {
+                                await blockMember(journeyId, jp.linkedUserId)
+                                invalidate()
+                              },
+                            })
+                          }
                         >
                           Block
                         </Button>
@@ -280,14 +343,17 @@ export function Members() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={async () => {
-                          try {
-                            await removeJourneyPerson(jp.id)
-                            invalidate()
-                          } catch (err) {
-                            setError(err.message)
-                          }
-                        }}
+                        onClick={() =>
+                          setConfirm({
+                            title: 'Remove traveler?',
+                            message: `Remove ${labelForJourneyPerson(jp, user?.id)} from this journey?`,
+                            confirmLabel: 'Remove',
+                            run: async () => {
+                              await removeJourneyPerson(jp.id)
+                              invalidate()
+                            },
+                          })
+                        }
                       >
                         Remove
                       </Button>
@@ -337,6 +403,7 @@ export function Members() {
           })}
         </ul>
 
+        <div className={styles.inviteColumn}>
         {canEdit && (
           <section className={styles.form}>
             <p className={styles.sectionTitle}>Add traveler</p>
@@ -660,21 +727,52 @@ export function Members() {
             )}
           </section>
         )}
+        </div>
+        </div>
 
         <Button
           variant="outline"
-          onClick={async () => {
-            try {
-              await leaveJourney(journeyId)
-              goHome()
-            } catch (err) {
-              setError(err.message)
-            }
-          }}
+          onClick={() =>
+            setConfirm({
+              title: 'Leave this journey?',
+              message: 'You will lose access until someone invites you again.',
+              confirmLabel: 'Leave',
+              run: async () => {
+                await leaveJourney(journeyId)
+                goHome()
+              },
+            })
+          }
         >
           Leave journey
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={!!confirm}
+        onDismiss={() => {
+          if (busyAction !== 'confirm') setConfirm(null)
+        }}
+        title={confirm?.title || ''}
+        message={confirm?.message}
+        confirmLabel={confirm?.confirmLabel || 'Confirm'}
+        busyLabel="Working…"
+        confirming={busyAction === 'confirm'}
+        onConfirm={async () => {
+          if (!confirm?.run) return
+          setBusyAction('confirm')
+          setError('')
+          try {
+            await confirm.run()
+            setConfirm(null)
+          } catch (err) {
+            setError(err.message)
+            setConfirm(null)
+          } finally {
+            setBusyAction('')
+          }
+        }}
+      />
     </div>
   )
 }

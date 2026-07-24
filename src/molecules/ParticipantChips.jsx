@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
+import { AnchoredPopover } from '@/molecules/AnchoredPopover'
+import popoverStyles from '@/molecules/AnchoredPopover.module.scss'
 import { cx } from '@/lib/cx'
 import { labelForJourneyPerson } from '@/lib/format'
 import styles from './ParticipantChips.module.scss'
@@ -21,6 +23,7 @@ export function ParticipantChips({
   readOnly = false,
 }) {
   const [picking, setPicking] = useState(false)
+  const addRef = useRef(null)
   const selectedList = roster.filter((p) => selected.has(p.id))
   const available = roster.filter((p) => !selected.has(p.id))
 
@@ -56,6 +59,7 @@ export function ParticipantChips({
         })}
         {!readOnly && available.length > 0 && (
           <button
+            ref={addRef}
             type="button"
             className={cx(styles.addChip, picking && styles.addChipOpen)}
             onClick={() => setPicking((v) => !v)}
@@ -68,31 +72,32 @@ export function ParticipantChips({
         )}
       </div>
 
-      {!readOnly && picking && available.length > 0 && (
-        <div
-          className={styles.picker}
-          role="listbox"
-          aria-label="Add travelers"
-        >
-          {available.map((p) => {
-            const label = labelForJourneyPerson(p, currentUserId)
-            return (
-              <button
-                key={p.id}
-                type="button"
-                role="option"
-                className={styles.pickerOption}
-                onClick={() => {
-                  onToggle(p.id)
-                  if (available.length <= 1) setPicking(false)
-                }}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
-      )}
+      <AnchoredPopover
+        open={!readOnly && picking && available.length > 0}
+        onClose={() => setPicking(false)}
+        anchorRef={addRef}
+        title="Add travelers"
+        align="start"
+        role="listbox"
+      >
+        {available.map((p) => {
+          const label = labelForJourneyPerson(p, currentUserId)
+          return (
+            <button
+              key={p.id}
+              type="button"
+              role="option"
+              className={popoverStyles.row}
+              onClick={() => {
+                onToggle(p.id)
+                if (available.length <= 1) setPicking(false)
+              }}
+            >
+              <span className={popoverStyles.name}>{label}</span>
+            </button>
+          )
+        })}
+      </AnchoredPopover>
 
       {selectedList.length === 0 && !picking && (
         <p className={styles.emptyHint}>

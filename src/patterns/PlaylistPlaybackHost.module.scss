@@ -1,0 +1,37 @@
+.dock {
+  z-index: 90;
+  box-sizing: border-box;
+  color: var(--fg);
+}
+
+.dockOverlay {
+  position: absolute;
+  overflow: auto;
+  border-radius: var(--radius);
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dockMini {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: none;
+  border-top: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+  background: var(--card);
+  box-shadow: 0 -8px 28px color-mix(in srgb, var(--fg) 8%, transparent);
+  overflow: hidden;
+}
+
+.fullPlayer {
+  height: 100%;
+}
+
+.miniPlayer {
+  min-width: 0;
+  width: 100%;
+}

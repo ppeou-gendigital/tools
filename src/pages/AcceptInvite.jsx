@@ -1,18 +1,22 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { SignInForm } from '@/blocks/SignInForm'
 import { Button } from '@/molecules/Button'
 import { LoadingState } from '@/molecules/LoadingState'
 import { PageHeader } from '@/patterns/PageHeader'
 import { labelForRole } from '@/lib/catalog'
 import { acceptInvite, peekInvite } from '@/lib/viaggioApi'
+import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function AcceptInvite() {
   const { params, replace, goHome } = useNavigation()
+  const { session } = useAuth()
   const token = params.inviteToken
   const [error, setError] = useState('')
+  const [showSignIn, setShowSignIn] = useState(false)
   const [now] = useState(() => Date.now())
 
   const { data: peek, isLoading, error: peekError } = useQuery({
@@ -42,9 +46,23 @@ export function AcceptInvite() {
     )
   }
 
+  if (!session && showSignIn) {
+    return (
+      <SignInForm
+        contextMessage={
+          peek?.journeyTitle
+            ? `Sign in to join “${peek.journeyTitle}”.`
+            : 'Sign in to accept this invite.'
+        }
+        onBack={() => setShowSignIn(false)}
+      />
+    )
+  }
+
   const expired =
     peek?.expiresAt != null && new Date(peek.expiresAt).getTime() <= now
   const blocked = !peek || peek.revoked || expired
+  const roleLabel = peek ? labelForRole({ type: 'trip' }, peek.role) : ''
 
   return (
     <div className={styles.page}>
@@ -65,7 +83,10 @@ export function AcceptInvite() {
             <div className={styles.block}>
               <span className={styles.rowTitle}>{peek.journeyTitle}</span>
               <span className={styles.rowMeta}>
-                Join as {labelForRole({ type: 'trip' }, peek.role)}
+                Join as {roleLabel}
+                {peek.expiresAt
+                  ? ` · Invite expires ${new Date(peek.expiresAt).toLocaleDateString()}`
+                  : ''}
               </span>
             </div>
             {peek.revoked && (
@@ -74,17 +95,31 @@ export function AcceptInvite() {
             {expired && !peek.revoked && (
               <p className={styles.error}>This invite has expired.</p>
             )}
-            {error && <p className={styles.error}>{error}</p>}
-            <Button
-              disabled={blocked || acceptMut.isPending}
-              onClick={() => {
-                setError('')
-                acceptMut.mutate()
-              }}
-              fullWidth
-            >
-              {acceptMut.isPending ? 'Joining…' : 'Accept invite'}
-            </Button>
+            {error && (
+              <p className={styles.error} role="alert">
+                {error}
+              </p>
+            )}
+            {!session ? (
+              <Button
+                disabled={blocked}
+                onClick={() => setShowSignIn(true)}
+                fullWidth
+              >
+                Sign in to join
+              </Button>
+            ) : (
+              <Button
+                disabled={blocked || acceptMut.isPending}
+                onClick={() => {
+                  setError('')
+                  acceptMut.mutate()
+                }}
+                fullWidth
+              >
+                {acceptMut.isPending ? 'Joining…' : 'Accept invite'}
+              </Button>
+            )}
           </>
         )}
         <Button variant="ghost" onClick={goHome}>

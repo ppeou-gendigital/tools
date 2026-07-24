@@ -195,3 +195,33 @@ export function formatWhen(iso, locale) {
     return String(iso)
   }
 }
+
+/** Compact relative day for list meta (Today / Yesterday / short date). */
+export function formatRelativeDay(iso, locale) {
+  if (!iso) return ''
+  try {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return ''
+    const now = new Date()
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    )
+    const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+    const dayDiff = Math.round(
+      (startOfToday.getTime() - startOfDay.getTime()) / 86400000,
+    )
+    if (dayDiff === 0) return 'Today'
+    if (dayDiff === 1) return 'Yesterday'
+    if (dayDiff > 1 && dayDiff < 7) return `${dayDiff} days ago`
+    return new Intl.DateTimeFormat(locale || undefined, {
+      month: 'short',
+      day: 'numeric',
+      year:
+        d.getFullYear() === now.getFullYear() ? undefined : 'numeric',
+    }).format(d)
+  } catch {
+    return ''
+  }
+}

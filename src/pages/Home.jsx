@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { LayoutGrid, List, MapPinned, Plus, Users } from 'lucide-react'
+import { AnchoredPopover } from '@/molecules/AnchoredPopover'
+import popoverStyles from '@/molecules/AnchoredPopover.module.scss'
 import { Button } from '@/molecules/Button'
+import { LoadingState } from '@/molecules/LoadingState'
 import { PageHeader } from '@/patterns/PageHeader'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
 import { cx } from '@/lib/cx'
 import { getPreset } from '@/lib/catalog'
 import { formatWallDate, labelForJourneyPerson } from '@/lib/format'
 import { listJourneys, listJourneyPeople } from '@/lib/viaggioApi'
-import { LoadingState } from '@/molecules/LoadingState'
 import { useAuth } from '@/providers/AuthProvider'
 import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
@@ -106,71 +108,43 @@ function sortSection(id, items) {
 }
 
 function ParticipantsPopover({ journey, currentUserId, open, onClose, anchorRef }) {
-  const panelRef = useRef(null)
   const { data: roster = [], isLoading, error } = useQuery({
     queryKey: ['viaggio', 'journey-people', journey.id],
     queryFn: () => listJourneyPeople(journey.id),
     enabled: open,
   })
 
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e) => {
-      if (panelRef.current?.contains(e.target)) return
-      if (anchorRef.current?.contains(e.target)) return
-      onClose()
-    }
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open, onClose, anchorRef])
-
-  if (!open) return null
-
   return (
-    <ul
-      ref={panelRef}
-      className={styles.peoplePopover}
-      role="listbox"
+    <AnchoredPopover
+      open={open}
+      onClose={onClose}
+      anchorRef={anchorRef}
+      title="Travelers"
+      role="list"
       aria-label={`Travelers for ${journey.title}`}
     >
-      <li className={styles.peoplePopoverTitle} role="presentation">
-        Travelers
-      </li>
-      {isLoading && (
-        <li>
-          <p className={styles.peopleHint}>Loading…</p>
-        </li>
-      )}
+      {isLoading && <p className={popoverStyles.hint}>Loading…</p>}
       {error && (
-        <li>
-          <p className={styles.peopleHint}>Could not load travelers.</p>
-        </li>
+        <p className={popoverStyles.hint}>Could not load travelers.</p>
       )}
-      {!isLoading &&
-        !error &&
-        roster.map((p) => (
-          <li key={p.id} className={styles.peopleRow} role="option">
-            <span className={styles.peopleName}>
-              {labelForJourneyPerson(p, currentUserId)}
-            </span>
-            <span className={styles.peopleRole}>
-              {p.linkedUserId ? 'Has account' : 'Guest'}
-            </span>
-          </li>
-        ))}
       {!isLoading && !error && roster.length === 0 && (
-        <li>
-          <p className={styles.peopleHint}>No travelers yet.</p>
-        </li>
+        <p className={popoverStyles.hint}>No travelers yet.</p>
       )}
-    </ul>
+      {!isLoading && !error && roster.length > 0 && (
+        <ul className={popoverStyles.list}>
+          {roster.map((p) => (
+            <li key={p.id} className={popoverStyles.row} role="listitem">
+              <span className={popoverStyles.name}>
+                {labelForJourneyPerson(p, currentUserId)}
+              </span>
+              <span className={popoverStyles.meta}>
+                {p.linkedUserId ? 'Joined' : 'Guest'}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </AnchoredPopover>
   )
 }
 
@@ -198,8 +172,8 @@ function JourneyCard({ journey, locale, layout, onOpen, currentUserId }) {
           ref={peopleBtnRef}
           type="button"
           className={styles.peopleBtn}
-          aria-label={`Participants for ${journey.title}`}
-          aria-haspopup="listbox"
+          aria-label={`Travelers for ${journey.title}`}
+          aria-haspopup="dialog"
           aria-expanded={peopleOpen}
           onClick={(e) => {
             e.stopPropagation()
@@ -302,10 +276,14 @@ export function Home() {
       <div className={cx('is-fluid-width', pageStyles.body)}>
         {isLoading && <LoadingState>Loading journeys…</LoadingState>}
         {error && (
-          <p className={pageStyles.error}>
-            Could not load journeys. Run the SQL schema in Supabase if tables
-            are missing. ({error.message})
-          </p>
+          <div className={pageStyles.empty}>
+            <p className={pageStyles.error}>
+              Could not load journeys. ({error.message})
+            </p>
+            <Button variant="outline" onClick={() => refetch()} fullWidth>
+              Retry
+            </Button>
+          </div>
         )}
 
         {!isLoading && !error && journeys.length === 0 && (
@@ -322,7 +300,11 @@ export function Home() {
           <section key={section.id} className={styles.section}>
             <h2 className={pageStyles.sectionTitle}>{section.title}</h2>
             <ul
-              className={layout === 'tiles' ? styles.tileGrid : pageStyles.list}
+              className={
+                layout === 'tiles'
+                  ? styles.tileGrid
+                  : cx(pageStyles.list, styles.listGrid)
+              }
             >
               {section.items.map((j) => (
                 <li
@@ -341,12 +323,6 @@ export function Home() {
             </ul>
           </section>
         ))}
-
-        {error && (
-          <Button variant="outline" onClick={() => refetch()} fullWidth>
-            Retry
-          </Button>
-        )}
       </div>
     </div>
   )

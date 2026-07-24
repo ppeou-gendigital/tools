@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Archive, ArrowLeft, Download, Save } from 'lucide-react'
+import { Archive, ArrowLeft, Check, Download, Loader2 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { LoadingState } from '@/molecules/LoadingState'
 import { Select } from '@/molecules/Select'
 import { TimezoneAutocomplete } from '@/molecules/TimezoneAutocomplete'
+import { ConfirmDialog } from '@/patterns/ConfirmDialog'
 import { PageHeader } from '@/patterns/PageHeader'
 import { COMMON_CURRENCIES } from '@/lib/catalog'
 import {
@@ -122,6 +123,9 @@ function JourneySettingsForm({
 }) {
   const qc = useQueryClient()
   const [error, setError] = useState('')
+  const [savedFlash, setSavedFlash] = useState(false)
+  const [confirm, setConfirm] = useState(null) // 'archive' | 'delete' | null
+  const [busy, setBusy] = useState(false)
   const canEdit =
     membership?.role === 'owner' || membership?.role === 'editor'
   const isOwner = membership?.role === 'owner'
@@ -144,10 +148,41 @@ function JourneySettingsForm({
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['viaggio', 'journey', journey.id] })
       qc.invalidateQueries({ queryKey: ['viaggio', 'journeys'] })
-      goBack()
+      setSavedFlash(true)
+      window.setTimeout(() => setSavedFlash(false), 2000)
     },
     onError: (err) => setError(err.message),
   })
+
+  async function runArchive() {
+    setBusy(true)
+    setError('')
+    try {
+      const snap = await buildJourneySnapshot(journey.id)
+      await archiveJourney(journey.id, snap)
+      qc.invalidateQueries({ queryKey: ['viaggio', 'journeys'] })
+      qc.invalidateQueries({ queryKey: ['viaggio', 'archives'] })
+      goHome()
+    } catch (err) {
+      setError(err.message)
+      setBusy(false)
+      setConfirm(null)
+    }
+  }
+
+  async function runDelete() {
+    setBusy(true)
+    setError('')
+    try {
+      await deleteJourney(journey.id)
+      qc.invalidateQueries({ queryKey: ['viaggio', 'journeys'] })
+      goHome()
+    } catch (err) {
+      setError(err.message)
+      setBusy(false)
+      setConfirm(null)
+    }
+  }
 
   return (
     <div className={styles.page}>
@@ -159,26 +194,13 @@ function JourneySettingsForm({
             {previousRouteLabel ?? 'Back'}
           </Button>
         }
-        actions={
-          canEdit ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className={styles.iconBtn}
-              onClick={() => {
-                setError('')
-                saveMut.mutate()
-              }}
-              disabled={saveMut.isPending}
-              aria-label={saveMut.isPending ? 'Saving…' : 'Save'}
-              title={saveMut.isPending ? 'Saving…' : 'Save'}
-            >
-              <Save size={14} aria-hidden="true" />
-            </Button>
-          ) : null
-        }
       />
       <div className={cx('is-fluid-width', styles.body)}>
+        {!canEdit && (
+          <p className={styles.readOnlyBanner}>
+            You can view these settings. Only editors can change them.
+          </p>
+        )}
         <div className={cx(styles.form, styles.formNarrow)}>
           <div className={styles.field}>
             <Label htmlFor="title">Title</Label>
@@ -189,57 +211,91 @@ function JourneySettingsForm({
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
-          <div className={styles.field}>
-            <Label htmlFor="starts">Starts</Label>
-            <Input
-              id="starts"
-              type="date"
-              value={startsOn}
-              disabled={!canEdit}
-              onChange={(e) => setStartsOn(e.target.value)}
-            />
+          <div className={styles.formGrid}>
+            <div className={styles.field}>
+              <Label htmlFor="starts">Starts</Label>
+              <Input
+                id="starts"
+                type="date"
+                value={startsOn}
+                disabled={!canEdit}
+                onChange={(e) => setStartsOn(e.target.value)}
+              />
+            </div>
+            <div className={styles.field}>
+              <Label htmlFor="ends">Ends</Label>
+              <Input
+                id="ends"
+                type="date"
+                value={endsOn}
+                disabled={!canEdit}
+                onChange={(e) => setEndsOn(e.target.value)}
+              />
+            </div>
           </div>
-          <div className={styles.field}>
-            <Label htmlFor="ends">Ends</Label>
-            <Input
-              id="ends"
-              type="date"
-              value={endsOn}
-              disabled={!canEdit}
-              onChange={(e) => setEndsOn(e.target.value)}
-            />
+          <div className={styles.formGrid}>
+            <div className={styles.field}>
+              <Label htmlFor="tz">Default timezone</Label>
+              <TimezoneAutocomplete
+                id="tz"
+                value={timezone}
+                disabled={!canEdit}
+                onChange={setTimezone}
+              />
+            </div>
+            <div className={styles.field}>
+              <Label htmlFor="cur">Default currency</Label>
+              <Select
+                id="cur"
+                value={currency}
+                disabled={!canEdit}
+                onChange={(e) => setCurrency(e.target.value)}
+              >
+                {COMMON_CURRENCIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
-          <div className={styles.field}>
-            <Label htmlFor="tz">Default timezone</Label>
-            <TimezoneAutocomplete
-              id="tz"
-              value={timezone}
-              disabled={!canEdit}
-              onChange={setTimezone}
-            />
-          </div>
-          <div className={styles.field}>
-            <Label htmlFor="cur">Default currency</Label>
-            <Select
-              id="cur"
-              value={currency}
-              disabled={!canEdit}
-              onChange={(e) => setCurrency(e.target.value)}
-            >
-              {COMMON_CURRENCIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </Select>
-          </div>
-          {error && <p className={styles.error}>{error}</p>}
+          {error && (
+            <p className={styles.error} role="alert">
+              {error}
+            </p>
+          )}
+          {savedFlash && (
+            <p className={styles.hint} role="status">
+              <Check size={12} aria-hidden="true" /> Saved.
+            </p>
+          )}
+
+          {canEdit && (
+            <div className={styles.actionsSticky}>
+              <Button
+                onClick={() => {
+                  setError('')
+                  saveMut.mutate()
+                }}
+                disabled={saveMut.isPending}
+              >
+                {saveMut.isPending ? (
+                  <>
+                    <Loader2 size={14} aria-hidden="true" />
+                    Saving
+                  </>
+                ) : (
+                  'Save changes'
+                )}
+              </Button>
+            </div>
+          )}
 
           <p className={styles.sectionTitle}>Export & archive</p>
           <p className={styles.hint}>
-            Export downloads a portable JSON snapshot (see{' '}
-            <code>docs/journey-snapshot.md</code>). Archive stores that JSON,
-            then removes the live journey — restore later from Archives.
+            Export downloads a full copy of this journey as a file you can keep.
+            Archive stores that copy and removes the live journey — restore later
+            from Archives.
           </p>
           <Button
             variant="outline"
@@ -255,63 +311,52 @@ function JourneySettingsForm({
             }}
           >
             <Download size={16} />
-            Export JSON
+            Export journey
           </Button>
-          {isOwner && (
-            <Button
-              variant="outline"
-              fullWidth
-              onClick={async () => {
-                if (
-                  !window.confirm(
-                    'Archive this journey? Live data will be removed and stored as JSON. You can restore it later from Archives.',
-                  )
-                ) {
-                  return
-                }
-                setError('')
-                try {
-                  const snap = await buildJourneySnapshot(journey.id)
-                  await archiveJourney(journey.id, snap)
-                  qc.invalidateQueries({ queryKey: ['viaggio', 'journeys'] })
-                  qc.invalidateQueries({ queryKey: ['viaggio', 'archives'] })
-                  goHome()
-                } catch (err) {
-                  setError(err.message)
-                }
-              }}
-            >
-              <Archive size={16} />
-              Archive journey
-            </Button>
-          )}
 
           {isOwner && (
-            <Button
-              variant="destructive"
-              fullWidth
-              onClick={async () => {
-                if (
-                  !window.confirm(
-                    'Delete this journey and all its data permanently? This cannot be undone. Prefer Archive if you might need it later.',
-                  )
-                ) {
-                  return
-                }
-                try {
-                  await deleteJourney(journey.id)
-                  qc.invalidateQueries({ queryKey: ['viaggio', 'journeys'] })
-                  goHome()
-                } catch (err) {
-                  setError(err.message)
-                }
-              }}
-            >
-              Delete journey
-            </Button>
+            <div className={styles.dangerZone}>
+              <p className={styles.sectionTitle}>Danger zone</p>
+              <Button
+                variant="outline"
+                fullWidth
+                onClick={() => setConfirm('archive')}
+              >
+                <Archive size={16} />
+                Archive journey
+              </Button>
+              <Button
+                variant="destructive"
+                fullWidth
+                onClick={() => setConfirm('delete')}
+              >
+                Delete journey
+              </Button>
+            </div>
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirm === 'archive'}
+        onDismiss={() => !busy && setConfirm(null)}
+        title="Archive this journey?"
+        message="Live data will be removed and stored so you can restore it later from Archives."
+        confirmLabel="Archive"
+        busyLabel="Archiving…"
+        confirming={busy}
+        onConfirm={runArchive}
+      />
+      <ConfirmDialog
+        open={confirm === 'delete'}
+        onDismiss={() => !busy && setConfirm(null)}
+        title="Delete this journey?"
+        message="Permanently delete this journey and all its data. Prefer Archive if you might need it later."
+        confirmLabel="Delete forever"
+        busyLabel="Deleting…"
+        confirming={busy}
+        onConfirm={runDelete}
+      />
     </div>
   )
 }

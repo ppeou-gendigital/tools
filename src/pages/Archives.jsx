@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Download, RotateCcw, Trash2, Upload } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { LoadingState } from '@/molecules/LoadingState'
+import { ConfirmDialog } from '@/patterns/ConfirmDialog'
 import { PageHeader } from '@/patterns/PageHeader'
+import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import {
   deleteJourneyArchive,
   getJourneyArchive,
@@ -27,10 +29,10 @@ function formatBytes(n) {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function formatWhen(iso) {
+function formatWhen(iso, locale) {
   if (!iso) return ''
   try {
-    return new Date(iso).toLocaleString()
+    return new Date(iso).toLocaleString(locale || undefined)
   } catch {
     return iso
   }
@@ -39,10 +41,13 @@ function formatWhen(iso) {
 export function Archives() {
   const { goBack, previousRouteLabel, goHome, goJourney } = useNavigation()
   const { user } = useAuth()
+  const { displayLocale } = useDisplayPrefs()
   const qc = useQueryClient()
   const fileRef = useRef(null)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [confirm, setConfirm] = useState(null)
+  const [busy, setBusy] = useState(false)
 
   const { data: archives = [], isLoading } = useQuery({
     queryKey: ['viaggio', 'archives'],
@@ -106,9 +111,7 @@ export function Archives() {
         <section className={styles.form}>
           <p className={styles.sectionTitle}>Import JSON</p>
           <p className={styles.hint}>
-            Compatible with format <code>viaggio.journey_snapshot</code> v1. See{' '}
-            <code>docs/journey-snapshot.md</code> and{' '}
-            <code>src/samples/journey-snapshot.sample.json</code>.
+            Import a journey file you previously exported or archived.
           </p>
           <input
             ref={fileRef}
@@ -149,9 +152,8 @@ export function Archives() {
                   <span className={styles.rowTitle}>{a.title}</span>
                   <span className={styles.rowMeta}>
                     {[
-                      formatWhen(a.archivedAt),
+                      formatWhen(a.archivedAt, displayLocale),
                       a.byteSize != null ? formatBytes(a.byteSize) : null,
-                      `v${a.snapshotVersion}`,
                     ]
                       .filter(Boolean)
                       .join(' · ')}
@@ -176,21 +178,20 @@ export function Archives() {
                     }}
                   >
                     <Download size={14} />
-                    JSON
+                    Export
                   </Button>
                   <Button
                     size="sm"
                     disabled={restoreMut.isPending}
-                    onClick={() => {
-                      if (
-                        !window.confirm(
-                          `Restore “${a.title}” as a new journey? The archive entry will be removed.`,
-                        )
-                      ) {
-                        return
-                      }
-                      restoreMut.mutate(a.id)
-                    }}
+                    onClick={() =>
+                      setConfirm({
+                        type: 'restore',
+                        archive: a,
+                        title: 'Restore archive?',
+                        message: `Restore “${a.title}” as a new journey? The archive entry will be removed.`,
+                        confirmLabel: 'Restore',
+                      })
+                    }
                   >
                     <RotateCcw size={14} />
                     Restore
@@ -198,23 +199,15 @@ export function Archives() {
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={async () => {
-                      if (
-                        !window.confirm(
-                          `Permanently delete archive “${a.title}”? This cannot be undone.`,
-                        )
-                      ) {
-                        return
-                      }
-                      try {
-                        await deleteJourneyArchive(a.id)
-                        qc.invalidateQueries({
-                          queryKey: ['viaggio', 'archives'],
-                        })
-                      } catch (err) {
-                        setError(err.message)
-                      }
-                    }}
+                    onClick={() =>
+                      setConfirm({
+                        type: 'delete',
+                        archive: a,
+                        title: 'Delete archive?',
+                        message: `Permanently delete archive “${a.title}”? This cannot be undone.`,
+                        confirmLabel: 'Delete',
+                      })
+                    }
                   >
                     <Trash2 size={14} />
                     Delete
@@ -229,6 +222,40 @@ export function Archives() {
           Back to journeys
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={!!confirm}
+        onDismiss={() => !busy && setConfirm(null)}
+        title={confirm?.title || ''}
+        message={confirm?.message}
+        confirmLabel={confirm?.confirmLabel || 'Confirm'}
+        busyLabel="Working…"
+        confirming={busy || restoreMut.isPending}
+        onConfirm={async () => {
+          if (!confirm?.archive) return
+          setBusy(true)
+          setError('')
+          try {
+            if (confirm.type === 'restore') {
+              await new Promise((resolve, reject) => {
+                restoreMut.mutate(confirm.archive.id, {
+                  onSuccess: resolve,
+                  onError: reject,
+                })
+              })
+            } else {
+              await deleteJourneyArchive(confirm.archive.id)
+              qc.invalidateQueries({ queryKey: ['viaggio', 'archives'] })
+            }
+            setConfirm(null)
+          } catch (err) {
+            setError(err.message)
+            setConfirm(null)
+          } finally {
+            setBusy(false)
+          }
+        }}
+      />
     </div>
   )
 }

@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
-  Info,
+  CircleDollarSign,
   ListMusic,
+  MapPin,
   Plus,
   Settings,
   Users,
   Wallet,
 } from 'lucide-react'
+import { AnchoredPopover } from '@/molecules/AnchoredPopover'
+import popoverStyles from '@/molecules/AnchoredPopover.module.scss'
 import { Button } from '@/molecules/Button'
 import { LoadingState } from '@/molecules/LoadingState'
 import { Modal } from '@/patterns/Modal'
@@ -48,61 +51,22 @@ import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import styles from './Page.module.scss'
 
-function EntrySidePopover({ open, onClose, title, children, anchorRef }) {
-  const panelRef = useRef(null)
-
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e) => {
-      if (panelRef.current?.contains(e.target)) return
-      if (anchorRef?.current?.contains(e.target)) return
-      onClose()
-    }
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open, onClose, anchorRef])
-
-  if (!open) return null
-
-  return (
-    <div ref={panelRef} className={styles.entryPopover} role="dialog" aria-label={title}>
-      <div className={styles.entryPopoverTitle}>{title}</div>
-      {children}
-    </div>
-  )
-}
-
 function EntryRowActions({
-  entry,
   entryExpenses,
   whoIds,
   peopleById,
   displayLocale,
   currentUserId,
-  displayNames,
   canEdit,
   onOpenExpense,
   onAddExpense,
 }) {
-  const [panel, setPanel] = useState(null) // 'expenses' | 'people' | 'details' | null
+  const [panel, setPanel] = useState(null) // 'expenses' | 'people' | null
   const expensesBtnRef = useRef(null)
   const peopleBtnRef = useRef(null)
-  const detailsBtnRef = useRef(null)
-  const showExpenses = entryExpenses.length > 0
+  // Editors always get Wallet so they can add the first expense from the row.
+  const showExpenses = canEdit || entryExpenses.length > 0
   const showPeople = whoIds.length > 1
-  const activity = getActivity(entry.activityId)
-  const showUpdated =
-    entry.updatedBy &&
-    entry.updatedAt &&
-    (entry.updatedBy !== entry.createdBy ||
-      entry.updatedAt !== entry.createdAt)
 
   return (
     <div className={styles.rowActions}>
@@ -136,49 +100,41 @@ function EntryRowActions({
           <Users size={16} aria-hidden="true" />
         </button>
       )}
-      <button
-        ref={detailsBtnRef}
-        type="button"
-        className={styles.rowInfo}
-        aria-label="Activity details"
-        title="Activity details"
-        aria-expanded={panel === 'details'}
-        aria-haspopup="dialog"
-        onClick={() => setPanel((p) => (p === 'details' ? null : 'details'))}
-      >
-        <Info size={16} aria-hidden="true" />
-      </button>
 
       {showExpenses && (
-        <EntrySidePopover
+        <AnchoredPopover
           open={panel === 'expenses'}
           onClose={() => setPanel(null)}
           title="Expenses"
           anchorRef={expensesBtnRef}
         >
-          <ul className={styles.list}>
-            {entryExpenses.map((ex) => (
-              <li key={ex.id}>
-                <button
-                  type="button"
-                  className={styles.entryPopoverRow}
-                  onClick={() => {
-                    setPanel(null)
-                    onOpenExpense(ex)
-                  }}
-                >
-                  <span className={styles.entryPopoverName}>
-                    {ex.title || 'Expense'}
-                  </span>
-                  <span className={styles.entryPopoverMeta}>
-                    {formatMoney(ex.amountCents, ex.currency, displayLocale)}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          {entryExpenses.length === 0 ? (
+            <p className={popoverStyles.hint}>No expenses yet.</p>
+          ) : (
+            <ul className={popoverStyles.list}>
+              {entryExpenses.map((ex) => (
+                <li key={ex.id}>
+                  <button
+                    type="button"
+                    className={popoverStyles.row}
+                    onClick={() => {
+                      setPanel(null)
+                      onOpenExpense(ex)
+                    }}
+                  >
+                    <span className={popoverStyles.name}>
+                      {ex.title || 'Expense'}
+                    </span>
+                    <span className={popoverStyles.meta}>
+                      {formatMoney(ex.amountCents, ex.currency, displayLocale)}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
           {canEdit && (
-            <div className={styles.entryPopoverActions}>
+            <div className={popoverStyles.actions}>
               <Button
                 size="sm"
                 variant="outline"
@@ -193,20 +149,20 @@ function EntryRowActions({
               </Button>
             </div>
           )}
-        </EntrySidePopover>
+        </AnchoredPopover>
       )}
 
       {showPeople && (
-        <EntrySidePopover
+        <AnchoredPopover
           open={panel === 'people'}
           onClose={() => setPanel(null)}
           title="Participants"
           anchorRef={peopleBtnRef}
         >
-          <ul className={styles.list}>
+          <ul className={popoverStyles.list}>
             {whoIds.map((pid) => (
-              <li key={pid} className={styles.entryPopoverRow}>
-                <span className={styles.entryPopoverName}>
+              <li key={pid} className={popoverStyles.row}>
+                <span className={popoverStyles.name}>
                   {labelForJourneyPerson(
                     peopleById.get(pid) || { id: pid },
                     currentUserId,
@@ -215,40 +171,27 @@ function EntryRowActions({
               </li>
             ))}
           </ul>
-        </EntrySidePopover>
+        </AnchoredPopover>
       )}
-
-      <EntrySidePopover
-        open={panel === 'details'}
-        onClose={() => setPanel(null)}
-        title="Details"
-        anchorRef={detailsBtnRef}
-      >
-        <div className={styles.entryPopoverRow}>
-          <span className={styles.entryPopoverName}>
-            {entry.title || activity?.label || 'Activity'}
-          </span>
-          {activity?.label && entry.title && (
-            <span className={styles.entryPopoverMeta}>{activity.label}</span>
-          )}
-        </div>
-        <p className={styles.entryPopoverHint}>
-          Created by{' '}
-          {labelForUserId(entry.createdBy, currentUserId, displayNames)}
-          {entry.createdAt
-            ? ` · ${formatWhen(entry.createdAt, displayLocale)}`
-            : ''}
-        </p>
-        {showUpdated && (
-          <p className={styles.entryPopoverHint}>
-            Updated by{' '}
-            {labelForUserId(entry.updatedBy, currentUserId, displayNames)}
-            {` · ${formatWhen(entry.updatedAt, displayLocale)}`}
-          </p>
-        )}
-      </EntrySidePopover>
     </div>
   )
+}
+
+function entryProvenance(entry, currentUserId, displayNames, displayLocale) {
+  const showUpdated =
+    entry.updatedBy &&
+    entry.updatedAt &&
+    (entry.updatedBy !== entry.createdBy ||
+      entry.updatedAt !== entry.createdAt)
+  if (showUpdated) {
+    return `Updated by ${labelForUserId(entry.updatedBy, currentUserId, displayNames)}${
+      entry.updatedAt ? ` · ${formatWhen(entry.updatedAt, displayLocale)}` : ''
+    }`
+  }
+  if (!entry.createdBy && !entry.createdAt) return ''
+  return `Created by ${labelForUserId(entry.createdBy, currentUserId, displayNames)}${
+    entry.createdAt ? ` · ${formatWhen(entry.createdAt, displayLocale)}` : ''
+  }`
 }
 
 export function Journey() {
@@ -261,6 +204,7 @@ export function Journey() {
     goMembers,
     goSpending,
     goPlaylist,
+    goMap,
     goJourneySettings,
   } = useNavigation()
   const journeyId = params.journeyId
@@ -268,8 +212,7 @@ export function Journey() {
   const { displayLocale } = useDisplayPrefs()
   const qc = useQueryClient()
   const [addOpen, setAddOpen] = useState(false)
-  const [browse, setBrowse] = useState(false)
-  const [packsOpen, setPacksOpen] = useState(false)
+  const [addStep, setAddStep] = useState('main') // 'main' | 'browse' | 'packs'
 
   const { data: journey, isLoading } = useQuery({
     queryKey: ['viaggio', 'journey', journeyId],
@@ -369,13 +312,18 @@ export function Journey() {
     mutationFn: (packs) => updateJourneyPacks(journeyId, packs),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['viaggio', 'journey', journeyId] })
-      setPacksOpen(false)
+      setAddStep('main')
     },
   })
 
+  function openAdd() {
+    setAddStep('main')
+    setAddOpen(true)
+  }
+
   function pickActivity(activityId) {
     setAddOpen(false)
-    setBrowse(false)
+    setAddStep('main')
     goEntryEdit({ journeyId, activityId })
   }
 
@@ -406,7 +354,7 @@ export function Journey() {
               variant="ghost"
               size="sm"
               className={styles.iconBtn}
-              onClick={() => setAddOpen(true)}
+              onClick={openAdd}
               aria-label="Add activity"
               title="Add activity"
             >
@@ -421,14 +369,14 @@ export function Journey() {
             shortcuts={[
               {
                 id: 'members',
-                label: 'Members',
+                label: 'Travelers',
                 icon: Users,
                 pick: () => () => goMembers(journeyId),
               },
               {
                 id: 'spending',
                 label: 'Spending',
-                icon: Wallet,
+                icon: CircleDollarSign,
                 pick: () => () => goSpending(journeyId),
               },
               {
@@ -436,6 +384,12 @@ export function Journey() {
                 label: 'Playlist',
                 icon: ListMusic,
                 pick: () => () => goPlaylist(journeyId),
+              },
+              {
+                id: 'map',
+                label: 'Map',
+                icon: MapPin,
+                pick: () => () => goMap(journeyId),
               },
               {
                 id: 'journey-settings',
@@ -456,7 +410,7 @@ export function Journey() {
           <div className={styles.empty}>
             <p>{preset?.emptyState || 'No activities yet.'}</p>
             {canEdit && (
-              <Button onClick={() => setAddOpen(true)}>
+              <Button onClick={openAdd}>
                 <Plus size={14} />
                 Add activity
               </Button>
@@ -489,15 +443,22 @@ export function Journey() {
                 const title =
                   entry.title || activity?.label || 'Activity'
                 const ActivityIcon = activityIcon(entry.activityId)
-                const meta = [
+                const metaPrimary = [
                   activity?.label,
                   formatEntryTimeLine(entry, displayLocale),
                   entry.placeName,
-                  moneyHint,
-                  whoHint,
                 ]
                   .filter(Boolean)
                   .join(' · ')
+                const metaSecondary = [moneyHint, whoHint]
+                  .filter(Boolean)
+                  .join(' · ')
+                const provenance = entryProvenance(
+                  entry,
+                  user?.id,
+                  displayNames,
+                  displayLocale,
+                )
                 return (
                   <li key={entry.id} className={styles.entryRow}>
                     <span
@@ -517,13 +478,11 @@ export function Journey() {
                           <span className={styles.rowTitle}>{title}</span>
                         </button>
                         <EntryRowActions
-                          entry={entry}
                           entryExpenses={entryExpenses}
                           whoIds={whoIds}
                           peopleById={peopleById}
                           displayLocale={displayLocale}
                           currentUserId={user?.id}
-                          displayNames={displayNames}
                           canEdit={canEdit}
                           onOpenExpense={(ex) =>
                             goExpenseEdit({
@@ -545,7 +504,23 @@ export function Journey() {
                         className={styles.rowMetaBtn}
                         onClick={openEntry}
                       >
-                        <span className={styles.rowMeta}>{meta}</span>
+                        <span className={styles.rowMeta}>
+                          {metaPrimary}
+                          {metaSecondary ? (
+                            <>
+                              {(metaPrimary || provenance) && <br />}
+                              {metaSecondary}
+                            </>
+                          ) : null}
+                          {provenance ? (
+                            <>
+                              {(metaPrimary || metaSecondary) && <br />}
+                              <span className={styles.rowMetaQuiet}>
+                                {provenance}
+                              </span>
+                            </>
+                          ) : null}
+                        </span>
                       </button>
                     </div>
                   </li>
@@ -558,12 +533,21 @@ export function Journey() {
 
       <Modal
         open={addOpen}
-        onDismiss={() => setAddOpen(false)}
-        title="Add activity"
-        wide
+        onDismiss={() => {
+          setAddOpen(false)
+          setAddStep('main')
+        }}
+        title={
+          addStep === 'packs'
+            ? 'Activity packs'
+            : addStep === 'browse'
+              ? 'All activities'
+              : 'Add activity'
+        }
+        wide={addStep !== 'packs'}
       >
         <div className={styles.sheet}>
-          {!browse && (
+          {addStep === 'main' && (
             <>
               <p className={styles.sectionTitle}>Primary</p>
               <div className={styles.chipRow}>
@@ -587,19 +571,23 @@ export function Journey() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPacksOpen(true)}
+                  onClick={() => setAddStep('packs')}
                 >
                   Also include…
                 </Button>
               )}
-              <Button variant="secondary" onClick={() => setBrowse(true)}>
+              <Button variant="secondary" onClick={() => setAddStep('browse')}>
                 Browse all
               </Button>
             </>
           )}
-          {browse && (
+          {addStep === 'browse' && (
             <>
-              <Button variant="ghost" size="sm" onClick={() => setBrowse(false)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setAddStep('main')}
+              >
                 ← Primary
               </Button>
               <ul className={styles.list}>
@@ -617,7 +605,6 @@ export function Journey() {
                         </span>
                         <span className={styles.rowBody}>
                           <span className={styles.rowTitle}>{a.label}</span>
-                          <span className={styles.rowMeta}>{a.schema}</span>
                         </span>
                       </button>
                     </li>
@@ -626,19 +613,23 @@ export function Journey() {
               </ul>
             </>
           )}
+          {addStep === 'packs' && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setAddStep('main')}
+              >
+                ← Back
+              </Button>
+              <PackPicker
+                journey={journey}
+                onSave={(packs) => packsMut.mutate(packs)}
+                saving={packsMut.isPending}
+              />
+            </>
+          )}
         </div>
-      </Modal>
-
-      <Modal
-        open={packsOpen}
-        onDismiss={() => setPacksOpen(false)}
-        title="Activity packs"
-      >
-        <PackPicker
-          journey={journey}
-          onSave={(packs) => packsMut.mutate(packs)}
-          saving={packsMut.isPending}
-        />
       </Modal>
     </div>
   )

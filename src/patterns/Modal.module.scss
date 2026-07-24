@@ -7,7 +7,7 @@
   display: grid;
   place-items: center;
   padding: var(--space-4);
-  background: color-mix(in srgb, #000 45%, transparent);
+  background: color-mix(in srgb, var(--fg) 40%, transparent);
   backdrop-filter: blur(2px);
   animation: fadeIn 120ms ease-out;
 }

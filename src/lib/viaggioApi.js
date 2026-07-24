@@ -163,6 +163,25 @@ function mapPlaylist(row) {
   }
 }
 
+function mapPlaceIdea(row) {
+  if (!row) return null
+  return {
+    id: row.id,
+    journeyId: row.journey_id,
+    googlePlaceId: row.google_place_id ?? null,
+    name: row.name,
+    address: row.address ?? null,
+    lat: row.lat != null ? Number(row.lat) : null,
+    lng: row.lng != null ? Number(row.lng) : null,
+    note: row.note ?? '',
+    sortOrder: row.sort_order,
+    entryId: row.entry_id ?? null,
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
 export async function listJourneys() {
   const { data, error } = await supabase
     .from('viaggio_journeys')
@@ -642,17 +661,26 @@ export async function listPlaylist(journeyId) {
 
 /** Infer platform label from a media URL for playlist chrome. */
 export function detectPlaylistPlatform(url) {
-  const u = String(url || '').toLowerCase()
-  if (!u) return null
-  if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube'
-  if (u.includes('spotify.com')) return 'spotify'
-  if (u.includes('music.apple.com') || u.includes('itunes.apple.com')) {
+  const raw = String(url || '').trim()
+  if (!raw) return null
+  let host = ''
+  try {
+    const parsed = new URL(raw.includes('://') ? raw : `https://${raw}`)
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null
+    host = parsed.hostname.toLowerCase().replace(/^www\./, '')
+  } catch {
+    // Incomplete typing — no badge yet.
+    return null
+  }
+  if (!host) return null
+  if (host === 'youtu.be' || host.endsWith('youtube.com')) return 'youtube'
+  if (host.endsWith('spotify.com')) return 'spotify'
+  if (host.endsWith('music.apple.com') || host.endsWith('itunes.apple.com')) {
     return 'apple_music'
   }
-  if (u.includes('soundcloud.com')) return 'soundcloud'
-  if (u.includes('vimeo.com')) return 'vimeo'
-  if (u.includes('tiktok.com')) return 'tiktok'
-  if (u.includes('open.spotify.com')) return 'spotify'
+  if (host.endsWith('soundcloud.com')) return 'soundcloud'
+  if (host.endsWith('vimeo.com')) return 'vimeo'
+  if (host.endsWith('tiktok.com')) return 'tiktok'
   return 'link'
 }
 
@@ -701,6 +729,153 @@ export async function deletePlaylistItem(itemId) {
     .delete()
     .eq('id', itemId)
   if (error) throw error
+}
+
+/** Persist playlist order. `orderedIds` is the full id list for the journey. */
+export async function reorderPlaylistItems(journeyId, orderedIds) {
+  const ids = (orderedIds ?? []).filter(Boolean)
+  if (!journeyId || ids.length === 0) return
+  const results = await Promise.all(
+    ids.map((id, sortOrder) =>
+      supabase
+        .from('viaggio_playlist_items')
+        .update({ sort_order: sortOrder })
+        .eq('id', id)
+        .eq('journey_id', journeyId),
+    ),
+  )
+  const failed = results.find((r) => r.error)
+  if (failed?.error) throw failed.error
+}
+
+export async function listPlaceIdeas(journeyId) {
+  const { data, error } = await supabase
+    .from('viaggio_place_ideas')
+    .select('*')
+    .eq('journey_id', journeyId)
+    .order('sort_order', { ascending: true })
+  if (error) throw error
+  return (data ?? []).map(mapPlaceIdea)
+}
+
+export async function addPlaceIdea(
+  journeyId,
+  { googlePlaceId, name, address, lat, lng, note },
+  userId,
+) {
+  const trimmedName = String(name || '').trim()
+  if (!trimmedName) throw new Error('Place name required')
+  const latN = Number(lat)
+  const lngN = Number(lng)
+  if (!Number.isFinite(latN) || !Number.isFinite(lngN)) {
+    throw new Error('Place coordinates required')
+  }
+
+  if (googlePlaceId) {
+    const { data: existing } = await supabase
+      .from('viaggio_place_ideas')
+      .select('*')
+      .eq('journey_id', journeyId)
+      .eq('google_place_id', googlePlaceId)
+      .maybeSingle()
+    if (existing) return mapPlaceIdea(existing)
+  }
+
+  const { data: last } = await supabase
+    .from('viaggio_place_ideas')
+    .select('sort_order')
+    .eq('journey_id', journeyId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+
+  const nextOrder = (last?.[0]?.sort_order ?? -1) + 1
+
+  const { data, error } = await supabase
+    .from('viaggio_place_ideas')
+    .insert({
+      journey_id: journeyId,
+      google_place_id: googlePlaceId || null,
+      name: trimmedName,
+      address: address ? String(address).trim() : null,
+      lat: latN,
+      lng: lngN,
+      note: note ? String(note) : '',
+      sort_order: nextOrder,
+      created_by: userId,
+    })
+    .select('*')
+    .single()
+  if (error) throw error
+  return mapPlaceIdea(data)
+}
+
+export async function updatePlaceIdea(ideaId, patch) {
+  const updates = { updated_at: new Date().toISOString() }
+  if (patch.note != null) updates.note = String(patch.note)
+  if (patch.entryId !== undefined) updates.entry_id = patch.entryId
+  if (patch.name != null) updates.name = String(patch.name).trim()
+  if (patch.address !== undefined) {
+    updates.address = patch.address ? String(patch.address).trim() : null
+  }
+
+  const { data, error } = await supabase
+    .from('viaggio_place_ideas')
+    .update(updates)
+    .eq('id', ideaId)
+    .select('*')
+    .single()
+  if (error) throw error
+  return mapPlaceIdea(data)
+}
+
+export async function deletePlaceIdea(ideaId) {
+  const { error } = await supabase
+    .from('viaggio_place_ideas')
+    .delete()
+    .eq('id', ideaId)
+  if (error) throw error
+}
+
+/** Persist shortlist order. `orderedIds` is the full id list for the journey. */
+export async function reorderPlaceIdeas(journeyId, orderedIds) {
+  const ids = (orderedIds ?? []).filter(Boolean)
+  if (!journeyId || ids.length === 0) return
+  const results = await Promise.all(
+    ids.map((id, sortOrder) =>
+      supabase
+        .from('viaggio_place_ideas')
+        .update({ sort_order: sortOrder, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('journey_id', journeyId),
+    ),
+  )
+  const failed = results.find((r) => r.error)
+  if (failed?.error) throw failed.error
+}
+
+/**
+ * Create a place activity from a shortlist idea and link entry_id.
+ * Idempotent when already promoted.
+ */
+export async function promotePlaceIdea(idea) {
+  if (!idea?.id || !idea.journeyId) throw new Error('Place idea required')
+  if (idea.entryId) {
+    const entry = await getEntry(idea.entryId)
+    return { idea, entry }
+  }
+
+  const entry = await upsertEntry({
+    journeyId: idea.journeyId,
+    activityId: 'place',
+    title: idea.name || 'Place',
+    placeName: idea.name || null,
+    address: idea.address || null,
+    lat: idea.lat,
+    lng: idea.lng,
+  })
+
+  const updated = await updatePlaceIdea(idea.id, { entryId: entry.id })
+  return { idea: updated, entry }
 }
 
 /** Build invite URL for web (or popup opener). */

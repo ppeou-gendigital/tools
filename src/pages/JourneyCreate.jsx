@@ -73,22 +73,24 @@ export function JourneyCreate() {
           }
         />
         <div className={cx('is-fluid-width', styles.body)}>
-          <ul className={styles.list}>
-            {PRESETS.map((p) => (
-              <li key={p.id}>
-                <button
-                  type="button"
-                  className={styles.rowBtn}
-                  onClick={() => pickPreset(p)}
-                >
-                  <span className={styles.rowBody}>
-                    <span className={styles.rowTitle}>{p.label}</span>
-                    <span className={styles.rowMeta}>{p.description}</span>
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div className={styles.formNarrow}>
+            <ul className={styles.list}>
+              {PRESETS.map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    className={styles.rowBtn}
+                    onClick={() => pickPreset(p)}
+                  >
+                    <span className={styles.rowBody}>
+                      <span className={styles.rowTitle}>{p.label}</span>
+                      <span className={styles.rowMeta}>{p.description}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     )
@@ -117,45 +119,47 @@ export function JourneyCreate() {
               placeholder={preset.titlePlaceholder}
             />
           </div>
-          <div className={styles.field}>
-            <Label htmlFor="starts">Starts (optional)</Label>
-            <Input
-              id="starts"
-              type="date"
-              value={startsOn}
-              onChange={(e) => setStartsOn(e.target.value)}
-            />
-          </div>
-          <div className={styles.field}>
-            <Label htmlFor="ends">Ends (optional)</Label>
-            <Input
-              id="ends"
-              type="date"
-              value={endsOn}
-              onChange={(e) => setEndsOn(e.target.value)}
-            />
-          </div>
-          <div className={styles.field}>
-            <Label htmlFor="tz">Default timezone</Label>
-            <TimezoneAutocomplete
-              id="tz"
-              value={timezone}
-              onChange={setTimezone}
-            />
-          </div>
-          <div className={styles.field}>
-            <Label htmlFor="cur">Default currency</Label>
-            <Select
-              id="cur"
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-            >
-              {COMMON_CURRENCIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </Select>
+          <div className={styles.formGrid}>
+            <div className={styles.field}>
+              <Label htmlFor="starts">Starts (optional)</Label>
+              <Input
+                id="starts"
+                type="date"
+                value={startsOn}
+                onChange={(e) => setStartsOn(e.target.value)}
+              />
+            </div>
+            <div className={styles.field}>
+              <Label htmlFor="ends">Ends (optional)</Label>
+              <Input
+                id="ends"
+                type="date"
+                value={endsOn}
+                onChange={(e) => setEndsOn(e.target.value)}
+              />
+            </div>
+            <div className={styles.field}>
+              <Label htmlFor="tz">Default timezone</Label>
+              <TimezoneAutocomplete
+                id="tz"
+                value={timezone}
+                onChange={setTimezone}
+              />
+            </div>
+            <div className={styles.field}>
+              <Label htmlFor="cur">Default currency</Label>
+              <Select
+                id="cur"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+              >
+                {COMMON_CURRENCIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
           {error && <p className={styles.error}>{error}</p>}
           <Button onClick={onCreate} disabled={createMut.isPending} fullWidth>

@@ -25,12 +25,12 @@
     transform 0.12s ease;
 
   &:hover:not(:disabled) {
-    opacity: 0.88;
+    filter: brightness(1.06);
   }
 
   &:active:not(:disabled) {
     transform: scale(0.98);
-    opacity: 0.82;
+    filter: brightness(0.96);
   }
 
   &:disabled {

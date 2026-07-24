@@ -8,8 +8,9 @@
    - **`patches/entry_participants.sql`** (if not already applied)
    - **`patches/journey_people.sql`** — personal people library + journey roster; migrates entry participants and expense splits to `journey_person_id`
 6. **`patches/journey_archives.sql`** — archive table + `archive_journey` / `delete_journey_archive` RPCs (store snapshot JSON, hard-delete live journey).
+7. **`patches/place_ideas.sql`** — shared map shortlist (`viaggio_place_ideas`) for brainstorming places before promoting to activities.
 
-Fresh `viaggio_schema.sql` already includes the traveler people model.
+Fresh `viaggio_schema.sql` already includes the traveler people model and place ideas table.
 
 Portable import/export format: **`docs/journey-snapshot.md`** (sample: `src/samples/journey-snapshot.sample.json`).
 

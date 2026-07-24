@@ -23,6 +23,7 @@ const ROUTES = [
   'accept-invite',
   'spending',
   'playlist',
+  'map',
   'journey-settings',
   'profile',
   'settings',
@@ -47,6 +48,7 @@ const ROUTE_LABELS = {
   'accept-invite': 'Join',
   spending: 'Spending',
   playlist: 'Playlist',
+  map: 'Map',
   'journey-settings': 'Journey settings',
   profile: 'Profile',
   settings: 'Settings',
@@ -67,6 +69,7 @@ const PARENT_ROUTE = {
   'accept-invite': 'home',
   spending: 'journey',
   playlist: 'journey',
+  map: 'journey',
   'journey-settings': 'journey',
   profile: 'home',
   settings: 'home',
@@ -278,6 +281,7 @@ export function NavigationProvider({ children, initial }) {
       goMembers: (journeyId) => navigate('members', { journeyId }),
       goSpending: (journeyId) => navigate('spending', { journeyId }),
       goPlaylist: (journeyId) => navigate('playlist', { journeyId }),
+      goMap: (journeyId) => navigate('map', { journeyId }),
       goJourneySettings: (journeyId) =>
         navigate('journey-settings', { journeyId }),
       goAcceptInvite: (inviteToken) =>

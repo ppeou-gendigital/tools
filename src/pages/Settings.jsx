@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Archive, ArrowLeft, Users } from 'lucide-react'
+import { Archive, ArrowLeft, UserRound, Users } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Label } from '@/molecules/Label'
 import { LocaleAutocomplete } from '@/molecules/LocaleAutocomplete'
@@ -13,7 +13,8 @@ import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function Settings() {
-  const { goBack, previousRouteLabel, goPeople, goArchives } = useNavigation()
+  const { goBack, previousRouteLabel, goPeople, goArchives, goProfile } =
+    useNavigation()
   const {
     displayLocale,
     defaultCurrency,
@@ -45,7 +46,27 @@ export function Settings() {
 
       <div className={cx('is-fluid-width', styles.body)}>
         <div className={cx(styles.form, styles.formNarrow)}>
+          <p className={styles.sectionTitle}>Account</p>
           <ul className={styles.list}>
+            <li>
+              <button
+                type="button"
+                className={styles.rowBtn}
+                onClick={() => goProfile()}
+              >
+                <UserRound
+                  size={16}
+                  className={styles.rowIcon}
+                  aria-hidden="true"
+                />
+                <span className={styles.rowBody}>
+                  <span className={styles.rowTitle}>Profile</span>
+                  <span className={styles.rowMeta}>
+                    How you appear to co-travelers
+                  </span>
+                </span>
+              </button>
+            </li>
             <li>
               <button
                 type="button"
@@ -54,7 +75,7 @@ export function Settings() {
               >
                 <Users size={16} className={styles.rowIcon} aria-hidden="true" />
                 <span className={styles.rowBody}>
-                  <span className={styles.rowTitle}>People library</span>
+                  <span className={styles.rowTitle}>People</span>
                   <span className={styles.rowMeta}>
                     Reusable travelers for any journey
                   </span>
@@ -73,9 +94,9 @@ export function Settings() {
                   aria-hidden="true"
                 />
                 <span className={styles.rowBody}>
-                  <span className={styles.rowTitle}>Archives & import</span>
+                  <span className={styles.rowTitle}>Archives</span>
                   <span className={styles.rowMeta}>
-                    Restore or import journey snapshots
+                    Restore or import saved journeys
                   </span>
                 </span>
               </button>
