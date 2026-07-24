@@ -23,7 +23,9 @@ import {
   Grip,
   Hospital,
   Landmark,
+  ListChecks,
   ListMusic,
+  LocateFixed,
   MapPin,
   Pill,
   Plus,
@@ -325,7 +327,7 @@ function MapFocus({ target }) {
 
 function MapCamera({ ideas, selectedId, fallbackCenter, searchFocus }) {
   const map = useMap()
-  const appliedFallback = useRef(false)
+  const appliedFallbackKey = useRef('')
   const fittedIdeasKey = useRef('')
   const ideasRef = useRef(ideas)
   const layoutKey = ideas
@@ -374,14 +376,17 @@ function MapCamera({ ideas, selectedId, fallbackCenter, searchFocus }) {
     }
 
     if (
-      !appliedFallback.current &&
       list.length === 0 &&
       fallbackCenter &&
       Number.isFinite(fallbackCenter.lat) &&
       Number.isFinite(fallbackCenter.lng)
     ) {
+      const key = `${fallbackCenter.lat},${fallbackCenter.lng}`
+      // Re-apply when geolocation arrives after the Paris default mount.
+      if (appliedFallbackKey.current === key) return
       map.panTo(fallbackCenter)
-      appliedFallback.current = true
+      map.setZoom(DEFAULT_ZOOM)
+      appliedFallbackKey.current = key
     }
   }, [map, layoutKey, selectedId, fallbackCenter, searchFocus])
 
@@ -536,6 +541,8 @@ function PlacesExplorePanel({
   onAddIdea,
   adding,
   onShowSaved,
+  onLocate,
+  locating = false,
 }) {
   const placesLib = useMapsLibrary('places')
   const detailsHostRef = useRef(null)
@@ -554,6 +561,7 @@ function PlacesExplorePanel({
   const [detailsFallback, setDetailsFallback] = useState(null)
   const [chipMenuOpen, setChipMenuOpen] = useState(false)
   const [richDetailsLoaded, setRichDetailsLoaded] = useState(false)
+  const [listCollapsed, setListCollapsed] = useState(false)
 
   useEffect(() => {
     boundsRef.current = bounds
@@ -653,6 +661,7 @@ function PlacesExplorePanel({
 
     setSearchError('')
     setSearching(true)
+    setListCollapsed(false)
     onDetailsPlaceId?.(null)
     setDetailsFallback(null)
 
@@ -739,6 +748,7 @@ function PlacesExplorePanel({
     setSearchError('')
     setSearching(false)
     setResults([])
+    setListCollapsed(false)
     setDetailsFallback(null)
     setDetailsLoading(false)
     onDetailsPlaceId?.(null)
@@ -765,18 +775,30 @@ function PlacesExplorePanel({
     searching ||
     detailsLoading ||
     Boolean(searchError)
+  // Collapse only hides the results list; details / search status stay open.
+  const sheetExpanded =
+    showingDetails ||
+    searching ||
+    detailsLoading ||
+    Boolean(searchError) ||
+    (results.length > 0 && !listCollapsed)
+  const listCollapsible =
+    !showingDetails && !searching && !searchError && results.length > 0
   const libReady = Boolean(placesLib?.Place?.searchByText)
   const detailsMapsUrl = googleMapsPlaceUrl(activeDetails)
 
   useEffect(() => {
-    if (showingDetails) setChipMenuOpen(false)
+    if (showingDetails) {
+      setChipMenuOpen(false)
+      setListCollapsed(false)
+    }
   }, [showingDetails])
 
   return (
     <aside
       className={cx(
         styles.mapExploreDock,
-        sheetOpen && styles.mapExploreDockFilled,
+        sheetExpanded && styles.mapExploreDockFilled,
       )}
       aria-label="Explore places"
     >
@@ -790,6 +812,25 @@ function PlacesExplorePanel({
             onRawSearch={(text) => void runTextSearch(text)}
           />
         </div>
+
+        {onLocate ? (
+          <button
+            type="button"
+            className={styles.mapLocateBtn}
+            onClick={() => void onLocate()}
+            disabled={locating}
+            aria-label={
+              locating ? 'Finding your location' : 'Go to my location'
+            }
+            title="My location"
+          >
+            <LocateFixed
+              size={16}
+              aria-hidden="true"
+              className={locating ? styles.spin : undefined}
+            />
+          </button>
+        ) : null}
 
         {!showingDetails && (
           <>
@@ -838,7 +879,33 @@ function PlacesExplorePanel({
         )}
       </div>
 
-      {sheetOpen ? (
+      {sheetOpen && listCollapsed && listCollapsible ? (
+        <div className={styles.mapExploreCollapsedBar}>
+          <button
+            type="button"
+            className={styles.mapExploreCollapsedBtn}
+            onClick={() => setListCollapsed(false)}
+            aria-expanded={false}
+            aria-label={`Show ${results.length} results`}
+          >
+            <span>
+              {results.length} result{results.length === 1 ? '' : 's'}
+            </span>
+            <ChevronDown size={14} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className={styles.mapExploreCollapsedClose}
+            onClick={clearSearch}
+            aria-label="Clear results"
+            title="Clear results"
+          >
+            <X size={14} aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
+
+      {sheetExpanded ? (
         <div
           className={cx(
             styles.mapExploreSheet,
@@ -862,55 +929,83 @@ function PlacesExplorePanel({
                 <p className={styles.mapExploreHint}>Searching…</p>
               ) : null}
               {!searching && results.length > 0 ? (
-                <ul className={styles.mapResultList}>
-                  {results.map((place) => (
-                    <li key={place.key}>
+                <>
+                  <div className={styles.mapExploreListBar}>
+                    <span className={styles.mapExploreListCount}>
+                      {results.length} result{results.length === 1 ? '' : 's'}
+                    </span>
+                    <div className={styles.mapExploreListBarActions}>
                       <button
                         type="button"
-                        className={styles.mapResultRow}
-                        onClick={() => {
-                          if (!place.googlePlaceId) return
-                          onDetailsPlaceId?.(place.googlePlaceId)
-                        }}
+                        className={styles.mapExploreListCollapse}
+                        onClick={() => setListCollapsed(true)}
+                        aria-expanded={true}
+                        aria-label="Hide results list"
+                        title="Hide list"
                       >
-                        <span className={styles.mapResultCopy}>
-                          <span className={styles.mapResultName}>
-                            <span className={styles.mapResultIndex}>
-                              {place.label}
-                            </span>
-                            {place.name}
-                          </span>
-                          {place.rating != null ? (
-                            <span className={styles.mapResultRating}>
-                              <Star size={12} aria-hidden="true" />
-                              {place.rating.toFixed(1)}
-                              {place.ratingCount != null
-                                ? ` (${place.ratingCount})`
-                                : ''}
-                            </span>
-                          ) : null}
-                          {place.address ? (
-                            <span className={styles.mapResultMeta}>
-                              {place.address}
-                            </span>
-                          ) : null}
-                        </span>
-                        {place.photoUrl ? (
-                          <img
-                            className={styles.mapResultPhoto}
-                            src={place.photoUrl}
-                            alt=""
-                            loading="lazy"
-                          />
-                        ) : (
-                          <span className={styles.mapResultPhotoFallback}>
-                            <MapPin size={16} aria-hidden="true" />
-                          </span>
-                        )}
+                        <ChevronUp size={14} aria-hidden="true" />
                       </button>
-                    </li>
-                  ))}
-                </ul>
+                      <button
+                        type="button"
+                        className={styles.mapExploreListCollapse}
+                        onClick={clearSearch}
+                        aria-label="Clear results"
+                        title="Clear results"
+                      >
+                        <X size={14} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
+                  <ul className={styles.mapResultList}>
+                    {results.map((place) => (
+                      <li key={place.key}>
+                        <button
+                          type="button"
+                          className={styles.mapResultRow}
+                          onClick={() => {
+                            if (!place.googlePlaceId) return
+                            onDetailsPlaceId?.(place.googlePlaceId)
+                          }}
+                        >
+                          <span className={styles.mapResultCopy}>
+                            <span className={styles.mapResultName}>
+                              <span className={styles.mapResultIndex}>
+                                {place.label}
+                              </span>
+                              {place.name}
+                            </span>
+                            {place.rating != null ? (
+                              <span className={styles.mapResultRating}>
+                                <Star size={12} aria-hidden="true" />
+                                {place.rating.toFixed(1)}
+                                {place.ratingCount != null
+                                  ? ` (${place.ratingCount})`
+                                  : ''}
+                              </span>
+                            ) : null}
+                            {place.address ? (
+                              <span className={styles.mapResultMeta}>
+                                {place.address}
+                              </span>
+                            ) : null}
+                          </span>
+                          {place.photoUrl ? (
+                            <img
+                              className={styles.mapResultPhoto}
+                              src={place.photoUrl}
+                              alt=""
+                              loading="lazy"
+                            />
+                          ) : (
+                            <span className={styles.mapResultPhotoFallback}>
+                              <MapPin size={16} aria-hidden="true" />
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </>
               ) : null}
             </div>
 
@@ -1066,6 +1161,12 @@ function journeyShortcuts(journeyId, go) {
       pick: () => () => go.goPlaylist(journeyId),
     },
     {
+      id: 'todos',
+      label: 'To-dos',
+      icon: ListChecks,
+      pick: () => () => go.goTodos(journeyId),
+    },
+    {
       id: 'map',
       label: 'Map',
       icon: MapPin,
@@ -1100,12 +1201,15 @@ export function Map() {
   const [deleting, setDeleting] = useState(false)
   const [promotingId, setPromotingId] = useState(null)
   const [ideasOpen, setIdeasOpen] = useState(false)
+  const [userLocation, setUserLocation] = useState(null)
+  const [locating, setLocating] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     resolveCoords().then((coords) => {
       if (cancelled || !coords) return
       setCenter({ lat: coords.lat, lng: coords.lng })
+      setUserLocation({ lat: coords.lat, lng: coords.lng })
     })
     return () => {
       cancelled = true
@@ -1196,6 +1300,34 @@ export function Map() {
       ...target,
       key: target.key || searchFocusKeyRef.current,
     })
+  }
+
+  async function goToMyLocation() {
+    if (locating) return
+    setLocating(true)
+    setActionError('')
+    try {
+      const coords = await resolveCoords()
+      if (!coords) {
+        setActionError(
+          'Could not get your location. Allow location access in the browser, then try again.',
+        )
+        return
+      }
+      const next = { lat: coords.lat, lng: coords.lng }
+      setUserLocation(next)
+      setCenter(next)
+      setSelectedId(null)
+      setDetailsPlaceId(null)
+      focusMapOn({
+        key: `me-${next.lat},${next.lng},${Date.now()}`,
+        lat: next.lat,
+        lng: next.lng,
+        zoom: 14,
+      })
+    } finally {
+      setLocating(false)
+    }
   }
 
   function openPlaceDetails(placeId) {
@@ -1351,6 +1483,22 @@ export function Map() {
                       }}
                     />
                   ))}
+                  {userLocation &&
+                  globalThis.google?.maps?.SymbolPath?.CIRCLE != null ? (
+                    <Marker
+                      position={userLocation}
+                      title="Your location"
+                      clickable={false}
+                      icon={{
+                        path: globalThis.google.maps.SymbolPath.CIRCLE,
+                        scale: 9,
+                        fillColor: '#4285F4',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2,
+                      }}
+                    />
+                  ) : null}
                 </GoogleMap>
               </div>
 
@@ -1369,6 +1517,8 @@ export function Map() {
                   setSelectedId(detailsSavedIdea.id)
                   setIdeasOpen(true)
                 }}
+                onLocate={goToMyLocation}
+                locating={locating}
               />
 
               {actionError && (

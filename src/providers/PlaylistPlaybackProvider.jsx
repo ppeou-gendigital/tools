@@ -73,13 +73,16 @@ export function PlaylistPlaybackProvider({ children }) {
     }
   }, [active, journeyId, items, trackId, currentIndex, stop])
 
-  const playAt = useCallback(({ journeyId: jid, trackId: tid }) => {
-    if (!jid || !tid) return
-    setJourneyId(jid)
-    setTrackId(tid)
-    setActive(true)
-    setPlayNonce((n) => n + 1)
-  }, [])
+  const playAt = useCallback(
+    ({ journeyId: jid, trackId: tid, autoplay = true }) => {
+      if (!jid || !tid) return
+      setJourneyId(jid)
+      setTrackId(tid)
+      setActive(true)
+      if (autoplay) setPlayNonce((n) => n + 1)
+    },
+    [],
+  )
 
   const setIndex = useCallback(
     (index, { autoplay = false } = {}) => {

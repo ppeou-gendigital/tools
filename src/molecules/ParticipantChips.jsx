@@ -14,6 +14,8 @@ import styles from './ParticipantChips.module.scss'
  * @param {(id: string) => void} onToggle
  * @param {string} [currentUserId]
  * @param {boolean} [readOnly]
+ * @param {string} [emptyHint] — shown when nothing selected
+ * @param {string} [addLabel] — label for the add chip button
  */
 export function ParticipantChips({
   roster = [],
@@ -21,6 +23,8 @@ export function ParticipantChips({
   onToggle,
   currentUserId,
   readOnly = false,
+  emptyHint,
+  addLabel = 'Add traveler',
 }) {
   const [picking, setPicking] = useState(false)
   const addRef = useRef(null)
@@ -67,7 +71,7 @@ export function ParticipantChips({
             aria-haspopup="listbox"
           >
             <Plus size={14} aria-hidden="true" />
-            Add traveler
+            {addLabel}
           </button>
         )}
       </div>
@@ -76,7 +80,7 @@ export function ParticipantChips({
         open={!readOnly && picking && available.length > 0}
         onClose={() => setPicking(false)}
         anchorRef={addRef}
-        title="Add travelers"
+        title={addLabel}
         align="start"
         role="listbox"
       >
@@ -101,9 +105,10 @@ export function ParticipantChips({
 
       {selectedList.length === 0 && !picking && (
         <p className={styles.emptyHint}>
-          {readOnly
-            ? 'No participants on this activity.'
-            : 'No one tagged yet. Add travelers above.'}
+          {emptyHint ??
+            (readOnly
+              ? 'No participants on this activity.'
+              : 'No one tagged yet. Add travelers above.')}
         </p>
       )}
     </div>

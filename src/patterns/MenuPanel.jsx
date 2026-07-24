@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import {
   Archive,
+  ListChecks,
   ListMusic,
   MapPin,
   UserRound,
@@ -29,6 +30,7 @@ const JOURNEY_ROUTES = new Set([
   'members',
   'spending',
   'playlist',
+  'todos',
   'map',
   'journey-settings',
 ])
@@ -109,6 +111,12 @@ export function MenuPanel({ corner, onClose }) {
             label="Playlist"
             onClose={onClose}
             onClick={() => nav.goPlaylist(journeyId)}
+          />
+          <MenuRow
+            icon={ListChecks}
+            label="To-dos"
+            onClose={onClose}
+            onClick={() => nav.goTodos(journeyId)}
           />
           <MenuRow
             icon={MapPin}

@@ -146,5 +146,28 @@
       "sort_order": 0,
       "entry_id": null
     }
+  ],
+  "todos": [
+    {
+      "title": "Apply for Schengen Visa",
+      "notes": "Book embassy appointment; passport photos",
+      "done": false,
+      "due_on": "2026-08-01",
+      "assignee_person_ids": ["person-owner", "person-guest"],
+      "assignees": [
+        { "person_id": "person-owner", "done": true },
+        { "person_id": "person-guest", "done": false }
+      ],
+      "sort_order": 0
+    },
+    {
+      "title": "Get eSim",
+      "notes": "",
+      "done": true,
+      "due_on": null,
+      "assignee_person_ids": [],
+      "assignees": [],
+      "sort_order": 1
+    }
   ]
 }

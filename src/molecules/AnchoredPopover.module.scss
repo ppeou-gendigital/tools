@@ -17,6 +17,19 @@
   box-shadow: var(--shadow-popover);
 }
 
+.fluid {
+  // SM: near full-bleed; MD+: hug content.
+  width: 92dvw;
+  min-width: 0;
+  max-width: 92dvw;
+  max-height: min(78dvh, 32rem);
+
+  @include m.md {
+    width: max-content;
+    max-width: min(calc(100dvw - 1rem), 28rem);
+  }
+}
+
 .title {
   font-size: var(--text-xs);
   font-weight: 600;
@@ -49,12 +62,22 @@
 }
 
 .name {
+  display: grid;
+  gap: 0.1rem;
   font-size: var(--text-sm);
   font-weight: 500;
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.splitHint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--muted-fg);
+  line-height: 0;
 }
 
 .meta {

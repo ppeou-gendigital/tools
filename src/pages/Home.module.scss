@@ -109,16 +109,15 @@
 }
 
 .tileCard {
-  flex-direction: column;
-  align-items: stretch;
+  /* Dense tile: title + people on one row, meta under title. No type-icon column. */
+  align-items: flex-start;
   height: 100%;
-  gap: var(--space-1);
 
   .cardMain {
     flex-direction: column;
-    align-items: flex-start;
-    flex: 1;
-    gap: var(--space-2);
+    align-items: stretch;
+    gap: 2px;
+    min-width: 0;
   }
 
   .cardBody {
@@ -134,10 +133,6 @@
 
   .cardMeta {
     white-space: normal;
-  }
-
-  .peopleBtn {
-    align-self: flex-end;
   }
 }
 

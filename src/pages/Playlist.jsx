@@ -5,6 +5,7 @@ import {
   ExternalLink,
   GripVertical,
   Link2,
+  ListChecks,
   MapPin,
   Music2,
   Plus,
@@ -116,6 +117,7 @@ export function Playlist() {
     previousRouteLabel,
     goMembers,
     goSpending,
+    goTodos,
     goMap,
     goJourneySettings,
   } = useNavigation()
@@ -136,8 +138,6 @@ export function Playlist() {
   const [ordered, setOrdered] = useState([])
   const [draggingId, setDraggingId] = useState(null)
   const [overIndex, setOverIndex] = useState(-1)
-  const [seedingDemo, setSeedingDemo] = useState(false)
-  const isDev = import.meta.env.DEV
   const {
     trackId: playingTrackId,
     journeyId: playingJourneyId,
@@ -256,26 +256,25 @@ export function Playlist() {
     setOrdered(items)
   }, [items, reorderMut.isPending])
 
+  // Default: select first playable track (paused) so the play bar is visible.
+  useEffect(() => {
+    if (!journeyId || ordered.length === 0) return
+    if (playingJourneyId === journeyId && playingTrackId) return
+    const first =
+      ordered.find((item) => parseMediaLink(item.url).playable) || ordered[0]
+    if (!first?.id) return
+    playAt({ journeyId, trackId: first.id, autoplay: false })
+  }, [
+    journeyId,
+    ordered,
+    playingJourneyId,
+    playingTrackId,
+    playAt,
+  ])
+
   function playTrack(item) {
     if (!journeyId || !item?.id) return
     playAt({ journeyId, trackId: item.id })
-  }
-
-  async function addDemoTracks() {
-    if (!journeyId || seedingDemo) return
-    setSeedingDemo(true)
-    setError('')
-    try {
-      const mod = await import('@/dev/seedScenarios')
-      await mod.seedPlaylistDemo(journeyId)
-      await qc.invalidateQueries({
-        queryKey: ['viaggio', 'playlist', journeyId],
-      })
-    } catch (err) {
-      setError(err.message || 'Could not add demo tracks.')
-    } finally {
-      setSeedingDemo(false)
-    }
   }
 
   function openAdd() {
@@ -431,6 +430,12 @@ export function Playlist() {
                 pick: () => () => goSpending(journeyId),
               },
               {
+                id: 'todos',
+                label: 'To-dos',
+                icon: ListChecks,
+                pick: () => () => goTodos(journeyId),
+              },
+              {
                 id: 'map',
                 label: 'Map',
                 icon: MapPin,
@@ -477,16 +482,6 @@ export function Playlist() {
                 Add link
               </Button>
             )}
-            {isDev && canEdit && (
-              <Button
-                variant="outline"
-                onClick={addDemoTracks}
-                disabled={seedingDemo}
-              >
-                <Music2 size={14} aria-hidden="true" />
-                {seedingDemo ? 'Adding demo…' : 'Add demo tracks'}
-              </Button>
-            )}
             {isViewer && (
               <p className={styles.hint}>Ask an editor to add links.</p>
             )}
@@ -501,24 +496,6 @@ export function Playlist() {
             {error}
           </p>
         )}
-
-        {isDev &&
-          canEdit &&
-          !isLoading &&
-          !loadError &&
-          ordered.length > 0 && (
-            <div className={styles.playlistDevBar}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={addDemoTracks}
-                disabled={seedingDemo}
-              >
-                <Music2 size={14} aria-hidden="true" />
-                {seedingDemo ? 'Adding demo…' : 'Add demo tracks'}
-              </Button>
-            </div>
-          )}
 
         {!isLoading && !loadError && ordered.length > 0 && (
           <div className={styles.playlistStage}>

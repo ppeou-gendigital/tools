@@ -3,10 +3,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
   CircleDollarSign,
+  Grid2x2Check,
+  ListChecks,
   ListMusic,
   MapPin,
   Plus,
   Settings,
+  Shapes,
   Users,
   Wallet,
 } from 'lucide-react'
@@ -34,6 +37,7 @@ import {
   formatWallDate,
   formatWhen,
   labelForJourneyPerson,
+  labelForSplitMode,
   labelForUserId,
 } from '@/lib/format'
 import {
@@ -124,6 +128,18 @@ function EntryRowActions({
                   >
                     <span className={popoverStyles.name}>
                       {ex.title || 'Expense'}
+                      <span
+                        className={popoverStyles.splitHint}
+                        role="img"
+                        aria-label={labelForSplitMode(ex.splitMode)}
+                        title={labelForSplitMode(ex.splitMode)}
+                      >
+                        {ex.splitMode === 'custom' ? (
+                          <Shapes size={12} aria-hidden="true" />
+                        ) : (
+                          <Grid2x2Check size={12} aria-hidden="true" />
+                        )}
+                      </span>
                     </span>
                     <span className={popoverStyles.meta}>
                       {formatMoney(ex.amountCents, ex.currency, displayLocale)}
@@ -204,6 +220,7 @@ export function Journey() {
     goMembers,
     goSpending,
     goPlaylist,
+    goTodos,
     goMap,
     goJourneySettings,
   } = useNavigation()
@@ -384,6 +401,12 @@ export function Journey() {
                 label: 'Playlist',
                 icon: ListMusic,
                 pick: () => () => goPlaylist(journeyId),
+              },
+              {
+                id: 'todos',
+                label: 'To-dos',
+                icon: ListChecks,
+                pick: () => () => goTodos(journeyId),
               },
               {
                 id: 'map',

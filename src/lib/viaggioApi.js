@@ -182,6 +182,107 @@ function mapPlaceIdea(row) {
   }
 }
 
+function mapTodoAssignees(nested) {
+  if (!Array.isArray(nested)) return []
+  return nested
+    .filter((a) => a?.journey_person_id)
+    .map((a) => ({
+      journeyPersonId: a.journey_person_id,
+      done: !!a.done,
+      doneAt: a.done_at ?? null,
+    }))
+}
+
+function mapTodo(row) {
+  if (!row) return null
+  const assignees = mapTodoAssignees(
+    row.assignees ?? row.viaggio_todo_assignees ?? [],
+  )
+  const assigneeIds = assignees.map((a) => a.journeyPersonId)
+  const doneCount = assignees.filter((a) => a.done).length
+  // With assignees: overall done = everyone done. Unassigned: todo.done.
+  const done =
+    assignees.length > 0 ? doneCount === assignees.length : !!row.done
+  return {
+    id: row.id,
+    journeyId: row.journey_id,
+    title: row.title,
+    notes: row.notes ?? '',
+    done,
+    dueOn: row.due_on ?? null,
+    assignees,
+    assigneeJourneyPersonIds: assigneeIds,
+    assigneeDoneCount: doneCount,
+    sortOrder: row.sort_order,
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+async function fetchTodoAssignees(todoId) {
+  const { data, error } = await supabase
+    .from('viaggio_todo_assignees')
+    .select('journey_person_id, done, done_at')
+    .eq('todo_id', todoId)
+  if (error) throw error
+  return data ?? []
+}
+
+async function syncTodoDoneRollup(todoId) {
+  const rows = await fetchTodoAssignees(todoId)
+  if (rows.length === 0) return null
+  const allDone = rows.every((r) => r.done)
+  const { data, error } = await supabase
+    .from('viaggio_todos')
+    .update({ done: allDone, updated_at: new Date().toISOString() })
+    .eq('id', todoId)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+/**
+ * Replace assignees. Preserves done for people who remain.
+ * @param {string} todoId
+ * @param {string[]} journeyPersonIds
+ * @param {{ defaultDone?: boolean }} [opts]
+ */
+async function replaceTodoAssignees(todoId, journeyPersonIds, opts = {}) {
+  const ids = [...new Set((journeyPersonIds ?? []).filter(Boolean))]
+  const { defaultDone = false } = opts
+  const existing = await fetchTodoAssignees(todoId)
+  const prevDone = new Map(
+    existing.map((r) => [r.journey_person_id, !!r.done]),
+  )
+
+  const { error: delErr } = await supabase
+    .from('viaggio_todo_assignees')
+    .delete()
+    .eq('todo_id', todoId)
+  if (delErr) throw delErr
+
+  if (ids.length === 0) return []
+
+  const rows = ids.map((journeyPersonId) => {
+    const done =
+      prevDone.has(journeyPersonId) ? prevDone.get(journeyPersonId) : defaultDone
+    return {
+      todo_id: todoId,
+      journey_person_id: journeyPersonId,
+      done,
+      done_at: done ? new Date().toISOString() : null,
+    }
+  })
+  const { data, error: insErr } = await supabase
+    .from('viaggio_todo_assignees')
+    .insert(rows)
+    .select('journey_person_id, done, done_at')
+  if (insErr) throw insErr
+  return data ?? rows
+}
+
 export async function listJourneys() {
   const { data, error } = await supabase
     .from('viaggio_journeys')
@@ -845,6 +946,186 @@ export async function reorderPlaceIdeas(journeyId, orderedIds) {
       supabase
         .from('viaggio_place_ideas')
         .update({ sort_order: sortOrder, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('journey_id', journeyId),
+    ),
+  )
+  const failed = results.find((r) => r.error)
+  if (failed?.error) throw failed.error
+}
+
+export async function listTodos(journeyId) {
+  const { data, error } = await supabase
+    .from('viaggio_todos')
+    .select(
+      '*, assignees:viaggio_todo_assignees(journey_person_id, done, done_at)',
+    )
+    .eq('journey_id', journeyId)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return (data ?? []).map(mapTodo)
+}
+
+export async function addTodo(
+  journeyId,
+  { title, notes, dueOn, assigneeJourneyPersonIds, done },
+  userId,
+) {
+  const trimmed = String(title || '').trim()
+  if (!trimmed) throw new Error('Title required')
+
+  const { data: last } = await supabase
+    .from('viaggio_todos')
+    .select('sort_order')
+    .eq('journey_id', journeyId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+
+  const nextOrder = (last?.[0]?.sort_order ?? -1) + 1
+  const ids = [...new Set((assigneeJourneyPersonIds ?? []).filter(Boolean))]
+  const overallDone = ids.length > 0 ? !!done : !!done
+
+  const { data, error } = await supabase
+    .from('viaggio_todos')
+    .insert({
+      journey_id: journeyId,
+      title: trimmed,
+      notes: notes != null ? String(notes) : '',
+      done: overallDone,
+      due_on: dueOn || null,
+      sort_order: nextOrder,
+      created_by: userId,
+    })
+    .select('*')
+    .single()
+  if (error) throw error
+
+  const assignees = await replaceTodoAssignees(data.id, ids, {
+    defaultDone: !!done,
+  })
+  if (ids.length > 0) {
+    const rolled = await syncTodoDoneRollup(data.id)
+    return mapTodo({ ...(rolled ?? data), assignees })
+  }
+  return mapTodo({ ...data, assignees })
+}
+
+/**
+ * Update a todo. When assignees exist, `done` toggles every assignee.
+ * Pass `assigneeDone` map/object to set per-person completion.
+ */
+export async function updateTodo(todoId, patch) {
+  const updates = { updated_at: new Date().toISOString() }
+  if (patch.title != null) {
+    const trimmed = String(patch.title).trim()
+    if (!trimmed) throw new Error('Title required')
+    updates.title = trimmed
+  }
+  if (patch.notes != null) updates.notes = String(patch.notes)
+  if (patch.dueOn !== undefined) updates.due_on = patch.dueOn || null
+
+  let assignees = await fetchTodoAssignees(todoId)
+
+  if (patch.assigneeJourneyPersonIds !== undefined) {
+    assignees = await replaceTodoAssignees(
+      todoId,
+      patch.assigneeJourneyPersonIds,
+      { defaultDone: false },
+    )
+  }
+
+  if (patch.assigneeDone && typeof patch.assigneeDone === 'object') {
+    const entries = Object.entries(patch.assigneeDone)
+    for (const [journeyPersonId, done] of entries) {
+      const { error } = await supabase
+        .from('viaggio_todo_assignees')
+        .update({
+          done: !!done,
+          done_at: done ? new Date().toISOString() : null,
+        })
+        .eq('todo_id', todoId)
+        .eq('journey_person_id', journeyPersonId)
+      if (error) throw error
+    }
+    assignees = await fetchTodoAssignees(todoId)
+  }
+
+  if (patch.done != null) {
+    if (assignees.length > 0) {
+      const { error } = await supabase
+        .from('viaggio_todo_assignees')
+        .update({
+          done: !!patch.done,
+          done_at: patch.done ? new Date().toISOString() : null,
+        })
+        .eq('todo_id', todoId)
+      if (error) throw error
+      assignees = await fetchTodoAssignees(todoId)
+      updates.done = !!patch.done
+    } else {
+      updates.done = !!patch.done
+    }
+  } else if (assignees.length > 0) {
+    updates.done = assignees.every((a) => a.done)
+  }
+
+  const { data, error } = await supabase
+    .from('viaggio_todos')
+    .update(updates)
+    .eq('id', todoId)
+    .select('*')
+    .single()
+  if (error) throw error
+  return mapTodo({ ...data, assignees })
+}
+
+/** Toggle one assignee's completion; rolls up todo.done. */
+export async function updateTodoAssigneeDone(todoId, journeyPersonId, done) {
+  if (!todoId || !journeyPersonId) throw new Error('Assignee required')
+  const { error } = await supabase
+    .from('viaggio_todo_assignees')
+    .update({
+      done: !!done,
+      done_at: done ? new Date().toISOString() : null,
+    })
+    .eq('todo_id', todoId)
+    .eq('journey_person_id', journeyPersonId)
+  if (error) throw error
+  const rolled = await syncTodoDoneRollup(todoId)
+  const assignees = await fetchTodoAssignees(todoId)
+  if (!rolled) {
+    const { data, error: gErr } = await supabase
+      .from('viaggio_todos')
+      .select('*')
+      .eq('id', todoId)
+      .single()
+    if (gErr) throw gErr
+    return mapTodo({ ...data, assignees })
+  }
+  return mapTodo({ ...rolled, assignees })
+}
+
+export async function deleteTodo(todoId) {
+  const { error } = await supabase
+    .from('viaggio_todos')
+    .delete()
+    .eq('id', todoId)
+  if (error) throw error
+}
+
+/** Persist todo order. `orderedIds` is the full id list for the journey. */
+export async function reorderTodos(journeyId, orderedIds) {
+  const ids = (orderedIds ?? []).filter(Boolean)
+  if (!journeyId || ids.length === 0) return
+  const results = await Promise.all(
+    ids.map((id, sortOrder) =>
+      supabase
+        .from('viaggio_todos')
+        .update({
+          sort_order: sortOrder,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', id)
         .eq('journey_id', journeyId),
     ),

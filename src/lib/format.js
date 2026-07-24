@@ -1,5 +1,10 @@
 /** Locale-aware formatting helpers. */
 
+/** Human label for expense split_mode (`equal` | `custom`). */
+export function labelForSplitMode(splitMode) {
+  return splitMode === 'custom' ? 'Paying separately' : 'Paying equally'
+}
+
 export function formatMoney(cents, currency, locale) {
   const amount = (Number(cents) || 0) / 100
   try {

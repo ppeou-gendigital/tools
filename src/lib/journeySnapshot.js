@@ -9,6 +9,7 @@ import {
   addJourneyPerson,
   addPlaceIdea,
   addPlaylistItem,
+  addTodo,
   createJourney,
   listEntries,
   listEntryParticipants,
@@ -17,8 +18,10 @@ import {
   listMembers,
   listPlaceIdeas,
   listPlaylist,
+  listTodos,
   updateJourneyPerson,
   updatePlaceIdea,
+  updateTodo,
   upsertEntry,
   upsertExpenseWithSplits,
 } from '@/lib/viaggioApi'
@@ -66,6 +69,7 @@ export function validateJourneySnapshot(raw) {
     'expense_splits',
     'playlist',
     'place_ideas',
+    'todos',
   ]) {
     if (raw[key] != null && !Array.isArray(raw[key])) {
       throw new Error(`${key} must be an array`)
@@ -115,6 +119,7 @@ export async function buildJourneySnapshot(journeyId) {
     expenses,
     playlist,
     placeIdeas,
+    todos,
   ] = await Promise.all([
     listJourneyPeople(journeyId),
     listMembers(journeyId),
@@ -124,6 +129,7 @@ export async function buildJourneySnapshot(journeyId) {
     listExpensesForJourney(journeyId),
     listPlaylist(journeyId),
     listPlaceIdeas(journeyId),
+    listTodos(journeyId),
   ])
 
   const roleByUser = new Map(members.map((m) => [m.userId, m.role]))
@@ -214,6 +220,18 @@ export async function buildJourneySnapshot(journeyId) {
       note: p.note,
       sort_order: p.sortOrder,
       entry_id: p.entryId,
+    })),
+    todos: todos.map((t) => ({
+      title: t.title,
+      notes: t.notes,
+      done: t.done,
+      due_on: t.dueOn,
+      assignee_person_ids: t.assigneeJourneyPersonIds ?? [],
+      assignees: (t.assignees ?? []).map((a) => ({
+        person_id: a.journeyPersonId,
+        done: !!a.done,
+      })),
+      sort_order: t.sortOrder,
     })),
   }
 }
@@ -430,6 +448,48 @@ export async function importJourneySnapshot(raw, { user } = {}) {
     const mappedEntryId = mapId(entryMap, item.entry_id)
     if (mappedEntryId && created.entryId !== mappedEntryId) {
       await updatePlaceIdea(created.id, { entryId: mappedEntryId })
+    }
+  }
+
+  const todos = [...(snap.todos ?? [])].sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+  )
+  for (const item of todos) {
+    if (!item?.title) continue
+    const detailed = Array.isArray(item.assignees) ? item.assignees : null
+    const rawAssigneeIds = detailed
+      ? detailed.map((a) => a.person_id).filter(Boolean)
+      : Array.isArray(item.assignee_person_ids)
+        ? item.assignee_person_ids
+        : item.assignee_person_id
+          ? [item.assignee_person_id]
+          : []
+    const assigneeJourneyPersonIds = []
+    const assigneeDone = {}
+    for (const rawId of rawAssigneeIds) {
+      const mapped = mapId(personMap, rawId)
+      if (!mapped) continue
+      assigneeJourneyPersonIds.push(mapped)
+      if (detailed) {
+        const row = detailed.find((a) => a.person_id === rawId)
+        assigneeDone[mapped] = !!row?.done
+      } else {
+        assigneeDone[mapped] = !!item.done
+      }
+    }
+    const created = await addTodo(
+      journey.id,
+      {
+        title: item.title,
+        notes: item.notes ?? '',
+        done: !!item.done,
+        dueOn: item.due_on || null,
+        assigneeJourneyPersonIds,
+      },
+      uid,
+    )
+    if (assigneeJourneyPersonIds.length > 0 && detailed) {
+      await updateTodo(created.id, { assigneeDone })
     }
   }
 

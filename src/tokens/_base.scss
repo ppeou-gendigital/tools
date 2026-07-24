@@ -6,12 +6,22 @@
 // Nothing below <html> should re-decide the width — <body>, #root, .shell
 // all just inherit 100% of their parent.
 html {
-  color-scheme: light dark;
+  // Match app theme (data-theme), not OS preference — otherwise Google Places
+  // widgets and native controls can render dark text chrome on a light shell.
+  color-scheme: light;
   // FontSizeProvider overrides this via inline style. All tokens in
   // _tokens.scss are declared in `rem`, so changing the root font size
   // scales the whole design system in lock-step.
   font-size: 16px;
   overflow: hidden;
+}
+
+html[data-theme='light'] {
+  color-scheme: light;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 // Web surface: fill the viewport. No caps.

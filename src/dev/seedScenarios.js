@@ -4,7 +4,9 @@
  */
 import { supabase } from '@/lib/supabase'
 import {
+  addJourneyPerson,
   addPlaylistItem,
+  addTodo,
   createInvite,
   createJourney,
   inviteUrl,
@@ -14,6 +16,7 @@ import {
   listJourneyPeople,
   listMembers,
   listPlaylist,
+  listTodos,
   updateJourney,
   upsertEntry,
   upsertExpenseWithSplits,
@@ -2233,5 +2236,888 @@ export async function seedPlaylistDemo(journeyId) {
     playlist: (await listPlaylist(jid)).length,
   }
   console.info('[viaggio] seedPlaylistDemo done', summary)
+  return summary
+}
+
+/**
+ * Seed a shared pre-trip checklist. Idempotent by title.
+ * Usage (DEV console):
+ *   await __viaggioSeed.seedTodoDemo('<journeyId>')
+ */
+export const DEMO_TODO_ITEMS = [
+  {
+    title: 'Apply for Visa',
+    notes: 'Check passport validity; book embassy appointment',
+    done: false,
+  },
+  {
+    title: 'Get eSim',
+    notes: 'Compare Airalo / local carriers for destination',
+    done: false,
+  },
+  {
+    title: 'Notify bank of travel',
+    notes: '',
+    done: false,
+  },
+  {
+    title: 'Download offline maps',
+    notes: 'Google Maps offline for first city',
+    done: true,
+  },
+  {
+    title: 'Travel insurance',
+    notes: 'Confirm medical coverage abroad',
+    done: false,
+  },
+]
+
+export async function seedTodoDemo(journeyId) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Sign in first')
+
+  let jid = journeyId
+  if (!jid) {
+    const journeys = await listJourneys()
+    jid = journeys[0]?.id
+  }
+  if (!jid) throw new Error('No journey found — open a journey first')
+
+  const existing = await listTodos(jid)
+  const titles = new Set(existing.map((t) => t.title.trim().toLowerCase()))
+  let added = 0
+  for (const item of DEMO_TODO_ITEMS) {
+    const key = item.title.trim().toLowerCase()
+    if (titles.has(key)) continue
+    await addTodo(jid, item, user.id)
+    titles.add(key)
+    added += 1
+  }
+
+  const summary = {
+    journeyId: jid,
+    added,
+    todos: (await listTodos(jid)).length,
+  }
+  console.info('[viaggio] seedTodoDemo done', summary)
+  return summary
+}
+
+const EAST_ASIA_TITLE = 'East Asia — Japan · Korea · Taiwan'
+
+async function resolveEastAsiaJourney(journeyId) {
+  const all = await listJourneys()
+  if (journeyId) {
+    const hit = all.find((j) => j.id === journeyId)
+    if (!hit) throw new Error(`Journey not found: ${journeyId}`)
+    return hit
+  }
+  const byTitle = all.find((j) => j.title === EAST_ASIA_TITLE)
+  if (!byTitle) throw new Error(`Open “${EAST_ASIA_TITLE}” first`)
+  return byTitle
+}
+
+/**
+ * Seed East Asia checklist items for the signed-in traveler only.
+ * Idempotent by title. Usage: ?devRun=seedEastAsiaTodos
+ *
+ * Chrome (owner) / Firefox (Benjamin) / Opera (Charlie) each add their set.
+ */
+export async function seedEastAsiaTodos(journeyId) {
+  const {
+    data: { user },
+    error: authErr,
+  } = await supabase.auth.getUser()
+  if (authErr) throw authErr
+  if (!user) throw new Error('Sign in first')
+
+  const journey = await resolveEastAsiaJourney(journeyId)
+  const jid = journey.id
+  const { people, map: personOf } = await rosterByUserId(jid)
+  const me = personOf.get(user.id)
+  if (!me) throw new Error('You are not on this journey roster')
+
+  const byEmail = (email) =>
+    people.find((p) => String(p.email || '').toLowerCase() === email)
+  const owner =
+    byEmail('ppeou@msn.com') || people.find((p) => p.linkedUserId === user.id)
+  const benjamin = byEmail('delivered+user1@resend.dev')
+  const charlie = byEmail('delivered+user2@resend.dev')
+  const allIds = [owner?.id, benjamin?.id, charlie?.id].filter(Boolean)
+
+  const email = String(user.email || '').toLowerCase()
+  let role = 'owner'
+  if (email === 'delivered+user1@resend.dev') role = 'benjamin'
+  else if (email === 'delivered+user2@resend.dev') role = 'charlie'
+
+  const itemsByRole = {
+    owner: [
+      {
+        title: 'Group travel insurance',
+        notes:
+          'Confirm medical + trip cancellation for all three. Compare World Nomads vs Allianz.',
+        done: false,
+        dueOn: '2026-08-20',
+        assigneeJourneyPersonIds: allIds,
+      },
+      {
+        title: 'Share final itinerary PDF',
+        notes: 'Drop PDF in shared drive + pin link in playlist notes.',
+        done: false,
+        dueOn: '2026-09-01',
+        assigneeJourneyPersonIds: owner?.id ? [owner.id] : [me],
+      },
+      {
+        title: 'Book JR Pass',
+        notes: '7-day ordinary; activate on NRT arrival day.',
+        done: true,
+        dueOn: '2026-08-15',
+        assigneeJourneyPersonIds: allIds,
+      },
+    ],
+    benjamin: [
+      {
+        title: 'Korea eSIM',
+        notes: 'Airalo Korea 5GB — activate before ICN landing.',
+        done: false,
+        dueOn: '2026-09-10',
+        assigneeJourneyPersonIds: benjamin?.id ? [benjamin.id] : [me],
+      },
+      {
+        title: 'Seoul transit card',
+        notes: 'T-money at CU / GS25; load ₩30,000.',
+        done: false,
+        dueOn: '2026-09-12',
+        assigneeJourneyPersonIds: benjamin?.id ? [benjamin.id] : [me],
+      },
+      {
+        title: 'Confirm Busan hotel',
+        notes: 'Reply to booking.com for late check-in (23:00).',
+        done: true,
+        dueOn: '2026-09-05',
+        assigneeJourneyPersonIds: benjamin?.id ? [benjamin.id] : [me],
+      },
+    ],
+    charlie: [
+      {
+        title: 'Taiwan EasyCard',
+        notes: 'Airport MRT counter; keep for Taipei + Kaohsiung.',
+        done: false,
+        dueOn: '2026-09-19',
+        assigneeJourneyPersonIds: charlie?.id ? [charlie.id] : [me],
+      },
+      {
+        title: 'Night market shortlist',
+        notes:
+          'Shilin, Raohe, Ningxia — pick two evenings. Note vegetarian stalls for the group.',
+        done: false,
+        dueOn: '2026-09-18',
+        assigneeJourneyPersonIds: [charlie?.id, owner?.id].filter(Boolean),
+      },
+      {
+        title: 'Notify bank (AUD)',
+        notes: 'CommBank travel notice for JP / KR / TW dates.',
+        done: false,
+        dueOn: '2026-09-01',
+        assigneeJourneyPersonIds: charlie?.id ? [charlie.id] : [me],
+      },
+    ],
+  }
+
+  const mine = itemsByRole[role] || itemsByRole.owner
+  const existing = await listTodos(jid)
+  const titles = new Set(existing.map((t) => t.title.trim().toLowerCase()))
+  let added = 0
+  for (const item of mine) {
+    const key = item.title.trim().toLowerCase()
+    if (titles.has(key)) continue
+    await addTodo(jid, item, user.id)
+    titles.add(key)
+    added += 1
+  }
+
+  const summary = {
+    journeyId: jid,
+    role,
+    as: user.email,
+    added,
+    todos: (await listTodos(jid)).length,
+  }
+  console.info('[viaggio] seedEastAsiaTodos done', summary)
+  return summary
+}
+
+/**
+ * Benjamin (Firefox): Korea week + EUR/USD expenses + playlist.
+ * Usage (signed in as Benjamin): ?devRun=asBenjaminEastAsia
+ */
+export async function asBenjaminEastAsia(journeyId) {
+  const {
+    data: { user },
+    error: authErr,
+  } = await supabase.auth.getUser()
+  if (authErr) throw authErr
+  if (!user) throw new Error('Sign in as Benjamin first')
+
+  const journey = await resolveEastAsiaJourney(journeyId)
+  const jid = journey.id
+  const { people, map: personOf } = await rosterByUserId(jid)
+  const me = personOf.get(user.id)
+  if (!me) throw new Error('Benjamin is not on this journey roster')
+
+  const byEmail = (email) =>
+    people.find((p) => String(p.email || '').toLowerCase() === email)
+  const owner = byEmail('ppeou@msn.com') || people.find((p) => p.id !== me)
+  const charlie =
+    byEmail('delivered+user2@resend.dev') ||
+    people.find((p) => p.id !== me && p.id !== owner?.id)
+  const all3 = [owner?.id, me, charlie?.id].filter(Boolean)
+  if (all3.length < 3) throw new Error('Need all 3 travelers on roster')
+
+  const existing = await listEntries(jid)
+  const titles = new Set(existing.map((e) => e.title))
+  async function ensureEntry(factory, title) {
+    if (titles.has(title)) return existing.find((e) => e.title === title)
+    const row = await factory()
+    titles.add(title)
+    existing.push(row)
+    return row
+  }
+
+  const flight = await ensureEntry(
+    () =>
+      addFlight(jid, {
+        title: 'NRT → ICN (crew)',
+        departWall: '2026-09-12T09:15',
+        departTz: 'Asia/Tokyo',
+        arriveWall: '2026-09-12T11:55',
+        arriveTz: 'Asia/Seoul',
+        from: 'Tokyo NRT',
+        to: 'Seoul ICN',
+        airline: 'Korean Air',
+      }),
+    'NRT → ICN (crew)',
+  )
+  const hotel = await ensureEntry(
+    () =>
+      addHotel(jid, {
+        title: 'Seoul — Hongdae base',
+        checkIn: '2026-09-12T15:00',
+        checkOut: '2026-09-19T11:00',
+        tz: 'Asia/Seoul',
+        place: 'Hongdae, Seoul',
+        confirmation: 'EA-SEL-01',
+      }),
+    'Seoul — Hongdae base',
+  )
+  await ensureEntry(
+    () =>
+      addSight(jid, {
+        title: 'Gyeongbokgung palace morning',
+        wall: '2026-09-13T09:30',
+        tz: 'Asia/Seoul',
+        place: 'Gyeongbokgung, Seoul',
+      }),
+    'Gyeongbokgung palace morning',
+  )
+  const bbq = await ensureEntry(
+    () =>
+      addMeal(jid, {
+        title: 'Korean BBQ — Mapo',
+        wall: '2026-09-13T19:00',
+        tz: 'Asia/Seoul',
+        place: 'Mapo-gu, Seoul',
+      }),
+    'Korean BBQ — Mapo',
+  )
+  const cafe = await ensureEntry(
+    () =>
+      addMeal(jid, {
+        title: 'Coffee crawl — Ikseon-dong (pair)',
+        wall: '2026-09-14T15:00',
+        tz: 'Asia/Seoul',
+        place: 'Ikseon-dong',
+      }),
+    'Coffee crawl — Ikseon-dong (pair)',
+  )
+
+  const expenses = await listExpensesForJourney(jid)
+  const expTitles = new Set(expenses.map((e) => e.title))
+  async function ensureExpense(title, input) {
+    if (expTitles.has(title)) return null
+    const row = await upsertExpenseWithSplits({ ...input, title })
+    expTitles.add(title)
+    return row
+  }
+
+  // Hotel USD equal — Benjamin paid
+  await ensureExpense('Seoul hotel — Hongdae (equal USD)', {
+    entryId: hotel.id,
+    amountCents: 126000,
+    currency: 'USD',
+    paidBy: me,
+    splitMode: 'equal',
+    category: 'lodging',
+    splits: equalSplits(all3, 126000),
+  })
+  // BBQ EUR equal — owner paid
+  await ensureExpense('Mapo BBQ (equal EUR)', {
+    entryId: bbq.id,
+    amountCents: 18000,
+    currency: 'EUR',
+    paidBy: owner.id,
+    splitMode: 'equal',
+    category: 'food',
+    splits: equalSplits(all3, 18000),
+  })
+  // Party of 2 (Benjamin + Charlie only) custom USD — Charlie paid
+  const pair = [me, charlie.id]
+  await ensureExpense('Ikseon coffee (party of 2 USD)', {
+    entryId: cafe.id,
+    amountCents: 4200,
+    currency: 'USD',
+    paidBy: charlie.id,
+    splitMode: 'custom',
+    category: 'food',
+    splits: [
+      { journeyPersonId: me, amountCents: 2200 },
+      { journeyPersonId: charlie.id, amountCents: 2000 },
+    ],
+  })
+  // Flight transfer fees EUR equal — Benjamin paid
+  await ensureExpense('NRT–ICN baggage (equal EUR)', {
+    entryId: flight.id,
+    amountCents: 9000,
+    currency: 'EUR',
+    paidBy: me,
+    splitMode: 'equal',
+    category: 'transit',
+    splits: equalSplits(all3, 9000),
+  })
+
+  const playlist = await listPlaylist(jid)
+  const urls = new Set(playlist.map((p) => p.url))
+  const kTrack = {
+    url: 'https://www.youtube.com/watch?v=IHNzOHi8sJs',
+    title: 'Korea vibes — DDU-DU DDU-DU',
+  }
+  if (!urls.has(kTrack.url)) {
+    await addPlaylistItem(jid, kTrack, user.id)
+  }
+
+  const summary = {
+    journeyId: jid,
+    as: 'benjamin',
+    entries: (await listEntries(jid)).length,
+    expenses: (await listExpensesForJourney(jid)).length,
+    playlist: (await listPlaylist(jid)).length,
+    pairExcluded: owner?.displayName,
+  }
+  console.info('[viaggio] asBenjaminEastAsia', summary)
+  return summary
+}
+
+/**
+ * Charlie (Opera): Taiwan week + AUD/USD expenses + playlist.
+ * Usage (signed in as Charlie): ?devRun=asCharlieEastAsia
+ */
+export async function asCharlieEastAsia(journeyId) {
+  const {
+    data: { user },
+    error: authErr,
+  } = await supabase.auth.getUser()
+  if (authErr) throw authErr
+  if (!user) throw new Error('Sign in as Charlie first')
+
+  const journey = await resolveEastAsiaJourney(journeyId)
+  const jid = journey.id
+  const { people, map: personOf } = await rosterByUserId(jid)
+  const me = personOf.get(user.id)
+  if (!me) throw new Error('Charlie is not on this journey roster')
+
+  const byEmail = (email) =>
+    people.find((p) => String(p.email || '').toLowerCase() === email)
+  const owner = byEmail('ppeou@msn.com') || people.find((p) => p.id !== me)
+  const benjamin =
+    byEmail('delivered+user1@resend.dev') ||
+    people.find((p) => p.id !== me && p.id !== owner?.id)
+  const all3 = [owner?.id, benjamin?.id, me].filter(Boolean)
+  if (all3.length < 3) throw new Error('Need all 3 travelers on roster')
+
+  const existing = await listEntries(jid)
+  const titles = new Set(existing.map((e) => e.title))
+  async function ensureEntry(factory, title) {
+    if (titles.has(title)) return existing.find((e) => e.title === title)
+    const row = await factory()
+    titles.add(title)
+    existing.push(row)
+    return row
+  }
+
+  await ensureEntry(
+    () =>
+      addFlight(jid, {
+        title: 'ICN → TPE (crew)',
+        departWall: '2026-09-19T10:40',
+        departTz: 'Asia/Seoul',
+        arriveWall: '2026-09-19T12:15',
+        arriveTz: 'Asia/Taipei',
+        from: 'Seoul ICN',
+        to: 'Taipei TPE',
+        airline: 'EVA Air',
+      }),
+    'ICN → TPE (crew)',
+  )
+  const hotel = await ensureEntry(
+    () =>
+      addHotel(jid, {
+        title: 'Taipei — Ximending base',
+        checkIn: '2026-09-19T15:00',
+        checkOut: '2026-09-26T11:00',
+        tz: 'Asia/Taipei',
+        place: 'Ximending, Taipei',
+        confirmation: 'EA-TPE-01',
+      }),
+    'Taipei — Ximending base',
+  )
+  const nightMarket = await ensureEntry(
+    () =>
+      addMeal(jid, {
+        title: 'Shilin night market feast',
+        wall: '2026-09-19T20:00',
+        tz: 'Asia/Taipei',
+        place: 'Shilin Night Market',
+      }),
+    'Shilin night market feast',
+  )
+  await ensureEntry(
+    () =>
+      addSight(jid, {
+        title: 'Jiufen day trip',
+        wall: '2026-09-21T09:00',
+        tz: 'Asia/Taipei',
+        place: 'Jiufen',
+      }),
+    'Jiufen day trip',
+  )
+  const treats = await ensureEntry(
+    () =>
+      addMeal(jid, {
+        title: 'Charlie treats — Din Tai Fung',
+        wall: '2026-09-22T12:30',
+        tz: 'Asia/Taipei',
+        place: 'Xinyi, Taipei',
+      }),
+    'Charlie treats — Din Tai Fung',
+  )
+  await ensureEntry(
+    () =>
+      addFlight(jid, {
+        title: 'TPE → LAX (Piseth home)',
+        departWall: '2026-09-26T12:00',
+        departTz: 'Asia/Taipei',
+        arriveWall: '2026-09-26T09:30',
+        arriveTz: 'America/Los_Angeles',
+        from: 'Taipei TPE',
+        to: 'Los Angeles LAX',
+        airline: 'EVA Air',
+      }),
+    'TPE → LAX (Piseth home)',
+  )
+  await ensureEntry(
+    () =>
+      addFlight(jid, {
+        title: 'TPE → CDG (Benjamin home)',
+        departWall: '2026-09-26T13:10',
+        departTz: 'Asia/Taipei',
+        arriveWall: '2026-09-27T06:40',
+        arriveTz: 'Europe/Paris',
+        from: 'Taipei TPE',
+        to: 'Paris CDG',
+        airline: 'China Airlines',
+      }),
+    'TPE → CDG (Benjamin home)',
+  )
+  await ensureEntry(
+    () =>
+      addFlight(jid, {
+        title: 'TPE → SYD (Charlie home)',
+        departWall: '2026-09-26T22:30',
+        departTz: 'Asia/Taipei',
+        arriveWall: '2026-09-27T09:55',
+        arriveTz: 'Australia/Sydney',
+        from: 'Taipei TPE',
+        to: 'Sydney SYD',
+        airline: 'Qantas',
+      }),
+    'TPE → SYD (Charlie home)',
+  )
+
+  const expenses = await listExpensesForJourney(jid)
+  const expTitles = new Set(expenses.map((e) => e.title))
+  async function ensureExpense(title, input) {
+    if (expTitles.has(title)) return null
+    const row = await upsertExpenseWithSplits({ ...input, title })
+    expTitles.add(title)
+    return row
+  }
+
+  await ensureExpense('Taipei hotel — Ximending (equal AUD)', {
+    entryId: hotel.id,
+    amountCents: 210000,
+    currency: 'AUD',
+    paidBy: me,
+    splitMode: 'equal',
+    category: 'lodging',
+    splits: equalSplits(all3, 210000),
+  })
+  await ensureExpense('Shilin night market (equal USD)', {
+    entryId: nightMarket.id,
+    amountCents: 9600,
+    currency: 'USD',
+    paidBy: benjamin.id,
+    splitMode: 'equal',
+    category: 'food',
+    splits: equalSplits(all3, 9600),
+  })
+  // Charlie treats — custom 3-way AUD
+  await ensureExpense('Din Tai Fung (custom AUD)', {
+    entryId: treats.id,
+    amountCents: 15000,
+    currency: 'AUD',
+    paidBy: me,
+    splitMode: 'custom',
+    category: 'food',
+    splits: [
+      { journeyPersonId: owner.id, amountCents: 4000 },
+      { journeyPersonId: benjamin.id, amountCents: 5000 },
+      { journeyPersonId: me, amountCents: 6000 },
+    ],
+  })
+
+  const playlist = await listPlaylist(jid)
+  const urls = new Set(playlist.map((p) => p.url))
+  const twTrack = {
+    url: 'https://www.youtube.com/watch?v=T0iQgLlFY2E',
+    title: 'Taiwan vibes — Mandopop night',
+  }
+  if (!urls.has(twTrack.url)) {
+    await addPlaylistItem(jid, twTrack, user.id)
+  }
+
+  const summary = {
+    journeyId: jid,
+    as: 'charlie',
+    entries: (await listEntries(jid)).length,
+    expenses: (await listExpensesForJourney(jid)).length,
+    playlist: (await listPlaylist(jid)).length,
+  }
+  console.info('[viaggio] asCharlieEastAsia', summary)
+  return summary
+}
+
+const EUROPE_CRUISE_TITLE =
+  'Northern Lights Cruise — Amsterdam · Ship · Bergen'
+const EUROPE_CRUISE_MOM = 'Mom'
+const EUROPE_CRUISE_DAD = 'Dad'
+
+/**
+ * Owner-only cruise demo with Mom/Dad as guest travelers (no accounts).
+ * NYC → Amsterdam pre-cruise → 2-week cruise → Bergen → LA.
+ * Usage (signed in as owner): ?devRun=seedEuropeCruiseParents
+ *   or await __viaggioSeed.seedEuropeCruiseParents()
+ */
+export async function seedEuropeCruiseParents() {
+  const {
+    data: { user },
+    error: authErr,
+  } = await supabase.auth.getUser()
+  if (authErr) throw authErr
+  if (!user) throw new Error('Sign in as owner first')
+
+  let journey = (await listJourneys()).find(
+    (j) => j.title === EUROPE_CRUISE_TITLE,
+  )
+  let reused = false
+  if (journey) {
+    reused = true
+  } else {
+    journey = await createJourney({
+      title: EUROPE_CRUISE_TITLE,
+      type: 'trip',
+      preset: 'leisure_trip',
+      defaultTimezone: 'Europe/Amsterdam',
+      defaultCurrency: 'USD',
+      startsOn: '2026-08-01',
+      endsOn: '2026-08-21',
+      activityPacks: [],
+    })
+  }
+  const jid = journey.id
+
+  let people = await listJourneyPeople(jid)
+  const byName = (name) =>
+    people.find(
+      (p) =>
+        String(p.displayName || '').trim().toLowerCase() ===
+        name.toLowerCase(),
+    )
+  const me =
+    people.find((p) => p.linkedUserId === user.id) ||
+    people.find((p) => p.linkedUserId)
+
+  if (!me) {
+    throw new Error('Owner is not on this journey roster')
+  }
+
+  if (!byName(EUROPE_CRUISE_MOM)) {
+    await addJourneyPerson({
+      journeyId: jid,
+      displayName: EUROPE_CRUISE_MOM,
+    })
+  }
+  if (!byName(EUROPE_CRUISE_DAD)) {
+    await addJourneyPerson({
+      journeyId: jid,
+      displayName: EUROPE_CRUISE_DAD,
+    })
+  }
+  people = await listJourneyPeople(jid)
+  const mom = byName(EUROPE_CRUISE_MOM)
+  const dad = byName(EUROPE_CRUISE_DAD)
+  if (!mom?.id || !dad?.id) {
+    throw new Error('Failed to add Mom/Dad guest travelers')
+  }
+  if (mom.linkedUserId || dad.linkedUserId) {
+    throw new Error('Mom/Dad should remain guests (no linked account)')
+  }
+
+  const all3 = [me.id, mom.id, dad.id]
+  const ams = 'Europe/Amsterdam'
+  const bergen = 'Europe/Oslo'
+  const nyc = 'America/New_York'
+  const la = 'America/Los_Angeles'
+
+  const existing = await listEntries(jid)
+  const titles = new Set(existing.map((e) => e.title))
+  async function ensureEntry(factory, title) {
+    if (titles.has(title)) return existing.find((e) => e.title === title)
+    const row = await factory()
+    titles.add(title)
+    existing.push(row)
+    return row
+  }
+
+  const flightOut = await ensureEntry(
+    () =>
+      addFlight(jid, {
+        title: 'JFK → AMS (family)',
+        departWall: '2026-08-01T18:30',
+        departTz: nyc,
+        arriveWall: '2026-08-02T07:45',
+        arriveTz: ams,
+        from: 'New York JFK',
+        to: 'Amsterdam AMS',
+        airline: 'KLM',
+      }),
+    'JFK → AMS (family)',
+  )
+  const amsHotel = await ensureEntry(
+    () =>
+      addHotel(jid, {
+        title: 'Amsterdam — Canal belt hotel',
+        checkIn: '2026-08-02T15:00',
+        checkOut: '2026-08-04T11:00',
+        tz: ams,
+        place: 'Amsterdam canal belt',
+        confirmation: 'NL-AMS-CRUISE',
+      }),
+    'Amsterdam — Canal belt hotel',
+  )
+  await ensureEntry(
+    () =>
+      addSight(jid, {
+        title: 'Rijksmuseum morning',
+        wall: '2026-08-03T10:00',
+        tz: ams,
+        place: 'Rijksmuseum, Amsterdam',
+      }),
+    'Rijksmuseum morning',
+  )
+  const damDinner = await ensureEntry(
+    () =>
+      addMeal(jid, {
+        title: 'Dam square dinner',
+        wall: '2026-08-03T19:00',
+        tz: ams,
+        place: 'Damrak, Amsterdam',
+      }),
+    'Dam square dinner',
+  )
+  const cruise = await ensureEntry(
+    () =>
+      addBoat(jid, {
+        title: 'Northern Lights cruise embarkation',
+        departWall: '2026-08-04T16:00',
+        arriveWall: '2026-08-18T09:00',
+        tz: ams,
+        from: 'Amsterdam cruise terminal',
+        to: 'Bergen cruise terminal',
+      }),
+    'Northern Lights cruise embarkation',
+  )
+  const onboardDinner = await ensureEntry(
+    () =>
+      addMeal(jid, {
+        title: 'Onboard specialty dinner',
+        wall: '2026-08-10T19:30',
+        tz: ams,
+        place: 'Cruise ship — specialty restaurant',
+      }),
+    'Onboard specialty dinner',
+  )
+  const bergenHotel = await ensureEntry(
+    () =>
+      addHotel(jid, {
+        title: 'Bergen — Bryggen hotel',
+        checkIn: '2026-08-18T15:00',
+        checkOut: '2026-08-21T11:00',
+        tz: bergen,
+        place: 'Bryggen, Bergen',
+        confirmation: 'NO-BGO-CRUISE',
+      }),
+    'Bergen — Bryggen hotel',
+  )
+  const seafood = await ensureEntry(
+    () =>
+      addMeal(jid, {
+        title: 'Bryggen seafood dinner',
+        wall: '2026-08-19T19:00',
+        tz: bergen,
+        place: 'Bryggen, Bergen',
+      }),
+    'Bryggen seafood dinner',
+  )
+  await ensureEntry(
+    () =>
+      addSight(jid, {
+        title: 'Fløibanen funicular',
+        wall: '2026-08-20T11:00',
+        tz: bergen,
+        place: 'Fløyen, Bergen',
+      }),
+    'Fløibanen funicular',
+  )
+  const flightHome = await ensureEntry(
+    () =>
+      addFlight(jid, {
+        title: 'BGO → LAX (family)',
+        departWall: '2026-08-21T13:20',
+        departTz: bergen,
+        arriveWall: '2026-08-21T16:45',
+        arriveTz: la,
+        from: 'Bergen BGO',
+        to: 'Los Angeles LAX',
+        airline: 'SAS / United',
+      }),
+    'BGO → LAX (family)',
+  )
+
+  const expenses = await listExpensesForJourney(jid)
+  const expTitles = new Set(expenses.map((e) => e.title))
+  async function ensureExpense(title, input) {
+    if (expTitles.has(title)) return null
+    const row = await upsertExpenseWithSplits({ ...input, title })
+    expTitles.add(title)
+    return row
+  }
+
+  await ensureExpense('JFK–AMS flights (equal USD)', {
+    entryId: flightOut.id,
+    amountCents: 360000,
+    currency: 'USD',
+    paidBy: me.id,
+    splitMode: 'equal',
+    category: 'transit',
+    splits: equalSplits(all3, 360000),
+  })
+  await ensureExpense('Amsterdam hotel — canal belt (equal EUR)', {
+    entryId: amsHotel.id,
+    amountCents: 90000,
+    currency: 'EUR',
+    paidBy: me.id,
+    splitMode: 'equal',
+    category: 'lodging',
+    splits: equalSplits(all3, 90000),
+  })
+  await ensureExpense('Dam square dinner (equal EUR)', {
+    entryId: damDinner.id,
+    amountCents: 18000,
+    currency: 'EUR',
+    paidBy: dad.id,
+    splitMode: 'equal',
+    category: 'food',
+    splits: equalSplits(all3, 18000),
+  })
+  await ensureExpense('Cruise fare — family cabin (equal USD)', {
+    entryId: cruise.id,
+    amountCents: 900000,
+    currency: 'USD',
+    paidBy: me.id,
+    splitMode: 'equal',
+    category: 'lodging',
+    splits: equalSplits(all3, 900000),
+  })
+  await ensureExpense('Onboard specialty dinner (equal USD)', {
+    entryId: onboardDinner.id,
+    amountCents: 24000,
+    currency: 'USD',
+    paidBy: mom.id,
+    splitMode: 'equal',
+    category: 'food',
+    splits: equalSplits(all3, 24000),
+  })
+  await ensureExpense('Bergen hotel — Bryggen (equal NOK)', {
+    entryId: bergenHotel.id,
+    amountCents: 1200000,
+    currency: 'NOK',
+    paidBy: me.id,
+    splitMode: 'equal',
+    category: 'lodging',
+    splits: equalSplits(all3, 1200000),
+  })
+  await ensureExpense('Bryggen seafood (equal NOK)', {
+    entryId: seafood.id,
+    amountCents: 180000,
+    currency: 'NOK',
+    paidBy: me.id,
+    splitMode: 'equal',
+    category: 'food',
+    splits: equalSplits(all3, 180000),
+  })
+  await ensureExpense('BGO–LAX flights (equal USD)', {
+    entryId: flightHome.id,
+    amountCents: 420000,
+    currency: 'USD',
+    paidBy: me.id,
+    splitMode: 'equal',
+    category: 'transit',
+    splits: equalSplits(all3, 420000),
+  })
+
+  const summary = {
+    journeyId: jid,
+    title: EUROPE_CRUISE_TITLE,
+    reused,
+    momId: mom.id,
+    dadId: dad.id,
+    ownerId: me.id,
+    guests: [mom.displayName, dad.displayName],
+    entries: (await listEntries(jid)).length,
+    expenses: (await listExpensesForJourney(jid)).length,
+  }
+  console.info('[viaggio] seedEuropeCruiseParents', summary)
   return summary
 }

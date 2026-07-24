@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Archive, ArrowLeft, Check, Download, Loader2 } from 'lucide-react'
+import { Archive, ArrowLeft, Check, Download, Loader2, Save } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -64,7 +64,7 @@ export function JourneySettings() {
           title="Journey settings"
           leading={
             <Button variant="ghost" size="sm" onClick={goBack}>
-              <ArrowLeft size={14} />
+              <ArrowLeft size={14} aria-hidden="true" />
               {previousRouteLabel ?? 'Back'}
             </Button>
           }
@@ -83,7 +83,7 @@ export function JourneySettings() {
           title="Journey settings"
           leading={
             <Button variant="ghost" size="sm" onClick={goHome}>
-              <ArrowLeft size={14} />
+              <ArrowLeft size={14} aria-hidden="true" />
               Home
             </Button>
           }
@@ -135,6 +135,20 @@ function JourneySettingsForm({
   const [endsOn, setEndsOn] = useState(journey.endsOn || '')
   const [timezone, setTimezone] = useState(journey.defaultTimezone || '')
   const [currency, setCurrency] = useState(journey.defaultCurrency || '')
+
+  const dateRangeInvalid =
+    Boolean(startsOn) && Boolean(endsOn) && endsOn < startsOn
+
+  const isDirty = useMemo(() => {
+    const norm = (v) => (v == null ? '' : String(v))
+    return (
+      norm(title) !== norm(journey.title) ||
+      norm(startsOn) !== norm(journey.startsOn) ||
+      norm(endsOn) !== norm(journey.endsOn) ||
+      norm(timezone) !== norm(journey.defaultTimezone) ||
+      norm(currency) !== norm(journey.defaultCurrency)
+    )
+  }, [title, startsOn, endsOn, timezone, currency, journey])
 
   const saveMut = useMutation({
     mutationFn: () =>
@@ -188,11 +202,58 @@ function JourneySettingsForm({
     <div className={styles.page}>
       <PageHeader
         title="Journey settings"
+        subtitle={journey.title}
         leading={
           <Button variant="ghost" size="sm" onClick={goBack}>
-            <ArrowLeft size={14} />
+            <ArrowLeft size={14} aria-hidden="true" />
             {previousRouteLabel ?? 'Back'}
           </Button>
+        }
+        actions={
+          canEdit ? (
+            <div className={styles.toolbar}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={styles.iconBtn}
+                onClick={() => {
+                  setError('')
+                  saveMut.mutate()
+                }}
+                disabled={
+                  !isDirty ||
+                  dateRangeInvalid ||
+                  saveMut.isPending
+                }
+                aria-label={
+                  saveMut.isPending
+                    ? 'Saving…'
+                    : savedFlash
+                      ? 'Saved'
+                      : 'Save changes'
+                }
+                title={
+                  saveMut.isPending
+                    ? 'Saving…'
+                    : savedFlash
+                      ? 'Saved'
+                      : 'Save changes'
+                }
+              >
+                {saveMut.isPending ? (
+                  <Loader2
+                    size={14}
+                    aria-hidden="true"
+                    className={styles.spin}
+                  />
+                ) : savedFlash ? (
+                  <Check size={14} aria-hidden="true" />
+                ) : (
+                  <Save size={14} aria-hidden="true" />
+                )}
+              </Button>
+            </div>
+          ) : null
         }
       />
       <div className={cx('is-fluid-width', styles.body)}>
@@ -233,6 +294,11 @@ function JourneySettingsForm({
               />
             </div>
           </div>
+          {dateRangeInvalid && (
+            <p className={styles.error} role="alert">
+              End date can’t be before the start date.
+            </p>
+          )}
           <div className={styles.formGrid}>
             <div className={styles.field}>
               <Label htmlFor="tz">Default timezone</Label>
@@ -270,32 +336,9 @@ function JourneySettingsForm({
             </p>
           )}
 
-          {canEdit && (
-            <div className={styles.actionsSticky}>
-              <Button
-                onClick={() => {
-                  setError('')
-                  saveMut.mutate()
-                }}
-                disabled={saveMut.isPending}
-              >
-                {saveMut.isPending ? (
-                  <>
-                    <Loader2 size={14} aria-hidden="true" />
-                    Saving
-                  </>
-                ) : (
-                  'Save changes'
-                )}
-              </Button>
-            </div>
-          )}
-
-          <p className={styles.sectionTitle}>Export & archive</p>
+          <p className={styles.sectionTitle}>Export</p>
           <p className={styles.hint}>
-            Export downloads a full copy of this journey as a file you can keep.
-            Archive stores that copy and removes the live journey — restore later
-            from Archives.
+            Download a full copy of this journey as a file you can keep offline.
           </p>
           <Button
             variant="outline"
@@ -310,19 +353,23 @@ function JourneySettingsForm({
               }
             }}
           >
-            <Download size={16} />
+            <Download size={16} aria-hidden="true" />
             Export journey
           </Button>
 
           {isOwner && (
             <div className={styles.dangerZone}>
               <p className={styles.sectionTitle}>Danger zone</p>
+              <p className={styles.hint}>
+                Archive removes the live journey but keeps a restorable copy.
+                Delete removes it permanently.
+              </p>
               <Button
                 variant="outline"
                 fullWidth
                 onClick={() => setConfirm('archive')}
               >
-                <Archive size={16} />
+                <Archive size={16} aria-hidden="true" />
                 Archive journey
               </Button>
               <Button

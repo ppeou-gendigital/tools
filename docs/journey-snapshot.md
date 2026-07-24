@@ -24,7 +24,8 @@ Portable JSON for moving a journey between Viaggio instances or generating compa
   "expenses": [],
   "expense_splits": [],
   "playlist": [],
-  "place_ideas": []
+  "place_ideas": [],
+  "todos": []
 }
 ```
 
@@ -143,6 +144,23 @@ Map brainstorming shortlist (shared per journey).
 | `sort_order` | integer | Ascending |
 | `entry_id` | string \| null | Local entry id if already promoted |
 
+## `todos` (optional)
+
+Shared journey checklist (pre-trip prep, etc.).
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `title` | string | Required on import |
+| `notes` | string | Default `""` |
+| `done` | boolean | Default `false` |
+| `due_on` | `YYYY-MM-DD` \| null | Calendar date |
+| `assignee_person_ids` | string[] | Local person ids; unmapped ids dropped |
+| `assignees` | `{ person_id, done }[]` | Per-person completion; preferred on import |
+| `assignee_person_id` | string \| null | Legacy single assignee; accepted on import |
+| `sort_order` | integer | Ascending |
+
+When `assignees` is present, each person’s `done` is restored. Otherwise `done` applies to the whole item (and to every assignee if only ids are listed).
+
 ## Not included (by design)
 
 - Auth users / passwords / OTP
@@ -157,7 +175,7 @@ Map brainstorming shortlist (shared per journey).
 2. Person with `member_role: "owner"`, or matching the importer’s email, maps to the owner’s roster seat; others are created as **guests** (no account).
 3. All local ids are remapped to new UUIDs.
 4. Entries use known `activity_id` values; unknown activities fail import.
-5. Import order: journey → people → contacts → entries (+ participants) → expenses (+ splits) → playlist → place ideas.
+5. Import order: journey → people → contacts → entries (+ participants) → expenses (+ splits) → playlist → place ideas → todos.
 
 ## Archive vs export
 

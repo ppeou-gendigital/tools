@@ -1,6 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Loader2, Save, Trash2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  Grid2x2Check,
+  Loader2,
+  Save,
+  Shapes,
+  Trash2,
+} from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -475,7 +482,11 @@ function ExpenseEditForm({
           </div>
           <div className={cx(styles.field, styles.formSpan2)}>
             <Label>Split mode</Label>
-            <div className={styles.segmented} role="group" aria-label="Split mode">
+            <div
+              className={styles.segmented}
+              role="group"
+              aria-label="Split mode"
+            >
               <button
                 type="button"
                 className={cx(
@@ -485,7 +496,8 @@ function ExpenseEditForm({
                 disabled={!canEdit}
                 onClick={() => setSplitMode('equal')}
               >
-                Equal
+                <Grid2x2Check size={14} aria-hidden="true" />
+                Paying equally
               </button>
               <button
                 type="button"
@@ -496,7 +508,8 @@ function ExpenseEditForm({
                 disabled={!canEdit}
                 onClick={() => setSplitMode('custom')}
               >
-                Custom
+                <Shapes size={14} aria-hidden="true" />
+                Paying separately
               </button>
             </div>
           </div>

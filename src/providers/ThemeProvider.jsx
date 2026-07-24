@@ -46,6 +46,10 @@ function resolveTheme(pref, coords) {
 function applyTheme(resolved) {
   if (typeof document === 'undefined') return
   document.documentElement.dataset.theme = resolved
+  // Keep native / Places UI Kit color-scheme in sync with the app theme.
+  // `light dark` on a light-themed app with a dark OS preference makes
+  // widgets paint light-on-light (or dark-on-dark) text.
+  document.documentElement.style.colorScheme = resolved
 }
 
 export function ThemeProvider({ children, defaultTheme = 'daynight' }) {

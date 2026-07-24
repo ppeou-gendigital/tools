@@ -23,6 +23,7 @@ import { OnboardingPrefs } from '@/pages/OnboardingPrefs'
 import { People } from '@/pages/People'
 import { Map } from '@/pages/Map'
 import { Playlist } from '@/pages/Playlist'
+import { Todos } from '@/pages/Todos'
 import { Profile } from '@/pages/Profile'
 import { Settings } from '@/pages/Settings'
 import { Spending } from '@/pages/Spending'
@@ -56,6 +57,7 @@ function Router() {
   if (route === 'accept-invite') return <AcceptInvite />
   if (route === 'spending') return <Spending />
   if (route === 'playlist') return <Playlist />
+  if (route === 'todos') return <Todos />
   if (route === 'map') return <Map />
   if (route === 'journey-settings') return <JourneySettings />
   if (route === 'profile') return <Profile />

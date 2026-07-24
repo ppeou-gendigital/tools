@@ -151,15 +151,22 @@ function ParticipantsPopover({ journey, currentUserId, open, onClose, anchorRef 
 function JourneyCard({ journey, locale, layout, onOpen, currentUserId }) {
   const [peopleOpen, setPeopleOpen] = useState(false)
   const peopleBtnRef = useRef(null)
+  const isTile = layout === 'tiles'
 
   return (
-    <div className={cx(styles.card, layout === 'tiles' && styles.tileCard)}>
+    <div className={cx(styles.card, isTile && styles.tileCard)}>
       <button
         type="button"
         className={styles.cardMain}
         onClick={() => onOpen(journey.id)}
       >
-        <MapPinned size={16} className={styles.cardIcon} aria-hidden="true" />
+        {!isTile && (
+          <MapPinned
+            size={16}
+            className={styles.cardIcon}
+            aria-hidden="true"
+          />
+        )}
         <span className={styles.cardBody}>
           <span className={styles.cardTitle}>{journey.title}</span>
           <span className={styles.cardMeta}>
@@ -262,9 +269,15 @@ export function Home() {
                 <LayoutGrid size={14} aria-hidden="true" />
               </button>
             </div>
-            <Button size="sm" onClick={nav.goJourneyCreate}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={nav.goJourneyCreate}
+              className={pageStyles.iconBtn}
+              aria-label="New journey"
+              title="New journey"
+            >
               <Plus size={14} aria-hidden="true" />
-              New
             </Button>
           </>
         }

@@ -259,6 +259,33 @@ create unique index if not exists viaggio_place_ideas_google_uidx
   on public.viaggio_place_ideas (journey_id, google_place_id)
   where google_place_id is not null;
 
+create table if not exists public.viaggio_todos (
+  id                           uuid primary key default gen_random_uuid(),
+  journey_id                   uuid not null references public.viaggio_journeys(id) on delete cascade,
+  title                        text not null,
+  notes                        text not null default '',
+  done                         boolean not null default false,
+  due_on                       date,
+  sort_order                   int not null default 0,
+  created_by                   uuid not null references auth.users(id) on delete restrict,
+  created_at                   timestamptz not null default now(),
+  updated_at                   timestamptz not null default now()
+);
+
+create index if not exists viaggio_todos_journey_sort_idx
+  on public.viaggio_todos (journey_id, sort_order);
+
+create table if not exists public.viaggio_todo_assignees (
+  todo_id            uuid not null references public.viaggio_todos(id) on delete cascade,
+  journey_person_id  uuid not null references public.viaggio_journey_people(id) on delete cascade,
+  done               boolean not null default false,
+  done_at            timestamptz,
+  primary key (todo_id, journey_person_id)
+);
+
+create index if not exists viaggio_todo_assignees_person_idx
+  on public.viaggio_todo_assignees (journey_person_id);
+
 -- Drop template attachments shape if present (user_id/parent_id).
 do $$
 begin
@@ -432,6 +459,8 @@ alter table public.viaggio_expense_splits enable row level security;
 alter table public.viaggio_entry_participants enable row level security;
 alter table public.viaggio_playlist_items enable row level security;
 alter table public.viaggio_place_ideas enable row level security;
+alter table public.viaggio_todos enable row level security;
+alter table public.viaggio_todo_assignees enable row level security;
 alter table public.viaggio_attachments enable row level security;
 
 -- Journeys
@@ -658,6 +687,70 @@ create policy "viaggio_place_ideas update"
 create policy "viaggio_place_ideas delete"
   on public.viaggio_place_ideas for delete
   using (public.viaggio_is_editor(journey_id));
+
+-- Todos (shared journey checklist)
+drop policy if exists "viaggio_todos select" on public.viaggio_todos;
+drop policy if exists "viaggio_todos insert" on public.viaggio_todos;
+drop policy if exists "viaggio_todos update" on public.viaggio_todos;
+drop policy if exists "viaggio_todos delete" on public.viaggio_todos;
+
+create policy "viaggio_todos select"
+  on public.viaggio_todos for select
+  using (public.viaggio_is_member(journey_id));
+create policy "viaggio_todos insert"
+  on public.viaggio_todos for insert
+  with check (public.viaggio_is_editor(journey_id) and created_by = auth.uid());
+create policy "viaggio_todos update"
+  on public.viaggio_todos for update
+  using (public.viaggio_is_editor(journey_id))
+  with check (public.viaggio_is_editor(journey_id));
+create policy "viaggio_todos delete"
+  on public.viaggio_todos for delete
+  using (public.viaggio_is_editor(journey_id));
+
+-- Todo assignees (multi-select travelers)
+drop policy if exists "viaggio_todo_assignees select" on public.viaggio_todo_assignees;
+drop policy if exists "viaggio_todo_assignees insert" on public.viaggio_todo_assignees;
+drop policy if exists "viaggio_todo_assignees delete" on public.viaggio_todo_assignees;
+
+create policy "viaggio_todo_assignees select"
+  on public.viaggio_todo_assignees for select
+  using (
+    exists (
+      select 1 from public.viaggio_todos t
+      where t.id = todo_id and public.viaggio_is_member(t.journey_id)
+    )
+  );
+create policy "viaggio_todo_assignees insert"
+  on public.viaggio_todo_assignees for insert
+  with check (
+    exists (
+      select 1 from public.viaggio_todos t
+      where t.id = todo_id and public.viaggio_is_editor(t.journey_id)
+    )
+  );
+create policy "viaggio_todo_assignees delete"
+  on public.viaggio_todo_assignees for delete
+  using (
+    exists (
+      select 1 from public.viaggio_todos t
+      where t.id = todo_id and public.viaggio_is_editor(t.journey_id)
+    )
+  );
+create policy "viaggio_todo_assignees update"
+  on public.viaggio_todo_assignees for update
+  using (
+    exists (
+      select 1 from public.viaggio_todos t
+      where t.id = todo_id and public.viaggio_is_editor(t.journey_id)
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.viaggio_todos t
+      where t.id = todo_id and public.viaggio_is_editor(t.journey_id)
+    )
+  );
 
 -- Attachments
 drop policy if exists "viaggio_attachments select" on public.viaggio_attachments;

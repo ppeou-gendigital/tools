@@ -10,12 +10,19 @@
 6. **`patches/journey_archives.sql`** — archive table + `archive_journey` / `delete_journey_archive` RPCs (store snapshot JSON, hard-delete live journey).
 7. **`patches/place_ideas.sql`** — shared map shortlist (`viaggio_place_ideas`) for brainstorming places before promoting to activities.
 8. **`patches/attachments_expense_id.sql`** — optional `expense_id` on `viaggio_attachments` for expense receipts (cascade delete with the expense).
+9. **`patches/todos.sql`** — shared journey checklist (`viaggio_todos`) for pre-trip prep items (Visa, eSim, etc.).
+10. **`patches/todo_assignees.sql`** — multi-assignee junction (`viaggio_todo_assignees`); migrates legacy single-assignee column if present.
+11. **`patches/todo_assignee_done.sql`** — per-assignee `done` / `done_at` + rollup to todo.done; adds assignee UPDATE RLS.
 
-Fresh `viaggio_schema.sql` already includes the traveler people model, place ideas, and attachment `expense_id`.
+Fresh `viaggio_schema.sql` already includes the traveler people model, place ideas, todos (+ assignees), and attachment `expense_id`.
 
 Portable import/export format: **`docs/journey-snapshot.md`** (sample: `src/samples/journey-snapshot.sample.json`).
 
 `template_attachments.sql` is superseded by the attachments section inside `viaggio_schema.sql` (entry-scoped paths).
+
+## Reset test data
+
+To empty all Viaggio domain tables while keeping `auth.users`, `profiles`, and shared `user_data`, run [`scripts/wipe_viaggio_app_data.sql`](scripts/wipe_viaggio_app_data.sql) in the SQL Editor. Irreversible. Then empty the `viaggio-attachments` bucket in Dashboard → Storage (SQL cannot delete `storage.objects` directly).
 
 ## Edge Function: invite email
 

@@ -18,6 +18,8 @@ export function AnchoredPopover({
   guardRef,
   /** Stretch panel width to match the anchor. */
   matchAnchorWidth = false,
+  /** Size width to content instead of the default min-width. */
+  fluid = false,
   title,
   children,
   className,
@@ -47,12 +49,21 @@ export function AnchoredPopover({
     }
     top = Math.max(VIEW_PAD, Math.min(top, vh - p.height - VIEW_PAD))
 
-    let left =
-      align === 'start' ? a.left : align === 'center' ? a.left + a.width / 2 - p.width / 2 : a.right - p.width
+    // Near-full-width fluid panels (e.g. 92dvw on SM): center for equal side space.
+    let left
+    if (fluid && p.width >= vw * 0.8) {
+      left = (vw - p.width) / 2
+    } else if (align === 'start') {
+      left = a.left
+    } else if (align === 'center') {
+      left = a.left + a.width / 2 - p.width / 2
+    } else {
+      left = a.right - p.width
+    }
     left = Math.max(VIEW_PAD, Math.min(left, vw - p.width - VIEW_PAD))
 
     setPos({ top, left, width, ready: true })
-  }, [anchorRef, align, matchAnchorWidth])
+  }, [anchorRef, align, matchAnchorWidth, fluid])
 
   useLayoutEffect(() => {
     if (!open) {
@@ -98,7 +109,7 @@ export function AnchoredPopover({
       ref={panelRef}
       role={role}
       aria-label={ariaLabel || title}
-      className={cx(styles.panel, className)}
+      className={cx(styles.panel, fluid && styles.fluid, className)}
       style={{
         top: pos.top,
         left: pos.left,
