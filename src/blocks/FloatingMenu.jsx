@@ -7,6 +7,9 @@ import styles from './FloatingMenu.module.scss'
 export function FloatingMenu() {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
+  // pointerdown closes an open menu so a drag doesn't leave the panel stranded;
+  // skip the following click toggle so we don't immediately reopen it.
+  const skipClickToggleRef = useRef(false)
   const { corner, dragOffset, isDragging, wasDragged, bind } = useCornerDrag()
   const { onPointerDown: dragPointerDown, ...restBind } = bind
 
@@ -29,12 +32,21 @@ export function FloatingMenu() {
   const handlePointerDown = (e) => {
     // Starting a drag while the menu is open would leave the panel anchored to
     // the old corner mid-move. Close it before drag begins.
-    if (open) setOpen(false)
+    if (open) {
+      setOpen(false)
+      skipClickToggleRef.current = true
+    } else {
+      skipClickToggleRef.current = false
+    }
     dragPointerDown(e)
   }
 
   const handleClick = () => {
     if (wasDragged()) return
+    if (skipClickToggleRef.current) {
+      skipClickToggleRef.current = false
+      return
+    }
     setOpen((v) => !v)
   }
 
