@@ -9,6 +9,8 @@ import {
 } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/providers/AuthProvider'
+import { useOfflineOptional } from '@/providers/OfflineProvider'
+import { getVaultOfflinePack } from '@/lib/offline/vaultPack'
 import { listCredentials, updateCredential } from '@/lib/credentialsApi'
 import { listCreditCards, updateCreditCard } from '@/lib/creditCardsApi'
 import { normalizePassphraseHint } from '@/lib/prefs'
@@ -138,6 +140,7 @@ async function clearCache() {
 
 export function VaultProvider({ children }) {
   const { user, loading: authLoading } = useAuth()
+  const offline = useOfflineOptional()
   const queryClient = useQueryClient()
 
   const [status, setStatus] = useState(STATUS.LOADING)
@@ -172,7 +175,12 @@ export function VaultProvider({ children }) {
   // Dedupes the post-unlock prefs pull (same pattern as VaultItemsSync).
   const metaSyncedForUnlockRef = useRef(null)
 
-  const userId = user?.id ?? null
+  const authUserId = user?.id ?? null
+  // Offline packs are keyed by userId; allow unlock without a live OTP session.
+  const userId =
+    authUserId ??
+    (offline?.isOfflineMode ? offline.primaryPack?.scopeId ?? null : null)
+  const isOfflineVault = Boolean(offline?.isOfflineMode)
 
   useEffect(() => {
     idleTimeoutMsRef.current = idleTimeoutMs
@@ -270,16 +278,26 @@ export function VaultProvider({ children }) {
       metaSyncedForUnlockRef.current = null
 
       try {
-        // Vault crypto lives in public.vault_meta (per app_id), not in
-        // the shared user_data prefs blob — sibling tools must not be
-        // able to wipe salt/verifier via prefs CAS.
-        await queryClient.invalidateQueries({
-          queryKey: vaultMetaQueryKey(userId),
-        })
-        const fetched = await fetchVaultMeta(userId, VAULT_APP_ACCESSO)
-        if (cancelled) return
-        queryClient.setQueryData(vaultMetaQueryKey(userId), fetched)
-        const meta = fetched?.meta ?? null
+        let meta = null
+
+        if (isOfflineVault) {
+          const pack =
+            (await getVaultOfflinePack(userId)) ?? offline?.primaryPack ?? null
+          meta = pack?.vaultMeta ?? null
+          if (cancelled) return
+        } else {
+          // Vault crypto lives in public.vault_meta (per app_id), not in
+          // the shared user_data prefs blob — sibling tools must not be
+          // able to wipe salt/verifier via prefs CAS.
+          await queryClient.invalidateQueries({
+            queryKey: vaultMetaQueryKey(userId),
+          })
+          const fetched = await fetchVaultMeta(userId, VAULT_APP_ACCESSO)
+          if (cancelled) return
+          queryClient.setQueryData(vaultMetaQueryKey(userId), fetched)
+          meta = fetched?.meta ?? null
+        }
+
         const nextIdleMs = normalizeIdleTimeoutMs(meta?.idleTimeoutMs)
         setIdleTimeoutMsState(nextIdleMs)
         idleTimeoutMsRef.current = nextIdleMs
@@ -288,7 +306,16 @@ export function VaultProvider({ children }) {
           metaRef.current = null
           setPassphraseHintState(null)
           await clearCache()
-          setStatus(STATUS.NEEDS_SETUP)
+          if (isOfflineVault) {
+            setError(
+              new Error(
+                'Offline vault pack is missing unlock metadata. Connect and refresh Available offline.',
+              ),
+            )
+            setStatus(STATUS.ERROR)
+          } else {
+            setStatus(STATUS.NEEDS_SETUP)
+          }
           return
         }
         metaRef.current = meta
@@ -326,6 +353,23 @@ export function VaultProvider({ children }) {
         setStatus(STATUS.LOCKED)
       } catch (err) {
         if (cancelled) return
+        if (!isOfflineVault) {
+          try {
+            const pack = await getVaultOfflinePack(userId)
+            if (pack?.vaultMeta && !cancelled) {
+              const meta = pack.vaultMeta
+              metaRef.current = meta
+              setPassphraseHintState(meta.hint ?? null)
+              const nextIdleMs = normalizeIdleTimeoutMs(meta.idleTimeoutMs)
+              setIdleTimeoutMsState(nextIdleMs)
+              idleTimeoutMsRef.current = nextIdleMs
+              setStatus(STATUS.LOCKED)
+              return
+            }
+          } catch {
+            // ignore pack fallback errors
+          }
+        }
         setError(err)
         setPassphraseHintState(null)
         setStatus(STATUS.ERROR)
@@ -335,7 +379,14 @@ export function VaultProvider({ children }) {
     return () => {
       cancelled = true
     }
-  }, [userId, authLoading, queryClient, reloadCounter])
+  }, [
+    userId,
+    authLoading,
+    queryClient,
+    reloadCounter,
+    isOfflineVault,
+    offline?.primaryPack,
+  ])
 
   const retryLoad = useCallback(() => {
     setReloadCounter((n) => n + 1)
@@ -497,9 +548,13 @@ export function VaultProvider({ children }) {
   // After unlock (including session hydrate), force-pull vault_meta and
   // re-verify the in-memory passphrase against fresh salt/verifier.
   useEffect(() => {
-    if (status !== STATUS.UNLOCKED || !userId) {
+    if (status !== STATUS.UNLOCKED || !userId || isOfflineVault) {
       if (status !== STATUS.UNLOCKED) {
         metaSyncedForUnlockRef.current = null
+      }
+      // Offline: trust pack meta; mark session so we do not retry network.
+      if (status === STATUS.UNLOCKED && isOfflineVault && userId) {
+        metaSyncedForUnlockRef.current = `${userId}:unlocked:offline`
       }
       return
     }
@@ -568,7 +623,7 @@ export function VaultProvider({ children }) {
     return () => {
       cancelled = true
     }
-  }, [status, userId, queryClient])
+  }, [status, userId, queryClient, isOfflineVault])
 
   // Persist a new idle-timeout preference. Updates local state
   // immediately (so the timer effect re-registers), then upserts the

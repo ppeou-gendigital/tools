@@ -1,14 +1,17 @@
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
+import { Loader2 } from 'lucide-react'
 import { AuthProvider } from '@/providers/AuthProvider'
 import { FabCornerProvider } from '@/providers/FabCornerProvider'
 import { FontSizeProvider } from '@/providers/FontSizeProvider'
 import { NavigationProvider, useNavigation } from '@/providers/NavigationProvider'
+import { OfflineProvider, useOffline } from '@/providers/OfflineProvider'
 import { PrefsSync } from '@/providers/PrefsSync'
 import { VaultItemsSync } from '@/providers/VaultItemsSync'
 import { ThemeProvider } from '@/providers/ThemeProvider'
 import { VaultProvider, useVault } from '@/providers/VaultProvider'
 import { AppShell } from '@/templates/AppShell'
 import { AuthGate } from '@/blocks/AuthGate'
+import gateStyles from '@/blocks/AuthGate.module.scss'
 import { VaultUnlockOverlay } from '@/blocks/VaultUnlockOverlay'
 import { BiometricEnrollPrompt } from '@/blocks/BiometricEnrollPrompt'
 import { Home } from '@/pages/Home'
@@ -22,15 +25,12 @@ import { CredentialEdit } from '@/pages/CredentialEdit'
 import { CreditCards } from '@/pages/CreditCards'
 import { CreditCardEdit } from '@/pages/CreditCardEdit'
 import { VaultUnlock } from '@/pages/VaultUnlock'
+import { OfflineEmpty } from '@/pages/offline/OfflineEmpty'
+import { OfflineRouter } from '@/pages/offline/OfflineRouter'
 import { APP_VERSION } from '@/env'
 import { queryClient } from '@/lib/queryClient'
 import { queryPersister } from '@/lib/queryPersister'
 
-// Routes that touch the vault. When the user has never set a
-// passphrase (`needsSetup`), we hijack these routes with the full-page
-// setup wizard. The locked-but-set-up case is handled by the overlay
-// (see `<VaultUnlockOverlay />`) and per-page locked placeholders, so
-// we don't route-swap for it.
 const VAULT_ROUTES = new Set([
   'credentials',
   'credential-new',
@@ -41,7 +41,7 @@ const VAULT_ROUTES = new Set([
   'datafeed-settings',
 ])
 
-function Router() {
+function OnlineRouter() {
   const { route } = useNavigation()
   const vault = useVault()
 
@@ -63,6 +63,38 @@ function Router() {
   return <Home />
 }
 
+function ModeSwitch() {
+  const { ready, isOfflineMode, isOfflineEmpty } = useOffline()
+
+  if (!ready) {
+    return (
+      <div className={gateStyles.loading}>
+        <Loader2 size={16} className={gateStyles.spinner} aria-hidden="true" />
+        <span>Loading</span>
+      </div>
+    )
+  }
+
+  if (isOfflineEmpty) return <OfflineEmpty />
+
+  if (isOfflineMode) {
+    return (
+      <>
+        <OfflineRouter />
+        <VaultUnlockOverlay />
+      </>
+    )
+  }
+
+  return (
+    <AuthGate>
+      <OnlineRouter />
+      <VaultUnlockOverlay />
+      <BiometricEnrollPrompt />
+    </AuthGate>
+  )
+}
+
 export function App() {
   return (
     <PersistQueryClientProvider
@@ -73,29 +105,25 @@ export function App() {
         buster: APP_VERSION,
       }}
     >
-      {/* AuthProvider is above Theme/Font/Fab so those providers can
-          call applySyncOp with the current userId (Fav Links recipe). */}
-      <AuthProvider>
-        <ThemeProvider>
-          <FontSizeProvider>
-            <FabCornerProvider>
-              <VaultProvider>
-                <PrefsSync />
-                <VaultItemsSync />
-                <NavigationProvider>
-                  <AppShell>
-                    <AuthGate>
-                      <Router />
-                      <VaultUnlockOverlay />
-                      <BiometricEnrollPrompt />
-                    </AuthGate>
-                  </AppShell>
-                </NavigationProvider>
-              </VaultProvider>
-            </FabCornerProvider>
-          </FontSizeProvider>
-        </ThemeProvider>
-      </AuthProvider>
+      <OfflineProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <FontSizeProvider>
+              <FabCornerProvider>
+                <VaultProvider>
+                  <PrefsSync />
+                  <VaultItemsSync />
+                  <NavigationProvider>
+                    <AppShell>
+                      <ModeSwitch />
+                    </AppShell>
+                  </NavigationProvider>
+                </VaultProvider>
+              </FabCornerProvider>
+            </FontSizeProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </OfflineProvider>
     </PersistQueryClientProvider>
   )
 }

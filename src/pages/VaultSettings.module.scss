@@ -59,6 +59,13 @@
   line-height: 1.4;
 }
 
+.error {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--danger, #b91c1c);
+  line-height: 1.4;
+}
+
 // Wrap positions the pending spinner on top of the select without
 // interfering with the native chevron rendered by the browser.
 .selectWrap {

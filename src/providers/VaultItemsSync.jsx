@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/providers/AuthProvider'
+import { useOfflineOptional } from '@/providers/OfflineProvider'
 import { useVault } from '@/providers/VaultProvider'
 import { getVaultItemStreamConfig, pullSync } from '@/lib/supabaseSync'
 import {
@@ -16,6 +17,7 @@ const VAULT_STREAMS = ['credentials', 'credit_cards']
 // force-pull both lists and reconcile around dirty (in-flight) rows.
 export function VaultItemsSync() {
   const { user, loading: authLoading } = useAuth()
+  const offline = useOfflineOptional()
   const vault = useVault()
   const queryClient = useQueryClient()
   const pulledForUnlockRef = useRef(null)
@@ -31,11 +33,12 @@ export function VaultItemsSync() {
   }, [userId, unlocked])
 
   useEffect(() => {
+    // Offline path reads the IndexedDB pack — do not hit Supabase.
+    if (offline?.isOfflineMode || offline?.online === false) return
     if (authLoading || !userId || !unlocked) return
     const sessionKey = `${userId}:unlocked`
     if (pulledForUnlockRef.current === sessionKey) return
     pulledForUnlockRef.current = sessionKey
-
     let cancelled = false
     ;(async () => {
       try {
@@ -70,7 +73,14 @@ export function VaultItemsSync() {
     return () => {
       cancelled = true
     }
-  }, [authLoading, userId, unlocked, queryClient])
+  }, [
+    authLoading,
+    userId,
+    unlocked,
+    queryClient,
+    offline?.isOfflineMode,
+    offline?.online,
+  ])
 
   return null
 }

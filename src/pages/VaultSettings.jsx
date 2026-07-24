@@ -4,14 +4,18 @@ import {
   Download,
   Eye,
   EyeOff,
+  HardDriveDownload,
   Loader2,
   Lock,
+  Trash2,
   TriangleAlert,
   Upload,
 } from 'lucide-react'
 import { PageHeader } from '@/patterns/PageHeader'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
+import { useAuth } from '@/providers/AuthProvider'
+import { useOffline } from '@/providers/OfflineProvider'
 import { useVault } from '@/providers/VaultProvider'
 import {
   PASSPHRASE_HINT_MAX_LENGTH,
@@ -43,9 +47,135 @@ export function VaultSettings() {
           <ChangePassphraseSection />
         </div>
       </div>
+      <OfflineAvailableSection />
       <VaultMetaBackupSection />
       <ResetVaultSection />
     </div>
+  )
+}
+
+function OfflineAvailableSection() {
+  const { user } = useAuth()
+  const vault = useVault()
+  const {
+    isPackAvailable,
+    makeAvailableOffline,
+    removeAvailableOffline,
+    getPack,
+    refreshPacks,
+  } = useOffline()
+  const userId = user?.id
+  const packReady = userId ? isPackAvailable(userId) : false
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+  const [syncedAt, setSyncedAt] = useState(null)
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      if (!userId) {
+        if (mounted) setSyncedAt(null)
+        return
+      }
+      const pack = await getPack(userId)
+      if (mounted) setSyncedAt(pack?.syncedAt ?? null)
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [userId, getPack, packReady])
+
+  const canPin =
+    Boolean(userId) &&
+    vault.isUnlocked &&
+    !vault.needsSetup &&
+    vault.status !== 'loading'
+
+  async function handlePin() {
+    if (!userId || busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      const pack = await makeAvailableOffline(userId)
+      setSyncedAt(pack.syncedAt)
+      await refreshPacks()
+    } catch (err) {
+      setError(err?.message ?? String(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleRemove() {
+    if (!userId || busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      await removeAvailableOffline(userId)
+      setSyncedAt(null)
+    } catch (err) {
+      setError(err?.message ?? String(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className={styles.section}>
+      <div className={styles.sectionHead}>
+        <h2 className={styles.sectionTitle}>Available offline</h2>
+        <p className={styles.sectionBody}>
+          Save an encrypted copy of your vault on this device for airplane mode.
+          Passwords stay ciphertext until you unlock with your passphrase. Not a
+          plaintext export.
+        </p>
+      </div>
+      {packReady && syncedAt && (
+        <p className={styles.sectionBody} role="status">
+          Last synced{' '}
+          {new Date(syncedAt).toLocaleString(undefined, {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          })}
+        </p>
+      )}
+      {!vault.isUnlocked && (
+        <p className={styles.sectionBody}>
+          Unlock the vault first, then make it available offline.
+        </p>
+      )}
+      {error && (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      )}
+      <div className={styles.dangerActions}>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={!canPin || busy}
+          onClick={handlePin}
+        >
+          {busy ? (
+            <Loader2 size={14} className={styles.spin} aria-hidden="true" />
+          ) : (
+            <HardDriveDownload size={14} aria-hidden="true" />
+          )}
+          {packReady ? 'Refresh offline copy' : 'Make available offline'}
+        </Button>
+        {packReady && (
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={busy}
+            onClick={handleRemove}
+          >
+            <Trash2 size={14} aria-hidden="true" />
+            Remove offline copy
+          </Button>
+        )}
+      </div>
+    </section>
   )
 }
 
