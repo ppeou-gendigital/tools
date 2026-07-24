@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNotes } from '@/providers/NotesProvider'
+import { useOfflineOptional } from '@/providers/OfflineProvider'
 import { enqueueSyncOp } from '@/lib/supabaseSync'
 import {
   fetchRemoteWorkspace,
@@ -33,6 +34,9 @@ const PUSH_MAX_ATTEMPTS = 3
 // Focus: flush dirty push only — never applyRemote (avoids wiping new lockboxes).
 export function WorkspaceSync() {
   const { user, loading: authLoading } = useAuth()
+  const offline = useOfflineOptional()
+  const offlineActive =
+    offline?.isOfflineMode || offline?.isOfflineEmpty || offline?.online === false
   const {
     ready,
     workspace,
@@ -218,7 +222,7 @@ export function WorkspaceSync() {
   }, [applyRemote, persistLocal, schedulePush])
 
   useEffect(() => {
-    if (!userId || !ready) return undefined
+    if (!userId || !ready || offlineActive) return undefined
     return registerPersistHook((next) => {
       const fp = workspaceContentFingerprint(next)
       if (fp === lastPushedFpRef.current) {
@@ -228,10 +232,10 @@ export function WorkspaceSync() {
       userDirtyRef.current = true
       return schedulePush('persist')
     })
-  }, [userId, ready, registerPersistHook, schedulePush])
+  }, [userId, ready, offlineActive, registerPersistHook, schedulePush])
 
   useEffect(() => {
-    if (!userId || !ready) return undefined
+    if (!userId || !ready || offlineActive) return undefined
     const onFocus = () => {
       if (!userDirtyRef.current) return
       schedulePush('focus-dirty').catch((err) => {
@@ -243,10 +247,10 @@ export function WorkspaceSync() {
     }
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
-  }, [userId, ready, schedulePush])
+  }, [userId, ready, offlineActive, schedulePush])
 
   useEffect(() => {
-    if (authLoading || !userId || !ready) return
+    if (authLoading || !userId || !ready || offlineActive) return
     if (initialPulledForUserRef.current === userId) return
     initialPulledForUserRef.current = userId
 
@@ -264,7 +268,7 @@ export function WorkspaceSync() {
     return () => {
       cancelled = true
     }
-  }, [authLoading, userId, ready, pullOnLogin])
+  }, [authLoading, userId, ready, offlineActive, pullOnLogin])
 
   return null
 }

@@ -122,6 +122,7 @@ export function RichNoteEditor({
 
   return (
     <div className={cx(styles.root, className)} data-disabled={disabled}>
+      {!disabled && (
       <div className={styles.toolbar} role="toolbar" aria-label="Formatting">
         <ToolbarBtn
           label="Bold"
@@ -222,6 +223,7 @@ export function RichNoteEditor({
           <Redo2 size={14} />
         </ToolbarBtn>
       </div>
+      )}
       <EditorContent editor={editor} className={styles.content} />
     </div>
   )

@@ -1,4 +1,4 @@
-import { House, Lock } from 'lucide-react'
+import { House, Lock, Settings } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { useNavigation } from '@/providers/NavigationProvider'
 import styles from './PageShortcuts.module.scss'
@@ -16,6 +16,12 @@ const DEFAULT_SHORTCUTS = [
     label: 'Lockboxes',
     icon: Lock,
     pick: (nav) => nav.goLockboxes,
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: Settings,
+    pick: (nav) => nav.goSettings,
   },
 ]
 
