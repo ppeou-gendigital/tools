@@ -6,8 +6,8 @@ import { pullSync } from '@/lib/supabaseSync'
 export function PrefsSync() {
   const {
     ready: displayReady,
-    displayLocale,
-    defaultCurrency,
+    storedDisplayLocale,
+    storedDefaultCurrency,
     prefsConfirmed,
     setDisplayLocale,
     setDefaultCurrency,
@@ -22,13 +22,13 @@ export function PrefsSync() {
   const extra = [
     {
       key: 'displayLocale',
-      get: () => displayLocale,
+      get: () => storedDisplayLocale,
       set: (v, opts) => setDisplayLocale(v, opts),
       ready: displayReady,
     },
     {
       key: 'defaultCurrency',
-      get: () => defaultCurrency,
+      get: () => storedDefaultCurrency,
       set: (v, opts) => setDefaultCurrency(v, opts),
       ready: displayReady,
     },

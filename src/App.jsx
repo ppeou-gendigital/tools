@@ -42,9 +42,13 @@ function OnboardingGate({ children }) {
 
   useEffect(() => {
     if (!ready) return
-    if (prefsConfirmed) return
-    if (route === 'onboarding-prefs' || route === 'accept-invite') return
-    replace('onboarding-prefs')
+    if (!prefsConfirmed) {
+      if (route === 'onboarding-prefs' || route === 'accept-invite') return
+      replace('onboarding-prefs')
+      return
+    }
+    // Late pull (or another device) may confirm after we already routed here.
+    if (route === 'onboarding-prefs') replace('home')
   }, [ready, prefsConfirmed, route, replace])
 
   if (!ready) return null

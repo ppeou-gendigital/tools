@@ -74,7 +74,11 @@ function prefsRowsEqual(a, b) {
   return (
     a.data.theme === b.data.theme &&
     a.data.fontSize === b.data.fontSize &&
-    a.data.fabCorner === b.data.fabCorner
+    a.data.fabCorner === b.data.fabCorner &&
+    a.data.displayLocale === b.data.displayLocale &&
+    a.data.defaultCurrency === b.data.defaultCurrency &&
+    a.data.mapsProvider === b.data.mapsProvider &&
+    a.data.prefsConfirmed === b.data.prefsConfirmed
   )
 }
 
@@ -84,6 +88,10 @@ function toDbPrefsPayload(userId, row) {
     theme: row.data.theme,
     fontSize: row.data.fontSize,
     fabCorner: row.data.fabCorner,
+    displayLocale: row.data.displayLocale,
+    defaultCurrency: row.data.defaultCurrency,
+    mapsProvider: row.data.mapsProvider,
+    prefsConfirmed: row.data.prefsConfirmed,
     updatedAt: new Date().toISOString(),
   }
   return {
@@ -257,6 +265,18 @@ export async function pullSync({ stream, userId, local, dirtyKeys } = {}) {
     if (!dirty.has('fabCorner') && !dirty.has('data')) {
       next.data.fabCorner = remote.data.fabCorner
     }
+    if (!dirty.has('displayLocale') && !dirty.has('data')) {
+      next.data.displayLocale = remote.data.displayLocale
+    }
+    if (!dirty.has('defaultCurrency') && !dirty.has('data')) {
+      next.data.defaultCurrency = remote.data.defaultCurrency
+    }
+    if (!dirty.has('mapsProvider') && !dirty.has('data')) {
+      next.data.mapsProvider = remote.data.mapsProvider
+    }
+    if (!dirty.has('prefsConfirmed') && !dirty.has('data')) {
+      next.data.prefsConfirmed = remote.data.prefsConfirmed
+    }
     // Never dirty sibling keys — always take them from remote.
     if (!dirty.has('data')) {
       applyRemoteForeignPrefs(next.data, remote.data)
@@ -273,4 +293,13 @@ export async function pullSync({ stream, userId, local, dirtyKeys } = {}) {
 }
 
 // Re-export op factories so callers can import everything from one place.
-export { opSetTheme, opSetFontSize, opSetFabCorner } from '@/lib/userDataOps'
+export {
+  opSetTheme,
+  opSetFontSize,
+  opSetFabCorner,
+  opSetDisplayLocale,
+  opSetDefaultCurrency,
+  opSetMapsProvider,
+  opSetPrefsConfirmed,
+  opConfirmDisplayPrefs,
+} from '@/lib/userDataOps'

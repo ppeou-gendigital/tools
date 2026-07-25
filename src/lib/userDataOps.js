@@ -11,15 +11,27 @@
 // examples (aemDomains, pinnedSites, …).
 
 import {
+  normalizeDefaultCurrency,
+  normalizeDisplayLocale,
   normalizeFabCorner,
   normalizeFontSize,
+  normalizeMapsProvider,
+  normalizePrefsConfirmed,
   normalizeRemotePrefs,
   normalizeTheme,
 } from '@/lib/prefs'
 
 function emptyRow() {
   return {
-    data: { theme: 'daynight', fontSize: 16, fabCorner: 'bottom-right' },
+    data: {
+      theme: 'daynight',
+      fontSize: 16,
+      fabCorner: 'bottom-right',
+      displayLocale: null,
+      defaultCurrency: null,
+      mapsProvider: 'google',
+      prefsConfirmed: false,
+    },
   }
 }
 
@@ -61,5 +73,62 @@ export function opSetFabCorner(corner) {
     const cur = cloneRow(row)
     if (cur.data.fabCorner === next) return row ?? cur
     return withData(cur, { fabCorner: next })
+  }
+}
+
+export function opSetDisplayLocale(locale) {
+  const next = normalizeDisplayLocale(locale)
+  return (row) => {
+    const cur = cloneRow(row)
+    if (cur.data.displayLocale === next) return row ?? cur
+    return withData(cur, { displayLocale: next })
+  }
+}
+
+export function opSetDefaultCurrency(currency) {
+  const next = normalizeDefaultCurrency(currency)
+  return (row) => {
+    const cur = cloneRow(row)
+    if (cur.data.defaultCurrency === next) return row ?? cur
+    return withData(cur, { defaultCurrency: next })
+  }
+}
+
+export function opSetMapsProvider(provider) {
+  const next = normalizeMapsProvider(provider)
+  return (row) => {
+    const cur = cloneRow(row)
+    if (cur.data.mapsProvider === next) return row ?? cur
+    return withData(cur, { mapsProvider: next })
+  }
+}
+
+export function opSetPrefsConfirmed(confirmed) {
+  const next = normalizePrefsConfirmed(confirmed)
+  return (row) => {
+    const cur = cloneRow(row)
+    if (cur.data.prefsConfirmed === next) return row ?? cur
+    return withData(cur, { prefsConfirmed: next })
+  }
+}
+
+/** Confirm onboarding: locale + currency + prefsConfirmed in one CAS write. */
+export function opConfirmDisplayPrefs({ locale, currency }) {
+  const nextLocale = normalizeDisplayLocale(locale)
+  const nextCurrency = normalizeDefaultCurrency(currency)
+  return (row) => {
+    const cur = cloneRow(row)
+    if (
+      cur.data.displayLocale === nextLocale &&
+      cur.data.defaultCurrency === nextCurrency &&
+      cur.data.prefsConfirmed === true
+    ) {
+      return row ?? cur
+    }
+    return withData(cur, {
+      displayLocale: nextLocale,
+      defaultCurrency: nextCurrency,
+      prefsConfirmed: true,
+    })
   }
 }
