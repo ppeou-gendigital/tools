@@ -23,13 +23,3 @@ export function AppNavItems({ onClose }) {
   }))
   return <ToolsAppNavItems items={items} onClose={onClose} />
 }
-
-export function useAppShortcutItems() {
-  const nav = useNavigation()
-  return APP_NAV.map(({ id, label, icon, go }) => ({
-    id,
-    label,
-    icon,
-    onClick: nav[go],
-  }))
-}
