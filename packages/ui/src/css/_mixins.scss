@@ -1,0 +1,56 @@
+@mixin focus-ring {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+
+  &:focus-visible {
+    outline-color: var(--ring);
+  }
+}
+
+// Hover / press / focus for custom click targets (list rows, chips, toggles).
+@mixin interactive-control {
+  @include focus-ring;
+
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    opacity 0.12s ease,
+    transform 0.12s ease;
+
+  &:active:not(:disabled) {
+    transform: scale(0.995);
+  }
+}
+
+@mixin stack($gap: var(--space-3)) {
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+}
+
+@mixin row($gap: var(--space-2)) {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: $gap;
+}
+
+// Breakpoint scale. SCSS values because @media expressions are evaluated at
+// parse time; the same values are also exposed as --bp-* CSS custom properties
+// in _tokens.scss for JS/inline consumption.
+$bp-md: 768px;
+$bp-lg: 1024px;
+$bp-xl: 1440px;
+
+@mixin md {
+  @media (min-width: $bp-md) { @content; }
+}
+
+@mixin lg {
+  @media (min-width: $bp-lg) { @content; }
+}
+
+@mixin xl {
+  @media (min-width: $bp-xl) { @content; }
+}

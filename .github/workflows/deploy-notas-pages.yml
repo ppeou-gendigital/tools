@@ -4,9 +4,9 @@ name: Deploy notas to GitHub Pages
 # from tool/notas does not wipe /tools/loopy/ or /tools/accesso/.
 # Live URL: https://ppeou-gendigital.github.io/tools/notas/
 
+# Primary web hosting is Firebase (see deploy-notas-firebase.yml).
+# Keep this workflow for emergency Pages redeploys only.
 on:
-  push:
-    branches: [tool/notas]
   workflow_dispatch:
 
 permissions:

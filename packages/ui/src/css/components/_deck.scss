@@ -1,0 +1,24 @@
+@use '../mixins' as m;
+.ui-deck {
+  container-type: inline-size; display: flex; gap: var(--gutter);
+  overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
+  height: 100%; padding-bottom: var(--space-3);
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  &::-webkit-scrollbar { height: 6px; width: 6px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--border) 70%, transparent); border-radius: 999px;
+  }
+  &::-webkit-scrollbar-thumb:hover { background: var(--border); }
+  &:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+}
+.ui-slide {
+  --_span: var(--slide-span, 12);
+  flex: 0 0 auto; scroll-snap-align: start; scroll-snap-stop: always;
+  height: 100%; overflow-y: auto;
+  width: calc((var(--_span) * (100cqi + var(--gutter))) / 12 - var(--gutter));
+  @include m.md { --_span: var(--slide-span-md, var(--slide-span, 12)); }
+  @include m.lg { --_span: var(--slide-span-lg, var(--slide-span-md, var(--slide-span, 12))); }
+  @include m.xl { --_span: var(--slide-span-xl, var(--slide-span-lg, var(--slide-span-md, var(--slide-span, 12)))); }
+}

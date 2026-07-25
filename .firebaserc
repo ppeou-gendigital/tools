@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "project-notas"
+  },
+  "targets": {
+    "project-notas": {
+      "hosting": {
+        "notas": ["project-notas"]
+      }
+    }
+  }
+}
