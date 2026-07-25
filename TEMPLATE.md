@@ -89,6 +89,16 @@ npm run lint
 
 All five should succeed on a fresh clone with a valid `.env`.
 
+## Shared UI packages
+
+This template ships three local packages under [`packages/`](packages/README.md):
+
+- `@tools/ui` — tokens + `ui-*` CSS + presentational React
+- `@tools/behavioral` — AppShell / FloatingMenu / MenuPanel / AuthGate shells
+- `@tools/service` — Auth + Theme / FontSize / FabCorner / PrefsSync
+
+Edit shared UI on `template/base` only. When migrating a `tool/*` app, sync `packages/` into that branch, `npm install`, then replace local copies one app at a time (see packages README).
+
 ## 7. Deploy
 
 - **Web (GitHub Pages)**: push to `tool/foo` — the workflow at `.github/workflows/deploy-foo-pages.yml` builds and publishes to `/tools/foo/` on the repo's Pages site.

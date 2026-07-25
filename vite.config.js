@@ -111,11 +111,17 @@ export default defineConfig(({ command, mode }) => {
         '@': resolve(__dirname, 'src'),
       },
     },
+    optimizeDeps: {
+      exclude: ['@tools/ui', '@tools/behavioral', '@tools/service'],
+    },
     css: {
       preprocessorOptions: {
         scss: {
-          // Make `@use 'tokens/mixins'` work anywhere in the tree.
-          loadPaths: [resolve(__dirname, 'src')],
+          // Package CSS + legacy `@use 'tokens/mixins'` in app modules.
+          loadPaths: [
+            resolve(__dirname, 'src'),
+            resolve(__dirname, 'packages/ui/src/css'),
+          ],
         },
       },
     },
