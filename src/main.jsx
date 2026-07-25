@@ -1,10 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
-import './tokens/main.scss'
+import '@tools/ui/css'
+import '@tools/behavioral/css'
+import './brand.scss'
 
-// Web/PWA only — MODE is statically replaced per Vite build, so the
-// extension bundle never pulls in virtual:pwa-register.
 if (import.meta.env.MODE !== 'extension') {
   void import('./pwaRegister.js')
 }

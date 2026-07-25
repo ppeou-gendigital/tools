@@ -1,16 +1,17 @@
-import { useAuth } from '@/providers/AuthProvider'
+import { AboutRow, Divider } from '@tools/ui'
+import {
+  AppearanceRow,
+  DevBadgeItem,
+  MenuPanel as ToolsMenuPanel,
+} from '@tools/behavioral'
+import { useAuth } from '@tools/service'
+import { APP_VERSION, devAutoLoginConfig } from '@/env'
 import { useVault } from '@/providers/VaultProvider'
-import { APP_VERSION } from '@/env'
-import { Divider } from '@/molecules/Divider'
-import { AboutRow } from '@/patterns/AboutRow'
 import { AccountRow } from '@/patterns/AccountRow'
-import { AppearanceRow } from '@/patterns/AppearanceRow'
 import { CredentialsItem } from '@/patterns/CredentialsItem'
 import { CreditCardsItem } from '@/patterns/CreditCardsItem'
 import { UnlockVaultItem } from '@/patterns/UnlockVaultItem'
 import { ProjectSiteItem } from '@/patterns/ProjectSiteItem'
-import { DevBadgeItem } from '@/patterns/DevBadgeItem'
-import styles from './MenuPanel.module.scss'
 
 const TOOL_NAME = 'Accesso'
 
@@ -18,13 +19,20 @@ export function MenuPanel({ corner, onClose }) {
   const { user } = useAuth()
   const vault = useVault()
   const signedIn = !!user
-  // Show the unlock shortcut only when it would actually do something:
-  // user is signed in, vault has already been set up, and it's not
-  // already unlocked.
   const showUnlock = signedIn && vault.isLocked
+  const dev = devAutoLoginConfig()
 
   return (
-    <div role="menu" className={styles.panel} data-corner={corner}>
+    <ToolsMenuPanel
+      corner={corner}
+      onClose={onClose}
+      footer={
+        <>
+          <DevBadgeItem email={dev?.email} />
+          <AboutRow name={TOOL_NAME} version={APP_VERSION} />
+        </>
+      }
+    >
       <AppearanceRow onClose={onClose} />
       {signedIn && <Divider />}
       {signedIn && <AccountRow onClose={onClose} />}
@@ -33,8 +41,6 @@ export function MenuPanel({ corner, onClose }) {
       {signedIn && <CreditCardsItem onClose={onClose} />}
       {showUnlock && <UnlockVaultItem onClose={onClose} />}
       <ProjectSiteItem onClose={onClose} />
-      <DevBadgeItem />
-      <AboutRow name={TOOL_NAME} version={APP_VERSION} />
-    </div>
+    </ToolsMenuPanel>
   )
 }

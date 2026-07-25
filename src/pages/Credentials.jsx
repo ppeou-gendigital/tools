@@ -229,15 +229,13 @@ export function Credentials() {
       )}
 
       <div className={styles.toolbar}>
-        <div className={styles.searchWrap}>
-          <Search size={14} aria-hidden="true" className={styles.searchIcon} />
-          <Input
-            className={styles.searchInput}
-            placeholder="Search by name, url, or username"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+        <Input
+          iconStart={<Search size={14} />}
+          placeholder="Search by name, url, or username"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search credentials"
+        />
         <div className={styles.toolbarRow}>
           <select
             className={styles.select}

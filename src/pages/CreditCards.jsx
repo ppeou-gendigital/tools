@@ -290,15 +290,13 @@ export function CreditCards() {
       )}
 
       <div className={styles.toolbar}>
-        <div className={styles.searchWrap}>
-          <Search size={14} aria-hidden="true" className={styles.searchIcon} />
-          <Input
-            className={styles.searchInput}
-            placeholder="Search by name, issuer, cardholder, or last 4"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+        <Input
+          iconStart={<Search size={14} />}
+          placeholder="Search by name, issuer, cardholder, or last 4"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search cards"
+        />
         <div className={styles.toolbarRow}>
           <select
             className={styles.select}
