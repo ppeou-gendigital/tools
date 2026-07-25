@@ -9,25 +9,11 @@ export function AuthProvider({ children }) {
     queryClient.clear()
   }, [])
 
-  const finalizeSignup = useCallback(async (userSession, displayName) => {
-    if (!userSession?.user?.id || !displayName) return
-    const { error } = await supabase.from('profiles').upsert(
-      {
-        id: userSession.user.id,
-        display_name: displayName,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'id' },
-    )
-    if (error) throw error
-  }, [])
-
   return (
     <ToolsAuthProvider
       supabase={supabase}
       appId="accesso"
       onSignedOut={onSignedOut}
-      finalizeSignup={finalizeSignup}
       getDevAutoLogin={devAutoLoginConfig}
     >
       {children}

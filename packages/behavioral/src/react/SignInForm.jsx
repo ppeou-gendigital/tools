@@ -5,7 +5,6 @@ import {
   Card,
   CardBody,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
   Input,
@@ -17,29 +16,24 @@ import { formatAuthError, useAuth } from '@tools/service'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /**
- * Merged viaggio UX + accesso signup API.
+ * Single passwordless OTP form (email → 6-digit code).
+ * New accounts are created implicitly via shouldCreateUser.
  *
  * @param {object} [props]
  * @param {string} [props.appName]
  * @param {any} [props.logoIcon]
  * @param {string} [props.contextMessage]
  * @param {() => void} [props.onBack]
- * @param {Array<'login'|'signup'>} [props.modes] — default ['login']
  */
 export function SignInForm({
   appName = 'App',
   logoIcon,
   contextMessage,
   onBack,
-  modes = ['login'],
 } = {}) {
-  const { requestOtp, verifyOtp, finalizeSignup } = useAuth()
-  const allowSignup = modes.includes('signup')
-  const [mode, setMode] = useState('login')
+  const { requestOtp, verifyOtp } = useAuth()
   const [step, setStep] = useState('email')
   const [email, setEmail] = useState('')
-  const [displayName, setDisplayName] = useState('')
-  const [pendingDisplayName, setPendingDisplayName] = useState('')
   const [token, setToken] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -54,24 +48,10 @@ export function SignInForm({
     }
     setSubmitting(true)
     try {
-      const isSignup = allowSignup && mode === 'signup'
-      await requestOtp(trimmed, {
-        shouldCreateUser: isSignup || !allowSignup,
-        displayName: isSignup ? displayName.trim() || undefined : undefined,
-      })
-      if (isSignup) setPendingDisplayName(displayName.trim())
+      await requestOtp(trimmed, { shouldCreateUser: true })
       setStep('token')
     } catch (err) {
-      const msg = formatAuthError(err, 'Could not send login code.')
-      if (
-        allowSignup &&
-        mode === 'login' &&
-        /sign up|not found|user/i.test(String(err?.message ?? ''))
-      ) {
-        setError(`${msg} Try signing up instead.`)
-      } else {
-        setError(msg)
-      }
+      setError(formatAuthError(err, 'Could not send the login code. Try again.'))
     } finally {
       setSubmitting(false)
     }
@@ -80,29 +60,40 @@ export function SignInForm({
   async function handleTokenSubmit(e) {
     e.preventDefault()
     setError(null)
-    const code = token.trim()
-    if (!code) {
-      setError('Enter the code from your email.')
+    const code = token.replace(/\s+/g, '')
+    if (code.length < 6) {
+      setError('The code is 6 digits.')
       return
     }
     setSubmitting(true)
     try {
-      const session = await verifyOtp(email.trim(), code)
-      if (allowSignup && mode === 'signup' && finalizeSignup) {
-        void finalizeSignup(session, pendingDisplayName)
-      }
+      await verifyOtp(email.trim(), code)
     } catch (err) {
-      setError(formatAuthError(err, 'Invalid or expired code.'))
+      setError(formatAuthError(err, 'That code did not work. Try again.'))
     } finally {
       setSubmitting(false)
     }
   }
 
+  function backToEmail() {
+    setStep('email')
+    setToken('')
+    setError(null)
+  }
+
+  const title =
+    step === 'token' ? 'Check your email' : `Sign in to ${appName}`
+  const description =
+    contextMessage ||
+    (step === 'token'
+      ? `We sent a 6-digit code to ${email.trim()}.`
+      : "We'll email you a 6-digit code. No password required.")
+
   return (
     <div className="bh-signin">
-      <Card style={{ width: '100%', maxWidth: 380 }}>
-        <CardHeader>
-          {onBack && (
+      <Card className="bh-signin__card">
+        <CardHeader className="bh-signin__header">
+          {onBack && step === 'email' && (
             <div className="bh-signin__back">
               <Button variant="ghost" size="sm" onClick={onBack} type="button">
                 <ArrowLeft size={14} aria-hidden="true" />
@@ -110,109 +101,101 @@ export function SignInForm({
               </Button>
             </div>
           )}
-          <Logo icon={logoIcon} size={40} alt={appName} />
-          <CardTitle>
-            {mode === 'signup' ? `Create ${appName} account` : `Sign in to ${appName}`}
-          </CardTitle>
-          <CardDescription>
-            {contextMessage ||
-              (step === 'email'
-                ? 'We will email you a one-time code.'
-                : `Enter the code sent to ${email.trim()}.`)}
-          </CardDescription>
+          <div className="bh-signin__brand">
+            <Logo icon={logoIcon} size={48} alt={appName} />
+          </div>
+          <p className="bh-signin__step">
+            Step {step === 'email' ? '1' : '2'} of 2
+          </p>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
         </CardHeader>
-        <CardBody>
-          {allowSignup && step === 'email' && (
-            <div className="ui-row" style={{ gap: 'var(--space-2)' }}>
-              <Button
-                type="button"
-                variant={mode === 'login' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setMode('login')}
-              >
-                Sign in
-              </Button>
-              <Button
-                type="button"
-                variant={mode === 'signup' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setMode('signup')}
-              >
-                Sign up
-              </Button>
-            </div>
-          )}
-          {step === 'email' ? (
-            <form className="bh-signin__form" onSubmit={handleEmailSubmit}>
-              {allowSignup && mode === 'signup' && (
-                <div className="ui-stack">
-                  <Label htmlFor="display-name">Display name (optional)</Label>
-                  <Input
-                    id="display-name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    autoComplete="name"
-                  />
-                </div>
-              )}
-              <div className="ui-stack">
-                <Label htmlFor="email">Email</Label>
+
+        {step === 'email' ? (
+          <form className="bh-signin__form" onSubmit={handleEmailSubmit}>
+            <CardBody className="bh-signin__body">
+              <div className="bh-signin__field">
+                <Label htmlFor="bh-signin-email">Email</Label>
                 <Input
-                  id="email"
+                  id="bh-signin-email"
                   type="email"
                   autoComplete="email"
+                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={submitting}
                   required
+                  autoFocus
                 />
               </div>
               {error && <p className="bh-signin__error">{error}</p>}
-              <CardFooter>
-                <Button type="submit" fullWidth disabled={submitting}>
-                  {submitting ? (
-                    <Loader2 size={16} className="spin" aria-hidden="true" />
-                  ) : (
+            </CardBody>
+            <div className="bh-signin__actions">
+              <Button type="submit" fullWidth disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 size={16} className="bh-signin__spinner" aria-hidden="true" />
+                    Sending…
+                  </>
+                ) : (
+                  <>
                     <Mail size={16} aria-hidden="true" />
-                  )}
-                  {submitting ? 'Sending…' : 'Send code'}
-                </Button>
-              </CardFooter>
-            </form>
-          ) : (
-            <form className="bh-signin__form" onSubmit={handleTokenSubmit}>
-              <div className="ui-stack">
-                <Label htmlFor="token">One-time code</Label>
+                    Send code
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <form className="bh-signin__form" onSubmit={handleTokenSubmit}>
+            <CardBody className="bh-signin__body">
+              <div className="bh-signin__field">
+                <Label htmlFor="bh-signin-token">One-time code</Label>
                 <Input
-                  id="token"
+                  id="bh-signin-token"
                   className="bh-signin__token"
                   inputMode="numeric"
                   autoComplete="one-time-code"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  placeholder="000000"
                   value={token}
-                  onChange={(e) => setToken(e.target.value)}
+                  onChange={(e) =>
+                    setToken(e.target.value.replace(/[^0-9]/g, ''))
+                  }
+                  disabled={submitting}
                   required
+                  autoFocus
                 />
+                <span className="bh-signin__helper">
+                  It may take a minute to arrive. Check spam too.
+                </span>
               </div>
               {error && <p className="bh-signin__error">{error}</p>}
-              <CardFooter>
-                <Button type="submit" fullWidth disabled={submitting}>
-                  {submitting ? 'Verifying…' : 'Verify & continue'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  fullWidth
-                  onClick={() => {
-                    setStep('email')
-                    setToken('')
-                    setError(null)
-                  }}
-                >
-                  Use a different email
-                </Button>
-              </CardFooter>
-            </form>
-          )}
-        </CardBody>
+            </CardBody>
+            <div className="bh-signin__actions">
+              <Button type="submit" fullWidth disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 size={16} className="bh-signin__spinner" aria-hidden="true" />
+                    Verifying…
+                  </>
+                ) : (
+                  'Verify & continue'
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                fullWidth
+                onClick={backToEmail}
+                disabled={submitting}
+              >
+                Use a different email
+              </Button>
+            </div>
+          </form>
+        )}
       </Card>
     </div>
   )

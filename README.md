@@ -166,14 +166,15 @@ Create a project at https://supabase.com (free tier — 50k MAU / 500MB Postgres
 
 ### 1. Configure email OTP (6-digit code, not magic-link)
 
-accesso uses `signInWithOtp` + `verifyOtp` with `type: 'email'`. The default Supabase email template uses a `ConfirmationURL` — replace it with the OTP token.
+accesso uses a single passwordless form (`signInWithOtp` + `verifyOtp` with `type: 'email'`). The default Supabase templates use a confirmation link — replace them with the OTP token (see also `@tools/behavioral` README).
 
-- **Dashboard** → **Authentication** → **Email Templates** → **Magic Link**
-- Replace the body with something like:
+- **Dashboard** → **Authentication** → **Email Templates** → **Magic Link** *and* **Confirm sign up**
+- Body must include `{{ .Token }}`, e.g.:
   ```
   Your login code is: {{ .Token }}
   It expires in 60 minutes.
   ```
+- Set **Site URL** to your production host (not `http://localhost:3000`) and allowlist redirect URLs.
 - Save.
 
 ### 2. Grab your API keys

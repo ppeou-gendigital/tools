@@ -11,13 +11,7 @@ export function AuthGate({ children }) {
           <span>Loading</span>
         </div>
       }
-      signIn={
-        <SignInForm
-          appName="Accesso"
-          logoIcon={Fingerprint}
-          modes={['login', 'signup']}
-        />
-      }
+      signIn={<SignInForm appName="Accesso" logoIcon={Fingerprint} />}
     >
       {children}
     </ToolsAuthGate>
