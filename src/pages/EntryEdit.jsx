@@ -528,7 +528,7 @@ function EntryEditForm({
                 </div>
               )}
               {fields.has('occurs_at') && (
-                <div className={styles.field}>
+                <div className={cx(styles.field, styles.formSpan2)}>
                   <Label htmlFor="occursAt">Starts</Label>
                   <Input
                     id="occursAt"
@@ -540,7 +540,7 @@ function EntryEditForm({
                 </div>
               )}
               {fields.has('ends_at') && (
-                <div className={styles.field}>
+                <div className={cx(styles.field, styles.formSpan2)}>
                   <Label htmlFor="endsAt">Ends</Label>
                   <Input
                     id="endsAt"

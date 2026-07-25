@@ -19,6 +19,8 @@
   @include m.focus-ring;
   display: flex;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   height: 36px;
   padding: 0 var(--space-3);
   border-radius: var(--radius);
@@ -39,6 +41,28 @@
 
   &:hover:not(:disabled) {
     border-color: var(--ring);
+  }
+
+  // iOS WebKit date/time controls have a large intrinsic min-width that can
+  // force grid columns wider than the viewport (esp. home-screen PWAs).
+  &[type='date'],
+  &[type='datetime-local'],
+  &[type='time'],
+  &[type='month'],
+  &[type='week'] {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+
+    &::-webkit-datetime-edit {
+      min-width: 0;
+      max-width: 100%;
+      padding-inline: 0;
+    }
+
+    &::-webkit-datetime-edit-fields-wrapper {
+      min-width: 0;
+    }
   }
 }
 
