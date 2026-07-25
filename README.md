@@ -168,12 +168,13 @@ Create a project at https://supabase.com (free tier — 50k MAU / 500MB Postgres
 
 viaggio uses `signInWithOtp` + `verifyOtp` with `type: 'email'`. The default Supabase email template uses a `ConfirmationURL` — replace it with the OTP token.
 
-- **Dashboard** → **Authentication** → **Email Templates** → **Magic Link**
-- Replace the body with something like:
+- **Dashboard** → **Authentication** → **Email Templates** → **Magic Link** *and* **Confirm sign up**
+- Body must include `{{ .Token }}` (not only `ConfirmationURL`), e.g.:
   ```
   Your login code is: {{ .Token }}
   It expires in 60 minutes.
   ```
+- Set **Site URL** to your production host (not `http://localhost:3000`) and allowlist redirect URLs.
 - Save.
 
 ### 2. Grab your API keys
