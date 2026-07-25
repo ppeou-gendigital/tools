@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "type": "patient",
+  "exportedAt": "2026-07-22T18:00:00.000Z",
+  "patient": {
+    "preferredName": "Ada",
+    "birthday": "1950-03-15",
+    "sex": "female",
+    "notes": "Example patient profile for integrators."
+  },
+  "doctors": [
+    {
+      "id": "doc-1",
+      "name": "Dr. Grace Hopper",
+      "specialty": "Internal medicine",
+      "email": "hopper@clinic.example",
+      "website": "https://clinic.example",
+      "notes": "",
+      "offices": [
+        {
+          "id": "office-1",
+          "label": "Downtown",
+          "phone": "+1-555-0100",
+          "addressLine1": "1 Pier Ave",
+          "city": "San Francisco",
+          "region": "CA",
+          "postalCode": "94105",
+          "country": "US"
+        }
+      ]
+    }
+  ],
+  "appointments": [
+    {
+      "id": "appt-1",
+      "title": "Annual checkup",
+      "kind": "checkup",
+      "status": "scheduled",
+      "startsAt": "2026-08-01T15:30:00.000Z",
+      "doctorId": "doc-1",
+      "officeId": "office-1",
+      "instructions": "Arrive 15 minutes early. Fasting not required."
+    }
+  ],
+  "visits": [
+    {
+      "id": "visit-1",
+      "title": "Follow-up",
+      "kind": "doctor_visit",
+      "visitDate": "2026-06-10",
+      "doctorId": "doc-1",
+      "officeId": "office-1",
+      "summary": "Labs reviewed; continue current meds."
+    }
+  ],
+  "medications": [
+    {
+      "id": "med-1",
+      "name": "Lisinopril",
+      "strength": "10 mg",
+      "isActive": true,
+      "refillDate": "2026-08-15",
+      "doctorId": "doc-1",
+      "schedule": {
+        "frequency": "daily",
+        "timesPerPeriod": 1,
+        "times": ["08:00"],
+        "instructions": "Take with water"
+      }
+    }
+  ],
+  "doses": [
+    {
+      "medicationId": "med-1",
+      "takenAt": "2026-07-21T13:05:00.000Z",
+      "note": "Taken with breakfast"
+    }
+  ],
+  "readings": [
+    {
+      "measuredAt": "2026-07-21T13:10:00.000Z",
+      "bloodPressure": { "systolic": 118, "diastolic": 76 },
+      "pulse": 68,
+      "weightKg": 62.5,
+      "notes": "Morning reading"
+    }
+  ],
+  "files": [
+    {
+      "title": "Primary insurance card",
+      "category": "insurance",
+      "insuranceCompany": "Example Health",
+      "memberId": "EXH-123456"
+    }
+  ]
+}

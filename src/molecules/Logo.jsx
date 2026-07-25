@@ -1,22 +1,13 @@
 import { HeartPlus } from 'lucide-react'
-import { cx } from '@/lib/cx'
-import styles from './Logo.module.scss'
+import { Logo as ToolsLogo } from '@tools/ui'
 
-/**
- * In-app brand mark: white HeartPlus on a sky rounded square.
- * Extension / PWA / favicon assets come from `icons/tool.svg`
- * (same shape) via `npm run icons`.
- */
-export function Logo({ size = 40, className, alt = 'Docto' }) {
-  const glyph = Math.max(12, Math.round(size * 0.58))
+export function Logo({ size, className, alt = 'Docto' }) {
   return (
-    <span
-      className={cx(styles.logo, className)}
-      style={{ width: size, height: size }}
-      aria-label={alt}
-      role="img"
-    >
-      <HeartPlus size={glyph} strokeWidth={2.25} aria-hidden="true" />
-    </span>
+    <ToolsLogo
+      icon={HeartPlus}
+      size={size}
+      className={className}
+      alt={alt}
+    />
   )
 }

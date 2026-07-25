@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "project-docto"
+  },
+  "targets": {
+    "project-docto": {
+      "hosting": {
+        "docto": ["project-docto"]
+      }
+    }
+  }
+}

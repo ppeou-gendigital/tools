@@ -8,6 +8,7 @@ This is the **template** branch. Full-featured reference implementation: see the
 - **UI**: React 19, hand-rolled components in SCSS Modules, Lucide icons
 - **Auth + storage**: [Supabase](https://supabase.com/) (Auth + Postgres) — free tier
 - **Build**: Vite + `@crxjs/vite-plugin`
+- **Web host**: [Firebase Hosting](https://project-docto.web.app) (`project-docto`)
 
 ---
 
@@ -68,7 +69,8 @@ Inspect:
 | `npm run dev`       | Vite dev server for the web build (`index.html`)                   |
 | `npm run dev:ext`   | Extension build in watch mode → `dist/`                            |
 | `npm run build`     | Production extension build → `dist/`                               |
-| `npm run build:web` | Production web build → `dist-web/`                                 |
+| `npm run build:web` | Production web build → `dist-web/docto`                            |
+| `npm run deploy:web`| Production web build + deploy to Firebase Hosting                  |
 | `npm run lint`      | ESLint over `src/**/*.{js,jsx}`                                    |
 | `npm run icons`     | Rasterize `icons/tool.svg` → transparent extension + opaque iOS/PWA PNGs |
 | `npm run init`      | Rename the template to a new tool name (see below)                 |
@@ -286,7 +288,10 @@ Settings → **Import / Export** downloads and imports plaintext patient JSON
 while the vault is unlocked (same idea as Accesso’s credential datafeeds).
 
 Hand [`datafeed/README.md`](./datafeed/README.md) to another system so it can
-export a compatible feed. Samples:
+export a compatible feed. Live agent contract:
+https://project-docto.web.app/agent/llms.txt
+
+Samples:
 
 - [`datafeed/patient.sample.json`](./datafeed/patient.sample.json) — full patient
 - [`datafeed/doctors.sample.json`](./datafeed/doctors.sample.json)
@@ -305,25 +310,34 @@ Add more as your tool needs them (`activeTab`, `tabs`, `scripting`, `webNavigati
 
 ---
 
-## CI / GitHub Pages
+## CI / Firebase Hosting
 
-Branch naming drives the live path. After `npm run init -- --name docto`:
+Primary web host: **Firebase Hosting** on project `project-docto`.
 
 | | |
 | --- | --- |
 | Branch | `tool/docto` |
-| Vite `base` / `outDir` | `/tools/docto/` · `dist-web/docto` |
-| Live URL | `https://<user>.github.io/tools/docto/` |
+| Vite `base` / `outDir` | `/` · `dist-web/docto` |
+| Live URL | https://project-docto.web.app |
 
-- **Workflow**: [`.github/workflows/deploy-docto-pages.yml`](.github/workflows/deploy-docto-pages.yml)
-- **Trigger**: push to `tool/docto` (or manual `workflow_dispatch` from the Actions tab)
-- **Build**: `npm run build:web` → `dist-web/docto/` (nested so the uploaded artifact serves at `/tools/docto/`)
-- **Repo secrets required** (Settings → Secrets and variables → Actions):
+- **Workflow**: [`.github/workflows/deploy-docto-firebase.yml`](.github/workflows/deploy-docto-firebase.yml)
+- **Trigger**: push to `tool/docto` (or manual `workflow_dispatch`)
+- **Local deploy**: `npm run deploy:web`
+- **Agent import contract**: https://project-docto.web.app/agent/llms.txt (JSON Schema + sample under `/agent/`)
+- **Config**: [`firebase.json`](firebase.json), [`.firebaserc`](.firebaserc) — hosting target `docto` → site `project-docto`
+- **Repo secrets** (Settings → Secrets and variables → Actions):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
-- **Repo Pages settings**: Settings → Pages → Source = **GitHub Actions**
+  - `FIREBASE_SERVICE_ACCOUNT_DOCTO`
 
-`scripts/init-tool.mjs` renames both this workflow file and the release workflow to match your tool's name, plus updates the branch triggers.
+### Supabase Auth allowlist
+
+In the Docto Supabase project → **Authentication → URL Configuration**, add `https://project-docto.web.app` to **Redirect URLs** (and Site URL when you cut over).
+
+### Legacy GitHub Pages
+
+- **Workflow**: [`.github/workflows/deploy-docto-pages.yml`](.github/workflows/deploy-docto-pages.yml) — **manual only**
+- **Old URL**: https://ppeou-gendigital.github.io/tools/docto/
 
 ### Install as a PWA (web build only)
 

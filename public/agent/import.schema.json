@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-docto.web.app/agent/import.schema.json",
+  "title": "Docto patient datafeed v1",
+  "description": "Plaintext patient import JSON. See https://project-docto.web.app/agent/llms.txt",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["version", "type"],
+      "properties": {
+        "version": { "const": 1 },
+        "type": { "enum": ["patient", "docto-backup"] },
+        "exportedAt": { "type": "string" },
+        "patient": { "$ref": "#/$defs/patientProfile" },
+        "doctors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/doctor" }
+        },
+        "appointments": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/appointment" }
+        },
+        "visits": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/visit" }
+        },
+        "medications": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/medication" }
+        },
+        "doses": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/dose" }
+        },
+        "readings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reading" }
+        },
+        "files": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/fileMeta" }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["version", "type", "items"],
+      "properties": {
+        "version": { "const": 1 },
+        "type": {
+          "enum": [
+            "doctors",
+            "appointments",
+            "visits",
+            "medications",
+            "readings",
+            "files"
+          ]
+        },
+        "exportedAt": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": { "type": "object" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "patientProfile": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "preferredName": { "type": "string" },
+        "birthday": { "type": "string" },
+        "sex": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "office": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "phone": { "type": "string" },
+        "phoneExt": { "type": "string" },
+        "email": { "type": "string" },
+        "website": { "type": "string" },
+        "addressLine1": { "type": "string" },
+        "addressLine2": { "type": "string" },
+        "city": { "type": "string" },
+        "region": { "type": "string" },
+        "postalCode": { "type": "string" },
+        "country": { "type": "string" }
+      }
+    },
+    "doctor": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "minLength": 1 },
+        "specialty": { "type": "string" },
+        "email": { "type": "string" },
+        "website": { "type": "string" },
+        "notes": { "type": "string" },
+        "offices": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/office" }
+        }
+      }
+    },
+    "appointment": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["startsAt"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "kind": { "type": "string" },
+        "status": { "type": "string" },
+        "startsAt": { "type": "string" },
+        "doctorId": { "type": "string" },
+        "officeId": { "type": "string" },
+        "instructions": { "type": "string" },
+        "notes": {}
+      }
+    },
+    "visit": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "kind": { "type": "string" },
+        "visitDate": { "type": "string" },
+        "doctorId": { "type": "string" },
+        "officeId": { "type": "string" },
+        "summary": { "type": "string" }
+      }
+    },
+    "medication": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "minLength": 1 },
+        "strength": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "refillDate": { "type": "string" },
+        "doctorId": { "type": "string" },
+        "schedule": { "type": "object" }
+      }
+    },
+    "dose": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "medicationId": { "type": "string" },
+        "takenAt": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+    "reading": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "measuredAt": { "type": "string" },
+        "bloodPressure": {
+          "type": "object",
+          "properties": {
+            "systolic": { "type": "number" },
+            "diastolic": { "type": "number" }
+          }
+        },
+        "pulse": { "type": "number" },
+        "weightKg": { "type": "number" },
+        "notes": { "type": "string" }
+      }
+    },
+    "fileMeta": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "insuranceCompany": { "type": "string" },
+        "memberId": { "type": "string" }
+      }
+    }
+  }
+}

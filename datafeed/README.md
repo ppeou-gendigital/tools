@@ -3,6 +3,10 @@
 JSON contract for importing and exporting a **patient record** (doctors,
 appointments, visits, medications, doses, readings, files).
 
+**Live agent URLs:** [llms.txt](https://project-docto.web.app/agent/llms.txt) ·
+[schema](https://project-docto.web.app/agent/import.schema.json) ·
+[sample](https://project-docto.web.app/agent/sample.json)
+
 Use the sample files in this folder as templates when building feeds from
 another system (EHR export, spreadsheet converter, migration script, etc.).
 

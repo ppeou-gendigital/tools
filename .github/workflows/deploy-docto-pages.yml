@@ -4,9 +4,9 @@ name: Deploy docto to GitHub Pages
 # from tool/docto does not wipe /tools/loopy/, /tools/accesso/, or /tools/notas/.
 # Live URL: https://ppeou-gendigital.github.io/tools/docto/
 
+# Primary web hosting is Firebase (see deploy-docto-firebase.yml).
+# Keep this workflow for emergency Pages redeploys only.
 on:
-  push:
-    branches: [tool/docto]
   workflow_dispatch:
 
 permissions:

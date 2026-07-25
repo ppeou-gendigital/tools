@@ -32,19 +32,18 @@ function buildAppVersion() {
 export default defineConfig(({ command, mode }) => {
   const isExtension = mode === 'extension'
   const isBuild = command === 'build'
-  const webBase = '/tools/docto/'
+  // Firebase Hosting serves at the site root (https://project-docto.web.app/).
+  // Override with VITE_BASE only if you need a subpath deploy.
+  const webBase = process.env.VITE_BASE || '/'
   const appVersion = buildAppVersion()
 
   return {
     define: {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
     },
-    // Web PROD build is intended to be served from
-    // https://<user>.github.io/tools/docto/, so every asset URL must
-    // be prefixed with the repo-and-tool subpath. Dev server (`npm run
-    // dev`) keeps '/' so http://localhost:5173/ works, and the extension
-    // build always resolves at the extension root.
+    // Web PROD defaults to `/` for Firebase. Dev and extension always `/`.
     base: !isExtension && isBuild ? webBase : '/',
+
     // Web build serves public/ (PWA + apple-touch icons under public/icons/).
     // Extension build keeps icons via the MV3 manifest paths in icons/.
     publicDir: isExtension ? false : resolve(__dirname, 'public'),
@@ -111,11 +110,16 @@ export default defineConfig(({ command, mode }) => {
         '@': resolve(__dirname, 'src'),
       },
     },
+    optimizeDeps: {
+      exclude: ['@tools/ui', '@tools/behavioral', '@tools/service'],
+    },
     css: {
       preprocessorOptions: {
         scss: {
-          // Make `@use 'tokens/mixins'` work anywhere in the tree.
-          loadPaths: [resolve(__dirname, 'src')],
+          loadPaths: [
+            resolve(__dirname, 'src'),
+            resolve(__dirname, 'packages/ui/src/css'),
+          ],
         },
       },
     },
@@ -130,10 +134,11 @@ export default defineConfig(({ command, mode }) => {
           },
         }
       : {
-          // Nested so the uploaded Pages artifact serves at
-          // /tools/docto/ (matching `base` above). The workflow uploads
-          // the parent `dist-web/` folder as the site.
+          // Nested under dist-web/<tool> so firebase.json public dir
+          // stays dist-web/docto (and legacy Pages dual-builds can still
+          // assemble site/docto/ if needed).
           outDir: 'dist-web/docto',
+
           emptyOutDir: true,
           rollupOptions: {
             input: {

@@ -1,0 +1,47 @@
+# Docto — patient datafeed import (for LLM / integrator agents)
+
+Purpose: generate a JSON file a user can import into an unlocked Docto vault
+to create or update patient health records (doctors, appointments, visits,
+medications, doses, readings, file metadata).
+
+## WARNING
+
+Feeds contain PLAINTEXT HEALTH / PII. Treat as highly sensitive. Binary uploads
+(photos, PDFs) are NOT included in v1 — only structured records.
+
+## Format
+
+Envelope (required):
+- version: 1
+- type: "patient" | "doctors" | "appointments" | "visits" | "medications"
+  | "readings" | "files"  (legacy alias: "docto-backup" == "patient")
+
+Full patient feed (preferred for agents):
+- type: "patient"
+- patient (profile object)
+- doctors[], appointments[], visits[], medications[], doses[], readings[], files[]
+
+Typed feeds use items[] for a single collection.
+
+Optional: exportedAt (ISO-8601)
+
+## Machine-readable contract
+
+- JSON Schema: https://project-docto.web.app/agent/import.schema.json
+- Sample JSON: https://project-docto.web.app/agent/sample.json
+- Human spec (repo): datafeed/README.md
+
+## How users import
+
+1. Sign in at https://project-docto.web.app
+2. Unlock the vault (owner or Can help)
+3. Settings → Import / Export → Choose JSON file
+
+## Cross-references
+
+Optional string id on doctors, offices, appointments, visits, medications is
+used ONLY within the file (doctorId, officeId, medicationId, …). Docto always
+creates new DB rows and remaps ids. Any unique string works (e.g. "doc-1").
+
+Unknown fields are ignored. Active patient is the import target; optional
+patient profile fields update the current patient.

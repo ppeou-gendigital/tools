@@ -1,0 +1,49 @@
+@use '../mixins' as m;
+
+.ui-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.ui-input-wrap__icon {
+  position: absolute;
+  top: 50%;
+  left: var(--space-3);
+  transform: translateY(-50%);
+  display: inline-flex;
+  color: var(--muted-fg);
+  pointer-events: none;
+}
+
+.ui-input {
+  @include m.focus-ring;
+  display: flex;
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius);
+  border: 1px solid var(--input);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: var(--text-sm);
+  transition: border-color 0.15s ease;
+
+  &::placeholder {
+    color: var(--muted-fg);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--ring);
+  }
+}
+
+// Leading icon inside the field — keeps text clear of the glyph.
+// Prefer <Input iconStart={…} />; class alone works too.
+.ui-input--icon-start {
+  padding-left: calc(var(--space-3) + 1.25rem);
+}
