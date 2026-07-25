@@ -9,6 +9,7 @@
     "dev:ext": "vite build --mode extension --watch",
     "build": "vite build --mode extension",
     "build:web": "vite build --mode web",
+    "deploy:web": "npm run build:web && firebase deploy --only hosting:accesso",
     "preview": "vite preview",
     "lint": "eslint \"src/**/*.{js,jsx}\" \"packages/*/src/**/*.{js,jsx}\"",
     "icons": "node scripts/generate-icons.mjs",

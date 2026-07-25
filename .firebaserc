@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "project-accesso"
+  },
+  "targets": {
+    "project-accesso": {
+      "hosting": {
+        "accesso": [
+          "project-accesso"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
