@@ -7,7 +7,7 @@ export default [
   { ignores: ['dist', 'dist-web', 'node_modules'] },
   js.configs.recommended,
   {
-    files: ['src/**/*.{js,jsx}'],
+    files: ['src/**/*.{js,jsx}', 'packages/*/src/**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',

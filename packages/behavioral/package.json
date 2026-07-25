@@ -1,0 +1,21 @@
+{
+  "name": "@tools/behavioral",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": [
+    "**/*.scss",
+    "**/*.css"
+  ],
+  "exports": {
+    ".": "./src/react/index.js",
+    "./css": "./src/css/main.scss"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "lucide-react": "*",
+    "@tools/ui": "0.1.0",
+    "@tools/service": "0.1.0"
+  }
+}

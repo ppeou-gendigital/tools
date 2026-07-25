@@ -30,17 +30,17 @@ export default defineConfig(({ command, mode }) => {
   const isExtension = mode === 'extension'
   const isBuild = command === 'build'
   const appVersion = buildAppVersion()
+  // Firebase Hosting serves at the site root (https://project-loopy.web.app/).
+  // Override with VITE_BASE only if you need a subpath deploy.
+  const webBase = process.env.VITE_BASE || '/'
 
   return {
     define: {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
     },
-    // Web PROD build is served from
-    // https://ppeou-gendigital.github.io/tools/loopy/, so every asset URL
-    // must be prefixed with the repo-and-tool subpath. Dev server
-    // (`npm run dev`) keeps '/' so http://localhost:5173/ works as before,
-    // and the extension build always resolves at the extension root.
-    base: !isExtension && isBuild ? '/tools/loopy/' : '/',
+    // Web PROD defaults to `/` for Firebase. Dev and extension always `/`.
+    base: !isExtension && isBuild ? webBase : '/',
+
     // Web build serves public/ (PWA + apple-touch icons under public/icons/).
     // Extension build keeps icons via the MV3 manifest paths in icons/.
     publicDir: isExtension ? false : resolve(__dirname, 'public'),
@@ -107,11 +107,17 @@ export default defineConfig(({ command, mode }) => {
         '@': resolve(__dirname, 'src'),
       },
     },
+    optimizeDeps: {
+      exclude: ['@tools/ui', '@tools/behavioral', '@tools/service'],
+    },
     css: {
       preprocessorOptions: {
         scss: {
-          // Make `@use 'styles/mixins'` work anywhere in the tree.
-          loadPaths: [resolve(__dirname, 'src')],
+          // Package CSS + legacy `@use 'tokens/mixins'` in app modules.
+          loadPaths: [
+            resolve(__dirname, 'src'),
+            resolve(__dirname, 'packages/ui/src/css'),
+          ],
         },
       },
     },
@@ -126,9 +132,9 @@ export default defineConfig(({ command, mode }) => {
           },
         }
       : {
-          // Nested so the uploaded Pages artifact serves at
-          // /tools/loopy/ (matching `base` above). The workflow uploads
-          // the parent `dist-web/` folder as the site.
+          // Nested under dist-web/<tool> so firebase.json public dir
+          // stays dist-web/loopy (and legacy Pages dual-builds can still
+          // assemble site/loopy/ if needed).
           outDir: 'dist-web/loopy',
           emptyOutDir: true,
           rollupOptions: {

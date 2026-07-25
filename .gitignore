@@ -65,12 +65,17 @@ htmlcov/
 .coverage
 .coverage.*
 
+# --- Firebase ---
+.firebase/
+*.cache
+
 # --- Build artifacts / misc ---
 coverage/
 tmp/
 temp/
 logs/
 *.log
+
 
 # Local extension zips produced by `cd dist && zip -r ../loopy-*.zip .`
 # outside of CI — never commit these.

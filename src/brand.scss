@@ -1,0 +1,16 @@
+// Loopy-specific categorical colors (AEM Jump). Package ships --accent-*;
+// keep the loopy names used across AemJumpBlock / Environments / TrackedHosts.
+:root,
+[data-theme='light'] {
+  --jump-page: #3b82f6;
+  --jump-project: #10b981;
+  --jump-aem: #f59e0b;
+  --jump-admin: #8b5cf6;
+}
+
+[data-theme='dark'] {
+  --jump-page: #60a5fa;
+  --jump-project: #34d399;
+  --jump-aem: #fbbf24;
+  --jump-admin: #a78bfa;
+}

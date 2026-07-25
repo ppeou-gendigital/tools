@@ -1,0 +1,11 @@
+.ui-icon-btn {
+  width: 1.75rem; height: 1.75rem; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: none; border-radius: var(--radius-sm);
+  background: transparent; color: var(--muted-fg); cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  &:hover:not(:disabled) { background: var(--muted); color: var(--fg); }
+  &:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:active:not(:disabled) { transform: scale(0.96); }
+}

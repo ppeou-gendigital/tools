@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "project-loopy"
+  },
+  "targets": {
+    "project-loopy": {
+      "hosting": {
+        "loopy": ["project-loopy"]
+      }
+    }
+  }
+}

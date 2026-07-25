@@ -6,6 +6,7 @@ A Chrome extension **and** web app in one codebase. React (ES6, no TypeScript) +
 - **UI**: React 19, hand-rolled components in SCSS Modules (shadcn/ui used only as visual reference), Lucide icons
 - **Auth + storage**: [Supabase](https://supabase.com/) (Auth + Postgres) — free tier
 - **Build**: Vite + `@crxjs/vite-plugin`
+- **Web host**: [Firebase Hosting](https://project-loopy.web.app) (`project-loopy`)
 
 ---
 
@@ -54,7 +55,8 @@ Inspect:
 | `npm run dev`       | Vite dev server for the web build (`index.html`)                   |
 | `npm run dev:ext`   | Extension build in watch mode → `dist/`                            |
 | `npm run build`     | Production extension build → `dist/`                               |
-| `npm run build:web` | Production web build → `dist-web/`                                 |
+| `npm run build:web` | Production web build → `dist-web/loopy`                            |
+| `npm run deploy:web`| Production web build + deploy to Firebase Hosting                  |
 | `npm run lint`      | ESLint over `src/**/*.{js,jsx}`                                    |
 
 ---
@@ -565,22 +567,38 @@ Add more later in [`manifest.json`](manifest.json) as features land.
 
 ---
 
-## CI / GitHub Pages
+## CI / Firebase Hosting
 
-- **Workflow**: [`.github/workflows/deploy-loopy-pages.yml`](.github/workflows/deploy-loopy-pages.yml)
-- **Trigger**: push to `tool/loopy` (or manual `workflow_dispatch` from the Actions tab)
-- **Live URL**: https://ppeou-gendigital.github.io/tools/loopy/
-- **Build**: dual-build — checks out `tool/accesso`, builds both tools, uploads a combined artifact (`site/loopy/` + `site/accesso/`) so neither deploy wipes the other
-- **Repo secrets required** (Settings → Secrets and variables → Actions):
+Primary web host: **Firebase Hosting** on project `project-loopy`.
+
+- **Live URL**: https://project-loopy.web.app  
+- **Workflow**: [`.github/workflows/deploy-loopy-firebase.yml`](.github/workflows/deploy-loopy-firebase.yml)  
+- **Trigger**: push to `tool/loopy` (or manual `workflow_dispatch`)  
+- **Local deploy**: `npm run deploy:web` (builds, then `firebase deploy --only hosting:loopy`)  
+- **Config**: [`firebase.json`](firebase.json), [`.firebaserc`](.firebaserc) — hosting target `loopy` → site `project-loopy`  
+- **Repo secrets** (Settings → Secrets and variables → Actions):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
-- **Repo Pages settings**: Settings → Pages → Source = **GitHub Actions**
+  - `FIREBASE_SERVICE_ACCOUNT` (JSON for `github-hosting-deploy@project-loopy.iam.gserviceaccount.com`)
 
-### One Pages site per repo — dual-build coexistence
+### Supabase Auth allowlist
 
-A GitHub repo publishes exactly **one** Pages site, and each deploy replaces the entire site. Both `tool/loopy` and `tool/accesso` workflows therefore dual-build every sibling and upload `site/<tool>/` together. Skipping the sibling (uploading only `dist-web`) makes the other tool 404 until the next dual deploy.
+In the Loopy Supabase project → **Authentication → URL Configuration**:
 
-When adding a third tool, extend every Pages workflow's dual-build to include the new branch. For a long-term split, give the new tool its own repo instead.
+- Add `https://project-loopy.web.app` (and later any custom domain) to **Redirect URLs**
+- Prefer that URL as **Site URL** once you cut over from GitHub Pages
+
+Email OTP (`verifyOtp`) does not require a magic-link redirect, but keeping the origin allowlisted avoids surprises if you add link-based flows later.
+
+### Vite `base`
+
+Web prod `base` defaults to `/` for Firebase (`https://project-loopy.web.app/`). Set `VITE_BASE` only if you intentionally deploy under a subpath (e.g. legacy Pages).
+
+### Legacy GitHub Pages
+
+- **Workflow**: [`.github/workflows/deploy-loopy-pages.yml`](.github/workflows/deploy-loopy-pages.yml) — **manual only** (`workflow_dispatch`)
+- **Old URL**: https://ppeou-gendigital.github.io/tools/loopy/
+- Dual-build Pages coexistence (loopy + accesso) still applies if you run that workflow.
 
 ### Install as a PWA (web build only)
 

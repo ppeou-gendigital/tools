@@ -1,8 +1,8 @@
 name: Deploy loopy to GitHub Pages
 
+# Primary web hosting is Firebase (see deploy-loopy-firebase.yml).
+# Keep this workflow for emergency Pages redeploys only.
 on:
-  push:
-    branches: [tool/loopy]
   workflow_dispatch:
 
 permissions:

@@ -1,0 +1,89 @@
+// The <html> element is the app's outermost surface. It owns the width and
+// height decision based on where we're rendering:
+//   - popup surface (Chrome extension) → capped at 780x600 (Chrome's hard
+//     max for a browser-action popup is 800x600; we leave 20px of headroom)
+//   - web surface  → fill the viewport (100dvw x 100dvh)
+// Nothing below <html> should re-decide the width — <body>, #root, .shell
+// all just inherit 100% of their parent.
+html {
+  // Match app theme (data-theme), not OS preference — otherwise Google Places
+  // widgets and native controls can render dark text chrome on a light shell.
+  color-scheme: light;
+  // FontSizeProvider overrides this via inline style. All tokens in
+  // _tokens.scss are declared in `rem`, so changing the root font size
+  // scales the whole design system in lock-step.
+  font-size: 16px;
+  overflow: hidden;
+}
+
+html[data-theme='light'] {
+  color-scheme: light;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+// Web surface: fill the viewport. No caps.
+html[data-surface='web'] {
+  width: 100dvw;
+  height: 100dvh;
+}
+
+// Popup surface: lock the outer surface to a fixed 780x600. A Chrome
+// browser-action popup sizes to fit its content (capped at 800x600), so
+// giving <html> an explicit pixel size is what actually drives the popup
+// window's dimensions. Using viewport units (`100dvw`/`100dvh`) resolves
+// to 0 before layout has a stage to measure against — the popup then
+// collapses to a blank sliver even though the React tree mounted.
+html[data-surface='popup'] {
+  width: 780px;
+  height: 600px;
+  // Subtle outline so the frame stays visible in a browser preview even
+  // when the page canvas is dark (Zen, dark-mode Firefox, …). In the real
+  // Chrome popup this is invisible because there's nothing outside html.
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  background: var(--bg);
+  color: var(--fg);
+  transition: background-color 0.15s ease, color 0.15s ease;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+// Thin, themed scrollbars everywhere. Firefox uses the standard properties;
+// WebKit/Chromium needs the ::-webkit-scrollbar pseudo-elements.
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--border) 80%, transparent) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
