@@ -2,6 +2,6 @@
   "id": "place",
   "schema": "place",
   "label": "Place",
-  "icon": "MapPin",
+  "icon": "MapPinned",
   "detailHints": []
 }

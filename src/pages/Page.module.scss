@@ -1750,8 +1750,7 @@
   }
 }
 
-// Google Maps-style dock: search + chips float over the map.
-// Idle: auto height so map stays clickable. Filled: sheet uses leftover height.
+// Google Maps-style dock: search floats over the map; map stays clickable.
 .mapExploreDock {
   // Shared geometry for search, chips, scroll buttons, Ideas pill.
   --map-control-h: 2.5rem;
@@ -1769,7 +1768,8 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-2);
-  max-height: calc(100% - 2 * var(--space-3));
+  // Never pin to the bottom — keep pan/zoom/POI clicks on the map.
+  max-height: min(48vh, 22rem);
   padding: 0;
   border: none;
   background: transparent;
@@ -1780,15 +1780,6 @@
     // Leave a rail for the Ideas pill so chips never sit under it.
     right: calc(var(--space-3) + 9rem);
   }
-}
-
-.mapExploreDockFilled {
-  // Pin to bottom so the sheet can consume leftover height under search.
-  // Keep overflow visible so PlaceAutocomplete predictions (shadow DOM
-  // dropdown under the search pill) are not clipped; the sheet itself scrolls.
-  bottom: var(--space-3);
-  max-height: none;
-  overflow: visible;
 }
 
 .mapExploreTop {
@@ -2054,27 +2045,233 @@
   gap: 0.1rem;
 }
 
-// Results / details sheet — grows into remaining dock height when open.
-.mapExploreSheet {
+// Optional results list — compact, never full-screen.
+.mapExploreResultsSheet {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: var(--space-2);
-  flex: 1 1 auto;
   width: min(22.5rem, 100%);
+  max-height: min(36vh, 16rem);
   min-height: 0;
-  max-height: none;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--map-control-shadow);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.mapExploreStatus,
+.mapExploreStatusError {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  max-width: min(22.5rem, 100%);
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--map-control-radius);
+  background: var(--card);
+  box-shadow: var(--map-control-shadow);
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+  line-height: 1.3;
+  pointer-events: auto;
+}
+
+.mapExploreStatusError {
+  color: var(--error-text);
+}
+
+.mapExploreStatusDismiss {
+  @include m.focus-ring;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin: 0 0 0 auto;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+// Compact place card — Google Maps-style bottom inspect (map stays visible).
+.mapPlaceCard {
+  position: absolute;
+  z-index: 6;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: calc(var(--fab-size) + var(--fab-corner-offset) + var(--space-3));
+  display: grid;
+  gap: var(--space-2);
+  width: min(26rem, calc(100% - 2 * var(--space-3)));
+  max-height: min(42vh, 18rem);
   padding: var(--space-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--card);
   box-shadow: var(--shadow-popover);
-  overflow: hidden;
+  overflow: auto;
+  pointer-events: auto;
+
+  @include m.md {
+    left: var(--space-3);
+    right: auto;
+    bottom: var(--space-3);
+  }
+}
+
+.mapPlaceCardBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.mapPlaceCardHint {
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+  font-weight: 500;
+}
+
+.mapPlaceCardBody {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.mapPlaceCardActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.mapPlaceCardPager {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 0.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--map-control-radius, 999px);
+  background: var(--bg);
+}
+
+.mapPlacePagerBtn {
+  @include m.interactive-control;
+  @include m.focus-ring;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--muted);
+  }
+}
+
+.mapPlacePagerLabel {
+  min-width: 3.5rem;
+  text-align: center;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--muted-fg);
+}
+
+.mapPlaceDetailOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  pointer-events: none;
+
+  @include m.md {
+    align-items: center;
+    padding: var(--space-3);
+  }
+}
+
+.mapPlaceDetailBackdrop {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
   pointer-events: auto;
 }
 
-.mapExploreSheetDetails {
-  // Place details is the primary inspect surface — prefer a tall column.
-  width: min(24rem, 100%);
+.mapPlaceDetailSheet {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-2);
+  // Near full-screen so Places UI Kit can show photos + reviews like Maps.
+  width: min(26rem, 100%);
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--card);
+  box-shadow: var(--shadow-popover);
+  overflow: hidden;
+  pointer-events: auto;
+
+  @include m.md {
+    width: min(26rem, calc(100% - 2 * var(--space-3)));
+    height: min(92dvh, 52rem);
+    max-height: min(92dvh, 52rem);
+    border-radius: var(--radius-lg);
+  }
+}
+
+.mapPlaceDetailHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  flex: 0 0 auto;
+}
+
+.mapPlaceDetailBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .mapDetailsFallback {
@@ -2275,19 +2472,24 @@
 
 .mapPlaceDetailsHost {
   flex: 1 1 auto;
-  min-height: min(40vh, 20rem);
+  width: 100%;
+  min-height: min(60vh, 28rem);
   overflow: visible;
   border-radius: var(--radius);
   background: var(--bg);
 
   :global(gmp-place-details) {
     display: block;
+    box-sizing: border-box;
     width: 100%;
-    min-height: 100%;
+    max-width: 100%;
+    min-height: min(70vh, 36rem);
     margin: 0;
+    padding: 0;
     border: none;
     color-scheme: inherit;
     color: var(--fg);
+    background: transparent;
   }
 }
 
@@ -2484,9 +2686,11 @@
   right: var(--space-3);
   // Clear the FAB on small screens.
   bottom: calc(var(--fab-size) + var(--fab-corner-offset) + var(--space-3));
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0;
-  max-height: min(40vh, 22rem);
+  // Tall enough on SM to show more than one Idea row.
+  max-height: min(55dvh, 28rem);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--card);
@@ -2514,6 +2718,10 @@
   }
 }
 
+.mapIdeasPanelHidden {
+  display: none;
+}
+
 .mapIdeasPanel:not(.mapIdeasPanelCollapsed) {
   // Open panel can use the fuller popover elevation.
   box-shadow: var(--shadow-popover);
@@ -2521,7 +2729,15 @@
 
 .mapIdeasHeader {
   display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--space-1);
   min-width: 0;
+  // Only fill the pill when collapsed — open header must not eat the list.
+  height: auto;
+}
+
+.mapIdeasPanelCollapsed .mapIdeasHeader {
   height: 100%;
 }
 
@@ -2532,10 +2748,12 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
+  width: auto;
   height: var(--map-control-h);
   margin: 0;
-  padding: 0 0.9rem;
+  padding: 0 0.35rem 0 0.9rem;
   border: none;
   background: transparent;
   color: var(--fg);
@@ -2547,16 +2765,45 @@
   cursor: pointer;
 }
 
+.mapIdeasFitBtn,
+.mapIdeasChevronBtn {
+  @include m.interactive-control;
+  @include m.focus-ring;
+
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--map-control-h);
+  height: var(--map-control-h);
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-fg);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--fg);
+    background: var(--muted);
+  }
+}
+
+.mapIdeasChevronBtn {
+  margin-right: 0.15rem;
+}
+
 .mapIdeasPanel:not(.mapIdeasPanelCollapsed) .mapIdeasToggle {
   height: auto;
   min-height: var(--map-control-h);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-1) var(--space-2) var(--space-3);
   font-size: var(--text-sm);
   gap: var(--space-2);
 }
 
 .mapIdeasTitle {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
 }
 
@@ -2575,12 +2822,19 @@
 
 .mapIdeasBody {
   display: grid;
+  align-content: start;
   gap: var(--space-2);
+  flex: 1 1 auto;
   padding: 0 var(--space-3) var(--space-3);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   min-height: 0;
   border-top: 1px solid var(--border);
   padding-top: var(--space-2);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  // Keep map pan from stealing the scroll gesture on SM.
+  touch-action: pan-y;
 }
 
 .mapIdeasBlurb,
@@ -2648,6 +2902,20 @@
   color: var(--muted-fg);
   font-size: var(--text-xs);
   font-weight: 500;
+}
+
+.mapBadgeReference {
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  color: var(--primary);
+}
+
+.mapIdeaDistance {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--primary);
+  line-height: 1.3;
 }
 
 .mapIdeaNote {

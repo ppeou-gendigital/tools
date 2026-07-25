@@ -2,7 +2,7 @@
   "id": "car_rental",
   "schema": "rental",
   "label": "Car rental",
-  "icon": "CarFront",
+  "icon": "Car",
   "detailHints": [
     {
       "key": "provider",

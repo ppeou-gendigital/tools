@@ -2,7 +2,7 @@
   "id": "train",
   "schema": "transit",
   "label": "Train",
-  "icon": "TrainFront",
+  "icon": "TramFront",
   "detailHints": [
     {
       "key": "confirmation",

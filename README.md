@@ -190,7 +190,7 @@ Both belong in `.env`. They're safe to ship in the client bundle; row-level secu
 Optional. Without a key, the Map page shows a setup message instead of a blank canvas.
 
 1. In [Google Cloud Console](https://console.cloud.google.com/) create (or pick) a project.
-2. Enable **Maps JavaScript API**, **Places API (New)**, and **Places UI Kit** (Map explore uses `PlaceAutocompleteElement` + `PlaceDetailsElement`).
+2. Enable **Maps JavaScript API**, **Places API (New)**, and **Places UI Kit** (Map search uses `PlaceAutocompleteElement`; place inspect is a compact in-app card).
 3. Create an API key; restrict it by HTTP referrer (`http://localhost:5173/*` for local Vite, plus your deploy origin).
 4. Under the key’s **API restrictions**, allow Maps JavaScript API, Places API (New), and Places UI Kit.
 5. Add to `.env`:
@@ -204,7 +204,7 @@ For GitHub Pages deploys, add the same value as a repo Actions secret and pass i
 **Two separate features:**
 
 1. **Journey routes** — Settings → Preferred maps app (Google or Apple). One Map button opens that app with a URL computed on the fly (never stored): trip-level = current location → all geo-pinned stops; activity-level = current location → that stop and later stops. Walk vs drive is inferred (trip-start / flight / long legs → drive). Pin `lat`/`lng` via Entry edit or by promoting Map Ideas.
-2. **Map Ideas** — brainstorm and pin multiple places on the Map page to study proximity. Optional Map link uses Ideas order only; not the trip itinerary.
+2. **Map Ideas** — brainstorm and pin multiple places on the Map page to study proximity. Tap an Idea to see straight-line (haversine) distances to the others in-app — not walking/driving time. Optional “Open all in Maps” uses Ideas order only; not the trip itinerary.
 
 ### 3. Create the `profiles` table + RLS
 

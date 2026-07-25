@@ -2,7 +2,7 @@
   "id": "hotel",
   "schema": "lodging",
   "label": "Hotel",
-  "icon": "Hotel",
+  "icon": "BedDouble",
   "detailHints": [
     {
       "key": "confirmation",

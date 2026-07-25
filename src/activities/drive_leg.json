@@ -2,7 +2,7 @@
   "id": "drive_leg",
   "schema": "transit",
   "label": "Drive / day leg",
-  "icon": "Car",
+  "icon": "Route",
   "detailHints": [
     {
       "key": "from",

@@ -2,7 +2,7 @@
   "id": "car_repair",
   "schema": "maintenance",
   "label": "Car repair",
-  "icon": "Cog",
+  "icon": "Wrench",
   "detailHints": [
     {
       "key": "shop",

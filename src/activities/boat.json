@@ -2,7 +2,7 @@
   "id": "boat",
   "schema": "transit",
   "label": "Boat / water taxi",
-  "icon": "Sailboat",
+  "icon": "Ship",
   "detailHints": [
     {
       "key": "from",
