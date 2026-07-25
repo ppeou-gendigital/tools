@@ -22,7 +22,9 @@ import {
   upsertEntry,
   upsertExpenseWithSplits,
 } from '@/lib/viaggioApi'
+import { civilDateKey } from '@/lib/journeyStatus'
 import { wallTimeToUtcIso } from '@/lib/timezone'
+import { addDaysKey } from '@/lib/weather'
 
 function equalSplits(journeyPersonIds, amountCents) {
   const n = journeyPersonIds.length
@@ -98,6 +100,9 @@ async function addHotel(journeyId, opts) {
     endsAt: wallTimeToUtcIso(opts.checkOut, opts.tz),
     timezone: opts.tz,
     placeName: opts.place || '',
+    address: opts.address || null,
+    lat: opts.lat ?? null,
+    lng: opts.lng ?? null,
     details: { confirmation: opts.confirmation || '' },
     body: {},
   })
@@ -741,6 +746,9 @@ async function addMeal(journeyId, opts) {
     occursAt: wallTimeToUtcIso(opts.wall, opts.tz),
     timezone: opts.tz,
     placeName: opts.place || '',
+    address: opts.address || null,
+    lat: opts.lat ?? null,
+    lng: opts.lng ?? null,
     details: {},
     body: {},
   })
@@ -755,6 +763,9 @@ async function addSight(journeyId, opts) {
     occursAt: wallTimeToUtcIso(opts.wall, opts.tz),
     timezone: opts.tz,
     placeName: opts.place || '',
+    address: opts.address || null,
+    lat: opts.lat ?? null,
+    lng: opts.lng ?? null,
     details: {},
     body: {},
   })
@@ -3331,5 +3342,496 @@ export async function seedEuropeCruiseParents() {
     expenses: (await listExpensesForJourney(jid)).length,
   }
   console.info('[viaggio] seedEuropeCruiseParents', summary)
+  return summary
+}
+
+const EAST_EUROPE_TITLE = 'East Europe explore — Prague · Vienna · Budapest · Kraków · Warsaw'
+
+/** Same East Asia crew user ids (Benjamin / Charlie) for membership cloning. */
+const EAST_EUROPE_CREW = {
+  benjamin: {
+    userId: 'e0f6ca1e-d0b8-4919-bdc1-02dd78481604',
+    displayName: 'Benjamin Bing',
+  },
+  charlie: {
+    userId: '151015e0-2b4d-41df-bed9-1a399ce5f095',
+    displayName: 'Charlie Charming',
+  },
+}
+
+const GEO = {
+  prague: { lat: 50.0875, lng: 14.4213, tz: 'Europe/Prague' },
+  vienna: { lat: 48.2082, lng: 16.3738, tz: 'Europe/Vienna' },
+  budapest: { lat: 47.4979, lng: 19.0402, tz: 'Europe/Budapest' },
+  krakow: { lat: 50.0619, lng: 19.9369, tz: 'Europe/Warsaw' },
+  warsaw: { lat: 52.2297, lng: 21.0122, tz: 'Europe/Warsaw' },
+}
+
+/**
+ * 3-week Central/Eastern Europe hop starting in 2 days (for weather chip tests).
+ * Geo-tagged lodging / meals / sights so Open-Meteo can resolve forecasts.
+ *
+ * Usage (owner signed in):
+ *   await __viaggioSeed.seedEastEuropeExplore()
+ *   or ?devRun=seedEastEuropeExplore
+ *
+ * Then attach Benjamin + Charlie (same East Asia travelers):
+ *   await __viaggioSeed.attachEastEuropeCrew()
+ */
+export async function seedEastEuropeExplore() {
+  const {
+    data: { user },
+    error: authErr,
+  } = await supabase.auth.getUser()
+  if (authErr) throw authErr
+  if (!user) throw new Error('Sign in as owner first')
+
+  const existing = (await listJourneys()).find((j) => j.title === EAST_EUROPE_TITLE)
+  if (existing) {
+    const expires = new Date()
+    expires.setDate(expires.getDate() + 30)
+    const inv = await createInvite(existing.id, 'editor', expires.toISOString())
+    return {
+      journey: existing,
+      inviteToken: inv.token,
+      inviteLink: inviteUrl(inv.token),
+      reused: true,
+    }
+  }
+
+  const tz0 = GEO.prague.tz
+  const startsOn = addDaysKey(civilDateKey(new Date(), tz0), 2)
+  const endsOn = addDaysKey(startsOn, 20)
+  if (!startsOn || !endsOn) throw new Error('Could not compute trip dates')
+
+  const d = (offset) => addDaysKey(startsOn, offset)
+
+  const journey = await createJourney({
+    title: EAST_EUROPE_TITLE,
+    type: 'trip',
+    preset: 'leisure_trip',
+    defaultTimezone: tz0,
+    defaultCurrency: 'EUR',
+    startsOn,
+    endsOn,
+    activityPacks: [],
+  })
+  const jid = journey.id
+
+  // --- Arrive Prague ---
+  await addFlight(jid, {
+    title: 'Arrive PRG (crew)',
+    departWall: `${d(0)}T08:30`,
+    departTz: 'Europe/Paris',
+    arriveWall: `${d(0)}T10:05`,
+    arriveTz: GEO.prague.tz,
+    from: 'Paris CDG',
+    to: 'Prague PRG',
+    airline: 'OK',
+    flightNumber: '767',
+  })
+  await addHotel(jid, {
+    title: 'Prague — Old Town base',
+    checkIn: `${d(0)}T15:00`,
+    checkOut: `${d(3)}T11:00`,
+    tz: GEO.prague.tz,
+    place: 'Staré Město, Prague',
+    address: 'Staroměstské náměstí, Praha 1',
+    lat: GEO.prague.lat,
+    lng: GEO.prague.lng,
+    confirmation: 'EE-PRG-01',
+  })
+  await addMeal(jid, {
+    title: 'Welcome dinner — Old Town Square',
+    wall: `${d(0)}T19:30`,
+    tz: GEO.prague.tz,
+    place: 'Old Town Square, Prague',
+    address: 'Staroměstské náměstí, Praha 1',
+    lat: 50.087, lng: 14.421,
+  })
+  await addSight(jid, {
+    title: 'Charles Bridge sunrise walk',
+    wall: `${d(1)}T07:00`,
+    tz: GEO.prague.tz,
+    place: 'Charles Bridge',
+    address: 'Karlův most, Praha 1',
+    lat: 50.0865, lng: 14.4115,
+  })
+  await addMeal(jid, {
+    title: 'Lunch — Letná beer garden',
+    wall: `${d(1)}T13:00`,
+    tz: GEO.prague.tz,
+    place: 'Letná, Prague',
+    lat: 50.0965, lng: 14.4155,
+  })
+  await addSight(jid, {
+    title: 'Prague Castle afternoon',
+    wall: `${d(1)}T15:30`,
+    tz: GEO.prague.tz,
+    place: 'Prague Castle',
+    address: 'Hradčany, Praha 1',
+    lat: 50.091, lng: 14.4015,
+  })
+  await addSight(jid, {
+    title: 'Jewish Quarter + Vltava stroll',
+    wall: `${d(2)}T10:30`,
+    tz: GEO.prague.tz,
+    place: 'Josefov, Prague',
+    lat: 50.0902, lng: 14.421,
+  })
+  await addMeal(jid, {
+    title: 'Dinner — Malá Strana',
+    wall: `${d(2)}T20:00`,
+    tz: GEO.prague.tz,
+    place: 'Malá Strana',
+    lat: 50.0878, lng: 14.404,
+  })
+
+  // --- Prague → Vienna ---
+  await addTrain(jid, {
+    title: 'Railjet PRG → Vienna',
+    departWall: `${d(3)}T09:42`,
+    arriveWall: `${d(3)}T13:49`,
+    tz: GEO.vienna.tz,
+    from: 'Praha hl.n.',
+    to: 'Wien Hbf',
+  })
+  await addHotel(jid, {
+    title: 'Vienna — Innere Stadt base',
+    checkIn: `${d(3)}T15:00`,
+    checkOut: `${d(7)}T11:00`,
+    tz: GEO.vienna.tz,
+    place: 'Innere Stadt, Vienna',
+    address: 'Stephansplatz, Wien',
+    lat: GEO.vienna.lat,
+    lng: GEO.vienna.lng,
+    confirmation: 'EE-VIE-01',
+  })
+  await addMeal(jid, {
+    title: 'Sachertorte stop — Café Central area',
+    wall: `${d(3)}T16:30`,
+    tz: GEO.vienna.tz,
+    place: 'Innere Stadt, Vienna',
+    lat: 48.2103, lng: 16.365,
+  })
+  await addSight(jid, {
+    title: 'Schönbrunn Palace',
+    wall: `${d(4)}T10:00`,
+    tz: GEO.vienna.tz,
+    place: 'Schönbrunn',
+    address: 'Schönbrunner Schloßstraße, Wien',
+    lat: 48.1858, lng: 16.3128,
+  })
+  await addSight(jid, {
+    title: 'Belvedere + Naschmarkt',
+    wall: `${d(5)}T11:00`,
+    tz: GEO.vienna.tz,
+    place: 'Belvedere, Vienna',
+    lat: 48.1915, lng: 16.3808,
+  })
+  await addMeal(jid, {
+    title: 'Dinner — Naschmarkt',
+    wall: `${d(5)}T19:30`,
+    tz: GEO.vienna.tz,
+    place: 'Naschmarkt',
+    lat: 48.1985, lng: 16.3635,
+  })
+  await addSight(jid, {
+    title: 'Prater Ferris wheel',
+    wall: `${d(6)}T15:00`,
+    tz: GEO.vienna.tz,
+    place: 'Prater, Vienna',
+    lat: 48.2166, lng: 16.3956,
+  })
+
+  // --- Vienna → Budapest ---
+  await addTrain(jid, {
+    title: 'Railjet Vienna → Budapest',
+    departWall: `${d(7)}T09:42`,
+    arriveWall: `${d(7)}T12:19`,
+    tz: GEO.budapest.tz,
+    from: 'Wien Hbf',
+    to: 'Budapest Keleti',
+  })
+  await addHotel(jid, {
+    title: 'Budapest — Pest base',
+    checkIn: `${d(7)}T15:00`,
+    checkOut: `${d(11)}T11:00`,
+    tz: GEO.budapest.tz,
+    place: 'District V, Budapest',
+    address: 'Váci utca, Budapest',
+    lat: GEO.budapest.lat,
+    lng: GEO.budapest.lng,
+    confirmation: 'EE-BUD-01',
+  })
+  await addSight(jid, {
+    title: 'Parliament + Danube promenade',
+    wall: `${d(8)}T10:00`,
+    tz: GEO.budapest.tz,
+    place: 'Hungarian Parliament',
+    lat: 47.5071, lng: 19.0457,
+  })
+  await addMeal(jid, {
+    title: 'Lunch — Great Market Hall',
+    wall: `${d(8)}T13:00`,
+    tz: GEO.budapest.tz,
+    place: 'Great Market Hall',
+    lat: 47.4869, lng: 19.0587,
+  })
+  await addSight(jid, {
+    title: 'Thermal baths — Széchenyi',
+    wall: `${d(9)}T11:00`,
+    tz: GEO.budapest.tz,
+    place: 'Széchenyi Baths',
+    lat: 47.5186, lng: 19.0825,
+  })
+  await addMeal(jid, {
+    title: 'Ruin bar crawl dinner',
+    wall: `${d(9)}T20:00`,
+    tz: GEO.budapest.tz,
+    place: 'Jewish Quarter, Budapest',
+    lat: 47.5005, lng: 19.0625,
+  })
+  await addSight(jid, {
+    title: 'Buda Castle + Fisherman’s Bastion',
+    wall: `${d(10)}T10:30`,
+    tz: GEO.budapest.tz,
+    place: 'Buda Castle',
+    lat: 47.4962, lng: 19.0396,
+  })
+
+  // --- Budapest → Kraków ---
+  await addTrain(jid, {
+    title: 'Train Budapest → Kraków',
+    departWall: `${d(11)}T08:10`,
+    arriveWall: `${d(11)}T14:40`,
+    tz: GEO.krakow.tz,
+    from: 'Budapest Keleti',
+    to: 'Kraków Główny',
+  })
+  await addHotel(jid, {
+    title: 'Kraków — Old Town base',
+    checkIn: `${d(11)}T16:00`,
+    checkOut: `${d(15)}T11:00`,
+    tz: GEO.krakow.tz,
+    place: 'Stare Miasto, Kraków',
+    address: 'Rynek Główny, Kraków',
+    lat: GEO.krakow.lat,
+    lng: GEO.krakow.lng,
+    confirmation: 'EE-KRK-01',
+  })
+  await addSight(jid, {
+    title: 'Main Square + Cloth Hall',
+    wall: `${d(12)}T10:00`,
+    tz: GEO.krakow.tz,
+    place: 'Rynek Główny',
+    lat: 50.0617, lng: 19.9373,
+  })
+  await addMeal(jid, {
+    title: 'Pierogi lunch — Kazimierz',
+    wall: `${d(12)}T13:00`,
+    tz: GEO.krakow.tz,
+    place: 'Kazimierz',
+    lat: 50.0516, lng: 19.9448,
+  })
+  await addSight(jid, {
+    title: 'Wawel Castle',
+    wall: `${d(13)}T10:30`,
+    tz: GEO.krakow.tz,
+    place: 'Wawel',
+    lat: 50.0547, lng: 19.9353,
+  })
+  await addSight(jid, {
+    title: 'Wieliczka Salt Mine day',
+    wall: `${d(14)}T09:30`,
+    tz: GEO.krakow.tz,
+    place: 'Wieliczka',
+    lat: 49.9832, lng: 20.0558,
+  })
+
+  // --- Kraków → Warsaw ---
+  await addTrain(jid, {
+    title: 'EIP Kraków → Warsaw',
+    departWall: `${d(15)}T09:20`,
+    arriveWall: `${d(15)}T11:45`,
+    tz: GEO.warsaw.tz,
+    from: 'Kraków Główny',
+    to: 'Warszawa Centralna',
+  })
+  await addHotel(jid, {
+    title: 'Warsaw — Śródmieście base',
+    checkIn: `${d(15)}T15:00`,
+    checkOut: `${d(20)}T11:00`,
+    tz: GEO.warsaw.tz,
+    place: 'Śródmieście, Warsaw',
+    address: 'Krakowskie Przedmieście, Warszawa',
+    lat: GEO.warsaw.lat,
+    lng: GEO.warsaw.lng,
+    confirmation: 'EE-WAW-01',
+  })
+  await addSight(jid, {
+    title: 'Old Town + Royal Castle',
+    wall: `${d(16)}T10:00`,
+    tz: GEO.warsaw.tz,
+    place: 'Warsaw Old Town',
+    lat: 52.2497, lng: 21.0122,
+  })
+  await addMeal(jid, {
+    title: 'Lunch — Praga district',
+    wall: `${d(16)}T13:30`,
+    tz: GEO.warsaw.tz,
+    place: 'Praga, Warsaw',
+    lat: 52.2515, lng: 21.0385,
+  })
+  await addSight(jid, {
+    title: 'Łazienki Park afternoon',
+    wall: `${d(17)}T14:00`,
+    tz: GEO.warsaw.tz,
+    place: 'Łazienki Park',
+    lat: 52.215, lng: 21.0355,
+  })
+  await addSight(jid, {
+    title: 'POLIN Museum',
+    wall: `${d(18)}T11:00`,
+    tz: GEO.warsaw.tz,
+    place: 'POLIN Museum',
+    lat: 52.2495, lng: 20.993,
+  })
+  await addMeal(jid, {
+    title: 'Farewell dinner — Nowy Świat',
+    wall: `${d(19)}T20:00`,
+    tz: GEO.warsaw.tz,
+    place: 'Nowy Świat',
+    lat: 52.2355, lng: 21.0185,
+  })
+  await addFlight(jid, {
+    title: 'WAW → home (crew)',
+    departWall: `${d(20)}T13:40`,
+    departTz: GEO.warsaw.tz,
+    arriveWall: `${d(20)}T16:10`,
+    arriveTz: 'Europe/Paris',
+    from: 'Warsaw WAW',
+    to: 'Paris CDG',
+    airline: 'LO',
+    flightNumber: '331',
+  })
+
+  const expires = new Date()
+  expires.setDate(expires.getDate() + 30)
+  const inv = await createInvite(jid, 'editor', expires.toISOString())
+
+  const summary = {
+    journey,
+    inviteToken: inv.token,
+    inviteLink: inviteUrl(inv.token),
+    reused: false,
+    startsOn,
+    endsOn,
+    entries: (await listEntries(jid)).length,
+    note: 'Run attachEastEuropeCrew() to add Benjamin + Charlie (same East Asia travelers).',
+  }
+  console.info('[viaggio] seedEastEuropeExplore', summary)
+  return summary
+}
+
+/**
+ * Add Benjamin Bing + Charlie Charming as editors (same accounts as East Asia).
+ * Owner must be signed in. Relies on owner INSERT policies (or run SQL in dashboard).
+ */
+export async function attachEastEuropeCrew(journeyId) {
+  const {
+    data: { user },
+    error: authErr,
+  } = await supabase.auth.getUser()
+  if (authErr) throw authErr
+  if (!user) throw new Error('Sign in as owner first')
+
+  let journey
+  if (journeyId) {
+    journey = (await listJourneys()).find((j) => j.id === journeyId)
+  } else {
+    journey = (await listJourneys()).find((j) => j.title === EAST_EUROPE_TITLE)
+  }
+  if (!journey) throw new Error(`Open “${EAST_EUROPE_TITLE}” first`)
+
+  const jid = journey.id
+  const results = []
+
+  for (const crew of Object.values(EAST_EUROPE_CREW)) {
+    const { error: memErr } = await supabase.from('viaggio_journey_members').upsert(
+      {
+        journey_id: jid,
+        user_id: crew.userId,
+        role: 'editor',
+      },
+      { onConflict: 'journey_id,user_id' },
+    )
+    if (memErr) {
+      results.push({
+        userId: crew.userId,
+        displayName: crew.displayName,
+        member: false,
+        error: memErr.message,
+      })
+      continue
+    }
+
+    const { data: existing } = await supabase
+      .from('viaggio_journey_people')
+      .select('*')
+      .eq('journey_id', jid)
+      .eq('linked_user_id', crew.userId)
+      .maybeSingle()
+
+    if (existing) {
+      await supabase
+        .from('viaggio_journey_people')
+        .update({ display_name: crew.displayName })
+        .eq('id', existing.id)
+      results.push({
+        userId: crew.userId,
+        member: true,
+        personId: existing.id,
+        displayName: crew.displayName,
+      })
+      continue
+    }
+
+    const { data: inserted, error: insErr } = await supabase
+      .from('viaggio_journey_people')
+      .insert({
+        journey_id: jid,
+        display_name: crew.displayName,
+        linked_user_id: crew.userId,
+        created_by: user.id,
+      })
+      .select('*')
+      .maybeSingle()
+
+    results.push({
+      userId: crew.userId,
+      member: true,
+      personId: inserted?.id ?? null,
+      displayName: crew.displayName,
+      error: insErr?.message,
+    })
+  }
+
+  const members = await listMembers(jid)
+  const people = await listJourneyPeople(jid)
+  const summary = {
+    journeyId: jid,
+    members: members.map((m) => ({
+      userId: m.userId,
+      role: m.role,
+      displayName: m.displayName,
+    })),
+    people: people.map((p) => ({
+      displayName: p.displayName,
+      linkedUserId: p.linkedUserId,
+    })),
+    results,
+  }
+  console.info('[viaggio] attachEastEuropeCrew', summary)
   return summary
 }

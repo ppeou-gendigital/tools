@@ -1,5 +1,5 @@
 /**
- * Resolve Lucide icons declared on activity / preset JSON (`"icon": "Plane"`).
+ * Resolve Lucide icons declared on activity / preset JSON (`"icon": "PlaneTakeoff"`).
  * Explicit imports keep the bundle to the catalog set only.
  */
 
@@ -21,6 +21,7 @@ import {
   MapPin,
   PartyPopper,
   Plane,
+  PlaneTakeoff,
   Receipt,
   Sailboat,
   Salad,
@@ -54,6 +55,7 @@ const BY_NAME = {
   MapPin,
   PartyPopper,
   Plane,
+  PlaneTakeoff,
   Receipt,
   Sailboat,
   Salad,

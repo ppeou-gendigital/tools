@@ -10,6 +10,7 @@ import { PageShortcuts } from '@/patterns/PageShortcuts'
 import { cx } from '@/lib/cx'
 import { getPreset } from '@/lib/catalog'
 import { formatWallDate, labelForJourneyPerson } from '@/lib/format'
+import { classifyJourney, todayUtcDate } from '@/lib/journeyStatus'
 import { listJourneys, listJourneyPeople } from '@/lib/viaggioApi'
 import { useAuth } from '@/providers/AuthProvider'
 import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
@@ -19,35 +20,8 @@ import styles from './Home.module.scss'
 
 const LAYOUT_KEY = 'viaggio.homeLayout'
 
-function todayUtcDate() {
-  const now = new Date()
-  return new Date(
-    Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()),
-  )
-}
-
-function parseOn(isoDate) {
-  if (!isoDate) return null
-  // startsOn / endsOn are calendar dates (YYYY-MM-DD)
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(isoDate))
-  if (!m) return null
-  return new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])))
-}
-
-/**
- * current  — ongoing (no dates) or today is within [startsOn, endsOn]
- * upcoming — starts after today
- * past     — ended before today
- */
-export function classifyJourney(journey, today = todayUtcDate()) {
-  const start = parseOn(journey.startsOn)
-  const end = parseOn(journey.endsOn)
-
-  if (!start && !end) return 'current'
-  if (start && start.getTime() > today.getTime()) return 'upcoming'
-  if (end && end.getTime() < today.getTime()) return 'past'
-  return 'current'
-}
+/** Re-export for callers that imported from Home. */
+export { classifyJourney }
 
 function formatJourneyDate(isoDate, locale) {
   if (!isoDate) return ''

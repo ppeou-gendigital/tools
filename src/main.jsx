@@ -42,6 +42,8 @@ if (import.meta.env.DEV) {
       DEMO_TODO_ITEMS: mod.DEMO_TODO_ITEMS,
       seedEastAsiaTodos: mod.seedEastAsiaTodos,
       patchEastAsiaFlightNumbers: mod.patchEastAsiaFlightNumbers,
+      seedEastEuropeExplore: mod.seedEastEuropeExplore,
+      attachEastEuropeCrew: mod.attachEastEuropeCrew,
     }
     void import('./lib/viaggioApi.js').then((api) => {
       globalThis.__viaggioSeed.acceptInvite = api.acceptInvite

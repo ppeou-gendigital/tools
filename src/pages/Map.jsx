@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   APIProvider,
@@ -55,6 +55,7 @@ import { PageShortcuts } from '@/patterns/PageShortcuts'
 import { GOOGLE_MAPS_API_KEY } from '@/env'
 import { cx } from '@/lib/cx'
 import { resolveCoords } from '@/lib/geoLocation'
+import { googleMapsPlaceUrl, openMapsRouteUrl } from '@/lib/mapsLinks'
 import {
   addPlaceIdea,
   deletePlaceIdea,
@@ -65,6 +66,7 @@ import {
   updatePlaceIdea,
 } from '@/lib/viaggioApi'
 import { useAuth } from '@/providers/AuthProvider'
+import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import styles from './Page.module.scss'
 
@@ -247,17 +249,6 @@ function placeDisplayName(place, fallbackName = 'Place') {
   return fallbackName
 }
 
-function googleMapsPlaceUrl(place) {
-  if (place?.googleMapsUri) return place.googleMapsUri
-  if (place?.googlePlaceId) {
-    return `https://www.google.com/maps/search/?api=1&query_place_id=${encodeURIComponent(place.googlePlaceId)}`
-  }
-  if (Number.isFinite(place?.lat) && Number.isFinite(place?.lng)) {
-    return `https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}`
-  }
-  return null
-}
-
 function appendPlaceContent(parent) {
   parent.appendChild(document.createElement('gmp-place-all-content'))
 }
@@ -424,7 +415,7 @@ function MapPoiClick({ onPlaceId }) {
 
 /**
  * Google-style autocomplete search box (cities + places).
- * Mounted outside the map canvas so the prediction list isn’t clipped.
+ * Prediction list lives in the widget shadow DOM — host must allow overflow.
  */
 function PlaceAutocompleteBar({ bounds, disabled, onPlacePick, onRawSearch }) {
   const hostRef = useRef(null)
@@ -433,6 +424,9 @@ function PlaceAutocompleteBar({ bounds, disabled, onPlacePick, onRawSearch }) {
   const onPlacePickRef = useRef(onPlacePick)
   const onRawSearchRef = useRef(onRawSearch)
   const boundsRef = useRef(bounds)
+  const PlaceAutocompleteElement = places?.PlaceAutocompleteElement
+  const unavailable =
+    Boolean(places) && typeof PlaceAutocompleteElement !== 'function'
 
   useEffect(() => {
     onPlacePickRef.current = onPlacePick
@@ -448,8 +442,6 @@ function PlaceAutocompleteBar({ bounds, disabled, onPlacePick, onRawSearch }) {
 
   useEffect(() => {
     if (!places || !hostRef.current) return undefined
-
-    const PlaceAutocompleteElement = places.PlaceAutocompleteElement
     if (typeof PlaceAutocompleteElement !== 'function') {
       console.warn(
         'PlaceAutocompleteElement unavailable — enable Places API (New).',
@@ -480,15 +472,13 @@ function PlaceAutocompleteBar({ bounds, disabled, onPlacePick, onRawSearch }) {
     }
 
     const onKeyDown = (event) => {
-      if (event.key !== 'Enter') return
+      if (event.key !== 'Enter' || event.isComposing) return
       // If the user hits Enter without picking a suggestion, run text search.
+      // Selection via gmp-select clears the input; if text remains after a tick,
+      // treat it as a raw text search (broken listOpen checks always matched the
+      // host element itself).
       const text = String(el.value || '').trim()
       if (!text) return
-      // Let the widget handle suggestion confirmation when a row is active.
-      const listOpen = Boolean(
-        document.querySelector('gmp-place-autocomplete, .pac-container'),
-      )
-      if (listOpen && event.isComposing) return
       window.setTimeout(() => {
         const still = String(el.value || '').trim()
         if (!still) return
@@ -505,7 +495,7 @@ function PlaceAutocompleteBar({ bounds, disabled, onPlacePick, onRawSearch }) {
       el.remove()
       elementRef.current = null
     }
-  }, [places])
+  }, [places, PlaceAutocompleteElement])
 
   useEffect(() => {
     const el = elementRef.current
@@ -523,6 +513,18 @@ function PlaceAutocompleteBar({ bounds, disabled, onPlacePick, onRawSearch }) {
     if (!el) return
     el.disabled = Boolean(disabled)
   }, [disabled, places])
+
+  // Keep the mount host free of React children so reconcile doesn't wipe
+  // the PlaceAutocompleteElement appended in the effect.
+  if (unavailable) {
+    return (
+      <div className={styles.mapAutocompleteHost}>
+        <p className={styles.mapAutocompleteUnavailable} role="status">
+          Place search unavailable — enable Places API (New).
+        </p>
+      </div>
+    )
+  }
 
   return <div ref={hostRef} className={styles.mapAutocompleteHost} />
 }
@@ -726,8 +728,8 @@ function PlacesExplorePanel({
     if (!card) return
     setSearchError('')
     setResults([])
-    onResultPins?.([])
     if (card.isArea) {
+      onResultPins?.([])
       onDetailsPlaceId?.(null)
       setDetailsFallback(null)
       onFocusMap?.({
@@ -739,7 +741,27 @@ function PlacesExplorePanel({
       })
       return
     }
-    if (card.googlePlaceId) onDetailsPlaceId?.(card.googlePlaceId)
+    onResultPins?.([
+      {
+        key: card.key || card.googlePlaceId || `pick-${card.lat},${card.lng}`,
+        lat: card.lat,
+        lng: card.lng,
+        name: card.name,
+        label: '1',
+        googlePlaceId: card.googlePlaceId || null,
+      },
+    ])
+    if (card.googlePlaceId) {
+      onDetailsPlaceId?.(card.googlePlaceId)
+      return
+    }
+    onFocusMap?.({
+      key: `pick-${card.lat},${card.lng}`,
+      lat: card.lat,
+      lng: card.lng,
+      viewport: card.viewport,
+      zoom: 16,
+    })
   }
 
   function clearSearch() {
@@ -1186,6 +1208,7 @@ export function Map() {
   const { params, goBack, previousRouteLabel, goEntryEdit } = nav
   const journeyId = params.journeyId
   const { user } = useAuth()
+  const { mapsProvider } = useDisplayPrefs()
   const qc = useQueryClient()
 
   const [center, setCenter] = useState(DEFAULT_CENTER)
@@ -1239,6 +1262,16 @@ export function Map() {
     queryFn: () => listPlaceIdeas(journeyId),
     enabled: !!journeyId,
   })
+
+  /** Optional: open Ideas shortlist in preferred Maps app to compare proximity. */
+  const ideasProximityUrl = useMemo(
+    () =>
+      openMapsRouteUrl(ideas, {
+        provider: mapsProvider,
+        fromCurrentLocation: false,
+      }),
+    [ideas, mapsProvider],
+  )
 
   const canEdit =
     membership?.role === 'owner' || membership?.role === 'editor'
@@ -1428,7 +1461,8 @@ export function Map() {
               <p className={styles.hint}>
                 Add <code>VITE_GOOGLE_MAPS_API_KEY</code> to your{' '}
                 <code>.env</code>, enable Maps JavaScript API, Places API
-                (New), and Places UI Kit, then restart the dev server.
+                (New), and Places UI Kit, then restart the
+                dev server.
               </p>
             </div>
           ) : (
@@ -1470,11 +1504,17 @@ export function Map() {
                       }}
                     />
                   ))}
-                  {ideas.map((idea) => (
+                  {ideas.map((idea, index) => (
                     <Marker
                       key={idea.id}
                       position={{ lat: idea.lat, lng: idea.lng }}
                       title={idea.name}
+                      label={{
+                        text: String(index + 1),
+                        color: '#ffffff',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                      }}
                       onClick={() => {
                         setDetailsPlaceId(null)
                         setSelectedId(idea.id)
@@ -1563,9 +1603,27 @@ export function Map() {
             {ideasOpen && (
               <div id="map-ideas-body" className={styles.mapIdeasBody}>
                 <p className={styles.mapIdeasBlurb}>
-                  Places you saved while exploring. Add them to the journey when
-                  ready.
+                  Pin places to compare how close they are. Promote a pin to the
+                  journey timeline when you decide to go — day routes live on
+                  Journey, not here.
                 </p>
+                {ideas.length >= 2 && ideasProximityUrl ? (
+                  <div
+                    className={styles.mapIdeasProximity}
+                    aria-label="Compare Ideas in Maps"
+                  >
+                    <a
+                      className={styles.mapRouteLink}
+                      href={ideasProximityUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      title={`Open Ideas in ${mapsProvider === 'apple' ? 'Apple' : 'Google'} Maps`}
+                    >
+                      Map
+                      <ExternalLink size={11} aria-hidden="true" />
+                    </a>
+                  </div>
+                ) : null}
 
                 {ideas.length === 0 ? (
                   <p className={styles.mapIdeasEmpty}>

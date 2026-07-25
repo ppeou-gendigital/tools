@@ -2,18 +2,27 @@ import { useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
-  CalendarSync,
   CircleDollarSign,
+  Cloud,
+  CloudDrizzle,
+  CloudFog,
+  CloudLightning,
+  CloudRain,
+  CloudSnow,
+  CloudSun,
+  ExternalLink,
   Grid2x2Check,
   ListChecks,
   ListMusic,
   Loader2,
   MapPin,
+  Navigation,
+  Plane,
   Plus,
   Settings,
   Shapes,
+  Sun,
   Users,
-  Wallet,
 } from 'lucide-react'
 import { AnchoredPopover } from '@/molecules/AnchoredPopover'
 import popoverStyles from '@/molecules/AnchoredPopover.module.scss'
@@ -49,6 +58,19 @@ import {
   formatFlightStatusDetails,
   formatFlightStatusLine,
 } from '@/lib/flightStatus'
+import { openMapsRouteUrl } from '@/lib/mapsLinks'
+import {
+  allGeoWaypoints,
+  resolveTimelineContext,
+} from '@/lib/timelineContext'
+import {
+  CACHE_TTL_MS as WEATHER_CACHE_TTL_MS,
+  fetchWeatherForEntries,
+  formatWeatherChip,
+  temperatureUnitFromLocale,
+  weatherIconKind,
+  weatherLookupFromEntry,
+} from '@/lib/weather'
 import {
   fetchDisplayNames,
   listEntries,
@@ -76,6 +98,8 @@ function EntryRowActions({
   onOpenExpense,
   onAddExpense,
   onRefreshFlight,
+  mapsUrl,
+  mapsTitle,
 }) {
   const [panel, setPanel] = useState(null) // 'expenses' | 'people' | 'flight' | null
   const [flightBusy, setFlightBusy] = useState(false)
@@ -140,7 +164,7 @@ function EntryRowActions({
           {flightBusy ? (
             <Loader2 size={16} className={styles.spin} aria-hidden="true" />
           ) : (
-            <CalendarSync size={16} aria-hidden="true" />
+            <Plane size={16} aria-hidden="true" />
           )}
         </button>
       )}
@@ -157,7 +181,7 @@ function EntryRowActions({
             setPanel((p) => (p === 'expenses' ? null : 'expenses'))
           }
         >
-          <Wallet size={16} aria-hidden="true" />
+          <CircleDollarSign size={16} aria-hidden="true" />
         </button>
       )}
       {showPeople && (
@@ -174,6 +198,18 @@ function EntryRowActions({
           <Users size={16} aria-hidden="true" />
         </button>
       )}
+      {mapsUrl ? (
+        <a
+          className={styles.rowInfo}
+          href={mapsUrl}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={mapsTitle || 'Open in Maps'}
+          title={mapsTitle || 'Open in Maps'}
+        >
+          <Navigation size={16} aria-hidden="true" />
+        </a>
+      ) : null}
 
       {showFlight && (
         <AnchoredPopover
@@ -292,6 +328,28 @@ function EntryRowActions({
   )
 }
 
+function WeatherIcon({ kind, size = 14 }) {
+  const props = { size, strokeWidth: 1.75, 'aria-hidden': true }
+  if (kind === 'sun') return <Sun {...props} />
+  if (kind === 'cloud-sun') return <CloudSun {...props} />
+  if (kind === 'fog') return <CloudFog {...props} />
+  if (kind === 'drizzle') return <CloudDrizzle {...props} />
+  if (kind === 'rain') return <CloudRain {...props} />
+  if (kind === 'snow') return <CloudSnow {...props} />
+  if (kind === 'storm') return <CloudLightning {...props} />
+  return <Cloud {...props} />
+}
+
+const WEATHER_LEGEND = [
+  { kind: 'sun', label: 'Clear' },
+  { kind: 'cloud-sun', label: 'Partly cloudy' },
+  { kind: 'cloud', label: 'Overcast' },
+  { kind: 'fog', label: 'Fog' },
+  { kind: 'rain', label: 'Rain' },
+  { kind: 'snow', label: 'Snow' },
+  { kind: 'storm', label: 'Storm' },
+]
+
 function entryProvenance(entry, currentUserId, displayNames, displayLocale) {
   const showUpdated =
     entry.updatedBy &&
@@ -299,11 +357,13 @@ function entryProvenance(entry, currentUserId, displayNames, displayLocale) {
     (entry.updatedBy !== entry.createdBy ||
       entry.updatedAt !== entry.createdAt)
   if (showUpdated) {
+    if (currentUserId && entry.updatedBy === currentUserId) return ''
     return `Updated by ${labelForUserId(entry.updatedBy, currentUserId, displayNames)}${
       entry.updatedAt ? ` · ${formatWhen(entry.updatedAt, displayLocale)}` : ''
     }`
   }
   if (!entry.createdBy && !entry.createdAt) return ''
+  if (currentUserId && entry.createdBy === currentUserId) return ''
   return `Created by ${labelForUserId(entry.createdBy, currentUserId, displayNames)}${
     entry.createdAt ? ` · ${formatWhen(entry.createdAt, displayLocale)}` : ''
   }`
@@ -325,7 +385,7 @@ export function Journey() {
   } = useNavigation()
   const journeyId = params.journeyId
   const { user } = useAuth()
-  const { displayLocale } = useDisplayPrefs()
+  const { displayLocale, mapsProvider } = useDisplayPrefs()
   const qc = useQueryClient()
   const [addOpen, setAddOpen] = useState(false)
   const [addStep, setAddStep] = useState('main') // 'main' | 'browse' | 'packs'
@@ -371,6 +431,25 @@ export function Journey() {
     for (const p of roster) map.set(p.id, p)
     return map
   }, [roster])
+
+  const weatherRequestKey = useMemo(() => {
+    if (!journey) return ''
+    return entries
+      .map((e) => weatherLookupFromEntry(e, journey)?.key)
+      .filter(Boolean)
+      .sort()
+      .join(',')
+  }, [entries, journey])
+
+  const { data: weatherByKey = {} } = useQuery({
+    queryKey: ['viaggio', 'weather', journeyId, weatherRequestKey],
+    queryFn: () => fetchWeatherForEntries(entries, journey),
+    enabled: !!journeyId && !!journey && !!weatherRequestKey,
+    staleTime: WEATHER_CACHE_TTL_MS,
+    refetchOnWindowFocus: true,
+  })
+
+  const showWeatherLegend = Object.keys(weatherByKey).length > 0
 
   const participantsByEntry = useMemo(() => {
     const map = new Map()
@@ -451,6 +530,30 @@ export function Journey() {
     }
     return [...groups.entries()]
   }, [entries])
+
+  const timelineCtx = useMemo(
+    () => resolveTimelineContext({ journey, entries }),
+    [journey, entries],
+  )
+  const supposedId = timelineCtx.supposedEntry?.id || null
+  const showSupposed =
+    timelineCtx.phase === 'current' && Boolean(supposedId)
+  const tripGeo = useMemo(() => allGeoWaypoints(entries), [entries])
+  const tripMapUrl = useMemo(
+    () =>
+      openMapsRouteUrl(tripGeo, {
+        provider: mapsProvider,
+        fromCurrentLocation: true,
+      }),
+    [tripGeo, mapsProvider],
+  )
+  const tripGeoIndexById = useMemo(() => {
+    const map = new Map()
+    tripGeo.forEach((entry, index) => {
+      map.set(entry.id, index)
+    })
+    return map
+  }, [tripGeo])
 
   const packsMut = useMutation({
     mutationFn: (packs) => updateJourneyPacks(journeyId, packs),
@@ -568,12 +671,68 @@ export function Journey() {
           </div>
         )}
 
-        {grouped.map(([day, dayEntries]) => (
+        {!isLoading && !entriesLoading && tripMapUrl ? (
+          <div className={styles.tripRouteBar} aria-label="Trip route">
+            <span className={styles.tripRouteLabel}>
+              <Navigation size={14} aria-hidden="true" />
+              From here · {tripGeo.length} pinned stop
+              {tripGeo.length === 1 ? '' : 's'}
+            </span>
+            <a
+              className={styles.dayRouteLink}
+              href={tripMapUrl}
+              target="_blank"
+              rel="noreferrer"
+              title={`Open route in ${mapsProvider === 'apple' ? 'Apple' : 'Google'} Maps`}
+            >
+              Map
+              <ExternalLink size={11} aria-hidden="true" />
+            </a>
+          </div>
+        ) : null}
+
+        {!isLoading && !entriesLoading && showWeatherLegend ? (
+          <div className={styles.weatherLegend} aria-label="Weather legend">
+            <span className={styles.weatherLegendLabel}>Weather</span>
+            <span className={styles.weatherLegendSep} aria-hidden="true">
+              ·
+            </span>
+            <ul className={styles.weatherLegendList}>
+              {WEATHER_LEGEND.map((item) => (
+                <li
+                  key={item.kind}
+                  className={styles.weatherLegendItem}
+                  data-kind={item.kind}
+                >
+                  <span className={styles.entryWeatherIcon}>
+                    <WeatherIcon kind={item.kind} size={14} />
+                  </span>
+                  <span>{item.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {grouped.map(([day, dayEntries]) => {
+          const isToday =
+            showSupposed && day === timelineCtx.todayKey
+          return (
           <div key={day}>
-            <div className={styles.dayHeader}>
-              {day === 'undated'
-                ? 'Undated'
-                : formatWallDate(day, null, displayLocale)}
+            <div
+              className={cx(
+                styles.dayHeader,
+                isToday && styles.dayHeaderToday,
+              )}
+            >
+              <span className={styles.dayHeaderLabel}>
+                {day === 'undated'
+                  ? 'Undated'
+                  : formatWallDate(day, null, displayLocale)}
+                {isToday ? (
+                  <span className={styles.dayTodayBadge}>Today</span>
+                ) : null}
+              </span>
             </div>
             <ul className={styles.list}>
               {dayEntries.map((entry) => {
@@ -610,17 +769,50 @@ export function Journey() {
                   displayNames,
                   displayLocale,
                 )
+                const isSupposed = showSupposed && entry.id === supposedId
+                const supposedLabel =
+                  timelineCtx.supposedKind === 'next' ? 'Next' : 'Now'
+                const geoIndex = tripGeoIndexById.get(entry.id)
+                const placeMapsUrl =
+                  geoIndex != null
+                    ? openMapsRouteUrl(tripGeo.slice(geoIndex), {
+                        provider: mapsProvider,
+                        fromCurrentLocation: true,
+                      })
+                    : null
+                const weatherLookup = weatherLookupFromEntry(entry, journey)
+                const weather = weatherLookup
+                  ? weatherByKey[weatherLookup.key]
+                  : null
+                const weatherLabel = formatWeatherChip(weather, {
+                  locale: displayLocale,
+                })
+                const weatherKind = weatherIconKind(weather?.weatherCode)
+                const weatherSummary = weather?.summary
+                  ? String(weather.summary)
+                  : ''
+                const mapsTitle = placeMapsUrl
+                  ? `Route from here through later stops in ${mapsProvider === 'apple' ? 'Apple' : 'Google'} Maps`
+                  : ''
                 return (
-                  <li key={entry.id} className={styles.entryRow}>
+                  <li
+                    key={entry.id}
+                    className={cx(
+                      styles.entryRow,
+                      styles.entryRowTimeline,
+                      weatherLabel && styles.entryRowHasWeather,
+                      isSupposed && styles.entryRowSupposed,
+                    )}
+                  >
                     <span
-                      className={styles.entryIcon}
+                      className={styles.entryIconFlat}
                       aria-hidden="true"
                       title={activity?.label || 'Activity'}
                     >
-                      <ActivityIcon size={18} strokeWidth={1.75} />
+                      <ActivityIcon size={32} strokeWidth={1.75} />
                     </span>
                     <div className={styles.entryMain}>
-                      <div className={styles.entryHeader}>
+                      <div className={styles.entryTitle}>
                         <button
                           type="button"
                           className={styles.rowTitleBtn}
@@ -628,33 +820,15 @@ export function Journey() {
                         >
                           <span className={styles.rowTitle}>{title}</span>
                         </button>
-                        <EntryRowActions
-                          entry={entry}
-                          entryExpenses={entryExpenses}
-                          whoIds={whoIds}
-                          peopleById={peopleById}
-                          displayLocale={displayLocale}
-                          currentUserId={user?.id}
-                          canEdit={canEdit}
-                          onOpenExpense={(ex) =>
-                            goExpenseEdit({
-                              journeyId,
-                              entryId: entry.id,
-                              expenseId: ex.id,
-                            })
-                          }
-                          onAddExpense={() =>
-                            goExpenseEdit({
-                              journeyId,
-                              entryId: entry.id,
-                            })
-                          }
-                          onRefreshFlight={refreshFlightEntry}
-                        />
+                        {isSupposed ? (
+                          <span className={styles.supposedBadge}>
+                            {supposedLabel}
+                          </span>
+                        ) : null}
                       </div>
                       <button
                         type="button"
-                        className={styles.rowMetaBtn}
+                        className={cx(styles.rowMetaBtn, styles.entryMeta)}
                         onClick={openEntry}
                       >
                         <span className={styles.rowMeta}>
@@ -686,12 +860,59 @@ export function Journey() {
                         </span>
                       </button>
                     </div>
+                    <div className={styles.entryActions}>
+                      <EntryRowActions
+                        entry={entry}
+                        entryExpenses={entryExpenses}
+                        whoIds={whoIds}
+                        peopleById={peopleById}
+                        displayLocale={displayLocale}
+                        currentUserId={user?.id}
+                        canEdit={canEdit}
+                        mapsUrl={placeMapsUrl}
+                        mapsTitle={mapsTitle}
+                        onOpenExpense={(ex) =>
+                          goExpenseEdit({
+                            journeyId,
+                            entryId: entry.id,
+                            expenseId: ex.id,
+                          })
+                        }
+                        onAddExpense={() =>
+                          goExpenseEdit({
+                            journeyId,
+                            entryId: entry.id,
+                          })
+                        }
+                        onRefreshFlight={refreshFlightEntry}
+                      />
+                    </div>
+                    {weatherLabel ? (
+                      <div
+                        className={styles.entryWeather}
+                        title={
+                          weatherSummary
+                            ? `${weatherSummary} · daily high / low`
+                            : 'Daily forecast high / low'
+                        }
+                        data-unit={temperatureUnitFromLocale(displayLocale)}
+                        data-kind={weatherKind}
+                      >
+                        <span className={styles.entryWeatherIcon}>
+                          <WeatherIcon kind={weatherKind} size={28} />
+                        </span>
+                        <span className={styles.entryWeatherTemps}>
+                          {weatherLabel}
+                        </span>
+                      </div>
+                    ) : null}
                   </li>
                 )
               })}
             </ul>
           </div>
-        ))}
+          )
+        })}
       </div>
 
       <Modal

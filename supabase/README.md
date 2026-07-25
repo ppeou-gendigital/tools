@@ -83,3 +83,25 @@ Successful responses include `"provider": "aerodatabox"` or `"aviationstack"`.
 **Quotas:** AeroDataBox free BASIC is ~600 units/mo (flight status is Tier 2 ≈ 2 units/call). Aviationstack free is ~100 req/mo and cannot filter by date. Prefer AeroDataBox for itinerary dates. The client caches ~12 minutes between forced refreshes.
 
 Flight entries need `details.airline` (IATA) + `details.flight_number` (+ `occurs_at` for the date). Confirmation / PNR is stored for the traveler but is not used for status lookup.
+
+### Weather (`weather`)
+
+Daily forecast by lat/lng + date via [Open-Meteo](https://open-meteo.com/) (no API key for non-commercial use).
+
+```bash
+supabase functions deploy weather
+```
+
+Client: `src/lib/weather.js` → `supabase.functions.invoke('weather', { body: { locations: [{ lat, lng, date }] } })`.
+
+**App UX:** Journey auto-fetches when the page opens for geo activities whose civil day falls in the next **7 days**. In-memory cache TTL is **15 minutes**; refetch on window focus when stale. Chips appear on entry rows that have `lat`/`lng` (not on flights). Offline packs prefetch `weather` at pin time.
+
+**Test:**
+
+```bash
+curl -L -X POST 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/weather' \
+  -H "Authorization: Bearer YOUR_PUBLISHABLE_OR_ANON_KEY" \
+  -H "apikey: YOUR_PUBLISHABLE_OR_ANON_KEY" \
+  -H 'Content-Type: application/json' \
+  --data '{"lat":41.9,"lng":12.5,"date":"2026-07-25"}'
+```

@@ -18,6 +18,7 @@ import {
 import {
   normalizeDefaultCurrency,
   normalizeDisplayLocale,
+  normalizeMapsProvider,
   normalizePrefsConfirmed,
 } from '@/lib/prefs'
 import { useAuth } from '@/providers/AuthProvider'
@@ -36,6 +37,20 @@ function readLocalSync() {
   }
 }
 
+function localBlob({
+  displayLocale,
+  defaultCurrency,
+  mapsProvider,
+  prefsConfirmed,
+}) {
+  return {
+    displayLocale,
+    defaultCurrency,
+    mapsProvider,
+    prefsConfirmed,
+  }
+}
+
 export function DisplayPrefsProvider({ children }) {
   const { user } = useAuth()
   const userId = user?.id ?? null
@@ -45,6 +60,9 @@ export function DisplayPrefsProvider({ children }) {
   )
   const [defaultCurrency, setDefaultCurrencyState] = useState(
     () => readLocalSync()?.defaultCurrency ?? null,
+  )
+  const [mapsProvider, setMapsProviderState] = useState(
+    () => normalizeMapsProvider(readLocalSync()?.mapsProvider),
   )
   const [prefsConfirmed, setPrefsConfirmedState] = useState(
     () => readLocalSync()?.prefsConfirmed === true,
@@ -62,6 +80,7 @@ export function DisplayPrefsProvider({ children }) {
           setDefaultCurrencyState(
             normalizeDefaultCurrency(parsed.defaultCurrency),
           )
+          setMapsProviderState(normalizeMapsProvider(parsed.mapsProvider))
           setPrefsConfirmedState(normalizePrefsConfirmed(parsed.prefsConfirmed))
         }
       } catch {
@@ -82,11 +101,12 @@ export function DisplayPrefsProvider({ children }) {
     async (next, { fromRemote = false } = {}) => {
       const value = normalizeDisplayLocale(next)
       setDisplayLocaleState(value)
-      const blob = {
+      const blob = localBlob({
         displayLocale: value,
         defaultCurrency,
+        mapsProvider,
         prefsConfirmed,
-      }
+      })
       await persistLocal(blob)
       if (fromRemote || !userId) return
       try {
@@ -105,18 +125,19 @@ export function DisplayPrefsProvider({ children }) {
         console.warn('[viaggio] displayLocale sync failed:', err?.message ?? err)
       }
     },
-    [defaultCurrency, prefsConfirmed, persistLocal, userId],
+    [defaultCurrency, mapsProvider, prefsConfirmed, persistLocal, userId],
   )
 
   const setDefaultCurrency = useCallback(
     async (next, { fromRemote = false } = {}) => {
       const value = normalizeDefaultCurrency(next)
       setDefaultCurrencyState(value)
-      const blob = {
+      const blob = localBlob({
         displayLocale,
         defaultCurrency: value,
+        mapsProvider,
         prefsConfirmed,
-      }
+      })
       await persistLocal(blob)
       if (fromRemote || !userId) return
       try {
@@ -138,18 +159,50 @@ export function DisplayPrefsProvider({ children }) {
         )
       }
     },
-    [displayLocale, prefsConfirmed, persistLocal, userId],
+    [displayLocale, mapsProvider, prefsConfirmed, persistLocal, userId],
+  )
+
+  const setMapsProvider = useCallback(
+    async (next, { fromRemote = false } = {}) => {
+      const value = normalizeMapsProvider(next)
+      setMapsProviderState(value)
+      const blob = localBlob({
+        displayLocale,
+        defaultCurrency,
+        mapsProvider: value,
+        prefsConfirmed,
+      })
+      await persistLocal(blob)
+      if (fromRemote || !userId) return
+      try {
+        await enqueueSyncOp({
+          stream: 'prefs',
+          key: 'mapsProvider',
+          fn: () =>
+            applySyncOp({
+              stream: 'prefs',
+              userId,
+              key: 'mapsProvider',
+              op: (cur) => ({ ...cur, mapsProvider: value }),
+            }),
+        })
+      } catch (err) {
+        console.warn('[viaggio] mapsProvider sync failed:', err?.message ?? err)
+      }
+    },
+    [displayLocale, defaultCurrency, prefsConfirmed, persistLocal, userId],
   )
 
   const setPrefsConfirmed = useCallback(
     async (next, { fromRemote = false } = {}) => {
       const value = normalizePrefsConfirmed(next)
       setPrefsConfirmedState(value)
-      const blob = {
+      const blob = localBlob({
         displayLocale,
         defaultCurrency,
+        mapsProvider,
         prefsConfirmed: value,
-      }
+      })
       await persistLocal(blob)
       if (fromRemote || !userId) return
       try {
@@ -171,7 +224,7 @@ export function DisplayPrefsProvider({ children }) {
         )
       }
     },
-    [displayLocale, defaultCurrency, persistLocal, userId],
+    [displayLocale, defaultCurrency, mapsProvider, persistLocal, userId],
   )
 
   const confirmPrefs = useCallback(
@@ -182,11 +235,12 @@ export function DisplayPrefsProvider({ children }) {
       setDisplayLocaleState(nextLocale)
       setDefaultCurrencyState(nextCurrency)
       setPrefsConfirmedState(true)
-      const blob = {
+      const blob = localBlob({
         displayLocale: nextLocale,
         defaultCurrency: nextCurrency,
+        mapsProvider,
         prefsConfirmed: true,
-      }
+      })
       await persistLocal(blob)
       if (!userId) return
       try {
@@ -210,7 +264,7 @@ export function DisplayPrefsProvider({ children }) {
         console.warn('[viaggio] confirmPrefs sync failed:', err?.message ?? err)
       }
     },
-    [persistLocal, userId],
+    [mapsProvider, persistLocal, userId],
   )
 
   const value = useMemo(
@@ -218,9 +272,11 @@ export function DisplayPrefsProvider({ children }) {
       ready,
       displayLocale: displayLocale || guessDeviceLocale(),
       defaultCurrency: defaultCurrency || guessDeviceCurrency(),
+      mapsProvider,
       prefsConfirmed,
       setDisplayLocale,
       setDefaultCurrency,
+      setMapsProvider,
       setPrefsConfirmed,
       confirmPrefs,
       applyRemote: (remote) => {
@@ -233,25 +289,33 @@ export function DisplayPrefsProvider({ children }) {
             normalizeDefaultCurrency(remote.defaultCurrency),
           )
         }
+        if (remote.mapsProvider !== undefined) {
+          setMapsProviderState(normalizeMapsProvider(remote.mapsProvider))
+        }
         if (remote.prefsConfirmed !== undefined) {
           setPrefsConfirmedState(
             normalizePrefsConfirmed(remote.prefsConfirmed),
           )
         }
-        persistLocal({
-          displayLocale: normalizeDisplayLocale(remote.displayLocale),
-          defaultCurrency: normalizeDefaultCurrency(remote.defaultCurrency),
-          prefsConfirmed: normalizePrefsConfirmed(remote.prefsConfirmed),
-        })
+        persistLocal(
+          localBlob({
+            displayLocale: normalizeDisplayLocale(remote.displayLocale),
+            defaultCurrency: normalizeDefaultCurrency(remote.defaultCurrency),
+            mapsProvider: normalizeMapsProvider(remote.mapsProvider),
+            prefsConfirmed: normalizePrefsConfirmed(remote.prefsConfirmed),
+          }),
+        )
       },
     }),
     [
       ready,
       displayLocale,
       defaultCurrency,
+      mapsProvider,
       prefsConfirmed,
       setDisplayLocale,
       setDefaultCurrency,
+      setMapsProvider,
       setPrefsConfirmed,
       confirmPrefs,
       persistLocal,

@@ -17,6 +17,7 @@ Built by `src/lib/offline/journeyPack.js`, stored in `viaggio.offline` (IndexedD
 - `scopeId` = journey id  
 - Client-mapped entities (`journey`, `entries`, `expenses`, `todos`, …)  
 - Prefetched `fx` rates at pin time  
+- Prefetched `weather` map (keyed by rounded lat|lng|date) for geo activities in the 7-day horizon at pin time  
 - Last-known flight status lives on each flight entry’s `details` (refreshed on demand while online)  
 - `syncedAt` ISO timestamp  
 

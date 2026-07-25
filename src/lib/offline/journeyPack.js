@@ -18,6 +18,7 @@ import {
   myMembership,
 } from '@/lib/viaggioApi'
 import { putPack, getPack, deletePack, listPacks } from '@/lib/offline/packStore'
+import { prefetchWeatherForPack } from '@/lib/weather'
 
 export const JOURNEY_PACK_KIND = 'journey'
 export const JOURNEY_PACK_SCHEMA = 1
@@ -78,6 +79,16 @@ export async function buildJourneyOfflinePack(journeyId, opts = {}) {
     console.warn('[viaggio] offline pack FX prefetch failed:', err?.message ?? err)
   }
 
+  let weather = {}
+  try {
+    weather = await prefetchWeatherForPack(entries, journey)
+  } catch (err) {
+    console.warn(
+      '[viaggio] offline pack weather prefetch failed:',
+      err?.message ?? err,
+    )
+  }
+
   /** @type {import('./packStore').OfflinePack} */
   const pack = {
     schemaVersion: JOURNEY_PACK_SCHEMA,
@@ -98,6 +109,7 @@ export async function buildJourneyOfflinePack(journeyId, opts = {}) {
     placeIdeas,
     todos,
     fx,
+    weather,
   }
 
   await putPack(pack)

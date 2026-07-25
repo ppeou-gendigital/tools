@@ -2,7 +2,7 @@
   "id": "flight",
   "schema": "transit",
   "label": "Flight",
-  "icon": "Plane",
+  "icon": "PlaneTakeoff",
   "detailHints": [
     {
       "key": "airline",

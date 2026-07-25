@@ -7,6 +7,7 @@ import { Label } from '@/molecules/Label'
 import { LoadingState } from '@/molecules/LoadingState'
 import { AirlineAutocomplete } from '@/molecules/AirlineAutocomplete'
 import { ParticipantChips } from '@/molecules/ParticipantChips'
+import { PlaceLocationField } from '@/molecules/PlaceLocationField'
 import { RichNoteEditor } from '@/molecules/RichNoteEditor'
 import { TimezoneAutocomplete } from '@/molecules/TimezoneAutocomplete'
 import { ConfirmDialog } from '@/patterns/ConfirmDialog'
@@ -220,7 +221,14 @@ function EntryEditForm({
   const [title, setTitle] = useState(existing?.title || '')
   const [placeName, setPlaceName] = useState(existing?.placeName || '')
   const [address, setAddress] = useState(existing?.address || '')
+  const [lat, setLat] = useState(
+    Number.isFinite(existing?.lat) ? existing.lat : null,
+  )
+  const [lng, setLng] = useState(
+    Number.isFinite(existing?.lng) ? existing.lng : null,
+  )
   const [occursOn, setOccursOn] = useState(existing?.occursOn || '')
+  const hasGeoFields = fields.has('lat') && fields.has('lng')
   const [timezone, setTimezone] = useState(existing?.timezone || defaultTz)
   const [startTimezone, setStartTimezone] = useState(
     existing?.startTimezone || existing?.timezone || defaultTz,
@@ -306,6 +314,8 @@ function EntryEditForm({
         endsAt,
         placeName: placeName || null,
         address: address || null,
+        lat: hasGeoFields && Number.isFinite(lat) ? lat : null,
+        lng: hasGeoFields && Number.isFinite(lng) ? lng : null,
         details: savedDetails,
         participantIds: [...selected],
       }
@@ -544,28 +554,52 @@ function EntryEditForm({
             </>
           )}
 
-          {fields.has('place_name') && (
-            <div className={styles.field}>
-              <Label htmlFor="place">Place</Label>
-              <Input
-                id="place"
-                value={placeName}
-                disabled={readOnly}
-                onChange={(e) => setPlaceName(e.target.value)}
-              />
-            </div>
-          )}
-
-          {fields.has('address') && (
+          {hasGeoFields ? (
             <div className={cx(styles.field, styles.formSpan2)}>
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
-                value={address}
+              <PlaceLocationField
+                placeName={placeName}
+                address={address}
+                lat={lat}
+                lng={lng}
                 disabled={readOnly}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={(next) => {
+                  setPlaceName(next.placeName ?? '')
+                  setAddress(next.address ?? '')
+                  setLat(
+                    Number.isFinite(next.lat) ? next.lat : null,
+                  )
+                  setLng(
+                    Number.isFinite(next.lng) ? next.lng : null,
+                  )
+                }}
               />
             </div>
+          ) : (
+            <>
+              {fields.has('place_name') && (
+                <div className={styles.field}>
+                  <Label htmlFor="place">Place</Label>
+                  <Input
+                    id="place"
+                    value={placeName}
+                    disabled={readOnly}
+                    onChange={(e) => setPlaceName(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {fields.has('address') && (
+                <div className={cx(styles.field, styles.formSpan2)}>
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    value={address}
+                    disabled={readOnly}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </div>
+              )}
+            </>
           )}
 
           {isFlight && (

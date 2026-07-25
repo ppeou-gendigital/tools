@@ -9,6 +9,7 @@
 
 const THEMES = ['light', 'dark', 'system', 'daynight']
 const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+const MAPS_PROVIDERS = ['google', 'apple']
 
 const FONT_MIN = 12
 const FONT_MAX = 24
@@ -21,6 +22,7 @@ const DEFAULTS = {
   fabCorner: 'bottom-right',
   displayLocale: null,
   defaultCurrency: null,
+  mapsProvider: 'google',
   prefsConfirmed: false,
 }
 
@@ -31,6 +33,7 @@ export const PREFS_OWNED_KEYS = new Set([
   'fabCorner',
   'displayLocale',
   'defaultCurrency',
+  'mapsProvider',
   'prefsConfirmed',
   'updatedAt',
 ])
@@ -79,6 +82,10 @@ export function normalizeDefaultCurrency(v) {
   return /^[A-Z]{3}$/.test(c) ? c : DEFAULTS.defaultCurrency
 }
 
+export function normalizeMapsProvider(v) {
+  return MAPS_PROVIDERS.includes(v) ? v : DEFAULTS.mapsProvider
+}
+
 export function normalizePrefsConfirmed(v) {
   return v === true
 }
@@ -94,6 +101,7 @@ export function normalizeRemotePrefs(remote) {
     fabCorner: normalizeFabCorner(remote?.fabCorner),
     displayLocale: normalizeDisplayLocale(remote?.displayLocale),
     defaultCurrency: normalizeDefaultCurrency(remote?.defaultCurrency),
+    mapsProvider: normalizeMapsProvider(remote?.mapsProvider),
     prefsConfirmed: normalizePrefsConfirmed(remote?.prefsConfirmed),
   }
 }

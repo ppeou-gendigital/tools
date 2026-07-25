@@ -18,16 +18,20 @@ export function Settings() {
   const {
     displayLocale,
     defaultCurrency,
+    mapsProvider,
     setDisplayLocale,
     setDefaultCurrency,
+    setMapsProvider,
   } = useDisplayPrefs()
   const [locale, setLocale] = useState(displayLocale)
   const [currency, setCurrency] = useState(defaultCurrency)
+  const [maps, setMaps] = useState(mapsProvider)
   const [saved, setSaved] = useState(false)
 
   async function onSave() {
     await setDisplayLocale(locale)
     await setDefaultCurrency(currency)
+    await setMapsProvider(maps)
     setSaved(true)
   }
 
@@ -132,9 +136,25 @@ export function Settings() {
               ))}
             </Select>
           </div>
+          <div className={styles.field}>
+            <Label htmlFor="mapsProvider">Preferred maps app</Label>
+            <Select
+              id="mapsProvider"
+              value={maps}
+              onChange={(e) => {
+                setMaps(e.target.value)
+                setSaved(false)
+              }}
+            >
+              <option value="google">Google Maps</option>
+              <option value="apple">Apple Maps</option>
+            </Select>
+          </div>
           <p className={styles.hint}>
             Preview: {formatMoney(123450, currency, locale)} ·{' '}
-            {formatWallDate(new Date().toISOString(), undefined, locale)}
+            {formatWallDate(new Date().toISOString(), undefined, locale)}.
+            Journey Map buttons open {maps === 'apple' ? 'Apple' : 'Google'}{' '}
+            Maps.
           </p>
           <Button onClick={onSave} fullWidth>
             {saved ? 'Saved' : 'Save preferences'}

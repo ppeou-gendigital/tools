@@ -45,6 +45,14 @@
   --accent-3: #f59e0b;
   --accent-4: #8b5cf6;
 
+  // Weather icon hues (readable on light cards).
+  --weather-clear: #d97706;
+  --weather-cloud: #64748b;
+  --weather-fog: #78716c;
+  --weather-rain: #2563eb;
+  --weather-snow: #0891b2;
+  --weather-storm: #7c3aed;
+
   --radius-sm: 4px;
   --radius: 8px;
   --radius-lg: 12px;
@@ -135,6 +143,14 @@
   --accent-2: #34d399;
   --accent-3: #fbbf24;
   --accent-4: #a78bfa;
+
+  // Weather icon hues (lighter for near-black cards).
+  --weather-clear: #fbbf24;
+  --weather-cloud: #94a3b8;
+  --weather-fog: #a8a29e;
+  --weather-rain: #60a5fa;
+  --weather-snow: #22d3ee;
+  --weather-storm: #a78bfa;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
