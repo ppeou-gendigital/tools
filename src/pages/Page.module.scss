@@ -378,6 +378,12 @@
   color: color-mix(in srgb, var(--muted-fg) 75%, transparent);
 }
 
+.flightStatus {
+  font-size: var(--text-sm);
+  font-weight: 550;
+  color: var(--fg);
+}
+
 .rowMetaEmphasis {
   font-size: var(--text-sm);
   font-weight: 600;

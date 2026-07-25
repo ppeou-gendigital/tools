@@ -1,0 +1,175 @@
+{
+  "format": "viaggio.journey_snapshot",
+  "version": 1,
+  "exported_at": "2026-07-23T18:00:00.000Z",
+  "journey": {
+    "title": "Weekend in Lisbon (sample)",
+    "type": "trip",
+    "preset": "leisure_trip",
+    "activity_packs": [],
+    "default_timezone": "Europe/Lisbon",
+    "default_currency": "EUR",
+    "starts_on": "2026-08-14",
+    "ends_on": "2026-08-16"
+  },
+  "people": [
+    {
+      "id": "person-owner",
+      "display_name": "Alex Organizer",
+      "email": "alex@example.com",
+      "phone_e164": null,
+      "member_role": "owner"
+    },
+    {
+      "id": "person-guest",
+      "display_name": "Sam Guest",
+      "email": null,
+      "phone_e164": null,
+      "member_role": null
+    }
+  ],
+  "contacts": [],
+  "entries": [
+    {
+      "id": "entry-flight",
+      "activity_id": "flight",
+      "schema": "transit",
+      "title": "LIS ← CDG",
+      "body": {},
+      "occurs_on": null,
+      "occurs_at": "2026-08-14T08:30:00.000Z",
+      "ends_at": "2026-08-14T10:05:00.000Z",
+      "timezone": "Europe/Lisbon",
+      "start_timezone": "Europe/Paris",
+      "end_timezone": "Europe/Lisbon",
+      "place_name": "Lisbon LIS",
+      "address": null,
+      "lat": null,
+      "lng": null,
+      "phone_e164": null,
+      "contact_id": null,
+      "details": {
+        "from": "Paris CDG",
+        "to": "Lisbon LIS",
+        "airline": "TP",
+        "flight_number": "440",
+        "confirmation": "ABC123"
+      }
+    },
+    {
+      "id": "entry-hotel",
+      "activity_id": "hotel",
+      "schema": "lodging",
+      "title": "Hotel in Baixa",
+      "body": {},
+      "occurs_on": null,
+      "occurs_at": "2026-08-14T15:00:00.000Z",
+      "ends_at": "2026-08-16T11:00:00.000Z",
+      "timezone": "Europe/Lisbon",
+      "start_timezone": null,
+      "end_timezone": null,
+      "place_name": "Baixa, Lisbon",
+      "address": null,
+      "lat": null,
+      "lng": null,
+      "phone_e164": null,
+      "contact_id": null,
+      "details": {
+        "confirmation": "SAMPLE-001"
+      }
+    },
+    {
+      "id": "entry-meal",
+      "activity_id": "meal",
+      "schema": "meal",
+      "title": "Pastéis de Belém",
+      "body": {},
+      "occurs_on": null,
+      "occurs_at": "2026-08-15T11:00:00.000Z",
+      "ends_at": null,
+      "timezone": "Europe/Lisbon",
+      "start_timezone": null,
+      "end_timezone": null,
+      "place_name": "Belém",
+      "address": null,
+      "lat": null,
+      "lng": null,
+      "phone_e164": null,
+      "contact_id": null,
+      "details": {}
+    }
+  ],
+  "entry_participants": [
+    { "entry_id": "entry-hotel", "person_id": "person-owner" },
+    { "entry_id": "entry-hotel", "person_id": "person-guest" },
+    { "entry_id": "entry-meal", "person_id": "person-owner" },
+    { "entry_id": "entry-meal", "person_id": "person-guest" }
+  ],
+  "expenses": [
+    {
+      "id": "exp-meal",
+      "entry_id": "entry-meal",
+      "title": "Pastéis + coffee",
+      "amount_cents": 1800,
+      "currency": "EUR",
+      "paid_by_person_id": "person-owner",
+      "split_mode": "equal",
+      "category": "food"
+    }
+  ],
+  "expense_splits": [
+    {
+      "expense_id": "exp-meal",
+      "person_id": "person-owner",
+      "amount_cents": 900
+    },
+    {
+      "expense_id": "exp-meal",
+      "person_id": "person-guest",
+      "amount_cents": 900
+    }
+  ],
+  "playlist": [
+    {
+      "url": "https://open.spotify.com/playlist/37i9dQZF1DX1IeqVhG1Hby",
+      "title": "Lisbon vibe (sample)",
+      "platform": "spotify",
+      "sort_order": 0
+    }
+  ],
+  "place_ideas": [
+    {
+      "google_place_id": null,
+      "name": "Miradouro da Senhora do Monte",
+      "address": "Largo da Senhora do Monte, Lisbon",
+      "lat": 38.7191,
+      "lng": -9.1327,
+      "note": "Sunset viewpoint — maybe Sunday evening",
+      "sort_order": 0,
+      "entry_id": null
+    }
+  ],
+  "todos": [
+    {
+      "title": "Apply for Schengen Visa",
+      "notes": "Book embassy appointment; passport photos",
+      "done": false,
+      "due_on": "2026-08-01",
+      "assignee_person_ids": ["person-owner", "person-guest"],
+      "assignees": [
+        { "person_id": "person-owner", "done": true },
+        { "person_id": "person-guest", "done": false }
+      ],
+      "sort_order": 0
+    },
+    {
+      "title": "Get eSim",
+      "notes": "",
+      "done": true,
+      "due_on": null,
+      "assignee_person_ids": [],
+      "assignees": [],
+      "sort_order": 1
+    }
+  ]
+}

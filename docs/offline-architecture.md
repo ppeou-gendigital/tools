@@ -17,6 +17,7 @@ Built by `src/lib/offline/journeyPack.js`, stored in `viaggio.offline` (IndexedD
 - `scopeId` = journey id  
 - Client-mapped entities (`journey`, `entries`, `expenses`, `todos`, …)  
 - Prefetched `fx` rates at pin time  
+- Last-known flight status lives on each flight entry’s `details` (refreshed on demand while online)  
 - `syncedAt` ISO timestamp  
 
 Not the portable file snapshot (`journeySnapshot.js`) — that format remaps IDs on import.

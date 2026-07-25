@@ -51,7 +51,9 @@
       "details": {
         "from": "Paris CDG",
         "to": "Lisbon LIS",
-        "airline": "TAP"
+        "airline": "TP",
+        "flight_number": "440",
+        "confirmation": "ABC123"
       }
     },
     {

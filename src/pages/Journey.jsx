@@ -2,10 +2,12 @@ import { useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
+  CalendarSync,
   CircleDollarSign,
   Grid2x2Check,
   ListChecks,
   ListMusic,
+  Loader2,
   MapPin,
   Plus,
   Settings,
@@ -41,6 +43,13 @@ import {
   labelForUserId,
 } from '@/lib/format'
 import {
+  applyFlightStatusToEntry,
+  fetchFlightStatus,
+  flightLookupFromEntry,
+  formatFlightStatusDetails,
+  formatFlightStatusLine,
+} from '@/lib/flightStatus'
+import {
   fetchDisplayNames,
   listEntries,
   listEntryParticipants,
@@ -48,6 +57,7 @@ import {
   listJourneyPeople,
   myMembership,
   updateJourneyPacks,
+  upsertEntry,
   getJourney,
 } from '@/lib/viaggioApi'
 import { useAuth } from '@/providers/AuthProvider'
@@ -56,6 +66,7 @@ import { useNavigation } from '@/providers/NavigationProvider'
 import styles from './Page.module.scss'
 
 function EntryRowActions({
+  entry,
   entryExpenses,
   whoIds,
   peopleById,
@@ -64,16 +75,75 @@ function EntryRowActions({
   canEdit,
   onOpenExpense,
   onAddExpense,
+  onRefreshFlight,
 }) {
-  const [panel, setPanel] = useState(null) // 'expenses' | 'people' | null
+  const [panel, setPanel] = useState(null) // 'expenses' | 'people' | 'flight' | null
+  const [flightBusy, setFlightBusy] = useState(false)
+  const [flightError, setFlightError] = useState('')
+  const [flightStatus, setFlightStatus] = useState(null)
   const expensesBtnRef = useRef(null)
   const peopleBtnRef = useRef(null)
+  const flightBtnRef = useRef(null)
   // Editors always get Wallet so they can add the first expense from the row.
   const showExpenses = canEdit || entryExpenses.length > 0
   const showPeople = whoIds.length > 1
+  const flightLookup = flightLookupFromEntry(entry)
+  const showFlight = canEdit && entry?.activityId === 'flight'
+
+  async function handleFlightRefresh() {
+    if (flightBusy) return
+    setPanel('flight')
+    setFlightStatus(null)
+    setFlightError('')
+    if (!flightLookup) {
+      setFlightError(
+        'Add airline (IATA) and flight number on this activity to refresh status.',
+      )
+      return
+    }
+    setFlightBusy(true)
+    try {
+      const status = await fetchFlightStatus(flightLookup, { force: true })
+      setFlightStatus(status)
+      await onRefreshFlight?.(entry, status)
+    } catch (err) {
+      setFlightError(err?.message || 'Could not refresh flight status')
+    } finally {
+      setFlightBusy(false)
+    }
+  }
+
+  const flightDetailRows = formatFlightStatusDetails(
+    flightStatus || entry?.details,
+  )
 
   return (
     <div className={styles.rowActions}>
+      {showFlight && (
+        <button
+          ref={flightBtnRef}
+          type="button"
+          className={styles.rowInfo}
+          aria-label="Refresh flight status"
+          title="Refresh flight status"
+          aria-expanded={panel === 'flight'}
+          aria-haspopup="dialog"
+          disabled={flightBusy}
+          onClick={() => {
+            if (panel === 'flight') {
+              setPanel(null)
+              return
+            }
+            handleFlightRefresh()
+          }}
+        >
+          {flightBusy ? (
+            <Loader2 size={16} className={styles.spin} aria-hidden="true" />
+          ) : (
+            <CalendarSync size={16} aria-hidden="true" />
+          )}
+        </button>
+      )}
       {showExpenses && (
         <button
           ref={expensesBtnRef}
@@ -103,6 +173,35 @@ function EntryRowActions({
         >
           <Users size={16} aria-hidden="true" />
         </button>
+      )}
+
+      {showFlight && (
+        <AnchoredPopover
+          open={panel === 'flight'}
+          onClose={() => setPanel(null)}
+          title="Flight status"
+          anchorRef={flightBtnRef}
+        >
+          {flightBusy && !flightStatus ? (
+            <p className={popoverStyles.hint}>Checking live status…</p>
+          ) : null}
+          {flightError ? (
+            <p className={popoverStyles.hint}>{flightError}</p>
+          ) : null}
+          {!flightBusy && !flightError && flightDetailRows.length === 0 ? (
+            <p className={popoverStyles.hint}>No status available.</p>
+          ) : null}
+          {flightDetailRows.length > 0 && (
+            <ul className={popoverStyles.list}>
+              {flightDetailRows.map((row) => (
+                <li key={row.label} className={popoverStyles.row}>
+                  <span className={popoverStyles.name}>{row.label}</span>
+                  <span className={popoverStyles.meta}>{row.value}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </AnchoredPopover>
       )}
 
       {showExpenses && (
@@ -299,6 +398,34 @@ export function Journey() {
   })
 
   const canEdit = membership?.role === 'owner' || membership?.role === 'editor'
+
+  async function refreshFlightEntry(entry, status) {
+    const patch = applyFlightStatusToEntry(entry, status)
+    await upsertEntry({
+      id: entry.id,
+      journeyId: entry.journeyId,
+      activityId: entry.activityId,
+      schema: entry.schema,
+      title: entry.title,
+      body: entry.body ?? {},
+      occursOn: entry.occursOn,
+      occursAt: patch.occursAt,
+      endsAt: patch.endsAt,
+      timezone: entry.timezone,
+      startTimezone: entry.startTimezone,
+      endTimezone: entry.endTimezone,
+      placeName: entry.placeName,
+      address: entry.address,
+      lat: entry.lat,
+      lng: entry.lng,
+      phoneE164: entry.phoneE164,
+      contactId: entry.contactId,
+      details: patch.details,
+      participantIds: participantsByEntry.get(entry.id) || [],
+    })
+    qc.invalidateQueries({ queryKey: ['viaggio', 'entries', journeyId] })
+    qc.invalidateQueries({ queryKey: ['viaggio', 'entry', entry.id] })
+  }
   const preset = getPreset(journey?.preset)
   const primaryIds = useMemo(
     () => (journey ? primaryActivityIds(journey) : []),
@@ -476,6 +603,7 @@ export function Journey() {
                 const metaSecondary = [moneyHint, whoHint]
                   .filter(Boolean)
                   .join(' · ')
+                const flightStatusLine = formatFlightStatusLine(entry.details)
                 const provenance = entryProvenance(
                   entry,
                   user?.id,
@@ -501,6 +629,7 @@ export function Journey() {
                           <span className={styles.rowTitle}>{title}</span>
                         </button>
                         <EntryRowActions
+                          entry={entry}
                           entryExpenses={entryExpenses}
                           whoIds={whoIds}
                           peopleById={peopleById}
@@ -520,6 +649,7 @@ export function Journey() {
                               entryId: entry.id,
                             })
                           }
+                          onRefreshFlight={refreshFlightEntry}
                         />
                       </div>
                       <button
@@ -529,9 +659,19 @@ export function Journey() {
                       >
                         <span className={styles.rowMeta}>
                           {metaPrimary}
+                          {flightStatusLine ? (
+                            <>
+                              {metaPrimary && <br />}
+                              <span className={styles.flightStatus}>
+                                {flightStatusLine}
+                              </span>
+                            </>
+                          ) : null}
                           {metaSecondary ? (
                             <>
-                              {(metaPrimary || provenance) && <br />}
+                              {(metaPrimary ||
+                                flightStatusLine ||
+                                provenance) && <br />}
                               {metaSecondary}
                             </>
                           ) : null}

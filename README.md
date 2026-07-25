@@ -8,6 +8,7 @@ This is the **template** branch. Full-featured reference implementation: see the
 - **UI**: React 19, hand-rolled components in SCSS Modules, Lucide icons
 - **Auth + storage**: [Supabase](https://supabase.com/) (Auth + Postgres) — free tier
 - **Build**: Vite + `@crxjs/vite-plugin`
+- **Web host**: [Firebase Hosting](https://project-viaggio.web.app) (`project-viaggio`)
 
 ---
 
@@ -68,7 +69,8 @@ Inspect:
 | `npm run dev`       | Vite dev server for the web build (`index.html`)                   |
 | `npm run dev:ext`   | Extension build in watch mode → `dist/`                            |
 | `npm run build`     | Production extension build → `dist/`                               |
-| `npm run build:web` | Production web build → `dist-web/`                                 |
+| `npm run build:web` | Production web build → `dist-web/viaggio`                          |
+| `npm run deploy:web`| Production web build + deploy to Firebase Hosting                  |
 | `npm run lint`      | ESLint over `src/**/*.{js,jsx}`                                    |
 | `npm run icons`     | Rasterize `icons/tool.svg` → transparent extension + opaque iOS/PWA PNGs |
 | `npm run init`      | Rename the template to a new tool name (see below)                 |
@@ -307,26 +309,35 @@ Add more as your tool needs them (`activeTab`, `tabs`, `scripting`, `webNavigati
 
 ---
 
-## CI / GitHub Pages
+## CI / Firebase Hosting
 
-Branch naming drives the live path. After `npm run init -- --name viaggio`:
+Primary web host: **Firebase Hosting** on project `project-viaggio`.
 
 | | |
 | --- | --- |
 | Branch | `tool/viaggio` |
-| Vite `base` / `outDir` | `/tools/viaggio/` · `dist-web/viaggio` |
-| Live URL | `https://<user>.github.io/tools/viaggio/` |
+| Vite `base` / `outDir` | `/` · `dist-web/viaggio` |
+| Live URL | https://project-viaggio.web.app |
 
-- **Workflow**: [`.github/workflows/deploy-viaggio-pages.yml`](.github/workflows/deploy-viaggio-pages.yml)
-- **Trigger**: push to `tool/viaggio` (or manual `workflow_dispatch` from the Actions tab)
-- **Build**: `npm run build:web` → `dist-web/viaggio/` (nested so the uploaded artifact serves at `/tools/viaggio/`)
-- **Repo secrets required** (Settings → Secrets and variables → Actions):
+- **Workflow**: [`.github/workflows/deploy-viaggio-firebase.yml`](.github/workflows/deploy-viaggio-firebase.yml)
+- **Trigger**: push to `tool/viaggio` (or manual `workflow_dispatch`)
+- **Local deploy**: `npm run deploy:web`
+- **Agent import contract**: https://project-viaggio.web.app/agent/llms.txt (JSON Schema + sample under `/agent/`)
+- **Config**: [`firebase.json`](firebase.json), [`.firebaserc`](.firebaserc) — hosting target `viaggio` → site `project-viaggio`
+- **Repo secrets** (Settings → Secrets and variables → Actions):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
   - `VITE_GOOGLE_MAPS_API_KEY` (optional; Map brainstorming page)
-- **Repo Pages settings**: Settings → Pages → Source = **GitHub Actions**
+  - `FIREBASE_SERVICE_ACCOUNT_VIAGGIO`
 
-`scripts/init-tool.mjs` renames both this workflow file and the release workflow to match your tool's name, plus updates the branch triggers.
+### Supabase Auth allowlist
+
+In the Viaggio Supabase project → **Authentication → URL Configuration**, add `https://project-viaggio.web.app` to **Redirect URLs** (and Site URL when you cut over).
+
+### Legacy GitHub Pages
+
+- **Workflow**: [`.github/workflows/deploy-viaggio-pages.yml`](.github/workflows/deploy-viaggio-pages.yml) — **manual only**
+- **Old URL**: https://ppeou-gendigital.github.io/tools/viaggio/
 
 ### Install as a PWA (web build only)
 

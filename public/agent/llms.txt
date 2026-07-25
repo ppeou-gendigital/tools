@@ -1,0 +1,42 @@
+# Viaggio — journey snapshot import (for LLM / integrator agents)
+
+Purpose: generate a JSON file a signed-in user can import into Viaggio to create
+a new journey (people, timeline entries, expenses, playlist, place ideas, todos).
+
+## Format
+
+- format (required): "viaggio.journey_snapshot"
+- version (required): 1
+- journey (required object)
+- people (required array, at least one person)
+- Optional arrays: contacts, entries, entry_participants, expenses,
+  expense_splits, playlist, place_ideas, todos
+- exported_at (optional ISO-8601)
+
+## Machine-readable contract
+
+- JSON Schema: https://project-viaggio.web.app/agent/import.schema.json
+- Sample JSON: https://project-viaggio.web.app/agent/sample.json
+- Human spec (repo): docs/journey-snapshot.md
+
+## How users import
+
+1. Sign in at https://project-viaggio.web.app
+2. Archives → Import JSON, or use Journey Settings export/import flows
+3. Select the generated .json file
+
+## Import rules agents must respect
+
+- All ids in the file are opaque local strings for cross-references only;
+  Viaggio remaps them to new UUIDs on import.
+- journey.type: "trip" | "journal"
+- journey.preset: catalog id (e.g. leisure_trip, road_trip)
+- journey.default_timezone: IANA (e.g. Europe/Lisbon)
+- journey.default_currency: ISO 4217 uppercase (e.g. EUR)
+- entries[].activity_id must be a known catalog activity (flight, hotel, meal,
+  sightseeing, ferry, train, …); unknown activities fail import.
+- Signed-in importer becomes the new journey owner.
+
+## Do not include
+
+Auth users, passwords, invite tokens, binary attachments.

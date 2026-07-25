@@ -5,6 +5,7 @@ import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { LoadingState } from '@/molecules/LoadingState'
+import { AirlineAutocomplete } from '@/molecules/AirlineAutocomplete'
 import { ParticipantChips } from '@/molecules/ParticipantChips'
 import { RichNoteEditor } from '@/molecules/RichNoteEditor'
 import { TimezoneAutocomplete } from '@/molecules/TimezoneAutocomplete'
@@ -17,6 +18,10 @@ import {
   isDualZoneSchema,
   resolveSchemaForActivity,
 } from '@/lib/catalog'
+import {
+  normalizeFlightDetails,
+  suggestFlightTitle,
+} from '@/lib/flightIdentity'
 import { parseRichBody, serializeRichBody } from '@/lib/richBody'
 import {
   formatMoney,
@@ -268,6 +273,12 @@ function EntryEditForm({
     })
   }
 
+  const isFlight = activityId === 'flight'
+  const flightHintKeys = new Set(['airline', 'flight_number', 'confirmation'])
+  const genericHints = (activity?.detailHints || []).filter((hint) =>
+    isFlight ? !flightHintKeys.has(hint.key) : true,
+  )
+
   const saveMut = useMutation({
     mutationFn: () => {
       const startTz = dualZone
@@ -276,19 +287,26 @@ function EntryEditForm({
       const endTz = dualZone ? endTimezone || defaultTz : timezone || defaultTz
       const occursAt = wallTimeToUtcIso(occursAtLocal, startTz)
       const endsAt = wallTimeToUtcIso(endsAtLocal, endTz)
+      const savedDetails = isFlight
+        ? normalizeFlightDetails(details)
+        : details
+      let savedTitle = title
+      if (isFlight && !String(savedTitle || '').trim()) {
+        savedTitle = suggestFlightTitle(savedDetails)
+      }
       const payload = {
         id: entryId || null,
         journeyId: journey.id,
         activityId,
         schema: schemaId,
-        title,
+        title: savedTitle,
         body: parseRichBody(body),
         occursOn: occursOn || null,
         occursAt,
         endsAt,
         placeName: placeName || null,
         address: address || null,
-        details,
+        details: savedDetails,
         participantIds: [...selected],
       }
       if (dualZone) {
@@ -550,7 +568,53 @@ function EntryEditForm({
             </div>
           )}
 
-          {(activity?.detailHints || []).map((hint) => (
+          {isFlight && (
+            <>
+              <div className={styles.field}>
+                <Label htmlFor="d-airline">Airline</Label>
+                <AirlineAutocomplete
+                  id="d-airline"
+                  value={details.airline || ''}
+                  disabled={readOnly}
+                  onChange={(iata) =>
+                    setDetails((prev) => ({ ...prev, airline: iata }))
+                  }
+                />
+              </div>
+              <div className={styles.field}>
+                <Label htmlFor="d-flight_number">Flight number</Label>
+                <Input
+                  id="d-flight_number"
+                  value={details.flight_number || ''}
+                  disabled={readOnly}
+                  placeholder="440 or TP440"
+                  onChange={(e) =>
+                    setDetails((prev) => ({
+                      ...prev,
+                      flight_number: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className={styles.field}>
+                <Label htmlFor="d-confirmation">Confirmation #</Label>
+                <Input
+                  id="d-confirmation"
+                  value={details.confirmation || ''}
+                  disabled={readOnly}
+                  placeholder="Optional"
+                  onChange={(e) =>
+                    setDetails((prev) => ({
+                      ...prev,
+                      confirmation: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </>
+          )}
+
+          {genericHints.map((hint) => (
             <div className={styles.field} key={hint.key}>
               <Label htmlFor={`d-${hint.key}`}>{hint.label}</Label>
               <Input

@@ -8,6 +8,7 @@ Portable JSON for moving a journey between Viaggio instances or generating compa
 | **Current version** | `1` |
 | **Sample file** | [`src/samples/journey-snapshot.sample.json`](../src/samples/journey-snapshot.sample.json) |
 | **Builder / importer** | `src/lib/journeySnapshot.js` |
+| **Live agent URLs** | [llms.txt](https://project-viaggio.web.app/agent/llms.txt) · [schema](https://project-viaggio.web.app/agent/import.schema.json) · [sample](https://project-viaggio.web.app/agent/sample.json) |
 
 ## Envelope
 
@@ -79,7 +80,7 @@ Timeline activities. `activity_id` must exist in the Viaggio activity catalog (`
 | `schema` | string | Catalog schema id |
 | `title` | string | |
 | `body` | object | Free-form JSON (default `{}`) |
-| `details` | object | Hint fields (confirmation, from/to, …) |
+| `details` | object | Hint fields (confirmation, from/to, …). For `flight`: `airline` (IATA), `flight_number`, optional `confirmation`, `from`, `to`. Live status refresh stores the edge JSON blob at `details.flight_live` (formatted in the UI; not flat gate/status keys). |
 | `occurs_on` | `YYYY-MM-DD` \| null | Date-only activities |
 | `occurs_at` / `ends_at` | ISO-8601 \| null | Instants (UTC `Z` recommended) |
 | `timezone`, `start_timezone`, `end_timezone` | string \| null | IANA |

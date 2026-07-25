@@ -10,6 +10,7 @@ import {
 import { Button } from '@/molecules/Button'
 import { LoadingState } from '@/molecules/LoadingState'
 import { PageHeader } from '@/patterns/PageHeader'
+import { formatFlightStatusLine } from '@/lib/flightStatus'
 import { formatWallDate, formatWallTime } from '@/lib/format'
 import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
@@ -154,11 +155,17 @@ export function OfflineJourney() {
                 : e.occursOn
                   ? formatWallDate(e.occursOn, tz, displayLocale)
                   : null
+              const flightStatusLine = formatFlightStatusLine(e.details)
               return (
                 <li key={e.id} className={styles.entryRow}>
                   <div className={styles.entryMain}>
                     <strong>{e.title || e.activityId || 'Activity'}</strong>
                     {when && <span className={styles.hint}>{when}</span>}
+                    {flightStatusLine && (
+                      <span className={styles.flightStatus}>
+                        {flightStatusLine}
+                      </span>
+                    )}
                     {e.placeName && (
                       <span className={styles.hint}>{e.placeName}</span>
                     )}

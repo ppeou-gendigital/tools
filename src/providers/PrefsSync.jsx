@@ -1,22 +1,9 @@
-import { useEffect, useRef } from 'react'
-import { useAuth } from '@/providers/AuthProvider'
+import { useCallback } from 'react'
+import { PrefsSync as ToolsPrefsSync } from '@tools/service'
 import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
-import { useFabCorner } from '@/providers/FabCornerProvider'
-import { useFontSize } from '@/providers/FontSizeProvider'
-import { useTheme } from '@/providers/ThemeProvider'
 import { pullSync } from '@/lib/supabaseSync'
 
-// PrefsSync is pull-only. Mutations go through supabaseSync from each
-// provider (optimistic local → CAS push). This component:
-//   1. pullSync prefs on sign-in
-//   2. skips fields the user dirtied while the fetch was in flight
 export function PrefsSync() {
-  const { user, loading: authLoading } = useAuth()
-  const { theme, setTheme, ready: themeReady } = useTheme()
-  const { size: fontSize, setSize: setFontSize, ready: fontReady } =
-    useFontSize()
-  const { corner: fabCorner, setCorner: setFabCorner, ready: fabReady } =
-    useFabCorner()
   const {
     ready: displayReady,
     displayLocale,
@@ -27,116 +14,36 @@ export function PrefsSync() {
     setPrefsConfirmed,
   } = useDisplayPrefs()
 
-  const initialPulledForUserRef = useRef(null)
+  const pullPrefs = useCallback(
+    (userId) => pullSync({ stream: 'prefs', userId }),
+    [],
+  )
 
-  const prefsRef = useRef(null)
-  useEffect(() => {
-    prefsRef.current = {
-      theme,
-      fontSize,
-      fabCorner,
-      displayLocale,
-      defaultCurrency,
-      prefsConfirmed,
-    }
-  }, [
-    theme,
-    fontSize,
-    fabCorner,
-    displayLocale,
-    defaultCurrency,
-    prefsConfirmed,
-  ])
+  const extra = [
+    {
+      key: 'displayLocale',
+      get: () => displayLocale,
+      set: (v, opts) => setDisplayLocale(v, opts),
+      ready: displayReady,
+    },
+    {
+      key: 'defaultCurrency',
+      get: () => defaultCurrency,
+      set: (v, opts) => setDefaultCurrency(v, opts),
+      ready: displayReady,
+    },
+    {
+      key: 'prefsConfirmed',
+      get: () => prefsConfirmed,
+      set: async (v, opts) => {
+        // Remote only confirms (true); never un-confirm from pull.
+        if (v === true) await setPrefsConfirmed(true, opts)
+      },
+      ready: displayReady,
+    },
+  ]
 
-  const userId = user?.id ?? null
-  const providersReady = themeReady && fontReady && fabReady && displayReady
-
-  useEffect(() => {
-    if (!userId) {
-      initialPulledForUserRef.current = null
-    }
-  }, [userId])
-
-  useEffect(() => {
-    if (authLoading || !userId || !providersReady) return
-    if (initialPulledForUserRef.current === userId) return
-    initialPulledForUserRef.current = userId
-
-    const snapshot = { ...prefsRef.current }
-    let cancelled = false
-    ;(async () => {
-      try {
-        const remote = await pullSync({ stream: 'prefs', userId })
-        if (cancelled) return
-        if (!remote) return
-
-        const dirtyKeys = new Set()
-        const live = prefsRef.current
-        if (live.theme !== snapshot.theme) dirtyKeys.add('theme')
-        if (live.fontSize !== snapshot.fontSize) dirtyKeys.add('fontSize')
-        if (live.fabCorner !== snapshot.fabCorner) dirtyKeys.add('fabCorner')
-        if (live.displayLocale !== snapshot.displayLocale) {
-          dirtyKeys.add('displayLocale')
-        }
-        if (live.defaultCurrency !== snapshot.defaultCurrency) {
-          dirtyKeys.add('defaultCurrency')
-        }
-        if (live.prefsConfirmed !== snapshot.prefsConfirmed) {
-          dirtyKeys.add('prefsConfirmed')
-        }
-
-        if (!dirtyKeys.has('theme') && remote.data.theme !== live.theme) {
-          await setTheme(remote.data.theme, { fromRemote: true })
-        }
-        if (
-          !dirtyKeys.has('fontSize') &&
-          remote.data.fontSize !== live.fontSize
-        ) {
-          setFontSize(remote.data.fontSize, { fromRemote: true })
-        }
-        if (
-          !dirtyKeys.has('fabCorner') &&
-          remote.data.fabCorner !== live.fabCorner
-        ) {
-          await setFabCorner(remote.data.fabCorner, { fromRemote: true })
-        }
-        if (
-          !dirtyKeys.has('displayLocale') &&
-          remote.data.displayLocale != null &&
-          remote.data.displayLocale !== live.displayLocale
-        ) {
-          await setDisplayLocale(remote.data.displayLocale, {
-            fromRemote: true,
-          })
-        }
-        if (
-          !dirtyKeys.has('defaultCurrency') &&
-          remote.data.defaultCurrency != null &&
-          remote.data.defaultCurrency !== live.defaultCurrency
-        ) {
-          await setDefaultCurrency(remote.data.defaultCurrency, {
-            fromRemote: true,
-          })
-        }
-        if (
-          !dirtyKeys.has('prefsConfirmed') &&
-          remote.data.prefsConfirmed === true &&
-          !live.prefsConfirmed
-        ) {
-          await setPrefsConfirmed(true, { fromRemote: true })
-        }
-      } catch (err) {
-        if (cancelled) return
-        initialPulledForUserRef.current = null
-        console.warn('[viaggio] prefs auto-pull failed:', err?.message ?? err)
-      }
-    })()
-
-    return () => {
-      cancelled = true
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, userId, providersReady])
-
-  return null
+  return (
+    <ToolsPrefsSync appId="viaggio" pullPrefs={pullPrefs} extra={extra} />
+  )
 }

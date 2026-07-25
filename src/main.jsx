@@ -1,7 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
-import './tokens/main.scss'
+import '@tools/ui/css'
+import '@tools/behavioral/css'
+import './brand.scss'
 
 // Web/PWA only — MODE is statically replaced per Vite build, so the
 // extension bundle never pulls in virtual:pwa-register.
@@ -39,6 +41,7 @@ if (import.meta.env.DEV) {
       seedTodoDemo: mod.seedTodoDemo,
       DEMO_TODO_ITEMS: mod.DEMO_TODO_ITEMS,
       seedEastAsiaTodos: mod.seedEastAsiaTodos,
+      patchEastAsiaFlightNumbers: mod.patchEastAsiaFlightNumbers,
     }
     void import('./lib/viaggioApi.js').then((api) => {
       globalThis.__viaggioSeed.acceptInvite = api.acceptInvite

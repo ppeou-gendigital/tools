@@ -4,9 +4,9 @@ name: Deploy viaggio to GitHub Pages
 # from tool/viaggio does not wipe other /tools/<name>/ paths.
 # Live URL: https://ppeou-gendigital.github.io/tools/viaggio/
 
+# Primary web hosting is Firebase (see deploy-viaggio-firebase.yml).
+# Keep this workflow for emergency Pages redeploys only.
 on:
-  push:
-    branches: [tool/viaggio]
   workflow_dispatch:
 
 permissions:

@@ -40,3 +40,46 @@ supabase secrets set INVITE_REDIRECT_URL=http://localhost:5173
 `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are provided automatically to Edge Functions.
 
 Client calls `sendInviteEmail({ inviteId, journeyId })` after `createInvite(...)`. Mailto / SMS / copy-link remain available as fallbacks.
+
+## Edge Function: flight status
+
+Live delay / gate / terminal for flight timeline entries. API keys stay server-side.
+
+**Providers (in order):**
+1. **[AeroDataBox](https://aerodatabox.com/)** via RapidAPI — primary (flight number + date)
+2. **[Aviationstack](https://aviationstack.com/)** — optional fallback (real-time only on free)
+
+```bash
+# From repo root (requires Supabase CLI + linked project)
+supabase functions deploy flight-status
+
+# Primary (RapidAPI → AeroDataBox subscription key)
+supabase secrets set AERODATABOX_API_KEY=your_rapidapi_key
+
+# Optional fallback
+supabase secrets set AVIATIONSTACK_API_KEY=your_aviationstack_key
+```
+
+Or set both in Dashboard → **Edge Functions → Secrets**.
+
+`SUPABASE_URL` and `SUPABASE_ANON_KEY` are provided automatically.
+
+Client: `src/lib/flightStatus.js` → `supabase.functions.invoke('flight-status', { body: { airline, flightNumber, date } })`.
+
+**App UX:** Journey does **not** auto-poll. Editors tap the plane icon on a flight row to fetch live status, see it in a popup, store the edge JSON on `details.flight_live`, and optionally update `occurs_at` / `ends_at` when times are valid. The UI formats that blob on the fly.
+
+**Test (Dashboard sample style — publishable key is fine):**
+
+```bash
+curl -L -X POST 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/flight-status' \
+  -H "Authorization: Bearer YOUR_PUBLISHABLE_OR_ANON_KEY" \
+  -H "apikey: YOUR_PUBLISHABLE_OR_ANON_KEY" \
+  -H 'Content-Type: application/json' \
+  --data '{"airline":"TP","flightNumber":"440","date":"2026-07-24"}'
+```
+
+Successful responses include `"provider": "aerodatabox"` or `"aviationstack"`.
+
+**Quotas:** AeroDataBox free BASIC is ~600 units/mo (flight status is Tier 2 ≈ 2 units/call). Aviationstack free is ~100 req/mo and cannot filter by date. Prefer AeroDataBox for itinerary dates. The client caches ~12 minutes between forced refreshes.
+
+Flight entries need `details.airline` (IATA) + `details.flight_number` (+ `occurs_at` for the date). Confirmation / PNR is stored for the traveler but is not used for status lookup.

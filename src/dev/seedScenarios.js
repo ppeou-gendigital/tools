@@ -15,6 +15,7 @@ import {
   listJourneys,
   listJourneyPeople,
   listMembers,
+  listParticipantsForEntry,
   listPlaylist,
   listTodos,
   updateJourney,
@@ -78,6 +79,10 @@ async function addFlight(journeyId, opts) {
       from: opts.from,
       to: opts.to,
       airline: opts.airline || '',
+      ...(opts.flightNumber
+        ? { flight_number: String(opts.flightNumber) }
+        : {}),
+      ...(opts.confirmation ? { confirmation: opts.confirmation } : {}),
     },
     body: {},
   })
@@ -2496,7 +2501,8 @@ export async function asBenjaminEastAsia(journeyId) {
         arriveTz: 'Asia/Seoul',
         from: 'Tokyo NRT',
         to: 'Seoul ICN',
-        airline: 'Korean Air',
+        airline: 'KE',
+        flightNumber: '704',
       }),
     'NRT → ICN (crew)',
   )
@@ -2666,7 +2672,8 @@ export async function asCharlieEastAsia(journeyId) {
         arriveTz: 'Asia/Taipei',
         from: 'Seoul ICN',
         to: 'Taipei TPE',
-        airline: 'EVA Air',
+        airline: 'BR',
+        flightNumber: '159',
       }),
     'ICN → TPE (crew)',
   )
@@ -2722,7 +2729,8 @@ export async function asCharlieEastAsia(journeyId) {
         arriveTz: 'America/Los_Angeles',
         from: 'Taipei TPE',
         to: 'Los Angeles LAX',
-        airline: 'EVA Air',
+        airline: 'BR',
+        flightNumber: '12',
       }),
     'TPE → LAX (Piseth home)',
   )
@@ -2736,7 +2744,8 @@ export async function asCharlieEastAsia(journeyId) {
         arriveTz: 'Europe/Paris',
         from: 'Taipei TPE',
         to: 'Paris CDG',
-        airline: 'China Airlines',
+        airline: 'CI',
+        flightNumber: '25',
       }),
     'TPE → CDG (Benjamin home)',
   )
@@ -2750,7 +2759,8 @@ export async function asCharlieEastAsia(journeyId) {
         arriveTz: 'Australia/Sydney',
         from: 'Taipei TPE',
         to: 'Sydney SYD',
-        airline: 'Qantas',
+        airline: 'QF',
+        flightNumber: '128',
       }),
     'TPE → SYD (Charlie home)',
   )
@@ -2816,6 +2826,208 @@ export async function asCharlieEastAsia(journeyId) {
   }
   console.info('[viaggio] asCharlieEastAsia', summary)
   return summary
+}
+
+/**
+ * Patch East Asia flights with IATA + flight numbers so live status refresh
+ * can be tested. Updates existing rows (idempotent). Also ensures inbound
+ * NRT arrivals + a near-term TP440 demo flight exist.
+ *
+ * Usage (signed in as owner/editor): ?devRun=patchEastAsiaFlightNumbers
+ *   or await __viaggioSeed.patchEastAsiaFlightNumbers()
+ */
+export async function patchEastAsiaFlightNumbers(journeyId) {
+  const {
+    data: { user },
+    error: authErr,
+  } = await supabase.auth.getUser()
+  if (authErr) throw authErr
+  if (!user) throw new Error('Sign in first')
+
+  const journey = await resolveEastAsiaJourney(journeyId)
+  const jid = journey.id
+  const { people, map: personOf } = await rosterByUserId(jid)
+  const me = personOf.get(user.id)
+  const byEmail = (email) =>
+    people.find((p) => String(p.email || '').toLowerCase() === email)
+  const owner = byEmail('ppeou@msn.com')
+  const benjamin = byEmail('delivered+user1@resend.dev')
+  const charlie = byEmail('delivered+user2@resend.dev')
+
+  /** @type {{ match: RegExp | string, airline: string, flightNumber: string, from?: string, to?: string }[]} */
+  const patches = [
+    {
+      match: /CDG\s*→\s*NRT/i,
+      airline: 'AF',
+      flightNumber: '276',
+      from: 'Paris CDG',
+      to: 'Tokyo NRT',
+    },
+    {
+      match: /LAX\s*→\s*NRT/i,
+      airline: 'NH',
+      flightNumber: '6',
+      from: 'Los Angeles LAX',
+      to: 'Tokyo NRT',
+    },
+    {
+      match: /SYD\s*→\s*NRT/i,
+      airline: 'JL',
+      flightNumber: '52',
+      from: 'Sydney SYD',
+      to: 'Tokyo NRT',
+    },
+    { match: 'NRT → ICN (crew)', airline: 'KE', flightNumber: '704' },
+    { match: 'ICN → TPE (crew)', airline: 'BR', flightNumber: '159' },
+    { match: 'TPE → LAX (Piseth home)', airline: 'BR', flightNumber: '12' },
+    { match: 'TPE → CDG (Benjamin home)', airline: 'CI', flightNumber: '25' },
+    { match: 'TPE → SYD (Charlie home)', airline: 'QF', flightNumber: '128' },
+    {
+      match: 'Status demo — TP440 (LIS)',
+      airline: 'TP',
+      flightNumber: '440',
+    },
+  ]
+
+  let entries = await listEntries(jid)
+
+  const inbound = [
+    {
+      title: 'CDG → NRT (Benjamin)',
+      departWall: '2026-09-04T13:20',
+      departTz: 'Europe/Paris',
+      arriveWall: '2026-09-05T09:45',
+      arriveTz: 'Asia/Tokyo',
+      from: 'Paris CDG',
+      to: 'Tokyo NRT',
+      airline: 'AF',
+      flightNumber: '276',
+      participantIds: [benjamin?.id].filter(Boolean),
+    },
+    {
+      title: 'LAX → NRT (Piseth)',
+      departWall: '2026-09-05T11:30',
+      departTz: 'America/Los_Angeles',
+      arriveWall: '2026-09-06T15:10',
+      arriveTz: 'Asia/Tokyo',
+      from: 'Los Angeles LAX',
+      to: 'Tokyo NRT',
+      airline: 'NH',
+      flightNumber: '6',
+      participantIds: [owner?.id || me].filter(Boolean),
+    },
+    {
+      title: 'SYD → NRT (Charlie)',
+      departWall: '2026-09-05T09:00',
+      departTz: 'Australia/Sydney',
+      arriveWall: '2026-09-05T18:30',
+      arriveTz: 'Asia/Tokyo',
+      from: 'Sydney SYD',
+      to: 'Tokyo NRT',
+      airline: 'JL',
+      flightNumber: '52',
+      participantIds: [charlie?.id].filter(Boolean),
+    },
+  ]
+
+  for (const flight of inbound) {
+    if (entries.some((e) => e.title === flight.title)) continue
+    const row = await addFlight(jid, flight)
+    if (flight.participantIds?.length) {
+      await upsertEntry({
+        id: row.id,
+        journeyId: jid,
+        activityId: 'flight',
+        schema: 'transit',
+        title: flight.title,
+        occursAt: row.occursAt,
+        endsAt: row.endsAt,
+        startTimezone: row.startTimezone,
+        endTimezone: row.endTimezone,
+        timezone: row.timezone,
+        details: row.details,
+        body: row.body ?? {},
+        participantIds: flight.participantIds,
+      })
+    }
+    entries = await listEntries(jid)
+  }
+
+  const demoTitle = 'Status demo — TP440 (LIS)'
+  if (!entries.some((e) => e.title === demoTitle)) {
+    await addFlight(jid, {
+      title: demoTitle,
+      departWall: '2026-07-24T18:10',
+      departTz: 'UTC',
+      arriveWall: '2026-07-24T21:35',
+      arriveTz: 'UTC',
+      from: 'LIS',
+      to: 'OPO',
+      airline: 'TP',
+      flightNumber: '440',
+      confirmation: 'DEMO-TP440',
+    })
+    entries = await listEntries(jid)
+  }
+
+  const updated = []
+  for (const entry of entries) {
+    if (entry.activityId !== 'flight') continue
+    const patch = patches.find((p) =>
+      typeof p.match === 'string'
+        ? entry.title === p.match
+        : p.match.test(entry.title),
+    )
+    if (!patch) continue
+    const already =
+      normalizeAirlineSeed(entry.details?.airline) === patch.airline &&
+      String(entry.details?.flight_number || '') === patch.flightNumber
+    if (already && !patch.from) continue
+
+    const participantIds = await listParticipantsForEntry(entry.id)
+    const details = {
+      ...(entry.details || {}),
+      airline: patch.airline,
+      flight_number: patch.flightNumber,
+    }
+    if (patch.from) details.from = patch.from
+    if (patch.to) details.to = patch.to
+
+    await upsertEntry({
+      id: entry.id,
+      journeyId: jid,
+      activityId: entry.activityId,
+      schema: entry.schema,
+      title: entry.title,
+      body: entry.body ?? {},
+      occursOn: entry.occursOn,
+      occursAt: entry.occursAt,
+      endsAt: entry.endsAt,
+      timezone: entry.timezone,
+      startTimezone: entry.startTimezone,
+      endTimezone: entry.endTimezone,
+      placeName: entry.placeName,
+      address: entry.address,
+      lat: entry.lat,
+      lng: entry.lng,
+      phoneE164: entry.phoneE164,
+      contactId: entry.contactId,
+      details,
+      participantIds,
+    })
+    updated.push(`${entry.title} → ${patch.airline}${patch.flightNumber}`)
+  }
+
+  const summary = { journeyId: jid, updated }
+  console.info('[viaggio] patchEastAsiaFlightNumbers', summary)
+  return summary
+}
+
+function normalizeAirlineSeed(raw) {
+  return String(raw || '')
+    .trim()
+    .toUpperCase()
+    .split(/[·•|\s]/)[0] || ''
 }
 
 const EUROPE_CRUISE_TITLE =

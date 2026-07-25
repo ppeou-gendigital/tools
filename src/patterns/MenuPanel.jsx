@@ -1,25 +1,25 @@
-import { useEffect, useRef } from 'react'
 import {
   Archive,
+  CircleDollarSign,
   ListChecks,
   ListMusic,
   MapPin,
+  PlaneTakeoff,
   UserRound,
   Users,
-  CircleDollarSign,
 } from 'lucide-react'
-import { useAuth } from '@/providers/AuthProvider'
+import { Divider, MenuRow } from '@tools/ui'
+import {
+  AppearanceRow,
+  DevBadgeItem,
+  MenuPanel as ToolsMenuPanel,
+  MenuSectionLabel,
+} from '@tools/behavioral'
+import { useAuth } from '@tools/service'
+import { APP_VERSION, devAutoLoginConfig } from '@/env'
 import { useNavigation } from '@/providers/NavigationProvider'
-import { APP_VERSION } from '@/env'
-import { Divider } from '@/molecules/Divider'
-import { Logo } from '@/molecules/Logo'
-import { MenuRow } from '@/molecules/MenuRow'
-import { AboutRow } from '@/patterns/AboutRow'
 import { AccountRow } from '@/patterns/AccountRow'
-import { AppearanceRow } from '@/patterns/AppearanceRow'
 import { AppNavItems } from '@/patterns/AppNavItems'
-import { DevBadgeItem } from '@/patterns/DevBadgeItem'
-import styles from './MenuPanel.module.scss'
 
 const TOOL_NAME = 'Viaggio'
 
@@ -38,62 +38,26 @@ const JOURNEY_ROUTES = new Set([
 export function MenuPanel({ corner, onClose }) {
   const { user } = useAuth()
   const nav = useNavigation()
-  const panelRef = useRef(null)
   const signedIn = !!user
   const journeyId = nav.params?.journeyId
   const inJourney = signedIn && journeyId && JOURNEY_ROUTES.has(nav.route)
-
-  useEffect(() => {
-    const panel = panelRef.current
-    if (!panel) return
-    const focusables = panel.querySelectorAll(
-      'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
-    )
-    const first = focusables[0]
-    if (first instanceof HTMLElement) first.focus()
-
-    const onKey = (e) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation()
-        onClose?.()
-        return
-      }
-      if (e.key !== 'Tab' || focusables.length === 0) return
-      const list = [...focusables]
-      const firstEl = list[0]
-      const lastEl = list[list.length - 1]
-      if (e.shiftKey && document.activeElement === firstEl) {
-        e.preventDefault()
-        lastEl.focus()
-      } else if (!e.shiftKey && document.activeElement === lastEl) {
-        e.preventDefault()
-        firstEl.focus()
-      }
-    }
-    document.addEventListener('keydown', onKey, true)
-    return () => document.removeEventListener('keydown', onKey, true)
-  }, [onClose])
+  const dev = devAutoLoginConfig()
 
   return (
-    <div
-      ref={panelRef}
-      role="dialog"
-      aria-label={`${TOOL_NAME} menu`}
-      className={styles.panel}
-      data-corner={corner}
+    <ToolsMenuPanel
+      corner={corner}
+      onClose={onClose}
+      brandConfig={{ name: TOOL_NAME, icon: PlaneTakeoff, logoAlt: TOOL_NAME }}
+      version={APP_VERSION}
+      footer={<DevBadgeItem email={dev?.email} />}
     >
-      <div className={styles.brand}>
-        <Logo size={28} alt={TOOL_NAME} />
-        <span className={styles.brandName}>{TOOL_NAME}</span>
-      </div>
-      <Divider />
       <AppearanceRow onClose={onClose} />
       {signedIn && <Divider />}
       {signedIn && <AccountRow onClose={onClose} />}
       {inJourney && (
         <>
           <Divider />
-          <p className={styles.sectionLabel}>This journey</p>
+          <MenuSectionLabel>This journey</MenuSectionLabel>
           <MenuRow
             icon={Users}
             label="Travelers"
@@ -129,7 +93,7 @@ export function MenuPanel({ corner, onClose }) {
       {signedIn && (
         <>
           <Divider />
-          <p className={styles.sectionLabel}>App</p>
+          <MenuSectionLabel>App</MenuSectionLabel>
           <AppNavItems onClose={onClose} />
           <MenuRow
             icon={UserRound}
@@ -145,8 +109,6 @@ export function MenuPanel({ corner, onClose }) {
           />
         </>
       )}
-      <DevBadgeItem />
-      <AboutRow name={TOOL_NAME} version={APP_VERSION} />
-    </div>
+    </ToolsMenuPanel>
   )
 }

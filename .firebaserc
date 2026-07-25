@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "project-viaggio"
+  },
+  "targets": {
+    "project-viaggio": {
+      "hosting": {
+        "viaggio": ["project-viaggio"]
+      }
+    }
+  }
+}

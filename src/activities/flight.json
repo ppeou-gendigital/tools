@@ -9,6 +9,10 @@
       "label": "Airline"
     },
     {
+      "key": "flight_number",
+      "label": "Flight number"
+    },
+    {
       "key": "confirmation",
       "label": "Confirmation #"
     },

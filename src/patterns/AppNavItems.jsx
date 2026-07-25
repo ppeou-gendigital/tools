@@ -1,5 +1,5 @@
 import { House, Settings } from 'lucide-react'
-import { MenuRow } from '@/molecules/MenuRow'
+import { AppNavItems as ToolsAppNavItems } from '@tools/behavioral'
 import { useNavigation } from '@/providers/NavigationProvider'
 
 /**
@@ -13,17 +13,21 @@ export const APP_NAV = [
 
 export function AppNavItems({ onClose }) {
   const nav = useNavigation()
-  return (
-    <>
-      {APP_NAV.map(({ id, label, icon, go }) => (
-        <MenuRow
-          key={id}
-          icon={icon}
-          label={label}
-          onClose={onClose}
-          onClick={nav[go]}
-        />
-      ))}
-    </>
-  )
+  const items = APP_NAV.map(({ id, label, icon, go }) => ({
+    id,
+    label,
+    icon,
+    onClick: nav[go],
+  }))
+  return <ToolsAppNavItems items={items} onClose={onClose} />
+}
+
+export function useAppShortcutItems() {
+  const nav = useNavigation()
+  return APP_NAV.map(({ id, label, icon, go }) => ({
+    id,
+    label,
+    icon,
+    onClick: nav[go],
+  }))
 }

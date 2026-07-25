@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-viaggio.web.app/agent/import.schema.json",
+  "title": "Viaggio journey snapshot v1",
+  "description": "Portable JSON imported via Archives → Import JSON. See https://project-viaggio.web.app/agent/llms.txt",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["format", "version", "journey", "people"],
+  "properties": {
+    "format": {
+      "const": "viaggio.journey_snapshot"
+    },
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "exported_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "journey": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "title",
+        "type",
+        "preset",
+        "default_timezone",
+        "default_currency"
+      ],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["trip", "journal"] },
+        "preset": { "type": "string", "minLength": 1 },
+        "activity_packs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "default_timezone": { "type": "string", "minLength": 1 },
+        "default_currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "starts_on": {
+          "type": ["string", "null"],
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "ends_on": {
+          "type": ["string", "null"],
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      }
+    },
+    "people": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "display_name"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "display_name": { "type": "string", "minLength": 1 },
+          "email": { "type": ["string", "null"] },
+          "phone_e164": { "type": ["string", "null"] },
+          "member_role": {
+            "type": ["string", "null"],
+            "enum": ["owner", "editor", "viewer", null]
+          }
+        }
+      }
+    },
+    "contacts": { "type": "array", "items": { "type": "object" } },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "activity_id"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "activity_id": { "type": "string", "minLength": 1 },
+          "schema": { "type": "string" },
+          "title": { "type": "string" },
+          "body": { "type": "object" },
+          "details": { "type": "object" },
+          "occurs_on": { "type": ["string", "null"] },
+          "occurs_at": { "type": ["string", "null"] },
+          "ends_at": { "type": ["string", "null"] },
+          "timezone": { "type": ["string", "null"] },
+          "place_name": { "type": ["string", "null"] },
+          "contact_id": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "entry_participants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["entry_id", "person_id"],
+        "properties": {
+          "entry_id": { "type": "string" },
+          "person_id": { "type": "string" }
+        }
+      }
+    },
+    "expenses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "entry_id", "amount_cents", "currency"],
+        "properties": {
+          "id": { "type": "string" },
+          "entry_id": { "type": "string" },
+          "title": { "type": "string" },
+          "amount_cents": { "type": "integer", "minimum": 0 },
+          "currency": { "type": "string" },
+          "paid_by_person_id": { "type": "string" },
+          "split_mode": { "enum": ["equal", "custom"] },
+          "category": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "expense_splits": { "type": "array", "items": { "type": "object" } },
+    "playlist": { "type": "array", "items": { "type": "object" } },
+    "place_ideas": { "type": "array", "items": { "type": "object" } },
+    "todos": { "type": "array", "items": { "type": "object" } }
+  }
+}

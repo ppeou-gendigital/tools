@@ -20,8 +20,10 @@
         "to",
         "confirmation",
         "airline",
+        "flight_number",
         "provider",
-        "vessel"
+        "vessel",
+        "flight_live"
       ]
     },
     {
