@@ -1,27 +1,59 @@
 /**
- * Minimal wall-clock hint for AI planning prompts.
- * Civil “today” in the device timezone — the model resolves relative phrases.
+ * Wall-clock hint for AI planning prompts.
+ * Prefer journey.default_timezone when provided; else device TZ.
  */
 
-/** Wall-clock “today” for the device timezone. */
-export function planningClockContext(displayLocale) {
-  const timeZone =
-    Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+/** @param {string | null | undefined} displayLocale */
+/** @param {string | null | undefined} [timeZone] IANA zone override */
+export function planningClockContext(displayLocale, timeZone = null) {
+  let zone = String(timeZone || '').trim()
+  if (!zone) {
+    try {
+      zone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+    } catch {
+      zone = 'UTC'
+    }
+  }
   const now = new Date()
-  const today = new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(now)
-  const weekday = new Intl.DateTimeFormat(displayLocale || 'en-US', {
-    timeZone,
-    weekday: 'long',
-  }).format(now)
+  let today
+  let weekday
+  try {
+    today = new Intl.DateTimeFormat('en-CA', {
+      timeZone: zone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(now)
+    weekday = new Intl.DateTimeFormat(displayLocale || 'en-US', {
+      timeZone: zone,
+      weekday: 'long',
+    }).format(now)
+  } catch {
+    zone = 'UTC'
+    today = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'UTC',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(now)
+    weekday = new Intl.DateTimeFormat(displayLocale || 'en-US', {
+      timeZone: 'UTC',
+      weekday: 'long',
+    }).format(now)
+  }
+
+  let deviceTimeZone = 'UTC'
+  try {
+    deviceTimeZone =
+      Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  } catch {
+    deviceTimeZone = 'UTC'
+  }
 
   return {
     today,
     weekday,
-    timeZone,
+    timeZone: zone,
+    device_timeZone: deviceTimeZone,
   }
 }

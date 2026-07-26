@@ -8,6 +8,7 @@ import {
   validateJourneySnapshot,
 } from '@/lib/journeySnapshot'
 import { parseMediaLink } from '@/lib/mediaEmbed'
+import { wallTimeToUtcIso } from '@/lib/timezone'
 
 const ACTIVITY_SET = new Set(knownActivityIds())
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
@@ -231,6 +232,66 @@ export function prepareSnapshotEntries(raw) {
   }
 }
 
+/** Normalize "YYYY-MM-DDTHH:mm[:ss]" to datetime-local for wallTimeToUtcIso. */
+function asWallLocal(value) {
+  const s = asString(value).trim()
+  if (!s) return null
+  const m = s.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}):(\d{2})/)
+  if (!m) return null
+  return `${m[1]}T${m[2]}:${m[3]}`
+}
+
+function participantIdsFrom(raw) {
+  const list =
+    raw?.participant_ids ??
+    raw?.participantIds ??
+    raw?.participants ??
+    null
+  if (!Array.isArray(list)) return undefined
+  return [...new Set(list.map((id) => asString(id).trim()).filter(Boolean))]
+}
+
+/** If model sent a zoneless datetime, treat as wall local in tz (not UTC). */
+function naiveInstantAsLocal(value, tz) {
+  const s = asString(value).trim()
+  if (!s) return null
+  if (s.endsWith('Z') || /[+-]\d{2}:?\d{2}$/i.test(s)) return null
+  const local = asWallLocal(s)
+  if (!local) return null
+  return wallTimeToUtcIso(local, tz || 'UTC')
+}
+
+function resolveInstantsFromLocals(raw, { timezone, startTimezone, endTimezone }) {
+  const occursLocal = asWallLocal(
+    raw?.occurs_at_local ?? raw?.occursAtLocal,
+  )
+  const endsLocal = asWallLocal(raw?.ends_at_local ?? raw?.endsAtLocal)
+  let occursAt = null
+  let endsAt = null
+  if (occursLocal) {
+    occursAt = wallTimeToUtcIso(occursLocal, startTimezone || timezone)
+  }
+  if (endsLocal) {
+    endsAt = wallTimeToUtcIso(endsLocal, endTimezone || timezone)
+  }
+  // Prefer locals when present; zoneless ISO → wall local; else real UTC ISO.
+  if (!occursAt) {
+    occursAt =
+      naiveInstantAsLocal(
+        raw?.occurs_at ?? raw?.occursAt,
+        startTimezone || timezone,
+      ) || asIsoInstant(raw?.occurs_at ?? raw?.occursAt).instant
+  }
+  if (!endsAt) {
+    endsAt =
+      naiveInstantAsLocal(
+        raw?.ends_at ?? raw?.endsAt,
+        endTimezone || timezone,
+      ) || asIsoInstant(raw?.ends_at ?? raw?.endsAt).instant
+  }
+  return { occursAt, endsAt, occursLocal, endsLocal }
+}
+
 export function normalizeEntry(raw, index = 0, { defaultTimezone = 'UTC' } = {}) {
   const activityId =
     coerceActivityId(raw?.activity_id || raw?.activityId) ||
@@ -240,8 +301,6 @@ export function normalizeEntry(raw, index = 0, { defaultTimezone = 'UTC' } = {})
   const id = asString(raw?.id).trim() || `entry-${index + 1}`
 
   const occursOn = asIsoDate(raw?.occurs_on ?? raw?.occursOn)
-  const occursAt = asIsoInstant(raw?.occurs_at ?? raw?.occursAt)
-  const endsAt = asIsoInstant(raw?.ends_at ?? raw?.endsAt)
   const tz = asIanaTimezone(raw?.timezone, defaultTimezone)
   const startTz = asIanaTimezone(
     raw?.start_timezone ?? raw?.startTimezone,
@@ -251,6 +310,20 @@ export function normalizeEntry(raw, index = 0, { defaultTimezone = 'UTC' } = {})
     raw?.end_timezone ?? raw?.endTimezone,
     tz.timezone,
   )
+  const { occursAt, endsAt } = resolveInstantsFromLocals(raw, {
+    timezone: tz.timezone,
+    startTimezone: startTz.timezone,
+    endTimezone: endTz.timezone,
+  })
+
+  // If locals implied a calendar day and occurs_on missing, derive it.
+  let occursOnDate = occursOn.date
+  if (!occursOnDate) {
+    const local = asWallLocal(raw?.occurs_at_local ?? raw?.occursAtLocal)
+    if (local) occursOnDate = local.slice(0, 10)
+  }
+
+  const participantIds = participantIdsFrom(raw)
 
   let entry = {
     id,
@@ -258,9 +331,9 @@ export function normalizeEntry(raw, index = 0, { defaultTimezone = 'UTC' } = {})
     schema,
     title: asString(raw?.title).trim() || activityId,
     body: {},
-    occurs_on: occursOn.date,
-    occurs_at: occursAt.instant,
-    ends_at: endsAt.instant,
+    occurs_on: occursOnDate,
+    occurs_at: occursAt,
+    ends_at: endsAt,
     timezone: tz.timezone,
     start_timezone: startTz.timezone,
     end_timezone: endTz.timezone,
@@ -272,11 +345,100 @@ export function normalizeEntry(raw, index = 0, { defaultTimezone = 'UTC' } = {})
     contact_id: null,
     details: parseDetails(raw?.details),
   }
+  if (participantIds !== undefined) {
+    entry.participant_ids = participantIds
+  }
 
   entry = mergeRecoveredIntoEntry(entry, tz.recovered)
   entry = mergeRecoveredIntoEntry(entry, occursOn.recovered)
-  entry = mergeRecoveredIntoEntry(entry, occursAt.recovered)
   return entry
+}
+
+/**
+ * Partial entry update: only fields present on the raw object.
+ * Always includes id when valid; activity_id optional if omitted.
+ */
+export function normalizeEntryPatch(raw, { defaultTimezone = 'UTC' } = {}) {
+  if (!raw || typeof raw !== 'object') return null
+  const id = asString(raw.id).trim()
+  if (!id) return null
+
+  const patch = { id }
+
+  if (raw.activity_id != null || raw.activityId != null) {
+    const activityId =
+      coerceActivityId(raw.activity_id || raw.activityId) ||
+      asString(raw.activity_id || raw.activityId).trim()
+    if (!ACTIVITY_SET.has(activityId)) return null
+    patch.activity_id = activityId
+    patch.schema = schemaForActivity(activityId)
+  }
+  if (raw.title != null) patch.title = asString(raw.title).trim()
+  if (raw.occurs_on != null || raw.occursOn != null) {
+    patch.occurs_on = asIsoDate(raw.occurs_on ?? raw.occursOn).date
+  }
+  if (raw.timezone != null) {
+    patch.timezone = asIanaTimezone(raw.timezone, defaultTimezone).timezone
+  }
+  if (raw.start_timezone != null || raw.startTimezone != null) {
+    patch.start_timezone = asIanaTimezone(
+      raw.start_timezone ?? raw.startTimezone,
+      patch.timezone || defaultTimezone,
+    ).timezone
+  }
+  if (raw.end_timezone != null || raw.endTimezone != null) {
+    patch.end_timezone = asIanaTimezone(
+      raw.end_timezone ?? raw.endTimezone,
+      patch.timezone || defaultTimezone,
+    ).timezone
+  }
+
+  const wantsLocal =
+    raw.occurs_at_local != null ||
+    raw.occursAtLocal != null ||
+    raw.ends_at_local != null ||
+    raw.endsAtLocal != null
+  const wantsUtc = raw.occurs_at != null || raw.occursAt != null || raw.ends_at != null || raw.endsAt != null
+
+  if (wantsLocal || wantsUtc) {
+    const tz = patch.timezone || defaultTimezone
+    const startTz = patch.start_timezone || tz
+    const endTz = patch.end_timezone || tz
+    const { occursAt, endsAt } = resolveInstantsFromLocals(raw, {
+      timezone: tz,
+      startTimezone: startTz,
+      endTimezone: endTz,
+    })
+    if (wantsLocal || raw.occurs_at != null || raw.occursAt != null) {
+      if (occursAt != null || wantsLocal) patch.occurs_at = occursAt
+    }
+    if (wantsLocal || raw.ends_at != null || raw.endsAt != null) {
+      if (endsAt != null || raw.ends_at_local != null || raw.endsAtLocal != null) {
+        patch.ends_at = endsAt
+      }
+    }
+    if (!patch.occurs_on) {
+      const local = asWallLocal(raw?.occurs_at_local ?? raw?.occursAtLocal)
+      if (local) patch.occurs_on = local.slice(0, 10)
+    }
+  }
+
+  if (raw.place_name != null || raw.placeName != null) {
+    patch.place_name = asNullableString(raw.place_name ?? raw.placeName)
+  }
+  if (raw.address != null) patch.address = asNullableString(raw.address)
+  if (raw.lat != null) patch.lat = asNumberOrNull(raw.lat)
+  if (raw.lng != null) patch.lng = asNumberOrNull(raw.lng)
+  if (raw.details != null) patch.details = parseDetails(raw.details)
+  if (raw.body != null) patch.body = raw.body
+
+  const participantIds = participantIdsFrom(raw)
+  if (participantIds !== undefined) {
+    patch.participant_ids = participantIds
+    patch._participantsProvided = true
+  }
+
+  return patch
 }
 
 export function normalizePlaceIdea(raw) {
@@ -703,23 +865,35 @@ function emptyActionFields() {
   }
 }
 
-export function normalizeChatTurn(raw) {
+export function normalizeChatTurn(raw, { defaultTimezone = 'UTC' } = {}) {
   const actionsIn = Array.isArray(raw?.actions) ? raw.actions : []
+  const warnings = []
+  let dropped = 0
+  const normOpts = { defaultTimezone }
+
   const actions = actionsIn
     .map((a, i) => {
       const type = asString(a?.type).trim()
-      if (!CHAT_ACTION_TYPES.has(type)) return null
+      if (!CHAT_ACTION_TYPES.has(type)) {
+        dropped += 1
+        return null
+      }
       const label = asString(a?.label).trim() || type.replace(/_/g, ' ')
       const base = {
         id: `action-${i + 1}`,
         type,
         label,
         ...emptyActionFields(),
+        risky: false,
+        risk_notes: [],
       }
 
       if (type.startsWith('remove_')) {
         const ids = collectActionIds(a)
-        if (!ids.length) return null
+        if (!ids.length) {
+          dropped += 1
+          return null
+        }
         return { ...base, ids }
       }
 
@@ -727,7 +901,10 @@ export function normalizeChatTurn(raw) {
         const expense = normalizeExpenseAction(a, {
           requireId: type === 'update_expense',
         })
-        if (!expense) return null
+        if (!expense) {
+          dropped += 1
+          return null
+        }
         return {
           ...base,
           label:
@@ -739,21 +916,21 @@ export function normalizeChatTurn(raw) {
 
       if (type === 'update_journey') {
         const journey = normalizeJourneyPatch(a)
-        if (!journey) return null
+        if (!journey) {
+          dropped += 1
+          return null
+        }
         return { ...base, journey }
       }
 
       if (type === 'update_entries') {
         const updates = (Array.isArray(a?.entries) ? a.entries : [])
-          .map((e, idx) => {
-            const id = asString(e?.id).trim()
-            if (!id) return null
-            const n = normalizeEntry(e, idx)
-            if (!n) return null
-            return { ...n, id }
-          })
+          .map((e) => normalizeEntryPatch(e, normOpts))
           .filter(Boolean)
-        if (!updates.length) return null
+        if (!updates.length) {
+          dropped += 1
+          return null
+        }
         return { ...base, entries: updates }
       }
 
@@ -761,7 +938,10 @@ export function normalizeChatTurn(raw) {
         const todos = (Array.isArray(a?.todos) ? a.todos : [])
           .map(normalizeTodoUpdate)
           .filter(Boolean)
-        if (!todos.length) return null
+        if (!todos.length) {
+          dropped += 1
+          return null
+        }
         return { ...base, todos }
       }
 
@@ -769,7 +949,10 @@ export function normalizeChatTurn(raw) {
         const place_ideas = (Array.isArray(a?.place_ideas) ? a.place_ideas : [])
           .map(normalizePlaceIdeaUpdate)
           .filter(Boolean)
-        if (!place_ideas.length) return null
+        if (!place_ideas.length) {
+          dropped += 1
+          return null
+        }
         return { ...base, place_ideas }
       }
 
@@ -782,36 +965,59 @@ export function normalizeChatTurn(raw) {
             return n ? { ...n, id } : null
           })
           .filter(Boolean)
-        if (!playlist.length) return null
+        if (!playlist.length) {
+          dropped += 1
+          return null
+        }
         return { ...base, playlist }
       }
 
-      const enrichment = normalizeEnrichment(a)
+      const enrichment = normalizeEnrichment(a, normOpts)
       if (type === 'add_entries') {
-        if (!enrichment.entries.length) return null
+        if (!enrichment.entries.length) {
+          dropped += 1
+          return null
+        }
         return { ...base, entries: enrichment.entries }
       }
       if (type === 'add_todos') {
-        if (!enrichment.todos.length) return null
+        if (!enrichment.todos.length) {
+          dropped += 1
+          return null
+        }
         return { ...base, todos: enrichment.todos }
       }
       if (type === 'add_place_ideas') {
-        if (!enrichment.place_ideas.length) return null
+        if (!enrichment.place_ideas.length) {
+          dropped += 1
+          return null
+        }
         return { ...base, place_ideas: enrichment.place_ideas }
       }
       if (type === 'add_playlist') {
-        if (!enrichment.playlist.length) return null
+        if (!enrichment.playlist.length) {
+          dropped += 1
+          return null
+        }
         return { ...base, playlist: enrichment.playlist }
       }
+      dropped += 1
       return null
     })
     .filter(Boolean)
+
+  if (dropped > 0) {
+    warnings.push(
+      `Dropped ${dropped} invalid or incomplete action${dropped === 1 ? '' : 's'}.`,
+    )
+  }
 
   return {
     assistant_message:
       asString(raw?.assistant_message || raw?.message).trim() ||
       'Here are some ideas.',
     actions,
+    warnings,
   }
 }
 

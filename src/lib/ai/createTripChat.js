@@ -18,8 +18,8 @@ function systemInstructionFor({ preferredCurrency, displayLocale }) {
   const clock = planningClockContext(prefLocale)
 
   return [
-    'You are Viaggio’s trip-planning copilot (like ChatGPT / Claude for travel).',
-    'Have a natural multi-turn conversation. Help the user explore destinations, dates, vibe, budget, food, and logistics before they commit.',
+    'You are Viaggio’s planning copilot for trips AND journals (life logs / household).',
+    'Have a natural multi-turn conversation. Clarify whether they want a trip itinerary or an ongoing journal before locking a draft.',
     'Return JSON only, matching this shape (no markdown):',
     '{',
     '  "assistant_message": string,',
@@ -28,23 +28,29 @@ function systemInstructionFor({ preferredCurrency, displayLocale }) {
     '',
     'Conversation-first rules:',
     '- Default: reply with a helpful assistant_message and set snapshot to null (questions, lists, comparisons, brainstorming, clarifications).',
-    '- Set snapshot to a FULL journey_snapshot only when proposing a new concrete draft or updating the itinerary after the user asks to build/rebuild/revise the plan.',
+    '- Set snapshot to a FULL journey_snapshot only when proposing a new concrete draft or updating the plan after the user asks to build/rebuild/revise.',
     '- Prefer revising the current draft in context. Never invent an unrelated destination because of a vague follow-up like “show me the list?” — answer from the draft / conversation.',
-    '- assistant_message must match the snapshot when you include one (same trip, dates, place).',
-    '- The user commits in the app via “Create journey”; do not assume the trip is booked.',
+    '- assistant_message must match the snapshot when you include one (same place, dates, intent).',
+    '- The user commits in the app via “Create journey”; do not assume it is saved yet.',
     '',
     `Today is ${clock.today} (${clock.weekday}) in ${clock.timeZone}.`,
     'Relative phrases (“this weekend”, “Friday”, “next month”) are relative to that today. Prefer future dates unless the user asks for the past.',
     '',
     JOURNEY_SNAPSHOT_PROMPT_SCHEMA,
-    'Prefer leisure_trip for vacations, road_trip for driving trips, custom_trip when unclear.',
+    '',
+    'Preset guidance:',
+    '- Trips: leisure_trip (vacations / flights & stays), road_trip (driving), custom_trip when unclear, family_reunion / league_season when fitting.',
+    '- Journals: life_log, household, car_log, home_project, custom_journal — sparse timelines OK; prefer bills/chores/milestones/appointments over flights/hotels.',
+    '- journey.type must match the preset type (trip vs journal).',
     '',
     'When emitting a snapshot:',
-    '- Put the day-by-day itinerary in entries[] (valid activity_id, title, occurs_on and/or occurs_at, timezone). Typically 6–20 for a weekend trip; never leave entries empty.',
-    '- Use exact catalog activity_id values, e.g. drive_leg, meal, restaurant, sightseeing, lodging, hotel, flight, train.',
+    '- Put the timeline in entries[] (valid activity_id, title, occurs_on and/or occurs_at_local, timezone). Trips typically 6–20 entries; journals may be fewer. Never leave entries empty when proposing a concrete draft.',
+    '- Prefer occurs_at_local / ends_at_local + IANA timezone(s). App converts to UTC. Never encode local clock as …Z.',
+    '- Transit/rental: start_timezone + end_timezone when origin and destination differ.',
+    '- Lodging: check-in occurs_at_local, check-out ends_at_local on the same entry; checkout before return transit on the last day.',
+    '- Use exact catalog activity_id values.',
     '- place_ideas[] are optional extras with lat/lng — they do not replace entries.',
-    '- Include useful pre-trip todos. Optional playlist as song titles (search_query OK) — never invent YouTube/Spotify URLs; the app resolves watch links.',
-    '- Plain YYYY-MM-DD dates and IANA timezones only.',
+    '- Include useful todos. Optional playlist as song titles (search_query OK) — never invent YouTube/Spotify URLs; the app resolves watch links.',
     catalogPromptBlock(),
     'User preferences (JSON):',
     JSON.stringify(
@@ -74,13 +80,13 @@ function parseTurn(responseText, importerName) {
   const parsed = parseModelJson(responseText)
   const assistantMessage =
     String(parsed?.assistant_message || parsed?.message || '').trim() ||
-    'How would you like to shape this trip?'
+    'How would you like to shape this plan?'
   const snapshot = tryNormalizeSnapshot(parsed?.snapshot, importerName)
   return { assistantMessage, snapshot }
 }
 
 /**
- * Multi-turn create-trip chat. Snapshot only when the draft is proposed/updated.
+ * Multi-turn create chat (trip or journal). Snapshot only when the draft is proposed/updated.
  */
 export async function createTripChat({
   history = [],
@@ -115,8 +121,8 @@ export async function createTripChat({
         user_message: text,
         current_draft: draft || null,
         note: draft
-          ? 'Answer from current_draft for lists/details/tweaks. Only replace snapshot when updating the itinerary.'
-          : 'No draft yet. Chat first; emit a snapshot when ready to propose a concrete plan.',
+          ? 'Answer from current_draft for lists/details/tweaks. Only replace snapshot when updating the plan. Prefer occurs_at_local/ends_at_local + timezones.'
+          : 'No draft yet. Chat first; emit a snapshot when ready to propose a concrete trip or journal plan.',
       }
 
       const result = await chat.sendMessage(JSON.stringify(payload))

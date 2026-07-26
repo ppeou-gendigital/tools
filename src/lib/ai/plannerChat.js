@@ -1,11 +1,12 @@
 import { getAI, getGenerativeModel, GoogleAIBackend } from 'firebase/ai'
 import { FIREBASE_AI_MODEL } from '@/env'
+import { applyChatActionGuardrails } from '@/lib/ai/actionGuardrails'
 import { catalogPromptBlock } from '@/lib/ai/catalogContext'
 import {
   buildJourneyAiContext,
-  journeyContextPromptBlock,
+  journeySystemRulesPromptBlock,
 } from '@/lib/ai/journeyContext'
-import { mapAiError } from '@/lib/ai/errors'
+import { AiValidationError, mapAiError } from '@/lib/ai/errors'
 import { parseModelJson } from '@/lib/ai/parse'
 import { normalizeChatTurn } from '@/lib/ai/normalize'
 import { CHAT_TURN_PROMPT_SCHEMA } from '@/lib/ai/promptSchema'
@@ -26,19 +27,21 @@ const AI_RECEIPT_MIME = new Set([
 ])
 
 function systemInstructionFor(ctx) {
+  const noun = ctx?.journey?.type === 'journal' ? 'journal' : 'trip'
   return [
-    'You are Viaggio’s in-app journey planner assistant.',
-    'Chat helpfully about this trip. When proposing concrete changes, include structured actions.',
+    `You are Viaggio’s in-app ${noun} planner assistant.`,
+    'Chat helpfully. When proposing concrete changes, include structured actions.',
+    'Live journey state is sent each turn as current_journey_context — use that, not outdated memory.',
     CHAT_TURN_PROMPT_SCHEMA,
-    'Prefer update_* / remove_* with existing ids from context; use add_* for new items.',
-    'Full CRUD is allowed on entries, todos, place ideas, playlist, and expenses. update_journey for trip title/dates/timezone/currency. Never delete people/members or the whole journey.',
+    'Prefer update_* / remove_* with existing ids from current_journey_context; use add_* for new items.',
+    'Full CRUD is allowed on entries, todos, place ideas, playlist, and expenses. update_journey for title/dates/timezone/currency. Never delete people/members or the whole journey.',
     'When the user attaches a receipt photo or PDF, read it and propose add_expense.',
     'place_ideas require approximate lat/lng on create. entries need valid activity_id values.',
-    'Suggest places: when asked for place ideas / “near the map”, propose add_place_ideas (typically 5–10) near map_focus if present, else near the trip area. Distinct names, lat/lng required, short notes OK. Skip duplicates already in context.',
+    'Suggest places: when asked for place ideas / “near the map”, propose add_place_ideas (typically 5–10) near map_focus if present, else near existing pins. Distinct names, lat/lng required, short notes OK. Skip duplicates.',
     'Playlist: when the user asks to search/add songs, emit add_playlist with song or mix titles (and optional search_query). Do NOT invent YouTube/Spotify URLs — the app resolves real youtube.com/watch links via YouTube search. Prefer 3–8 titles. You may still pass a real pasted watch/playlist URL if the user provided one.',
     'Plain YYYY-MM-DD dates and IANA timezones only — never Scope.* mashups.',
     catalogPromptBlock(),
-    journeyContextPromptBlock(ctx),
+    journeySystemRulesPromptBlock(ctx),
   ].join('\n')
 }
 
@@ -72,17 +75,18 @@ async function fileToInlineDataPart(file) {
   return { inlineData: { data: base64, mimeType } }
 }
 
+function finalizeTurn(parsed, ctx) {
+  const defaultTimezone = ctx?.journey?.default_timezone || 'UTC'
+  let turn = normalizeChatTurn(parsed, { defaultTimezone })
+  turn = applyChatActionGuardrails(turn, {
+    contextEntries: ctx?.entries || [],
+  })
+  return turn
+}
+
 /**
  * Start a multi-turn planner chat for a journey.
- * @param {string} journeyId
- * @param {{
- *   userId?: string | null,
- *   history?: unknown[],
- *   preferredCurrency?: string | null,
- *   displayLocale?: string | null,
- *   mapFocus?: { lat: number, lng: number, source?: string } | null,
- * }} [opts]
- * Returns { send(message, { files }), refreshContext() }.
+ * Returns { send(message, { files }), refreshContext(), getContext() }.
  */
 export async function createPlannerChat(
   journeyId,
@@ -95,7 +99,7 @@ export async function createPlannerChat(
   } = {},
 ) {
   const ctxOpts = { userId, preferredCurrency, displayLocale, mapFocus }
-  const ctx = await buildJourneyAiContext(journeyId, ctxOpts)
+  let ctx = await buildJourneyAiContext(journeyId, ctxOpts)
   ensureAppCheck()
   const ai = getAI(getFirebaseApp(), { backend: new GoogleAIBackend() })
   const model = getGenerativeModel(ai, {
@@ -103,7 +107,6 @@ export async function createPlannerChat(
     systemInstruction: systemInstructionFor(ctx),
     generationConfig: {
       responseMimeType: 'application/json',
-      // No responseSchema — prompt-carried shape only (avoids Scope.* leaks).
     },
   })
   const chat = model.startChat({
@@ -112,9 +115,37 @@ export async function createPlannerChat(
 
   async function send(message, { files = [] } = {}) {
     try {
+      ctx = await buildJourneyAiContext(journeyId, ctxOpts)
       const text = String(message || '').trim()
       const list = [...(files || [])].filter(Boolean).slice(0, 1)
       list.forEach(assertReceiptFile)
+
+      const envelope = {
+        user_message:
+          text ||
+          (list.length
+            ? 'Please read this receipt and propose an add_expense action for this journey.'
+            : ''),
+        current_journey_context: ctx,
+        note: 'Use current_journey_context as the source of truth for ids, times (wall locals + zones), and participants. Prefer occurs_at_local/ends_at_local when editing times.',
+      }
+      if (
+        mapFocus &&
+        Number.isFinite(Number(mapFocus.lat)) &&
+        Number.isFinite(Number(mapFocus.lng))
+      ) {
+        envelope.map_focus = {
+          lat: Number(mapFocus.lat),
+          lng: Number(mapFocus.lng),
+          source: mapFocus.source || 'map',
+        }
+        envelope.note +=
+          ' If suggesting places, use add_place_ideas near map_focus; avoid duplicates.'
+      }
+
+      if (!envelope.user_message && !list.length) {
+        throw new Error('Message is empty')
+      }
 
       let payload
       if (list.length) {
@@ -122,44 +153,67 @@ export async function createPlannerChat(
         for (const file of list) {
           parts.push(await fileToInlineDataPart(file))
         }
-        parts.push(
-          text ||
-            'Please read this receipt and propose an add_expense action for this journey.',
-        )
+        parts.push(JSON.stringify(envelope))
         payload = parts
       } else {
-        if (!text) throw new Error('Message is empty')
-        // Keep map focus on each turn so place suggestions stay near the view.
-        if (
-          mapFocus &&
-          Number.isFinite(Number(mapFocus.lat)) &&
-          Number.isFinite(Number(mapFocus.lng))
-        ) {
-          payload = JSON.stringify({
-            user_message: text,
-            map_focus: {
-              lat: Number(mapFocus.lat),
-              lng: Number(mapFocus.lng),
-              source: mapFocus.source || 'map',
-            },
-            note: 'If suggesting places, use add_place_ideas near map_focus; avoid duplicates from context.',
-          })
-        } else {
-          payload = text
-        }
+        payload = JSON.stringify(envelope)
       }
 
       const result = await chat.sendMessage(payload)
       const responseText = result?.response?.text?.() ?? ''
-      const parsed = parseModelJson(responseText)
-      return normalizeChatTurn(parsed)
+      let parsed
+      try {
+        parsed = parseModelJson(responseText)
+      } catch (err) {
+        if (!(err instanceof AiValidationError)) throw err
+        const repair = await chat.sendMessage(
+          JSON.stringify({
+            repair: true,
+            errors: [err.message],
+            note: 'Return valid chat-turn JSON only (assistant_message + actions). No Scope.* mashups. Prefer occurs_at_local/ends_at_local + timezones.',
+            previous_invalid_output: String(err.raw || responseText).slice(
+              0,
+              6000,
+            ),
+          }),
+        )
+        parsed = parseModelJson(repair?.response?.text?.() ?? '')
+      }
+
+      let turn = finalizeTurn(parsed, ctx)
+      if (
+        Array.isArray(parsed?.actions) &&
+        parsed.actions.length > 0 &&
+        turn.actions.length === 0
+      ) {
+        const repair = await chat.sendMessage(
+          JSON.stringify({
+            repair: true,
+            errors: turn.warnings?.length
+              ? turn.warnings
+              : ['All actions were invalid or incomplete.'],
+            note: 'Re-emit the chat-turn JSON with valid actions only. Use ids from current_journey_context. Prefer occurs_at_local/ends_at_local.',
+            current_journey_context: {
+              people: ctx.people,
+              entries: ctx.entries,
+              journey: ctx.journey,
+            },
+          }),
+        )
+        turn = finalizeTurn(
+          parseModelJson(repair?.response?.text?.() ?? ''),
+          ctx,
+        )
+      }
+      return turn
     } catch (err) {
       throw new Error(mapAiError(err))
     }
   }
 
   async function refreshContext() {
-    return buildJourneyAiContext(journeyId, ctxOpts)
+    ctx = await buildJourneyAiContext(journeyId, ctxOpts)
+    return ctx
   }
 
   return { send, refreshContext, getContext: () => ctx }

@@ -7,7 +7,9 @@ import {
   deletePlaceIdea,
   deletePlaylistItem,
   deleteTodo,
+  getEntry,
   listJourneyPeople,
+  listParticipantsForEntry,
   updateJourney,
   updatePlaceIdea,
   updatePlaylistItem,
@@ -42,6 +44,12 @@ function emptyApplied() {
   }
 }
 
+function entryParticipantIds(entry) {
+  if (Array.isArray(entry?.participant_ids)) return entry.participant_ids
+  if (Array.isArray(entry?.participantIds)) return entry.participantIds
+  return undefined
+}
+
 /**
  * Apply additive AI suggestions to a live journey.
  * @returns {{ applied: object, errors: string[] }}
@@ -54,6 +62,7 @@ export async function applyEnrichment(journeyId, enrichment, userId) {
     try {
       const schema =
         entry.schema || resolveSchemaForActivity(entry.activity_id)
+      const participantIds = entryParticipantIds(entry) ?? []
       const row = await upsertEntry({
         journeyId,
         activityId: entry.activity_id,
@@ -71,7 +80,7 @@ export async function applyEnrichment(journeyId, enrichment, userId) {
         lat: entry.lat,
         lng: entry.lng,
         details: entry.details || {},
-        participantIds: [],
+        participantIds,
       })
       applied.entries.push(row)
     } catch (err) {
@@ -88,6 +97,7 @@ export async function applyEnrichment(journeyId, enrichment, userId) {
           notes: todo.notes,
           dueOn: todo.due_on,
           done: !!todo.done,
+          assigneeJourneyPersonIds: todo.assignee_person_ids,
         },
         userId,
       )
@@ -240,40 +250,66 @@ async function applyRemove(action, deleteFn, noun) {
   return { applied, errors }
 }
 
+function pick(patch, key, existingValue) {
+  if (Object.prototype.hasOwnProperty.call(patch, key)) {
+    return patch[key]
+  }
+  return existingValue
+}
+
 async function applyUpdateEntries(journeyId, action) {
   const applied = emptyApplied()
   const errors = []
-  for (const entry of action.entries || []) {
-    if (!entry?.id) {
-      errors.push(`Entry “${entry?.title || '?'}”: missing id for update`)
+  for (const patch of action.entries || []) {
+    if (!patch?.id) {
+      errors.push(`Entry “${patch?.title || '?'}”: missing id for update`)
       continue
     }
     try {
+      const existing = await getEntry(patch.id)
+      if (!existing) {
+        errors.push(`Entry ${patch.id}: not found`)
+        continue
+      }
+      const activityId = patch.activity_id || existing.activityId
       const schema =
-        entry.schema || resolveSchemaForActivity(entry.activity_id)
+        patch.schema ||
+        existing.schema ||
+        resolveSchemaForActivity(activityId)
+
+      let participantIds
+      if (
+        patch._participantsProvided ||
+        Array.isArray(patch.participant_ids)
+      ) {
+        participantIds = patch.participant_ids || []
+      } else {
+        participantIds = await listParticipantsForEntry(patch.id)
+      }
+
       const row = await upsertEntry({
-        id: entry.id,
+        id: patch.id,
         journeyId,
-        activityId: entry.activity_id,
+        activityId,
         schema,
-        title: entry.title,
-        body: entry.body || {},
-        occursOn: entry.occurs_on,
-        occursAt: entry.occurs_at,
-        endsAt: entry.ends_at,
-        timezone: entry.timezone,
-        startTimezone: entry.start_timezone,
-        endTimezone: entry.end_timezone,
-        placeName: entry.place_name,
-        address: entry.address,
-        lat: entry.lat,
-        lng: entry.lng,
-        details: entry.details || {},
-        participantIds: [],
+        title: pick(patch, 'title', existing.title),
+        body: pick(patch, 'body', existing.body || {}),
+        occursOn: pick(patch, 'occurs_on', existing.occursOn),
+        occursAt: pick(patch, 'occurs_at', existing.occursAt),
+        endsAt: pick(patch, 'ends_at', existing.endsAt),
+        timezone: pick(patch, 'timezone', existing.timezone),
+        startTimezone: pick(patch, 'start_timezone', existing.startTimezone),
+        endTimezone: pick(patch, 'end_timezone', existing.endTimezone),
+        placeName: pick(patch, 'place_name', existing.placeName),
+        address: pick(patch, 'address', existing.address),
+        lat: pick(patch, 'lat', existing.lat),
+        lng: pick(patch, 'lng', existing.lng),
+        details: pick(patch, 'details', existing.details || {}),
+        participantIds,
       })
       applied.entries.push(row)
     } catch (err) {
-      errors.push(`Update “${entry.title}”: ${err.message}`)
+      errors.push(`Update “${patch.title || patch.id}”: ${err.message}`)
     }
   }
   return { applied, errors }
@@ -293,6 +329,9 @@ async function applyUpdateTodos(action) {
       if (todo.notes !== undefined) patch.notes = todo.notes
       if (todo.due_on !== undefined) patch.dueOn = todo.due_on
       if (todo.done !== undefined) patch.done = todo.done
+      if (todo.assignee_person_ids !== undefined) {
+        patch.assigneeJourneyPersonIds = todo.assignee_person_ids
+      }
       const row = await updateTodo(todo.id, patch)
       applied.todos.push(row)
     } catch (err) {

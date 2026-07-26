@@ -2,7 +2,7 @@ import { catalogPromptBlock } from '@/lib/ai/catalogContext'
 import { generateJsonFromPrompt } from '@/lib/ai/client'
 import {
   buildJourneyAiContext,
-  journeyContextPromptBlock,
+  journeySystemRulesPromptBlock,
 } from '@/lib/ai/journeyContext'
 import { normalizeEnrichment } from '@/lib/ai/normalize'
 import { ENRICHMENT_PROMPT_SCHEMA } from '@/lib/ai/promptSchema'
@@ -51,18 +51,20 @@ export async function enrichJourneyPlan({
   const system = [
     'You improve an existing Viaggio journey. Output only additive suggestions.',
     catalogPromptBlock(),
-    journeyContextPromptBlock(ctx),
+    journeySystemRulesPromptBlock(ctx),
     ENRICHMENT_PROMPT_SCHEMA,
     `Mode: ${modeMeta.id} — ${modeMeta.hint}`,
     'entries need valid activity_id/schema; place_ideas need lat/lng.',
-    'Keep suggestions realistic and non-duplicative.',
+    'Prefer occurs_at_local/ends_at_local + timezones. Keep suggestions realistic and non-duplicative.',
   ].join('\n')
 
   const raw = await generateJsonFromPrompt({
     systemInstruction: system,
-    prompt: `Extra user notes:\n${prompt || '(none)'}`,
+    prompt: `Current journey context:\n${JSON.stringify(ctx, null, 2)}\n\nExtra user notes:\n${prompt || '(none)'}`,
     validate: (parsed) => {
-      const n = normalizeEnrichment(parsed)
+      const n = normalizeEnrichment(parsed, {
+        defaultTimezone: ctx?.journey?.default_timezone || 'UTC',
+      })
       const total =
         n.entries.length +
         n.todos.length +

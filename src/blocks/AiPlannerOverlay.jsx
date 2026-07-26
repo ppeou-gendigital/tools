@@ -100,13 +100,33 @@ function formatExpenseAmount(cents, currency) {
   }
 }
 
+function entryTimeHint(e) {
+  const local =
+    e.occurs_at_local ||
+    (e.occurs_at && e.timezone
+      ? `${e.occurs_at} (${e.timezone})`
+      : e.occurs_at) ||
+    e.occurs_on
+  const endLocal =
+    e.ends_at_local ||
+    (e.ends_at && (e.end_timezone || e.timezone)
+      ? `→ ${e.ends_at}`
+      : e.ends_at
+        ? `→ ${e.ends_at}`
+        : '')
+  const bits = [e.title, local, endLocal].filter(Boolean)
+  return bits.join(' ')
+}
+
 function actionPreview(action) {
   if (action.type?.startsWith('remove_')) {
     const n = (action.ids || []).length
     return n ? `${n} item${n === 1 ? '' : 's'}` : ''
   }
   if (action.type === 'add_entries' || action.type === 'update_entries') {
-    return (action.entries || []).map((e) => e.title).join(', ')
+    const base = (action.entries || []).map(entryTimeHint).join(', ')
+    const risk = (action.risk_notes || []).join(' ')
+    return [base, risk].filter(Boolean).join(' · ')
   }
   if (action.type === 'add_todos' || action.type === 'update_todos') {
     return (action.todos || [])
@@ -961,6 +981,7 @@ export function AiPlannerOverlay({
             id: `a-${Date.now()}`,
             role: 'assistant',
             text: turn.assistant_message,
+            warnings: turn.warnings || [],
             actions,
           },
         ])
@@ -1006,7 +1027,7 @@ export function AiPlannerOverlay({
   if (!open || typeof document === 'undefined') return null
 
   const title = isCreate
-    ? 'Plan a trip'
+    ? 'Plan with AI'
     : journey?.title
       ? `AI · ${journey.title}`
       : 'AI planner'
@@ -1120,6 +1141,11 @@ export function AiPlannerOverlay({
                       </div>
                     )}
                     {m.text}
+                    {!!(m.warnings || []).length && (
+                      <p className={styles.hint}>
+                        {(m.warnings || []).join(' ')}
+                      </p>
+                    )}
                   </div>
                   {hasMeta && !isUser && (
                     <div className={styles.turnMeta}>
@@ -1169,6 +1195,11 @@ export function AiPlannerOverlay({
                           <span className={styles.hint}>
                             {actionPreview(action)}
                           </span>
+                          {action.risky && !!(action.risk_notes || []).length && (
+                            <span className={styles.error}>
+                              {(action.risk_notes || []).join(' ')}
+                            </span>
+                          )}
                           {action.status === 'pending' && (
                             <div className={styles.actionActions}>
                               <Button

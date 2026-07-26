@@ -1,7 +1,7 @@
 import { generateJson } from '@/lib/ai/client'
 import {
   buildJourneyAiContext,
-  journeyContextPromptBlock,
+  journeySystemRulesPromptBlock,
 } from '@/lib/ai/journeyContext'
 import { normalizePlaceIdea } from '@/lib/ai/normalize'
 import { placeIdeasResponseSchema } from '@/lib/ai/schemas'
@@ -22,21 +22,23 @@ export async function suggestPlacesForJourney({
   count = 8,
 }) {
   const ctx = await buildJourneyAiContext(journeyId)
+  const noun = ctx?.journey?.type === 'journal' ? 'journal' : 'trip'
   const system = [
-    'You suggest map place ideas for a collaborative trip brainstorm.',
+    `You suggest map place ideas for a collaborative ${noun} brainstorm.`,
     'Return distinct places with approximate lat/lng (required) and short notes.',
-    'Stay in or near the trip destination / existing pins.',
+    'Stay in or near existing pins / map focus.',
     'Do not duplicate places already on the shortlist.',
-    journeyContextPromptBlock(ctx),
+    journeySystemRulesPromptBlock(ctx),
   ].join('\n')
 
   const user = {
-    hint: prompt || 'Suggest interesting places for this trip',
+    hint: prompt || `Suggest interesting places for this ${noun}`,
     near:
       Number.isFinite(lat) && Number.isFinite(lng)
         ? { lat, lng }
         : null,
     count: Math.min(Math.max(Number(count) || 8, 3), 16),
+    current_journey_context: ctx,
   }
 
   const raw = await generateJson({
