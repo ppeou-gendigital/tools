@@ -59,6 +59,9 @@ import styles from './AiPlannerOverlay.module.scss'
 const WELCOME_CHAT =
   'Ask me to add, update, or remove activities, todos, places, playlist, or expenses — or attach a receipt photo/PDF. I’ll propose changes you can accept. Or Export JSON to edit in ChatGPT and Import it back.'
 
+const WELCOME_CHAT_MAP =
+  'I can suggest places near this map view (with pins you can accept), or help with activities, todos, playlist, and expenses. Ask for ideas — e.g. “scenic viewpoints” or “late-night eats”.'
+
 const WELCOME_CREATE =
   'Chat with me about your trip — destination, dates, vibe, food, constraints. We can go back and forth as long as you like. When a plan looks right I’ll show a draft; Create journey when you’re ready to commit.'
 
@@ -137,7 +140,13 @@ function actionDoneLabel(action) {
   return 'Added.'
 }
 
-export function AiPlannerOverlay({ open, mode, journeyId, onClose }) {
+export function AiPlannerOverlay({
+  open,
+  mode,
+  journeyId,
+  mapFocus = null,
+  onClose,
+}) {
   const enabled = isAiPlanningEnabled()
   const { user } = useAuth()
   const { displayLocale, defaultCurrency } = useDisplayPrefs()
@@ -157,6 +166,11 @@ export function AiPlannerOverlay({ open, mode, journeyId, onClose }) {
 
   const isCreate = mode === 'create'
   const isChat = mode === 'chat'
+  const hasMapFocus =
+    mapFocus &&
+    Number.isFinite(Number(mapFocus.lat)) &&
+    Number.isFinite(Number(mapFocus.lng))
+  const chatWelcome = hasMapFocus ? WELCOME_CHAT_MAP : WELCOME_CHAT
 
   const [ready, setReady] = useState(false)
   const [initError, setInitError] = useState('')
@@ -312,6 +326,7 @@ export function AiPlannerOverlay({ open, mode, journeyId, onClose }) {
           history,
           preferredCurrency: defaultCurrency,
           displayLocale,
+          mapFocus: hasMapFocus ? mapFocus : null,
         })
         if (cancelled) return
         modelHistoryRef.current = history
@@ -324,7 +339,7 @@ export function AiPlannerOverlay({ open, mode, journeyId, onClose }) {
             {
               id: 'welcome',
               role: 'assistant',
-              text: WELCOME_CHAT,
+              text: chatWelcome,
               actions: [],
             },
           ])
@@ -354,6 +369,10 @@ export function AiPlannerOverlay({ open, mode, journeyId, onClose }) {
     defaultCurrency,
     displayLocale,
     activeSessionKey,
+    hasMapFocus,
+    mapFocus?.lat,
+    mapFocus?.lng,
+    chatWelcome,
   ])
 
   useEffect(() => {
@@ -636,12 +655,13 @@ export function AiPlannerOverlay({ open, mode, journeyId, onClose }) {
         history: [],
         preferredCurrency: defaultCurrency,
         displayLocale,
+        mapFocus: hasMapFocus ? mapFocus : null,
       })
       setMessages([
         {
           id: 'welcome',
           role: 'assistant',
-          text: WELCOME_CHAT,
+          text: chatWelcome,
           actions: [],
         },
       ])
@@ -1062,7 +1082,9 @@ export function AiPlannerOverlay({ open, mode, journeyId, onClose }) {
                       ? 'Add a note (optional)…'
                       : isCreate
                         ? 'Message the planner…'
-                        : 'Write a message…'
+                        : hasMapFocus
+                          ? 'Suggest places near this map…'
+                          : 'Write a message…'
                   }
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {

@@ -16,21 +16,34 @@ import { useNavigation } from '@/providers/NavigationProvider'
 
 const AiPlannerContext = createContext(null)
 
+function normalizeMapFocus(mapFocus) {
+  const lat = Number(mapFocus?.lat)
+  const lng = Number(mapFocus?.lng)
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+  return { lat, lng, source: mapFocus?.source || 'map' }
+}
+
 export function AiPlannerProvider({ children }) {
   const nav = useNavigation()
   const [state, setState] = useState({
     open: false,
     mode: 'chat',
     journeyId: null,
+    mapFocus: null,
   })
 
   const openCreate = useCallback(() => {
-    setState({ open: true, mode: 'create', journeyId: null })
+    setState({ open: true, mode: 'create', journeyId: null, mapFocus: null })
   }, [])
 
-  const openChat = useCallback((journeyId) => {
+  const openChat = useCallback((journeyId, opts = {}) => {
     if (!journeyId) return
-    setState({ open: true, mode: 'chat', journeyId })
+    setState({
+      open: true,
+      mode: 'chat',
+      journeyId,
+      mapFocus: normalizeMapFocus(opts.mapFocus),
+    })
   }, [])
 
   const close = useCallback(() => {
@@ -38,9 +51,9 @@ export function AiPlannerProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    return registerAiPlannerHandler(({ mode, journeyId }) => {
+    return registerAiPlannerHandler(({ mode, journeyId, mapFocus }) => {
       if (mode === 'create') openCreate()
-      else if (mode === 'chat') openChat(journeyId)
+      else if (mode === 'chat') openChat(journeyId, { mapFocus })
     })
   }, [openCreate, openChat])
 
@@ -76,6 +89,7 @@ export function AiPlannerProvider({ children }) {
       open: state.open,
       mode: state.mode,
       journeyId: state.journeyId,
+      mapFocus: state.mapFocus,
       openCreate,
       openChat,
       close,
@@ -90,6 +104,7 @@ export function AiPlannerProvider({ children }) {
         open={state.open}
         mode={state.mode}
         journeyId={state.journeyId}
+        mapFocus={state.mapFocus}
         onClose={close}
       />
     </AiPlannerContext.Provider>
@@ -109,6 +124,6 @@ export function tryOpenAiPlannerCreate() {
   bridgeOpenCreate()
 }
 
-export function tryOpenAiPlannerChat(journeyId) {
-  bridgeOpenChat(journeyId)
+export function tryOpenAiPlannerChat(journeyId, opts) {
+  bridgeOpenChat(journeyId, opts)
 }

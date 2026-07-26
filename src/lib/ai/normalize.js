@@ -7,6 +7,7 @@ import {
   JOURNEY_SNAPSHOT_VERSION,
   validateJourneySnapshot,
 } from '@/lib/journeySnapshot'
+import { parseMediaLink } from '@/lib/mediaEmbed'
 
 const ACTIVITY_SET = new Set(knownActivityIds())
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
@@ -307,42 +308,34 @@ export function normalizeTodo(raw) {
   }
 }
 
-function playlistSearchUrl(title, platform) {
-  const q = encodeURIComponent(title || 'road trip')
-  if (platform === 'spotify') {
-    return `https://open.spotify.com/search/${q}`
+/** Rewrite YouTube Music watch/playlist shares to youtube.com for the in-app Player. */
+function rewriteYoutubeMusicUrl(url) {
+  let parsed
+  try {
+    parsed = new URL(url)
+  } catch {
+    return null
   }
-  return `https://music.youtube.com/search?q=${q}`
-}
-
-function isTrustedPlaylistSearchUrl(parsed) {
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null
   const host = parsed.hostname.replace(/^www\./, '').toLowerCase()
-  const path = parsed.pathname.toLowerCase()
-  if (host === 'youtube.com' || host === 'm.youtube.com') {
-    return path === '/results' && parsed.searchParams.has('search_query')
+  if (host !== 'music.youtube.com') return url
+
+  const videoId = parsed.searchParams.get('v')
+  if (videoId) {
+    return `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`
   }
-  if (host === 'music.youtube.com') {
-    return path === '/search' || path.startsWith('/search')
+  const list = parsed.searchParams.get('list')
+  if (list && (parsed.pathname === '/playlist' || parsed.pathname.startsWith('/playlist'))) {
+    return `https://www.youtube.com/playlist?list=${encodeURIComponent(list)}`
   }
-  if (host === 'open.spotify.com') {
-    return path.startsWith('/search')
-  }
-  return false
+  // search / browse / etc. — not embeddable
+  return null
 }
 
-function isAllowedPlaylistHost(hostname) {
-  const host = hostname.replace(/^www\./, '').toLowerCase()
-  return (
-    host === 'youtube.com' ||
-    host === 'm.youtube.com' ||
-    host === 'youtu.be' ||
-    host === 'music.youtube.com' ||
-    host === 'open.spotify.com' ||
-    host === 'spotify.com'
-  )
-}
-
-/** Coerce model playlist rows to real searchable links (no invented deep IDs). */
+/**
+ * Keep only playlist rows the in-app Player can embed.
+ * Drops search URLs, fakes, and title-only suggestions.
+ */
 export function normalizePlaylistItem(raw) {
   const title = asString(raw?.title).trim() || 'Track'
   const id = asString(raw?.id).trim() || null
@@ -351,37 +344,23 @@ export function normalizePlaylistItem(raw) {
     platform = null
   }
   let url = asString(raw?.url).trim()
+  if (!url) return null
+
   const fakeHint =
     /example|placeholder|fake|dummy|lorem|test[_-]?id/i.test(url) ||
     /example|placeholder|fake|dummy/i.test(title)
+  if (fakeHint) return null
 
-  if (!url || fakeHint) {
-    url = playlistSearchUrl(title, platform || 'youtube')
-    if (!platform) platform = 'youtube'
-  } else {
-    try {
-      const parsed = new URL(url)
-      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-        return null
-      }
-      if (!isAllowedPlaylistHost(parsed.hostname)) {
-        url = playlistSearchUrl(title, platform || 'youtube')
-        if (!platform) platform = 'youtube'
-      } else if (!isTrustedPlaylistSearchUrl(parsed)) {
-        // Deep playlist/track/album links are unverifiable — use search.
-        if (!platform) {
-          const host = parsed.hostname.replace(/^www\./, '').toLowerCase()
-          platform = host.includes('spotify') ? 'spotify' : 'youtube'
-        }
-        url = playlistSearchUrl(title, platform)
-      } else if (!platform) {
-        const host = parsed.hostname.replace(/^www\./, '').toLowerCase()
-        platform = host.includes('spotify') ? 'spotify' : 'youtube'
-      }
-    } catch {
-      url = playlistSearchUrl(title, platform || 'youtube')
-      if (!platform) platform = 'youtube'
-    }
+  const rewritten = rewriteYoutubeMusicUrl(url)
+  if (rewritten == null && /music\.youtube\.com/i.test(url)) return null
+  if (rewritten) url = rewritten
+
+  const target = parseMediaLink(url)
+  if (!target.playable) return null
+
+  if (!platform) {
+    if (target.platform === 'spotify') platform = 'spotify'
+    else if (target.platform === 'youtube') platform = 'youtube'
   }
 
   return {

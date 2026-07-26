@@ -9,6 +9,13 @@ import {
   listTodos,
 } from '@/lib/viaggioApi'
 
+function normalizeMapFocus(mapFocus) {
+  const lat = Number(mapFocus?.lat)
+  const lng = Number(mapFocus?.lng)
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+  return { lat, lng, source: mapFocus?.source || 'map' }
+}
+
 /**
  * Compact journey summary for prompts (no emails / invites / attachments).
  * @param {string} journeyId
@@ -16,6 +23,7 @@ import {
  *   userId?: string | null,
  *   preferredCurrency?: string | null,
  *   displayLocale?: string | null,
+ *   mapFocus?: { lat: number, lng: number, source?: string } | null,
  * }} [opts]
  */
 export async function buildJourneyAiContext(
@@ -24,6 +32,7 @@ export async function buildJourneyAiContext(
     userId = null,
     preferredCurrency = null,
     displayLocale = null,
+    mapFocus = null,
   } = {},
 ) {
   const clock = planningClockContext(displayLocale)
@@ -95,6 +104,7 @@ export async function buildJourneyAiContext(
     .trim()
     .toUpperCase()
   const prefLocale = String(displayLocale || '').trim()
+  const focus = normalizeMapFocus(mapFocus)
 
   return {
     journey: {
@@ -114,6 +124,7 @@ export async function buildJourneyAiContext(
       display_locale: prefLocale || null,
     },
     clock,
+    map_focus: focus,
     current_user_id: userId || null,
     people: peopleLines,
     entries: entryLines,
@@ -133,7 +144,8 @@ export function journeyContextPromptBlock(ctx) {
     'Money talk: journey.default_currency is trip bookkeeping; user_prefs.preferred_currency is how to talk to this user. When discussing prices/budgets, lead with preferred_currency and optionally show local currency in parentheses. Format amounts naturally for user_prefs.display_locale when set.',
     'Dates: clock.today / clock.weekday / clock.timeZone are authoritative. Relative phrases use that calendar; do not invent outdated years.',
     'For add_expense / update_expense: use an existing entry_id from context (same-day or most recent activity if unsure), paid_by_person_id from people (prefer is_current_user), store currency from the receipt (or journey.default_currency if unclear) — do not invent converted cents as the stored amount. split_mode "equal" by default.',
-    'Playlist: never invent YouTube/Spotify deep playlist or track IDs. Use search URLs only (music.youtube.com/search or youtube/spotify search). When replacing Spotify with YouTube Music, emit remove_playlist (spotify ids) plus add_playlist (search URLs).',
+    'Playlist: only embeddable youtube.com/watch?v= / youtube.com/playlist?list= or open.spotify.com/{track|album|playlist}/… URLs. Never music.youtube.com search or invented IDs. For song ideas without real links, list titles in assistant_message and skip add_playlist. Replacing Spotify → remove_playlist by id; add_playlist only with real playable URLs.',
+    'Place suggestions (Suggest places): when the user asks for places, ideas, or “near here/the map”, emit add_place_ideas with distinct name + approximate lat/lng (+ optional note/address). Prefer map_focus when set; otherwise stay near the trip destination / existing pins. Do not duplicate place_ideas or entry places already in context. Typically 5–10 ideas.',
     'Avoid duplicating places/todos/entries that already exist unless the user asks.',
   ].join('\n')
 }

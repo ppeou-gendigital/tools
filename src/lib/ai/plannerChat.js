@@ -34,7 +34,8 @@ function systemInstructionFor(ctx) {
     'Full CRUD is allowed on entries, todos, place ideas, playlist, and expenses. update_journey for trip title/dates/timezone/currency. Never delete people/members or the whole journey.',
     'When the user attaches a receipt photo or PDF, read it and propose add_expense.',
     'place_ideas require approximate lat/lng on create. entries need valid activity_id values.',
-    'Playlist urls must be YouTube Music / YouTube / Spotify search links — never invent deep playlist IDs.',
+    'Suggest places: when asked for place ideas / “near the map”, propose add_place_ideas (typically 5–10) near map_focus if present, else near the trip area. Distinct names, lat/lng required, short notes OK. Skip duplicates already in context.',
+    'Playlist urls must be embeddable (youtube.com/watch or playlist, or open.spotify.com track/album/playlist). Never music.youtube.com search or invented IDs; if unsure, suggest song names in chat and skip add_playlist.',
     'Plain YYYY-MM-DD dates and IANA timezones only — never Scope.* mashups.',
     catalogPromptBlock(),
     journeyContextPromptBlock(ctx),
@@ -79,6 +80,7 @@ async function fileToInlineDataPart(file) {
  *   history?: unknown[],
  *   preferredCurrency?: string | null,
  *   displayLocale?: string | null,
+ *   mapFocus?: { lat: number, lng: number, source?: string } | null,
  * }} [opts]
  * Returns { send(message, { files }), refreshContext() }.
  */
@@ -89,9 +91,10 @@ export async function createPlannerChat(
     history = [],
     preferredCurrency = null,
     displayLocale = null,
+    mapFocus = null,
   } = {},
 ) {
-  const ctxOpts = { userId, preferredCurrency, displayLocale }
+  const ctxOpts = { userId, preferredCurrency, displayLocale, mapFocus }
   const ctx = await buildJourneyAiContext(journeyId, ctxOpts)
   ensureAppCheck()
   const ai = getAI(getFirebaseApp(), { backend: new GoogleAIBackend() })
@@ -126,7 +129,24 @@ export async function createPlannerChat(
         payload = parts
       } else {
         if (!text) throw new Error('Message is empty')
-        payload = text
+        // Keep map focus on each turn so place suggestions stay near the view.
+        if (
+          mapFocus &&
+          Number.isFinite(Number(mapFocus.lat)) &&
+          Number.isFinite(Number(mapFocus.lng))
+        ) {
+          payload = JSON.stringify({
+            user_message: text,
+            map_focus: {
+              lat: Number(mapFocus.lat),
+              lng: Number(mapFocus.lng),
+              source: mapFocus.source || 'map',
+            },
+            note: 'If suggesting places, use add_place_ideas near map_focus; avoid duplicates from context.',
+          })
+        } else {
+          payload = text
+        }
       }
 
       const result = await chat.sendMessage(payload)

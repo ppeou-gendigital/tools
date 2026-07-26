@@ -13,7 +13,15 @@ export function openAiPlannerCreate() {
   handler?.({ mode: 'create' })
 }
 
-export function openAiPlannerChat(journeyId) {
+/**
+ * @param {string} journeyId
+ * @param {{ mapFocus?: { lat: number, lng: number, source?: string } | null }} [opts]
+ */
+export function openAiPlannerChat(journeyId, opts = {}) {
   if (!journeyId) return
-  handler?.({ mode: 'chat', journeyId })
+  handler?.({
+    mode: 'chat',
+    journeyId,
+    mapFocus: opts.mapFocus || null,
+  })
 }

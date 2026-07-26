@@ -6,12 +6,14 @@ import { cx } from '@/lib/cx'
 
 /**
  * Header Sparkles control. Pass journeyId for chat mode; omit for create-trip.
+ * Optional mapFocus ({ lat, lng }) anchors place suggestions to the map view.
  */
 export function AiPlannerButton({
   journeyId,
   className,
   label,
   title,
+  mapFocus = null,
 }) {
   const enabled = isAiPlanningEnabled()
   const { openCreate, openChat } = useAiPlanner()
@@ -19,7 +21,17 @@ export function AiPlannerButton({
   if (!enabled) return null
 
   const isCreate = !journeyId
-  const aria = label || (isCreate ? 'Plan with AI' : 'AI planner')
+  const hasMap =
+    mapFocus &&
+    Number.isFinite(Number(mapFocus.lat)) &&
+    Number.isFinite(Number(mapFocus.lng))
+  const aria =
+    label ||
+    (isCreate
+      ? 'Plan with AI'
+      : hasMap
+        ? 'AI planner — suggest places near map'
+        : 'AI planner')
   const tip = title || aria
 
   return (
@@ -27,7 +39,11 @@ export function AiPlannerButton({
       variant="ghost"
       size="sm"
       className={cx(className)}
-      onClick={() => (isCreate ? openCreate() : openChat(journeyId))}
+      onClick={() =>
+        isCreate
+          ? openCreate()
+          : openChat(journeyId, hasMap ? { mapFocus } : undefined)
+      }
       aria-label={aria}
       title={tip}
     >
