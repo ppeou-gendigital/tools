@@ -1,6 +1,7 @@
 import { asyncStorage } from '@/lib/storage'
 
 const STORAGE_KEY = 'viaggio.themeCoords'
+const PROMPTED_KEY = 'viaggio.geoPrompted'
 
 const POSITION_OPTIONS = {
   enableHighAccuracy: false,
@@ -17,6 +18,31 @@ function validCoords(lat, lng) {
     lng >= -180 &&
     lng <= 180
   )
+}
+
+/** @returns {Promise<'granted' | 'denied' | 'prompt' | 'unknown'>} */
+export async function queryGeoPermission() {
+  try {
+    const perms = globalThis.navigator?.permissions
+    if (!perms?.query) return 'unknown'
+    const status = await perms.query({ name: 'geolocation' })
+    const state = String(status?.state || '')
+    if (state === 'granted' || state === 'denied' || state === 'prompt') {
+      return state
+    }
+  } catch {
+    /* Safari / older browsers may reject geolocation permission queries */
+  }
+  return 'unknown'
+}
+
+export async function hasGeoPrompted() {
+  const raw = await asyncStorage.getItem(PROMPTED_KEY)
+  return raw === '1' || raw === 'true'
+}
+
+export async function markGeoPrompted() {
+  await asyncStorage.setItem(PROMPTED_KEY, '1')
 }
 
 /** @returns {Promise<{ lat: number, lng: number, source: 'cache' } | null>} */
@@ -69,15 +95,42 @@ export function requestPosition() {
   })
 }
 
-/**
- * Prefer a live fix; fall back to cache when the live request fails.
- * @returns {Promise<{ lat: number, lng: number, source: 'live' | 'cache' } | null>}
- */
-export async function resolveCoords() {
+async function applyLiveOrCache(cached) {
   const live = await requestPosition()
   if (live) {
     await saveCachedCoords(live)
     return live
   }
-  return loadCachedCoords()
+  return cached
+}
+
+/**
+ * Resolve device coords without spamming the system permission dialog.
+ *
+ * - interactive: false (default) — cache, or live only if already granted
+ * - interactive: true — may prompt at most once (tracked via viaggio.geoPrompted)
+ *
+ * @param {{ interactive?: boolean }} [opts]
+ * @returns {Promise<{ lat: number, lng: number, source: 'live' | 'cache' } | null>}
+ */
+export async function resolveCoords({ interactive = false } = {}) {
+  const cached = await loadCachedCoords()
+  const perm = await queryGeoPermission()
+
+  if (perm === 'denied') return cached
+
+  if (!interactive) {
+    if (perm === 'granted') return applyLiveOrCache(cached)
+    return cached
+  }
+
+  // Interactive path
+  if (perm === 'granted') return applyLiveOrCache(cached)
+
+  const prompted = await hasGeoPrompted()
+  // Already asked once and still not sticky-granted — use cache, no dialog.
+  if (prompted) return cached
+
+  await markGeoPrompted()
+  return applyLiveOrCache(cached)
 }

@@ -22,6 +22,23 @@ export function speechSynthesisSupported() {
   )
 }
 
+/** @returns {Promise<'granted' | 'denied' | 'prompt' | 'unknown'>} */
+export async function queryMicrophonePermission() {
+  try {
+    const perms = globalThis.navigator?.permissions
+    if (!perms?.query) return 'unknown'
+    // Chromium supports 'microphone'; Safari often rejects the query.
+    const status = await perms.query({ name: 'microphone' })
+    const state = String(status?.state || '')
+    if (state === 'granted' || state === 'denied' || state === 'prompt') {
+      return state
+    }
+  } catch {
+    /* unsupported permission name */
+  }
+  return 'unknown'
+}
+
 /** Map app locale tags (e.g. en, en-US) to a BCP-47 tag speech APIs accept. */
 export function speechLangFromLocale(locale) {
   const tag = String(locale || '').trim()

@@ -39,6 +39,7 @@ import {
   createPlannerChat,
 } from '@/lib/ai/plannerChat'
 import {
+  queryMicrophonePermission,
   speakText,
   speechLangFromLocale,
   speechRecognitionSupported,
@@ -202,7 +203,7 @@ export function AiPlannerOverlay({
   const isCreate = mode === 'create'
   const isChat = mode === 'chat'
   const speechLang = speechLangFromLocale(displayLocale)
-  const canDictate = speechRecognitionSupported()
+  const recognitionOk = speechRecognitionSupported()
   const hasMapFocus =
     mapFocus &&
     Number.isFinite(Number(mapFocus.lat)) &&
@@ -221,6 +222,7 @@ export function AiPlannerOverlay({
   const [pendingPreviewUrl, setPendingPreviewUrl] = useState(null)
   /** idle | listening | speaking */
   const [voicePhase, setVoicePhase] = useState('idle')
+  const [micDenied, setMicDenied] = useState(false)
 
   const [importOpen, setImportOpen] = useState(false)
   const [importBusy, setImportBusy] = useState(false)
@@ -258,6 +260,19 @@ export function AiPlannerOverlay({
       haltSpeechEngines()
     }
   }, [])
+
+  useEffect(() => {
+    if (!open || !recognitionOk) return undefined
+    let cancelled = false
+    queryMicrophonePermission().then((state) => {
+      if (!cancelled) setMicDenied(state === 'denied')
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [open, recognitionOk])
+
+  const canDictate = recognitionOk && !micDenied
 
   const { data: journey } = useQuery({
     queryKey: ['viaggio', 'journey', journeyId],
@@ -641,7 +656,7 @@ export function AiPlannerOverlay({
   }
 
   function startVoiceListen({ unlock = false } = {}) {
-    if (!canDictate || busy) return
+    if (!recognitionOk || micDenied || busy) return
     // Unlock TTS during the mic tap so replies can speak after the AI returns
     // (iOS Safari blocks speechSynthesis outside a user-gesture chain).
     if (unlock) unlockSpeechSynthesis()
@@ -665,7 +680,11 @@ export function AiPlannerOverlay({
       },
       onError: (err) => {
         if (!voiceActiveRef.current) return
-        setError(err?.message || 'Speech recognition failed')
+        const msg = err?.message || 'Speech recognition failed'
+        if (/permission denied|not-allowed/i.test(msg)) {
+          setMicDenied(true)
+        }
+        setError(msg)
         stopVoiceSession()
       },
     })
@@ -1448,13 +1467,15 @@ export function AiPlannerOverlay({
                             : 'Start voice conversation'
                       }
                       title={
-                        !canDictate
+                        !recognitionOk
                           ? 'Voice not supported in this browser'
-                          : voicePhase === 'listening'
-                            ? 'Stop listening'
-                            : voicePhase === 'speaking'
-                              ? 'Interrupt reply'
-                              : 'Talk with the planner'
+                          : micDenied
+                            ? 'Microphone blocked in browser settings'
+                            : voicePhase === 'listening'
+                              ? 'Stop listening'
+                              : voicePhase === 'speaking'
+                                ? 'Interrupt reply'
+                                : 'Talk with the planner'
                       }
                       aria-pressed={voicePhase !== 'idle'}
                     >

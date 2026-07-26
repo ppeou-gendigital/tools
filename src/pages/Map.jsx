@@ -1709,7 +1709,8 @@ export function Map() {
 
   useEffect(() => {
     let cancelled = false
-    resolveCoords().then((coords) => {
+    // Non-interactive: cache / already-granted only — no permission dialog on open.
+    resolveCoords({ interactive: false }).then((coords) => {
       if (cancelled || !coords) return
       setCenter({ lat: coords.lat, lng: coords.lng })
       setUserLocation({ lat: coords.lat, lng: coords.lng })
@@ -1854,7 +1855,7 @@ export function Map() {
     setLocating(true)
     setActionError('')
     try {
-      const coords = await resolveCoords()
+      const coords = await resolveCoords({ interactive: true })
       if (!coords) {
         setActionError(
           'Could not get your location. Allow location access in the browser, then try again.',

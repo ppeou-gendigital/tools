@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { loadCachedCoords, resolveCoords } from '@/lib/geoLocation'
+import {
+  hasGeoPrompted,
+  loadCachedCoords,
+  resolveCoords,
+} from '@/lib/geoLocation'
 import {
   isClockDaylight,
   isDaylight,
@@ -14,6 +18,9 @@ import { useOfflineOptional } from '@/providers/OfflineProvider'
  * Returns a stable-ish resolveDaynight whose identity bumps on boundary/coords
  * so the package ThemeProvider re-applies the resolved theme.
  *
+ * Location is resolved non-interactively after the first ask so reopening the
+ * app does not re-trigger the system permission dialog.
+ *
  * @param {(resolve: () => 'light'|'dark') => void} syncResolve
  */
 export function useViaggioDaynight(syncResolve) {
@@ -26,8 +33,8 @@ export function useViaggioDaynight(syncResolve) {
 
   const [coords, setCoords] = useState(null)
   const [tick, setTick] = useState(0)
-  const deniedRef = useRef(false)
   const coordsRef = useRef(null)
+  const firstAskDoneRef = useRef(false)
 
   useEffect(() => {
     coordsRef.current = coords
@@ -39,35 +46,39 @@ export function useViaggioDaynight(syncResolve) {
     if (theme !== 'daynight' || forceClock) return
 
     let cancelled = false
-    deniedRef.current = false
 
-    const refresh = async ({ forcePrompt = false } = {}) => {
+    const refresh = async ({ allowFirstAsk = false } = {}) => {
       if (cancelled) return
+
       const cached = await loadCachedCoords()
       if (cancelled) return
       if (cached) setCoords(cached)
 
-      if (deniedRef.current && !forcePrompt && !cached) {
-        setCoords(null)
+      // First daynight session with no cache: one interactive ask, then never
+      // auto-prompt again (resolveCoords also persists geoPrompted).
+      if (
+        allowFirstAsk &&
+        !firstAskDoneRef.current &&
+        !cached &&
+        !(await hasGeoPrompted())
+      ) {
+        firstAskDoneRef.current = true
+        const next = await resolveCoords({ interactive: true })
+        if (cancelled) return
+        setCoords(next)
         return
       }
 
-      const next = await resolveCoords()
+      const next = await resolveCoords({ interactive: false })
       if (cancelled) return
-      if (next) {
-        deniedRef.current = false
-        setCoords(next)
-      } else {
-        if (!cached) deniedRef.current = true
-        setCoords(cached)
-      }
+      setCoords(next)
     }
 
-    void refresh({ forcePrompt: true })
+    void refresh({ allowFirstAsk: true })
 
     const onVisible = () => {
       if (document.visibilityState === 'visible') {
-        void refresh({ forcePrompt: false })
+        void refresh({ allowFirstAsk: false })
       }
     }
     document.addEventListener('visibilitychange', onVisible)
