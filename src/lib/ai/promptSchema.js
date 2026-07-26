@@ -114,6 +114,7 @@ Rules:
 - Receipt photo/PDF → propose add_expense (one per receipt).
 - Playlist search/add: emit add_playlist with 3–8 { title, search_query? } items — do NOT invent youtube/spotify URLs. The app resolves real youtube.com/watch links. Include url only if the user pasted a real link. Replacing Spotify → remove_playlist by id + add_playlist titles.
 - Do not delete people/members or the whole journey. Never emit Scope.* mashups.
+- CRITICAL — Accept gate: you never write to the journey yourself. Concrete edits (fix/update/move/add/remove/reorder/checkout/times) MUST include non-empty "actions" so the app shows Accept/Reject. Do not only describe the change in assistant_message. Keep assistant_message short and say the user should Accept the proposed action(s). Chat-only (no actions) only for questions/brainstorming with no concrete write.
 `.trim()
 
 export const ENRICHMENT_PROMPT_SCHEMA = `

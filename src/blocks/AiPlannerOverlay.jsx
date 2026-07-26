@@ -1146,6 +1146,13 @@ export function AiPlannerOverlay({
                         {(m.warnings || []).join(' ')}
                       </p>
                     )}
+                    {!isUser &&
+                      (m.actions || []).some((a) => a.status === 'pending') && (
+                        <p className={styles.hint}>
+                          Review the proposed change(s) below, then Accept or
+                          Reject.
+                        </p>
+                      )}
                   </div>
                   {hasMeta && !isUser && (
                     <div className={styles.turnMeta}>

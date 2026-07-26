@@ -26,11 +26,18 @@ const AI_RECEIPT_MIME = new Set([
   'application/pdf',
 ])
 
+function looksLikeChangeRequest(text) {
+  return /\b(fix|update|change|move|add|remove|delete|set|reorder|correct|adjust|put|schedule|checkout|reschedule|swap)\b/i.test(
+    String(text || ''),
+  )
+}
+
 function systemInstructionFor(ctx) {
   const noun = ctx?.journey?.type === 'journal' ? 'journal' : 'trip'
   return [
     `You are Viaggio’s in-app ${noun} planner assistant.`,
-    'Chat helpfully. When proposing concrete changes, include structured actions.',
+    'Chat helpfully. Concrete edits ALWAYS go in "actions" — the app shows Accept/Reject; nothing is saved until the user Accepts.',
+    'Never claim you already updated the journey. Propose actions and briefly tell the user to Accept.',
     'Live journey state is sent each turn as current_journey_context — use that, not outdated memory.',
     CHAT_TURN_PROMPT_SCHEMA,
     'Prefer update_* / remove_* with existing ids from current_journey_context; use add_* for new items.',
@@ -181,21 +188,27 @@ export async function createPlannerChat(
       }
 
       let turn = finalizeTurn(parsed, ctx)
-      if (
-        Array.isArray(parsed?.actions) &&
-        parsed.actions.length > 0 &&
-        turn.actions.length === 0
-      ) {
+      const needActionRepair =
+        (Array.isArray(parsed?.actions) &&
+          parsed.actions.length > 0 &&
+          turn.actions.length === 0) ||
+        (looksLikeChangeRequest(text) && turn.actions.length === 0)
+
+      if (needActionRepair) {
         const repair = await chat.sendMessage(
           JSON.stringify({
             repair: true,
             errors: turn.warnings?.length
               ? turn.warnings
-              : ['All actions were invalid or incomplete.'],
-            note: 'Re-emit the chat-turn JSON with valid actions only. Use ids from current_journey_context. Prefer occurs_at_local/ends_at_local.',
+              : [
+                  'User asked for a concrete change but actions was empty or invalid. Emit non-empty actions so Accept/Reject appears. Do not only describe the fix.',
+                ],
+            note: 'Re-emit chat-turn JSON with valid actions using ids from current_journey_context. Prefer occurs_at_local/ends_at_local. assistant_message should ask the user to Accept.',
+            user_message: text,
             current_journey_context: {
               people: ctx.people,
               entries: ctx.entries,
+              days: ctx.days,
               journey: ctx.journey,
             },
           }),
@@ -204,6 +217,15 @@ export async function createPlannerChat(
           parseModelJson(repair?.response?.text?.() ?? ''),
           ctx,
         )
+        if (looksLikeChangeRequest(text) && turn.actions.length === 0) {
+          turn = {
+            ...turn,
+            warnings: [
+              ...(turn.warnings || []),
+              'No Acceptable changes were returned. Ask again, or say “propose an update_entries action I can Accept.”',
+            ],
+          }
+        }
       }
       return turn
     } catch (err) {
