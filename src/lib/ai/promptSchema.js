@@ -43,7 +43,7 @@ Rules:
 - Never concatenate schema paths into values (no "Scope.field:…").
 - dates are plain YYYY-MM-DD; timezones are plain IANA ids.
 - details is a JSON object, not a string.
-- Playlist urls must be embeddable: youtube.com/watch?v=…, youtube.com/playlist?list=…, or open.spotify.com/{track|album|playlist}/…. Never music.youtube.com search, never invent IDs. Omit playlist if you lack a real playable URL.
+- Playlist: prefer { title, search_query? } without inventing URLs — the app resolves YouTube watch links. Only include url when the user pasted a real youtube.com/watch or open.spotify.com track/album/playlist link.
 `.trim()
 
 export const CHAT_TURN_PROMPT_SCHEMA = `
@@ -84,8 +84,7 @@ Rules:
 - Use existing ids from journey context for every update_* / remove_*. Never invent ids.
 - remove_* uses "ids": [...]. update_* includes id on each object (or expense.id / journey fields).
 - Receipt photo/PDF → propose add_expense (one per receipt).
-- Playlist: only embeddable URLs the in-app Player can play — https://www.youtube.com/watch?v=VIDEO_ID, https://www.youtube.com/playlist?list=LIST_ID, or https://open.spotify.com/{track|album|playlist}/ID. Never music.youtube.com/search, never youtube/spotify search pages, never invent video/playlist IDs.
-- If the user asks for songs and you lack real playable URLs: name suggestions in assistant_message and skip add_playlist (or ask them to paste links). Replacing Spotify → remove_playlist by id; only add_playlist when you have real embeddable URLs.
+- Playlist search/add: emit add_playlist with 3–8 { title, search_query? } items — do NOT invent youtube/spotify URLs. The app resolves real youtube.com/watch links. Include url only if the user pasted a real link. Replacing Spotify → remove_playlist by id + add_playlist titles.
 - Do not delete people/members or the whole journey. Never emit Scope.* mashups.
 `.trim()
 
@@ -99,5 +98,5 @@ Return JSON only:
   "playlist": [playlist objects…]
 }
 Plain ISO dates / IANA timezones only. No Scope.* mashups. details is an object.
-Playlist urls must be embeddable youtube.com watch/playlist or open.spotify.com track/album/playlist — never search URLs or invented IDs. Omit playlist if unsure.
+Playlist: titles (+ optional search_query) OK without urls; app resolves YouTube. Never invent video IDs.
 `.trim()

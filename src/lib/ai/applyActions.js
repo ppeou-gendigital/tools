@@ -16,6 +16,7 @@ import {
   upsertExpenseWithSplits,
 } from '@/lib/viaggioApi'
 import { resolveSchemaForActivity } from '@/lib/catalog'
+import { resolvePlaylistItems } from '@/lib/youtubeSearch'
 
 function equalSplits(personIds, amountCents) {
   const n = personIds.length
@@ -115,7 +116,14 @@ export async function applyEnrichment(journeyId, enrichment, userId) {
     }
   }
 
-  for (const item of enrichment?.playlist || []) {
+  let playlistItems = enrichment?.playlist || []
+  try {
+    playlistItems = await resolvePlaylistItems(playlistItems)
+  } catch (err) {
+    errors.push(`Playlist search: ${err.message}`)
+    playlistItems = []
+  }
+  for (const item of playlistItems) {
     try {
       const row = await addPlaylistItem(
         journeyId,
@@ -321,7 +329,13 @@ async function applyUpdatePlaceIdeas(action) {
 async function applyUpdatePlaylist(action) {
   const applied = emptyApplied()
   const errors = []
-  for (const item of action.playlist || []) {
+  let playlistItems = action.playlist || []
+  try {
+    playlistItems = await resolvePlaylistItems(playlistItems)
+  } catch (err) {
+    return { applied, errors: [`Playlist search: ${err.message}`] }
+  }
+  for (const item of playlistItems) {
     if (!item?.id) {
       errors.push('Playlist update missing id')
       continue

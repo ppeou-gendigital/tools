@@ -35,7 +35,7 @@ function systemInstructionFor(ctx) {
     'When the user attaches a receipt photo or PDF, read it and propose add_expense.',
     'place_ideas require approximate lat/lng on create. entries need valid activity_id values.',
     'Suggest places: when asked for place ideas / “near the map”, propose add_place_ideas (typically 5–10) near map_focus if present, else near the trip area. Distinct names, lat/lng required, short notes OK. Skip duplicates already in context.',
-    'Playlist urls must be embeddable (youtube.com/watch or playlist, or open.spotify.com track/album/playlist). Never music.youtube.com search or invented IDs; if unsure, suggest song names in chat and skip add_playlist.',
+    'Playlist: when the user asks to search/add songs, emit add_playlist with song or mix titles (and optional search_query). Do NOT invent YouTube/Spotify URLs — the app resolves real youtube.com/watch links via YouTube search. Prefer 3–8 titles. You may still pass a real pasted watch/playlist URL if the user provided one.',
     'Plain YYYY-MM-DD dates and IANA timezones only — never Scope.* mashups.',
     catalogPromptBlock(),
     journeyContextPromptBlock(ctx),

@@ -43,7 +43,7 @@ function systemInstructionFor({ preferredCurrency, displayLocale }) {
     '- Put the day-by-day itinerary in entries[] (valid activity_id, title, occurs_on and/or occurs_at, timezone). Typically 6–20 for a weekend trip; never leave entries empty.',
     '- Use exact catalog activity_id values, e.g. drive_leg, meal, restaurant, sightseeing, lodging, hotel, flight, train.',
     '- place_ideas[] are optional extras with lat/lng — they do not replace entries.',
-    '- Include useful pre-trip todos. Optional playlist only with embeddable youtube.com watch/playlist or Spotify track/album/playlist URLs — never search URLs or invented IDs; omit playlist if unsure.',
+    '- Include useful pre-trip todos. Optional playlist as song titles (search_query OK) — never invent YouTube/Spotify URLs; the app resolves watch links.',
     '- Plain YYYY-MM-DD dates and IANA timezones only.',
     catalogPromptBlock(),
     'User preferences (JSON):',

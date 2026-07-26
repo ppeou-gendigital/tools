@@ -10,6 +10,12 @@ export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 /** Google Maps JavaScript API + Places (Map brainstorming page). Optional. */
 export const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
 
+/**
+ * YouTube Data API v3 (AI playlist search → playable watch URLs). Optional.
+ * Falls back to VITE_GOOGLE_MAPS_API_KEY when unset (same GCP project).
+ */
+export const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY || ''
+
 /** Injected at build time: package.json version + git SHA (e.g. 0.1.0+ed7b435). */
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '0.0.0+local'
 

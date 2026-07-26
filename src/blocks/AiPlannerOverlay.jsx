@@ -34,6 +34,7 @@ import {
   assertReceiptFile,
   createPlannerChat,
 } from '@/lib/ai/plannerChat'
+import { resolvePlaylistItems } from '@/lib/youtubeSearch'
 import { prepareImportedSnapshot } from '@/lib/ai/repairSnapshot'
 import {
   formatByteSize,
@@ -752,18 +753,47 @@ export function AiPlannerOverlay({
           userText,
           turn.assistant_message,
         )
+        const actions = []
+        for (const a of turn.actions || []) {
+          let next = {
+            ...a,
+            status: 'pending',
+            receiptFile: a.type === 'add_expense' ? receipt || null : null,
+          }
+          if (
+            (a.type === 'add_playlist' || a.type === 'update_playlist') &&
+            (a.playlist || []).length
+          ) {
+            try {
+              const resolved = await resolvePlaylistItems(a.playlist)
+              if (!resolved.length) {
+                next = {
+                  ...next,
+                  status: 'error',
+                  error:
+                    'Could not find playable YouTube videos for those titles.',
+                  playlist: a.playlist,
+                }
+              } else {
+                next = { ...next, playlist: resolved }
+              }
+            } catch (err) {
+              next = {
+                ...next,
+                status: 'error',
+                error: err.message || 'YouTube search failed',
+              }
+            }
+          }
+          actions.push(next)
+        }
         setMessages((prev) => [
           ...prev,
           {
             id: `a-${Date.now()}`,
             role: 'assistant',
             text: turn.assistant_message,
-            actions: (turn.actions || []).map((a) => ({
-              ...a,
-              status: 'pending',
-              receiptFile:
-                a.type === 'add_expense' ? receipt || null : null,
-            })),
+            actions,
           },
         ])
       }

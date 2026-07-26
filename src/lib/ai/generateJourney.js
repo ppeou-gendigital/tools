@@ -28,7 +28,7 @@ export async function generateJourneyPlan(input) {
     'Include a realistic day-by-day mix of transit, lodging, meals, sightseeing in entries[] (non-empty).',
     'Include 4–10 place_ideas with approximate lat/lng near the destination.',
     'Include useful pre-trip todos (visa, packs, bookings).',
-    'Playlist URLs must be embeddable https youtube.com/watch or youtube.com/playlist or open.spotify.com track/album/playlist — never search URLs or invented IDs; omit playlist if unsure.',
+    'Playlist: song titles (+ optional search_query) without inventing URLs; the app resolves YouTube watch links. Real pasted urls OK.',
     'If the user supplied starts_on, ends_on, timezone, or currency, use those exact values.',
     `Today is ${clock.today} (${clock.weekday}) in ${clock.timeZone}. Relative phrases are relative to that today; prefer future dates unless the user asks for the past.`,
   ].join('\n')

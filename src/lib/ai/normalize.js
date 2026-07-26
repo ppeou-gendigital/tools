@@ -332,9 +332,32 @@ function rewriteYoutubeMusicUrl(url) {
   return null
 }
 
+function searchQueryFromUrl(url) {
+  try {
+    const parsed = new URL(url)
+    const host = parsed.hostname.replace(/^www\./, '').toLowerCase()
+    if (
+      (host === 'youtube.com' || host === 'm.youtube.com') &&
+      parsed.pathname === '/results'
+    ) {
+      return asString(parsed.searchParams.get('search_query')).trim() || null
+    }
+    if (host === 'music.youtube.com' && parsed.pathname.startsWith('/search')) {
+      return asString(parsed.searchParams.get('q')).trim() || null
+    }
+    if (host === 'open.spotify.com' && parsed.pathname.startsWith('/search')) {
+      const q = decodeURIComponent(parsed.pathname.replace(/^\/search\/?/, ''))
+      return q.trim() || null
+    }
+  } catch {
+    /* ignore */
+  }
+  return null
+}
+
 /**
- * Keep only playlist rows the in-app Player can embed.
- * Drops search URLs, fakes, and title-only suggestions.
+ * Playlist rows for the Player: keep playable URLs, or title/search_query for
+ * YouTube Data API resolution at accept time.
  */
 export function normalizePlaylistItem(raw) {
   const title = asString(raw?.title).trim() || 'Track'
@@ -344,30 +367,59 @@ export function normalizePlaylistItem(raw) {
     platform = null
   }
   let url = asString(raw?.url).trim()
-  if (!url) return null
+  let searchQuery = asString(raw?.search_query || raw?.searchQuery).trim()
 
   const fakeHint =
     /example|placeholder|fake|dummy|lorem|test[_-]?id/i.test(url) ||
     /example|placeholder|fake|dummy/i.test(title)
-  if (fakeHint) return null
 
-  const rewritten = rewriteYoutubeMusicUrl(url)
-  if (rewritten == null && /music\.youtube\.com/i.test(url)) return null
-  if (rewritten) url = rewritten
-
-  const target = parseMediaLink(url)
-  if (!target.playable) return null
-
-  if (!platform) {
-    if (target.platform === 'spotify') platform = 'spotify'
-    else if (target.platform === 'youtube') platform = 'youtube'
+  if (fakeHint) {
+    url = ''
   }
+
+  if (url) {
+    const fromSearch = searchQueryFromUrl(url)
+    if (fromSearch) {
+      searchQuery = searchQuery || fromSearch
+      url = ''
+    } else {
+      const rewritten = rewriteYoutubeMusicUrl(url)
+      if (rewritten == null && /music\.youtube\.com/i.test(url)) {
+        searchQuery = searchQuery || title
+        url = ''
+      } else if (rewritten) {
+        url = rewritten
+      }
+    }
+  }
+
+  if (url) {
+    const target = parseMediaLink(url)
+    if (target.playable) {
+      if (!platform) {
+        if (target.platform === 'spotify') platform = 'spotify'
+        else if (target.platform === 'youtube') platform = 'youtube'
+      }
+      return {
+        ...(id ? { id } : {}),
+        title,
+        url,
+        platform: platform === 'spotify' || platform === 'youtube' ? platform : null,
+      }
+    }
+    searchQuery = searchQuery || title
+    url = ''
+  }
+
+  const query = searchQuery || (title !== 'Track' ? title : '')
+  if (!query) return null
 
   return {
     ...(id ? { id } : {}),
     title,
-    url,
-    platform: platform === 'spotify' || platform === 'youtube' ? platform : null,
+    url: null,
+    search_query: query,
+    platform: platform === 'spotify' ? 'spotify' : 'youtube',
   }
 }
 
