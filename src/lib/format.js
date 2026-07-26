@@ -112,31 +112,36 @@ export function formatEntryTimeLine(entry, locale) {
     : ''
   if (entry.endsAt && endTz && endTz !== startTz) {
     const end = formatWallTime(entry.endsAt, endTz, locale)
-    const startLabel = shortTz(startTz)
-    const endLabel = shortTz(endTz)
+    const startLabel = shortTz(startTz, entry.occursAt)
+    const endLabel = shortTz(endTz, entry.endsAt)
     return `${start} ${startLabel} → ${end} ${endLabel}`.trim()
   }
   if (entry.endsAt) {
     const tz = endTz || startTz
+    const label = shortTz(tz, entry.occursAt || entry.endsAt)
     if (!sameCivilDay(entry.occursAt, entry.endsAt, tz)) {
-      return `${formatWallDateTime(entry.occursAt, startTz, locale)} – ${formatWallDateTime(entry.endsAt, tz, locale)}`.trim()
+      return `${formatWallDateTime(entry.occursAt, startTz, locale)} – ${formatWallDateTime(entry.endsAt, tz, locale)} ${label}`.trim()
     }
     const end = formatWallTime(entry.endsAt, tz, locale)
-    return `${start} – ${end}`.trim()
+    return `${start} – ${end} ${label}`.trim()
   }
-  return start
+  const label = shortTz(startTz, entry.occursAt)
+  return label ? `${start} ${label}`.trim() : start
 }
 
-function shortTz(tz) {
+/** Short zone label (PST, CST, …) at the given instant for DST accuracy. */
+function shortTz(tz, instant) {
   if (!tz) return ''
   try {
+    const when = instant ? new Date(instant) : new Date()
+    if (Number.isNaN(when.getTime())) return ''
     const parts = new Intl.DateTimeFormat('en-US', {
       timeZone: tz,
       timeZoneName: 'short',
-    }).formatToParts(new Date())
-    return parts.find((p) => p.type === 'timeZoneName')?.value || tz
+    }).formatToParts(when)
+    return parts.find((p) => p.type === 'timeZoneName')?.value || ''
   } catch {
-    return tz
+    return ''
   }
 }
 
