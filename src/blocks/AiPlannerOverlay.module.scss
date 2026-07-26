@@ -417,6 +417,29 @@
   }
 }
 
+.promptMicListening {
+  opacity: 1 !important;
+  color: var(--destructive, #c62828) !important;
+  background: color-mix(in srgb, var(--destructive, #c62828) 12%, transparent) !important;
+  animation: promptMicPulse 1.4s ease-in-out infinite;
+}
+
+.promptMicSpeaking {
+  opacity: 1 !important;
+  color: var(--primary) !important;
+  background: color-mix(in srgb, var(--primary) 12%, transparent) !important;
+}
+
+@keyframes promptMicPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--destructive, #c62828) 35%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
 .promptSend {
   width: 2rem;
   height: 2rem;

@@ -7,10 +7,13 @@ import {
   Download,
   FileText,
   MessageSquarePlus,
+  Mic,
+  MicOff,
   Plus,
   Send,
   Sparkles,
   Upload,
+  Volume2,
   X,
 } from 'lucide-react'
 import { AnchoredPopover } from '@/molecules/AnchoredPopover'
@@ -31,9 +34,18 @@ import { createTripChat } from '@/lib/ai/createTripChat'
 import { isAiPlanningEnabled } from '@/lib/ai/enabled'
 import { mapAiError } from '@/lib/ai/errors'
 import {
+  AI_RECEIPT_MIME,
   assertReceiptFile,
   createPlannerChat,
 } from '@/lib/ai/plannerChat'
+import {
+  speakText,
+  speechLangFromLocale,
+  speechRecognitionSupported,
+  startDictation,
+  stopDictation,
+  stopSpeaking,
+} from '@/lib/speech'
 import { resolvePlaylistItems } from '@/lib/youtubeSearch'
 import { prepareImportedSnapshot } from '@/lib/ai/repairSnapshot'
 import {
@@ -58,7 +70,7 @@ import { cx } from '@/lib/cx'
 import styles from './AiPlannerOverlay.module.scss'
 
 const WELCOME_CHAT =
-  'Ask me to add, update, or remove activities, todos, places, playlist, or expenses — or attach a receipt photo/PDF. I’ll propose changes you can accept. Or Export JSON to edit in ChatGPT and Import it back.'
+  'Ask me to add, update, or remove activities, todos, places, playlist, or expenses — or paste/attach a receipt photo/PDF. Tap the mic to talk. I’ll propose changes you can accept. Or Export JSON to edit in ChatGPT and Import it back.'
 
 const WELCOME_CHAT_MAP =
   'I can suggest places near this map view (with pins you can accept), or help with activities, todos, playlist, and expenses. Ask for ideas — e.g. “scenic viewpoints” or “late-night eats”.'
@@ -141,6 +153,24 @@ function actionDoneLabel(action) {
   return 'Added.'
 }
 
+function filesFromDataTransfer(dt) {
+  if (!dt) return []
+  if (dt.files?.length) return [...dt.files]
+  const items = dt.items ? [...dt.items] : []
+  return items
+    .filter((it) => it.kind === 'file')
+    .map((it) => it.getAsFile())
+    .filter(Boolean)
+}
+
+function firstReceiptFile(files) {
+  return (
+    (files || []).find((f) =>
+      AI_RECEIPT_MIME.has(String(f?.type || '').toLowerCase()),
+    ) || null
+  )
+}
+
 export function AiPlannerOverlay({
   open,
   mode,
@@ -164,9 +194,14 @@ export function AiPlannerOverlay({
   const receiptUploadRef = useRef(null)
   const responseRef = useRef(null)
   const plusBtnRef = useRef(null)
+  const voiceActiveRef = useRef(false)
+  const sendRef = useRef(null)
+  const startVoiceListenRef = useRef(null)
 
   const isCreate = mode === 'create'
   const isChat = mode === 'chat'
+  const speechLang = speechLangFromLocale(displayLocale)
+  const canDictate = speechRecognitionSupported()
   const hasMapFocus =
     mapFocus &&
     Number.isFinite(Number(mapFocus.lat)) &&
@@ -183,6 +218,8 @@ export function AiPlannerOverlay({
   const [createResult, setCreateResult] = useState(null)
   const [pendingReceipt, setPendingReceipt] = useState(null)
   const [pendingPreviewUrl, setPendingPreviewUrl] = useState(null)
+  /** idle | listening | speaking */
+  const [voicePhase, setVoicePhase] = useState('idle')
 
   const [importOpen, setImportOpen] = useState(false)
   const [importBusy, setImportBusy] = useState(false)
@@ -197,6 +234,29 @@ export function AiPlannerOverlay({
       if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl)
     }
   }, [pendingPreviewUrl])
+
+  function haltSpeechEngines() {
+    voiceActiveRef.current = false
+    stopDictation()
+    stopSpeaking()
+  }
+
+  function stopVoiceSession() {
+    haltSpeechEngines()
+    setVoicePhase('idle')
+  }
+
+  useEffect(() => {
+    if (open) return undefined
+    haltSpeechEngines()
+    return undefined
+  }, [open])
+
+  useEffect(() => {
+    return () => {
+      haltSpeechEngines()
+    }
+  }, [])
 
   const { data: journey } = useQuery({
     queryKey: ['viaggio', 'journey', journeyId],
@@ -254,6 +314,8 @@ export function AiPlannerOverlay({
       if (prev) URL.revokeObjectURL(prev)
       return null
     })
+    setVoicePhase('idle')
+    haltSpeechEngines()
 
     let cancelled = false
     skipSessionSaveRef.current = true
@@ -544,6 +606,81 @@ export function AiPlannerOverlay({
     setPendingReceipt(file)
   }
 
+  function tryAttachReceiptFiles(files) {
+    if (!isChat) return false
+    const file = firstReceiptFile(files)
+    if (!file) return false
+    onPickReceipt([file])
+    return true
+  }
+
+  function onComposerPaste(event) {
+    if (!isChat) return
+    const file = firstReceiptFile(filesFromDataTransfer(event.clipboardData))
+    if (!file) return
+    event.preventDefault()
+    event.stopPropagation()
+    onPickReceipt([file])
+  }
+
+  function onComposerDragOver(event) {
+    if (!isChat) return
+    if (![...(event.dataTransfer?.types || [])].includes('Files')) return
+    event.preventDefault()
+    event.stopPropagation()
+  }
+
+  function onComposerDrop(event) {
+    if (!isChat) return
+    const files = filesFromDataTransfer(event.dataTransfer)
+    if (!firstReceiptFile(files)) return
+    event.preventDefault()
+    event.stopPropagation()
+    tryAttachReceiptFiles(files)
+  }
+
+  function startVoiceListen() {
+    if (!canDictate || busy) return
+    stopSpeaking()
+    stopDictation()
+    voiceActiveRef.current = true
+    setVoicePhase('listening')
+    setError('')
+    setInput('')
+    startDictation({
+      lang: speechLang,
+      continuous: false,
+      onInterim: (t) => {
+        if (voiceActiveRef.current) setInput(t)
+      },
+      onFinal: (t) => {
+        if (!voiceActiveRef.current) return
+        stopDictation()
+        setInput(t)
+        void sendRef.current?.({ text: t, fromVoice: true })
+      },
+      onError: (err) => {
+        if (!voiceActiveRef.current) return
+        setError(err?.message || 'Speech recognition failed')
+        stopVoiceSession()
+      },
+    })
+  }
+
+  function toggleVoice() {
+    if (!canDictate || busy) return
+    if (voicePhase === 'listening') {
+      stopVoiceSession()
+      return
+    }
+    if (voicePhase === 'speaking') {
+      stopSpeaking()
+      startVoiceListen()
+      return
+    }
+    startVoiceListen()
+  }
+
   function closeImport() {
     setImportOpen(false)
     resetImport()
@@ -610,6 +747,7 @@ export function AiPlannerOverlay({
 
   async function onNewChat() {
     setPlusOpen(false)
+    stopVoiceSession()
     setError('')
     setBusy(false)
     setCreateResult(null)
@@ -672,10 +810,11 @@ export function AiPlannerOverlay({
     }
   }
 
-  async function onSend() {
-    const text = input.trim()
+  async function onSend({ text: textOverride, fromVoice = false } = {}) {
+    const text = String(textOverride ?? input).trim()
     const receipt = isChat ? pendingReceipt : null
     if ((!text && !receipt) || busy) return
+    if (fromVoice) stopDictation()
     setBusy(true)
     setError('')
     setInput('')
@@ -708,10 +847,13 @@ export function AiPlannerOverlay({
       },
     ])
 
+    let assistantText = ''
+    let sendFailed = false
     try {
       if (isCreate) {
         if (!chatRef.current) return
         const turn = await chatRef.current.send(text)
+        assistantText = turn.assistant_message || ''
         modelHistoryRef.current = appendModelTurn(
           modelHistoryRef.current,
           userText,
@@ -748,6 +890,7 @@ export function AiPlannerOverlay({
         const turn = await chatRef.current.send(text, {
           files: receipt ? [receipt] : [],
         })
+        assistantText = turn.assistant_message || ''
         modelHistoryRef.current = appendModelTurn(
           modelHistoryRef.current,
           userText,
@@ -798,11 +941,35 @@ export function AiPlannerOverlay({
         ])
       }
     } catch (err) {
+      sendFailed = true
       setError(mapAiError(err))
+      if (fromVoice) stopVoiceSession()
     } finally {
       setBusy(false)
     }
+
+    if (
+      !sendFailed &&
+      fromVoice &&
+      voiceActiveRef.current &&
+      assistantText.trim()
+    ) {
+      setVoicePhase('speaking')
+      await speakText(assistantText, { lang: speechLang })
+      if (voiceActiveRef.current) {
+        startVoiceListenRef.current?.()
+      } else {
+        setVoicePhase('idle')
+      }
+    } else if (fromVoice && !voiceActiveRef.current) {
+      setVoicePhase('idle')
+    }
   }
+
+  useEffect(() => {
+    sendRef.current = onSend
+    startVoiceListenRef.current = startVoiceListen
+  })
 
   if (!open || typeof document === 'undefined') return null
 
@@ -1072,7 +1239,12 @@ export function AiPlannerOverlay({
                   onPickReceipt(e.target.files)
                 }}
               />
-              <div className={styles.promptBox}>
+              <div
+                className={styles.promptBox}
+                onPaste={onComposerPaste}
+                onDragOver={onComposerDragOver}
+                onDrop={onComposerDrop}
+              >
                 {pendingReceipt && (
                   <div className={styles.pendingChipRow}>
                     <div className={styles.pendingChip}>
@@ -1108,18 +1280,25 @@ export function AiPlannerOverlay({
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={
-                    pendingReceipt
-                      ? 'Add a note (optional)…'
-                      : isCreate
-                        ? 'Message the planner…'
-                        : hasMapFocus
-                          ? 'Suggest places near this map…'
-                          : 'Write a message…'
+                    voicePhase === 'listening'
+                      ? 'Listening…'
+                      : voicePhase === 'speaking'
+                        ? 'Speaking…'
+                        : pendingReceipt
+                          ? 'Add a note (optional)…'
+                          : isCreate
+                            ? 'Message the planner…'
+                            : hasMapFocus
+                              ? 'Suggest places near this map…'
+                              : isChat
+                                ? 'Message or paste a receipt…'
+                                : 'Write a message…'
                   }
+                  onPaste={onComposerPaste}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault()
-                      onSend()
+                      void onSend()
                     }
                   }}
                   autoComplete="off"
@@ -1239,9 +1418,46 @@ export function AiPlannerOverlay({
                   <div className={styles.promptToolbarEnd}>
                     <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
+                      className={cx(
+                        styles.promptIconBtn,
+                        voicePhase === 'listening' && styles.promptMicListening,
+                        voicePhase === 'speaking' && styles.promptMicSpeaking,
+                      )}
+                      onClick={toggleVoice}
+                      disabled={busy || !canDictate}
+                      aria-label={
+                        voicePhase === 'listening'
+                          ? 'Stop voice conversation'
+                          : voicePhase === 'speaking'
+                            ? 'Interrupt and listen'
+                            : 'Start voice conversation'
+                      }
+                      title={
+                        !canDictate
+                          ? 'Voice not supported in this browser'
+                          : voicePhase === 'listening'
+                            ? 'Stop listening'
+                            : voicePhase === 'speaking'
+                              ? 'Interrupt reply'
+                              : 'Talk with the planner'
+                      }
+                      aria-pressed={voicePhase !== 'idle'}
+                    >
+                      {voicePhase === 'listening' ? (
+                        <MicOff size={18} aria-hidden="true" />
+                      ) : voicePhase === 'speaking' ? (
+                        <Volume2 size={18} aria-hidden="true" />
+                      ) : (
+                        <Mic size={18} aria-hidden="true" />
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
                       size="sm"
                       className={styles.promptSend}
-                      onClick={onSend}
+                      onClick={() => void onSend()}
                       disabled={
                         busy || (!input.trim() && !pendingReceipt)
                       }
