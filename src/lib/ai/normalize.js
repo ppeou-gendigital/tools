@@ -102,6 +102,19 @@ export function asIanaTimezone(value, fallback = 'UTC') {
   }
 }
 
+/**
+ * AI often emits timezone:"UTC" even when journey.default_timezone is a city.
+ * Prefer the journey zone unless the entry explicitly uses a different non-UTC zone.
+ */
+export function preferJourneyTimezone(entryTz, defaultTimezone) {
+  const fallback = asIanaTimezone(null, defaultTimezone || 'UTC').timezone
+  const entry = asIanaTimezone(entryTz, fallback).timezone
+  if (!entry || entry === 'UTC') {
+    return fallback && fallback !== 'UTC' ? fallback : entry || 'UTC'
+  }
+  return entry
+}
+
 function parseDetails(raw) {
   if (raw == null || raw === '') return {}
   if (typeof raw === 'object' && !Array.isArray(raw)) return raw
@@ -301,15 +314,18 @@ export function normalizeEntry(raw, index = 0, { defaultTimezone = 'UTC' } = {})
   const id = asString(raw?.id).trim() || `entry-${index + 1}`
 
   const occursOn = asIsoDate(raw?.occurs_on ?? raw?.occursOn)
-  const tz = asIanaTimezone(raw?.timezone, defaultTimezone)
-  const startTz = asIanaTimezone(
+  const tzName = preferJourneyTimezone(raw?.timezone, defaultTimezone)
+  const startTzName = preferJourneyTimezone(
     raw?.start_timezone ?? raw?.startTimezone,
-    tz.timezone,
+    tzName,
   )
-  const endTz = asIanaTimezone(
+  const endTzName = preferJourneyTimezone(
     raw?.end_timezone ?? raw?.endTimezone,
-    tz.timezone,
+    tzName,
   )
+  const tz = { timezone: tzName, recovered: {} }
+  const startTz = { timezone: startTzName, recovered: {} }
+  const endTz = { timezone: endTzName, recovered: {} }
   const { occursAt, endsAt } = resolveInstantsFromLocals(raw, {
     timezone: tz.timezone,
     startTimezone: startTz.timezone,
@@ -378,19 +394,19 @@ export function normalizeEntryPatch(raw, { defaultTimezone = 'UTC' } = {}) {
     patch.occurs_on = asIsoDate(raw.occurs_on ?? raw.occursOn).date
   }
   if (raw.timezone != null) {
-    patch.timezone = asIanaTimezone(raw.timezone, defaultTimezone).timezone
+    patch.timezone = preferJourneyTimezone(raw.timezone, defaultTimezone)
   }
   if (raw.start_timezone != null || raw.startTimezone != null) {
-    patch.start_timezone = asIanaTimezone(
+    patch.start_timezone = preferJourneyTimezone(
       raw.start_timezone ?? raw.startTimezone,
       patch.timezone || defaultTimezone,
-    ).timezone
+    )
   }
   if (raw.end_timezone != null || raw.endTimezone != null) {
-    patch.end_timezone = asIanaTimezone(
+    patch.end_timezone = preferJourneyTimezone(
       raw.end_timezone ?? raw.endTimezone,
       patch.timezone || defaultTimezone,
-    ).timezone
+    )
   }
 
   const wantsLocal =
