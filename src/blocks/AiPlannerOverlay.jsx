@@ -45,6 +45,7 @@ import {
   startDictation,
   stopDictation,
   stopSpeaking,
+  unlockSpeechSynthesis,
 } from '@/lib/speech'
 import { resolvePlaylistItems } from '@/lib/youtubeSearch'
 import { prepareImportedSnapshot } from '@/lib/ai/repairSnapshot'
@@ -639,8 +640,11 @@ export function AiPlannerOverlay({
     tryAttachReceiptFiles(files)
   }
 
-  function startVoiceListen() {
+  function startVoiceListen({ unlock = false } = {}) {
     if (!canDictate || busy) return
+    // Unlock TTS during the mic tap so replies can speak after the AI returns
+    // (iOS Safari blocks speechSynthesis outside a user-gesture chain).
+    if (unlock) unlockSpeechSynthesis()
     stopSpeaking()
     stopDictation()
     voiceActiveRef.current = true
@@ -674,11 +678,13 @@ export function AiPlannerOverlay({
       return
     }
     if (voicePhase === 'speaking') {
+      // Interrupt reply — stay in voice mode and listen again.
+      unlockSpeechSynthesis()
       stopSpeaking()
-      startVoiceListen()
+      startVoiceListen({ unlock: false })
       return
     }
-    startVoiceListen()
+    startVoiceListen({ unlock: true })
   }
 
   function closeImport() {
@@ -955,9 +961,16 @@ export function AiPlannerOverlay({
       assistantText.trim()
     ) {
       setVoicePhase('speaking')
+      // Re-unlock is a no-op after the mic tap, but helps desktop Chrome
+      // if the synth got stuck paused during the long AI wait.
+      try {
+        window.speechSynthesis?.resume?.()
+      } catch {
+        /* ignore */
+      }
       await speakText(assistantText, { lang: speechLang })
       if (voiceActiveRef.current) {
-        startVoiceListenRef.current?.()
+        startVoiceListenRef.current?.({ unlock: false })
       } else {
         setVoicePhase('idle')
       }

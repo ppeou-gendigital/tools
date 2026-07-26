@@ -1,6 +1,9 @@
 /**
  * Web Speech API helpers for AI planner dictation + spoken replies.
  * Recognition / synthesis need HTTPS (or localhost) and a user gesture on many browsers.
+ *
+ * iOS Safari only allows speechSynthesis after a speak() during a user gesture.
+ * Call unlockSpeechSynthesis() from the mic tap before async AI replies.
  */
 
 function recognitionCtor() {
@@ -39,6 +42,71 @@ export function speechLangFromLocale(locale) {
 }
 
 let activeRecognition = null
+let speechUnlocked = false
+let voicesPrimed = false
+
+function primeVoices() {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return
+  try {
+    const voices = window.speechSynthesis.getVoices()
+    if (voices?.length) voicesPrimed = true
+    if (!voicesPrimed) {
+      window.speechSynthesis.addEventListener(
+        'voiceschanged',
+        () => {
+          voicesPrimed = true
+        },
+        { once: true },
+      )
+      window.speechSynthesis.getVoices()
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function pickVoice(lang) {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return null
+  const voices = window.speechSynthesis.getVoices() || []
+  if (!voices.length) return null
+  const tag = String(lang || 'en-US')
+  const base = tag.split('-')[0].toLowerCase()
+  return (
+    voices.find((v) => v.lang === tag) ||
+    voices.find((v) => String(v.lang || '').toLowerCase().startsWith(base)) ||
+    voices.find((v) => v.default) ||
+    voices[0] ||
+    null
+  )
+}
+
+/**
+ * Must run inside a click/tap handler (e.g. mic button).
+ * Unlocks iOS Safari for later programmatic speak() after async work.
+ */
+export function unlockSpeechSynthesis() {
+  if (!speechSynthesisSupported()) return
+  primeVoices()
+  try {
+    // Resume if Chrome left the synth stuck in paused state.
+    window.speechSynthesis.resume?.()
+    // Empty/near-empty utterance during the tap unlocks later programmatic speak.
+    // Avoid volume=0 — some iOS builds treat that as never starting.
+    const unlock = new SpeechSynthesisUtterance(' ')
+    unlock.rate = 10
+    unlock.volume = 0.01
+    unlock.onend = () => {
+      speechUnlocked = true
+    }
+    unlock.onerror = () => {
+      speechUnlocked = true
+    }
+    window.speechSynthesis.speak(unlock)
+    speechUnlocked = true
+  } catch {
+    /* ignore */
+  }
+}
 
 export function stopDictation() {
   const rec = activeRecognition
@@ -133,26 +201,74 @@ export function stopSpeaking() {
   }
 }
 
+function wait(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms)
+  })
+}
+
 /**
  * Speak plain text. Resolves when utterance ends (or immediately if unsupported/empty).
  * @returns {Promise<void>}
  */
-export function speakText(text, { lang } = {}) {
-  return new Promise((resolve) => {
-    const t = String(text || '').trim()
-    if (!t || !speechSynthesisSupported()) {
-      resolve()
-      return
-    }
-    stopSpeaking()
-    const utterance = new SpeechSynthesisUtterance(t)
-    if (lang) utterance.lang = lang
-    utterance.onend = () => resolve()
-    utterance.onerror = () => resolve()
+export async function speakText(text, { lang } = {}) {
+  const t = String(text || '').trim()
+  if (!t || !speechSynthesisSupported()) return
+
+  // Mic and synth fight on WebKit — fully stop recognition first.
+  stopDictation()
+  stopSpeaking()
+  // cancel() then immediate speak() is flaky on Chrome/Safari;
+  // WebKit also needs a beat to release the mic audio session.
+  await wait(250)
+
+  primeVoices()
+  if (!speechUnlocked) {
+    // Best-effort if caller forgot unlock; often still blocked on iOS.
     try {
-      window.speechSynthesis.speak(utterance)
+      window.speechSynthesis.resume?.()
     } catch {
+      /* ignore */
+    }
+  }
+
+  const utterance = new SpeechSynthesisUtterance(t)
+  utterance.lang = lang || 'en-US'
+  utterance.volume = 1
+  utterance.rate = 1
+  const voice = pickVoice(utterance.lang)
+  if (voice) utterance.voice = voice
+
+  await new Promise((resolve) => {
+    let settled = false
+    const done = () => {
+      if (settled) return
+      settled = true
+      if (keepAlive) window.clearInterval(keepAlive)
       resolve()
+    }
+
+    utterance.onend = done
+    utterance.onerror = done
+
+    // Chrome bug: synthesis can freeze in "paused" after ~15s; nudge resume.
+    const keepAlive = window.setInterval(() => {
+      try {
+        if (window.speechSynthesis.paused) window.speechSynthesis.resume()
+      } catch {
+        /* ignore */
+      }
+    }, 5000)
+
+    try {
+      window.speechSynthesis.resume?.()
+      window.speechSynthesis.speak(utterance)
+      // If the browser silently drops the utterance, don't hang the voice loop.
+      window.setTimeout(() => {
+        if (!settled && !window.speechSynthesis.speaking) done()
+      }, 1500)
+    } catch {
+      done()
     }
   })
 }
