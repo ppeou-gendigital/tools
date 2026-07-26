@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { AnchoredPopover } from '@/molecules/AnchoredPopover'
 import popoverStyles from '@/molecules/AnchoredPopover.module.scss'
+import { AiPlannerButton } from '@/molecules/AiPlannerButton'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -239,6 +240,16 @@ export function Members() {
             <ArrowLeft size={14} />
             {previousRouteLabel ?? 'Back'}
           </Button>
+        }
+        actions={
+          canEdit ? (
+            <div className={styles.toolbar}>
+              <AiPlannerButton
+                journeyId={journeyId}
+                className={styles.iconBtn}
+              />
+            </div>
+          ) : null
         }
         shortcuts={
           <PageShortcuts

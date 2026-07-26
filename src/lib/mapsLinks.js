@@ -77,10 +77,28 @@ export function inferTravelMode(waypoints, { fromCurrentLocation = false } = {})
   return 'walking'
 }
 
+/** Google Maps URL API allows at most 9 intermediate waypoints. */
+const GOOGLE_MAX_MID_WAYPOINTS = 9
+
+/** Evenly sample mid stops so origin → … → destination stays within Google’s limit. */
+function limitGoogleMids(mid) {
+  if (mid.length <= GOOGLE_MAX_MID_WAYPOINTS) return mid
+  const out = []
+  const last = GOOGLE_MAX_MID_WAYPOINTS - 1
+  for (let i = 0; i <= last; i += 1) {
+    const idx = Math.round((i / last) * (mid.length - 1))
+    const p = mid[idx]
+    if (out[out.length - 1] !== p) out.push(p)
+  }
+  return out
+}
+
 /**
  * Multi-stop Google directions. `waypoints` is an ordered list of
  * `{ lat, lng }` (or place name/address fallbacks).
  * When `fromCurrentLocation`, origin is Current+Location and waypoints are stops.
+ * Prefer `fromCurrentLocation: false` for overseas trip overviews (home → Europe
+ * cannot be driven and Maps will not offer navigation).
  */
 export function googleMapsDirectionsUrl(
   waypoints,
@@ -92,15 +110,15 @@ export function googleMapsDirectionsUrl(
   const mode = travelMode === 'driving' ? 'driving' : 'walking'
 
   if (fromCurrentLocation) {
+    const destination = pts[pts.length - 1]
+    const mid = limitGoogleMids(pts.slice(0, -1))
     const params = new URLSearchParams({
       api: '1',
       origin: 'Current Location',
-      destination: pts[pts.length - 1],
+      destination,
       travelmode: mode,
     })
-    if (pts.length > 1) {
-      params.set('waypoints', pts.slice(0, -1).join('|'))
-    }
+    if (mid.length) params.set('waypoints', mid.join('|'))
     return `https://www.google.com/maps/dir/?${params.toString()}`
   }
 
@@ -109,7 +127,7 @@ export function googleMapsDirectionsUrl(
   }
   const origin = pts[0]
   const destination = pts[pts.length - 1]
-  const mid = pts.slice(1, -1)
+  const mid = limitGoogleMids(pts.slice(1, -1))
   const params = new URLSearchParams({
     api: '1',
     origin,

@@ -13,6 +13,29 @@ export const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '
 /** Injected at build time: package.json version + git SHA (e.g. 0.1.0+ed7b435). */
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '0.0.0+local'
 
+/** Firebase AI Logic (Gemini). Hosting project config + App Check. */
+export const FIREBASE_AI_ENABLED =
+  String(import.meta.env.VITE_FIREBASE_AI_ENABLED || '').toLowerCase() ===
+  'true'
+export const FIREBASE_API_KEY = import.meta.env.VITE_FIREBASE_API_KEY || ''
+export const FIREBASE_AUTH_DOMAIN =
+  import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || ''
+export const FIREBASE_PROJECT_ID =
+  import.meta.env.VITE_FIREBASE_PROJECT_ID || ''
+export const FIREBASE_STORAGE_BUCKET =
+  import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || ''
+export const FIREBASE_MESSAGING_SENDER_ID =
+  import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || ''
+export const FIREBASE_APP_ID = import.meta.env.VITE_FIREBASE_APP_ID || ''
+export const FIREBASE_APPCHECK_SITE_KEY =
+  import.meta.env.VITE_FIREBASE_APPCHECK_SITE_KEY || ''
+export const FIREBASE_APPCHECK_USE_ENTERPRISE =
+  String(
+    import.meta.env.VITE_FIREBASE_APPCHECK_USE_ENTERPRISE || '',
+  ).toLowerCase() === 'true'
+export const FIREBASE_AI_MODEL =
+  import.meta.env.VITE_FIREBASE_AI_MODEL || 'gemini-3.6-flash'
+
 // Sentinel values shipped in `.env.example`. If they leak into a real `.env`,
 // every Supabase call fails with an opaque DNS/CORS error. Fail fast instead.
 const PLACEHOLDER_URL = 'https://YOUR-PROJECT-REF.supabase.co'

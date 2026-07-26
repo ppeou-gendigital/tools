@@ -11,6 +11,11 @@ import {
   addPlaylistItem,
   addTodo,
   createJourney,
+  deleteEntry,
+  deleteExpense,
+  deletePlaceIdea,
+  deletePlaylistItem,
+  deleteTodo,
   listEntries,
   listEntryParticipants,
   listExpensesForJourney,
@@ -19,6 +24,7 @@ import {
   listPlaceIdeas,
   listPlaylist,
   listTodos,
+  updateJourney,
   updateJourneyPerson,
   updatePlaceIdea,
   updateTodo,
@@ -504,6 +510,244 @@ export async function importJourneySnapshot(raw, { user } = {}) {
   }
 }
 
+/**
+ * Replace timeline content on an existing journey (members / people seats stay).
+ * Clears entries, expenses, todos, place ideas, and playlist, then re-imports
+ * those arrays from the snapshot. Journey metadata is updated from snap.journey.
+ */
+export async function replaceJourneyFromSnapshot(
+  journeyId,
+  raw,
+  { user } = {},
+) {
+  const snap = validateJourneySnapshot(raw)
+  const j = snap.journey
+
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser()
+  const uid = user?.id || authUser?.id
+  if (!uid) throw new Error('Sign in required to import')
+  if (!journeyId) throw new Error('Journey id required')
+
+  const journeyPatch = {
+    title: j.title,
+    startsOn: j.starts_on ?? null,
+    endsOn: j.ends_on ?? null,
+    defaultTimezone: j.default_timezone,
+    defaultCurrency: j.default_currency,
+  }
+  if (Array.isArray(j.activity_packs) && j.activity_packs.length) {
+    journeyPatch.activityPacks = j.activity_packs
+  }
+  const journey = await updateJourney(journeyId, journeyPatch)
+
+  const [existingEntries, existingTodos, existingIdeas, existingPlaylist, existingExpenses] =
+    await Promise.all([
+      listEntries(journeyId),
+      listTodos(journeyId),
+      listPlaceIdeas(journeyId),
+      listPlaylist(journeyId),
+      listExpensesForJourney(journeyId),
+    ])
+
+  for (const x of existingExpenses) {
+    await deleteExpense(x.id)
+  }
+  for (const e of existingEntries) {
+    await deleteEntry(e.id)
+  }
+  for (const t of existingTodos) {
+    await deleteTodo(t.id)
+  }
+  for (const p of existingIdeas) {
+    await deletePlaceIdea(p.id)
+  }
+  for (const p of existingPlaylist) {
+    await deletePlaylistItem(p.id)
+  }
+
+  const people = await listJourneyPeople(journeyId)
+  const personMap = newIdMap()
+  const byName = new Map(
+    people.map((p) => [String(p.displayName || '').trim().toLowerCase(), p.id]),
+  )
+  for (const p of snap.people ?? []) {
+    const key = String(p.display_name || '').trim().toLowerCase()
+    if (key && byName.has(key)) personMap.set(p.id, byName.get(key))
+  }
+  if (people[0] && (snap.people ?? []).length) {
+    const owner = (snap.people ?? []).find((p) => p.member_role === 'owner')
+    if (owner && !personMap.has(owner.id)) {
+      personMap.set(owner.id, people[0].id)
+    }
+  }
+
+  const entryMap = newIdMap()
+  const participantsByEntry = new Map()
+  for (const row of snap.entry_participants ?? []) {
+    const list = participantsByEntry.get(row.entry_id) || []
+    const mapped = mapId(personMap, row.person_id)
+    if (mapped) list.push(mapped)
+    participantsByEntry.set(row.entry_id, list)
+  }
+
+  for (const e of snap.entries ?? []) {
+    const created = await upsertEntry({
+      journeyId,
+      activityId: e.activity_id,
+      schema: e.schema,
+      title: e.title ?? '',
+      body: e.body ?? {},
+      occursOn: e.occurs_on ?? null,
+      occursAt: e.occurs_at ?? null,
+      endsAt: e.ends_at ?? null,
+      timezone: e.timezone ?? null,
+      startTimezone: e.start_timezone ?? null,
+      endTimezone: e.end_timezone ?? null,
+      placeName: e.place_name ?? null,
+      address: e.address ?? null,
+      lat: e.lat ?? null,
+      lng: e.lng ?? null,
+      phoneE164: e.phone_e164 ?? null,
+      contactId: null,
+      details: e.details ?? {},
+      participantIds: participantsByEntry.get(e.id) ?? [],
+    })
+    entryMap.set(e.id, created.id)
+  }
+
+  const splitsByExpense = new Map()
+  for (const s of snap.expense_splits ?? []) {
+    const list = splitsByExpense.get(s.expense_id) || []
+    const personId = mapId(personMap, s.person_id)
+    if (personId) {
+      list.push({
+        journeyPersonId: personId,
+        amountCents: Number(s.amount_cents) || 0,
+      })
+    }
+    splitsByExpense.set(s.expense_id, list)
+  }
+
+  for (const x of snap.expenses ?? []) {
+    const entryId = mapId(entryMap, x.entry_id)
+    const paidBy = mapId(personMap, x.paid_by_person_id)
+    if (!entryId || !paidBy) continue
+    let splits = splitsByExpense.get(x.id) || []
+    const amount = Number(x.amount_cents) || 0
+    const sum = splits.reduce((a, s) => a + s.amountCents, 0)
+    if (splits.length === 0 || sum !== amount) {
+      splits = [{ journeyPersonId: paidBy, amountCents: amount }]
+    }
+    await upsertExpenseWithSplits({
+      entryId,
+      title: x.title ?? '',
+      amountCents: amount,
+      currency: x.currency,
+      paidBy,
+      splitMode: x.split_mode === 'custom' ? 'custom' : 'equal',
+      category: x.category ?? null,
+      splits,
+    })
+  }
+
+  const playlist = [...(snap.playlist ?? [])].sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+  )
+  for (const item of playlist) {
+    if (!item.url) continue
+    await addPlaylistItem(
+      journeyId,
+      {
+        url: item.url,
+        title: item.title ?? '',
+        platform: item.platform ?? undefined,
+      },
+      uid,
+    )
+  }
+
+  const placeIdeas = [...(snap.place_ideas ?? [])].sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+  )
+  for (const item of placeIdeas) {
+    if (!item?.name) continue
+    const lat = Number(item.lat)
+    const lng = Number(item.lng)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue
+    const created = await addPlaceIdea(
+      journeyId,
+      {
+        googlePlaceId: item.google_place_id ?? null,
+        name: item.name,
+        address: item.address ?? null,
+        lat,
+        lng,
+        note: item.note ?? '',
+      },
+      uid,
+    )
+    const mappedEntryId = mapId(entryMap, item.entry_id)
+    if (mappedEntryId && created.entryId !== mappedEntryId) {
+      await updatePlaceIdea(created.id, { entryId: mappedEntryId })
+    }
+  }
+
+  const todos = [...(snap.todos ?? [])].sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+  )
+  for (const item of todos) {
+    if (!item?.title) continue
+    const detailed = Array.isArray(item.assignees) ? item.assignees : null
+    const rawAssigneeIds = detailed
+      ? detailed.map((a) => a.person_id).filter(Boolean)
+      : Array.isArray(item.assignee_person_ids)
+        ? item.assignee_person_ids
+        : item.assignee_person_id
+          ? [item.assignee_person_id]
+          : []
+    const assigneeJourneyPersonIds = []
+    const assigneeDone = {}
+    for (const rawId of rawAssigneeIds) {
+      const mapped = mapId(personMap, rawId)
+      if (!mapped) continue
+      assigneeJourneyPersonIds.push(mapped)
+      if (detailed) {
+        const row = detailed.find((a) => a.person_id === rawId)
+        assigneeDone[mapped] = !!row?.done
+      } else {
+        assigneeDone[mapped] = !!item.done
+      }
+    }
+    const created = await addTodo(
+      journeyId,
+      {
+        title: item.title,
+        notes: item.notes ?? '',
+        done: !!item.done,
+        dueOn: item.due_on || null,
+        assigneeJourneyPersonIds,
+      },
+      uid,
+    )
+    if (assigneeJourneyPersonIds.length > 0 && detailed) {
+      await updateTodo(created.id, { assigneeDone })
+    }
+  }
+
+  return {
+    journey,
+    counts: {
+      entries: (snap.entries ?? []).length,
+      todos: (snap.todos ?? []).length,
+      place_ideas: (snap.place_ideas ?? []).length,
+      playlist: (snap.playlist ?? []).length,
+      expenses: (snap.expenses ?? []).length,
+    },
+  }
+}
+
 export function snapshotFilename(snapshot) {
   const title = String(snapshot?.journey?.title || 'journey')
     .toLowerCase()
@@ -535,4 +779,22 @@ export async function readSnapshotFile(file) {
     throw new Error('File is not valid JSON')
   }
   return validateJourneySnapshot(parsed)
+}
+
+/** Parse JSON without validating (for sanitize / AI-repair pipelines). */
+export async function parseSnapshotFileLoose(file) {
+  const text = await file.text()
+  try {
+    return JSON.parse(text)
+  } catch {
+    throw new Error('File is not valid JSON')
+  }
+}
+
+export function parseSnapshotTextLoose(text) {
+  try {
+    return JSON.parse(text)
+  } catch {
+    throw new Error('Text is not valid JSON')
+  }
 }

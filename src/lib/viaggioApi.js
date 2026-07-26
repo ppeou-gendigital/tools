@@ -832,6 +832,37 @@ export async function deletePlaylistItem(itemId) {
   if (error) throw error
 }
 
+export async function updatePlaylistItem(itemId, { url, title, platform } = {}) {
+  const updates = { updated_at: new Date().toISOString() }
+  if (title != null) updates.title = String(title)
+  if (url != null) {
+    const trimmed = String(url || '').trim()
+    if (!trimmed) throw new Error('URL required')
+    let parsed
+    try {
+      parsed = new URL(trimmed)
+    } catch {
+      throw new Error('Enter a valid URL (include https://)')
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      throw new Error('URL must start with http:// or https://')
+    }
+    updates.url = trimmed
+    updates.platform = platform || detectPlaylistPlatform(trimmed)
+  } else if (platform != null) {
+    updates.platform = platform
+  }
+
+  const { data, error } = await supabase
+    .from('viaggio_playlist_items')
+    .update(updates)
+    .eq('id', itemId)
+    .select('*')
+    .single()
+  if (error) throw error
+  return mapPlaylist(data)
+}
+
 /** Persist playlist order. `orderedIds` is the full id list for the journey. */
 export async function reorderPlaylistItems(journeyId, orderedIds) {
   const ids = (orderedIds ?? []).filter(Boolean)
@@ -917,6 +948,14 @@ export async function updatePlaceIdea(ideaId, patch) {
   if (patch.name != null) updates.name = String(patch.name).trim()
   if (patch.address !== undefined) {
     updates.address = patch.address ? String(patch.address).trim() : null
+  }
+  if (patch.lat !== undefined) {
+    const latN = Number(patch.lat)
+    if (Number.isFinite(latN)) updates.lat = latN
+  }
+  if (patch.lng !== undefined) {
+    const lngN = Number(patch.lng)
+    if (Number.isFinite(lngN)) updates.lng = lngN
   }
 
   const { data, error } = await supabase

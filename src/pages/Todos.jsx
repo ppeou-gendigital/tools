@@ -14,6 +14,7 @@ import {
   Trash2,
   Users,
 } from 'lucide-react'
+import { AiPlannerButton } from '@/molecules/AiPlannerButton'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -28,6 +29,7 @@ import {
   formatWallDate,
   labelForJourneyPerson,
 } from '@/lib/format'
+import { isAiPlanningEnabled } from '@/lib/ai/enabled'
 import {
   addTodo,
   deleteTodo,
@@ -174,6 +176,7 @@ export function Todos() {
     goJourneySettings,
   } = useNavigation()
   const journeyId = params.journeyId
+  const aiEnabled = isAiPlanningEnabled()
   const { user } = useAuth()
   const { displayLocale } = useDisplayPrefs()
   const qc = useQueryClient()
@@ -560,6 +563,12 @@ export function Todos() {
                 className={isFetching ? styles.spin : undefined}
               />
             </Button>
+            {canEdit && aiEnabled && (
+              <AiPlannerButton
+                journeyId={journeyId}
+                className={styles.iconBtn}
+              />
+            )}
             {canEdit && (
               <Button
                 variant="ghost"

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { LayoutGrid, List, MapPinned, Plus, Users } from 'lucide-react'
 import { AnchoredPopover } from '@/molecules/AnchoredPopover'
 import popoverStyles from '@/molecules/AnchoredPopover.module.scss'
+import { AiPlannerButton } from '@/molecules/AiPlannerButton'
 import { Button } from '@/molecules/Button'
 import { LoadingState } from '@/molecules/LoadingState'
 import { PageHeader } from '@/patterns/PageHeader'
@@ -243,6 +244,7 @@ export function Home() {
                 <LayoutGrid size={14} aria-hidden="true" />
               </button>
             </div>
+            <AiPlannerButton className={pageStyles.iconBtn} />
             <Button
               variant="ghost"
               size="sm"

@@ -14,6 +14,7 @@ import {
   Users,
 } from 'lucide-react'
 import { AnchoredPopover } from '@/molecules/AnchoredPopover'
+import { AiPlannerButton } from '@/molecules/AiPlannerButton'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { LoadingState } from '@/molecules/LoadingState'
@@ -943,16 +944,22 @@ export function Spending() {
           canEdit || hasForeignCurrencies ? (
             <div className={styles.toolbar}>
               {canEdit ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={styles.iconBtn}
-                  onClick={openAdd}
-                  aria-label="Add expense"
-                  title="Add expense"
-                >
-                  <Plus size={14} aria-hidden="true" />
-                </Button>
+                <>
+                  <AiPlannerButton
+                    journeyId={journeyId}
+                    className={styles.iconBtn}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={styles.iconBtn}
+                    onClick={openAdd}
+                    aria-label="Add expense"
+                    title="Add expense"
+                  >
+                    <Plus size={14} aria-hidden="true" />
+                  </Button>
+                </>
               ) : null}
               {hasForeignCurrencies ? (
                 <>

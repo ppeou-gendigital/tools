@@ -5,6 +5,7 @@ import { AuthProvider } from '@/providers/AuthProvider'
 import { DisplayPrefsProvider, useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { FabCornerProvider } from '@/providers/FabCornerProvider'
 import { FontSizeProvider } from '@/providers/FontSizeProvider'
+import { AiPlannerProvider } from '@/providers/AiPlannerProvider'
 import { NavigationProvider, useNavigation } from '@/providers/NavigationProvider'
 import { OfflineProvider, useOffline } from '@/providers/OfflineProvider'
 import { PlaylistPlaybackProvider } from '@/providers/PlaylistPlaybackProvider'
@@ -59,6 +60,10 @@ function OnlineRouter() {
   const { route } = useNavigation()
   if (route === 'onboarding-prefs') return <OnboardingPrefs />
   if (route === 'journey-create') return <JourneyCreate />
+  // Legacy AI routes: AiPlannerProvider opens the overlay and replaces the route.
+  if (route === 'ai-generate' || route === 'ai-enrich' || route === 'ai-planner') {
+    return null
+  }
   if (route === 'journey') return <Journey />
   if (route === 'entry-edit') return <EntryEdit />
   if (route === 'expense-edit') return <ExpenseEdit />
@@ -118,11 +123,13 @@ export function App() {
                 <DisplayPrefsProvider>
                   <PrefsSync />
                   <NavigationProvider>
-                    <PlaylistPlaybackProvider>
-                      <AppShell>
-                        <ModeSwitch />
-                      </AppShell>
-                    </PlaylistPlaybackProvider>
+                    <AiPlannerProvider>
+                      <PlaylistPlaybackProvider>
+                        <AppShell>
+                          <ModeSwitch />
+                        </AppShell>
+                      </PlaylistPlaybackProvider>
+                    </AiPlannerProvider>
                   </NavigationProvider>
                 </DisplayPrefsProvider>
               </FabCornerProvider>

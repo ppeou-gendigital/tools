@@ -201,6 +201,29 @@ VITE_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
 
 For GitHub Pages deploys, add the same value as a repo Actions secret and pass it into the web build (alongside the Supabase vars).
 
+### 2b. Firebase AI Logic (optional — AI trip planner)
+
+Web PWA only. Powers **Plan with AI**, Map place suggestions, journey enrichment, and the planner chat.
+
+1. Firebase Console → project `project-viaggio` → **AI Services → AI Logic** → enable **Gemini Developer API**.
+2. **App Check** → register the web app with **reCAPTCHA v3**; copy the site key.
+3. Project settings → Your apps → Web app config values into `.env` (see [`.env.example`](.env.example)).
+4. Locally: with `npm run dev`, register the App Check **debug token** printed in the browser console (App Check → Apps → Manage debug tokens).
+
+```
+VITE_FIREBASE_AI_ENABLED=true
+VITE_FIREBASE_API_KEY=…
+VITE_FIREBASE_AUTH_DOMAIN=project-viaggio.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=project-viaggio
+VITE_FIREBASE_STORAGE_BUCKET=project-viaggio.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=…
+VITE_FIREBASE_APP_ID=…
+VITE_FIREBASE_APPCHECK_SITE_KEY=…
+VITE_FIREBASE_AI_MODEL=gemini-3.6-flash
+```
+
+Auth and journey data stay on **Supabase**. AI never writes without a review/accept step. The Chrome extension hides AI entry points.
+
 **Two separate features:**
 
 1. **Journey routes** — Settings → Preferred maps app (Google or Apple). One Map button opens that app with a URL computed on the fly (never stored): trip-level = current location → all geo-pinned stops; activity-level = current location → that stop and later stops. Walk vs drive is inferred (trip-start / flight / long legs → drive). Pin `lat`/`lng` via Entry edit or by promoting Map Ideas.
@@ -334,6 +357,7 @@ Primary web host: **Firebase Hosting** on project `project-viaggio`.
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
   - `VITE_GOOGLE_MAPS_API_KEY` (optional; Map brainstorming page)
+  - `VITE_FIREBASE_AI_ENABLED` + `VITE_FIREBASE_*` (optional; AI planner — see §2b)
   - `FIREBASE_SERVICE_ACCOUNT_VIAGGIO`
 
 ### Supabase Auth allowlist

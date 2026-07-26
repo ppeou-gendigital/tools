@@ -257,12 +257,10 @@
   justify-self: end;
   min-width: 0;
 
-  // 16px glyphs; keep a usable hit target; pin to top with the title.
+  // 16px glyphs; keep a usable hit target; center the icon in the box.
   .rowInfo {
     width: 32px;
     height: 32px;
-    align-items: flex-start;
-    padding-top: 2px;
   }
 }
 
@@ -426,17 +424,22 @@
   justify-content: center;
   width: 36px;
   height: 36px;
+  margin: 0;
+  padding: 0;
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--muted-fg);
   cursor: pointer;
   text-decoration: none;
+  appearance: none;
+  -webkit-appearance: none;
 
   &:hover:not(:disabled),
+  &:focus-visible,
   &[aria-expanded='true'] {
     color: var(--fg);
-    background: var(--muted);
+    background: transparent;
   }
 
   &:disabled {

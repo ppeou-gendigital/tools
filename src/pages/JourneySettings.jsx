@@ -10,6 +10,7 @@ import {
   Save,
   Trash2,
 } from 'lucide-react'
+import { AiPlannerButton } from '@/molecules/AiPlannerButton'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -244,6 +245,10 @@ function JourneySettingsForm({
         actions={
           canEdit ? (
             <div className={styles.toolbar}>
+              <AiPlannerButton
+                journeyId={journey.id}
+                className={styles.iconBtn}
+              />
               <Button
                 variant="ghost"
                 size="sm"

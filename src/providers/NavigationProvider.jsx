@@ -7,6 +7,10 @@ import {
   useRef,
   useState,
 } from 'react'
+import {
+  openAiPlannerChat,
+  openAiPlannerCreate,
+} from '@/lib/ai/aiPlannerBridge'
 import { asyncStorage } from '@/lib/storage'
 import { useAuth } from '@/providers/AuthProvider'
 
@@ -16,6 +20,9 @@ const ROUTES = [
   'home',
   'onboarding-prefs',
   'journey-create',
+  'ai-generate',
+  'ai-enrich',
+  'ai-planner',
   'journey',
   'entry-edit',
   'expense-edit',
@@ -42,6 +49,9 @@ const ROUTE_LABELS = {
   home: 'Home',
   'onboarding-prefs': 'Preferences',
   'journey-create': 'New journey',
+  'ai-generate': 'Plan with AI',
+  'ai-enrich': 'Improve plan',
+  'ai-planner': 'AI planner',
   journey: 'Journey',
   'entry-edit': 'Activity',
   'expense-edit': 'Expense',
@@ -64,6 +74,9 @@ const PARENT_ROUTE = {
   home: null,
   'onboarding-prefs': 'home',
   'journey-create': 'home',
+  'ai-generate': 'journey-create',
+  'ai-enrich': 'journey',
+  'ai-planner': 'journey',
   journey: 'home',
   'entry-edit': 'journey',
   'expense-edit': 'entry-edit',
@@ -278,6 +291,9 @@ export function NavigationProvider({ children, initial }) {
       goArchives: () => navigate('archives'),
       goOnboardingPrefs: () => navigate('onboarding-prefs'),
       goJourneyCreate: () => navigate('journey-create'),
+      goAiGenerate: () => openAiPlannerCreate(),
+      goAiEnrich: (journeyId) => openAiPlannerChat(journeyId),
+      goAiPlanner: (journeyId) => openAiPlannerChat(journeyId),
       goJourney: (journeyId) => navigate('journey', { journeyId }),
       goEntryEdit: (params) => navigate('entry-edit', params),
       goExpenseEdit: (params) => navigate('expense-edit', params),

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Sparkles } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -12,6 +12,7 @@ import {
   PRESETS,
   guessDeviceTimezone,
 } from '@/lib/catalog'
+import { isAiPlanningEnabled } from '@/lib/ai/enabled'
 import { createJourney } from '@/lib/viaggioApi'
 import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
@@ -74,6 +75,21 @@ export function JourneyCreate() {
         />
         <div className={cx('is-fluid-width', styles.body)}>
           <div className={styles.formNarrow}>
+            {isAiPlanningEnabled() && (
+              <div className={styles.field} style={{ marginBottom: '1rem' }}>
+                <Button
+                  variant="outline"
+                  fullWidth
+                  onClick={() => nav.goAiGenerate()}
+                >
+                  <Sparkles size={14} />
+                  Plan with AI
+                </Button>
+                <p className={styles.hint}>
+                  Describe a destination and dates — import a full draft journey.
+                </p>
+              </div>
+            )}
             <ul className={styles.list}>
               {PRESETS.map((p) => (
                 <li key={p.id}>

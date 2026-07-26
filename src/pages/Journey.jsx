@@ -21,11 +21,13 @@ import {
   Plus,
   Settings,
   Shapes,
+  Sparkles,
   Sun,
   Users,
 } from 'lucide-react'
 import { AnchoredPopover } from '@/molecules/AnchoredPopover'
 import popoverStyles from '@/molecules/AnchoredPopover.module.scss'
+import { AiPlannerButton } from '@/molecules/AiPlannerButton'
 import { Button } from '@/molecules/Button'
 import { LoadingState } from '@/molecules/LoadingState'
 import { Modal } from '@/patterns/Modal'
@@ -40,6 +42,7 @@ import {
   getPreset,
   primaryActivityIds,
 } from '@/lib/catalog'
+import { isAiPlanningEnabled } from '@/lib/ai/enabled'
 import {
   entryDayKey,
   formatEntryTimeLine,
@@ -382,8 +385,10 @@ export function Journey() {
     goTodos,
     goMap,
     goJourneySettings,
+    goAiPlanner,
   } = useNavigation()
   const journeyId = params.journeyId
+  const aiEnabled = isAiPlanningEnabled()
   const { user } = useAuth()
   const { displayLocale, mapsProvider } = useDisplayPrefs()
   const qc = useQueryClient()
@@ -543,7 +548,9 @@ export function Journey() {
     () =>
       openMapsRouteUrl(tripGeo, {
         provider: mapsProvider,
-        fromCurrentLocation: true,
+        // Trip overview: first pinned stop → last (not device location).
+        // Current location (e.g. Texas) → Europe cannot be driven in Maps.
+        fromCurrentLocation: false,
       }),
     [tripGeo, mapsProvider],
   )
@@ -597,16 +604,24 @@ export function Journey() {
         }
         actions={
           canEdit ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className={styles.iconBtn}
-              onClick={openAdd}
-              aria-label="Add activity"
-              title="Add activity"
-            >
-              <Plus size={14} aria-hidden="true" />
-            </Button>
+            <div className={styles.toolbar}>
+              {aiEnabled && (
+                <AiPlannerButton
+                  journeyId={journeyId}
+                  className={styles.iconBtn}
+                />
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className={styles.iconBtn}
+                onClick={openAdd}
+                aria-label="Add activity"
+                title="Add activity"
+              >
+                <Plus size={14} aria-hidden="true" />
+              </Button>
+            </div>
           ) : null
         }
         shortcuts={
@@ -668,6 +683,12 @@ export function Journey() {
                 Add activity
               </Button>
             )}
+            {canEdit && aiEnabled && (
+              <Button variant="outline" onClick={() => goAiPlanner(journeyId)}>
+                <Sparkles size={14} />
+                Improve with AI
+              </Button>
+            )}
           </div>
         )}
 
@@ -675,7 +696,7 @@ export function Journey() {
           <div className={styles.tripRouteBar} aria-label="Trip route">
             <span className={styles.tripRouteLabel}>
               <Navigation size={14} aria-hidden="true" />
-              From here · {tripGeo.length} pinned stop
+              Route · {tripGeo.length} pinned stop
               {tripGeo.length === 1 ? '' : 's'}
             </span>
             <a

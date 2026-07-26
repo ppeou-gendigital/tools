@@ -1,7 +1,8 @@
 # Viaggio — journey snapshot import (for LLM / integrator agents)
 
 Purpose: generate a JSON file a signed-in user can import into Viaggio to create
-a new journey (people, timeline entries, expenses, playlist, place ideas, todos).
+a new journey, or to replace the timeline of an existing journey via the in-app
+AI planner Import flow.
 
 ## Format
 
@@ -19,23 +20,48 @@ a new journey (people, timeline entries, expenses, playlist, place ideas, todos)
 - Sample JSON: https://project-viaggio.web.app/agent/sample.json
 - Human spec (repo): docs/journey-snapshot.md
 
-## How users import
+## How users import (new journey)
 
 1. Sign in at https://project-viaggio.web.app
 2. Archives → Import JSON, or use Journey Settings export/import flows
 3. Select the generated .json file
 
+## External edit loop (update an existing journey)
+
+Typical ChatGPT / Copilot round-trip:
+
+1. Open the journey → AI planner → **Export** (downloads current snapshot JSON)
+2. Optionally use **Copy prompt** in the AI planner for instructions
+3. Attach/paste the JSON in ChatGPT/Copilot and request edits
+4. Return a complete `viaggio.journey_snapshot` JSON file
+5. In the same AI planner → **Import** → review → confirm replace timeline
+
+Import on an existing journey **replaces** activities, todos, place ideas,
+playlist, and expenses. **Members and people seats stay.**
+
+Broken JSON may be sanitized client-side and optionally repaired with Viaggio’s
+in-app AI before the user confirms apply.
+
+## In-app planner
+
+Viaggio’s AI planner chat can also propose add/update actions without files
+(Accept / Reject). New journeys can still be created via New journey → Plan
+with AI, or Archives → Import JSON.
+
 ## Import rules agents must respect
 
 - All ids in the file are opaque local strings for cross-references only;
-  Viaggio remaps them to new UUIDs on import.
+  Viaggio remaps them to new UUIDs on import (except when updating existing
+  entries via in-app chat actions that carry live entry ids).
 - journey.type: "trip" | "journal"
 - journey.preset: catalog id (e.g. leisure_trip, road_trip)
-- journey.default_timezone: IANA (e.g. Europe/Lisbon)
+- journey.default_timezone: IANA (e.g. Europe/Lisbon) — plain string only
 - journey.default_currency: ISO 4217 uppercase (e.g. EUR)
+- journey.starts_on / ends_on: YYYY-MM-DD only (never concatenated schema paths)
 - entries[].activity_id must be a known catalog activity (flight, hotel, meal,
   sightseeing, ferry, train, …); unknown activities fail import.
-- Signed-in importer becomes the new journey owner.
+- Never emit values like `Scope.ends_on:…` or mashed timezone/address strings.
+- Signed-in importer becomes the new journey owner on create-via-import.
 
 ## Do not include
 

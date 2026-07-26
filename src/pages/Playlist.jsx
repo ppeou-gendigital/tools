@@ -16,6 +16,7 @@ import {
   Video,
   CircleDollarSign,
 } from 'lucide-react'
+import { AiPlannerButton } from '@/molecules/AiPlannerButton'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -398,6 +399,12 @@ export function Playlist() {
                 className={isFetching ? styles.spin : undefined}
               />
             </Button>
+            {canEdit && (
+              <AiPlannerButton
+                journeyId={journeyId}
+                className={styles.iconBtn}
+              />
+            )}
             {canEdit && (
               <Button
                 variant="ghost"

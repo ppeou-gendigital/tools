@@ -1,0 +1,148 @@
+@use 'tokens/mixins' as m;
+
+.modeList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.modeBtn {
+  display: grid;
+  gap: var(--space-1);
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: inherit;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--fg);
+  }
+
+  &[data-selected='true'] {
+    border-color: var(--fg);
+    box-shadow: inset 0 0 0 1px var(--fg);
+  }
+}
+
+.previewCard {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.previewSection {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.previewSection h3 {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.previewList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.previewItem {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  font-size: var(--text-sm);
+}
+
+.previewItem input {
+  margin-top: 0.2rem;
+}
+
+.chatLog {
+  display: grid;
+  gap: var(--space-3);
+  min-height: 12rem;
+}
+
+.bubble {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 40rem;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  white-space: pre-wrap;
+}
+
+.bubbleUser {
+  justify-self: end;
+  background: var(--muted-bg, color-mix(in srgb, var(--fg) 8%, transparent));
+}
+
+.bubbleAssistant {
+  justify-self: start;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.actionCard {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.actionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.composer {
+  display: grid;
+  gap: var(--space-2);
+  position: sticky;
+  bottom: 0;
+  padding-top: var(--space-2);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--bg) 20%
+  );
+}
+
+.sheet {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+.importSheet {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (min-width: 768px) {
+  .composer {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+}

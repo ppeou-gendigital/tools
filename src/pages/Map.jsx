@@ -37,6 +37,7 @@ import {
   Shield,
   ShoppingBag,
   ShoppingCart,
+  Sparkles,
   Star,
   Store,
   Toilet,
@@ -48,14 +49,22 @@ import {
   X,
 } from 'lucide-react'
 import { AnchoredPopover } from '@/molecules/AnchoredPopover'
+import { AiPlannerButton } from '@/molecules/AiPlannerButton'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { LoadingState } from '@/molecules/LoadingState'
+import { Textarea } from '@/molecules/Textarea'
 import { ConfirmDialog } from '@/patterns/ConfirmDialog'
+import { Modal } from '@/patterns/Modal'
 import { PageHeader } from '@/patterns/PageHeader'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
 import { GOOGLE_MAPS_API_KEY } from '@/env'
+import { applySelectedPlaceIdeas } from '@/lib/ai/applyActions'
+import { isAiPlanningEnabled } from '@/lib/ai/enabled'
+import { mapAiError } from '@/lib/ai/errors'
+import { suggestPlacesForJourney } from '@/lib/ai/suggestPlaces'
+import aiStyles from './Ai.module.scss'
 import { cx } from '@/lib/cx'
 import { resolveCoords } from '@/lib/geoLocation'
 import {
@@ -1701,8 +1710,16 @@ export function Map() {
   const [ideasOpen, setIdeasOpen] = useState(false)
   const [userLocation, setUserLocation] = useState(null)
   const [locating, setLocating] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiError, setAiError] = useState('')
+  const [aiSuggestions, setAiSuggestions] = useState([])
+  const [aiSelected, setAiSelected] = useState(() => new Set())
+  const [aiBusy, setAiBusy] = useState(false)
+  const [aiApplying, setAiApplying] = useState(false)
   /** Ignore the map click that follows a marker click (avoids instant dismiss). */
   const ignoreEmptyMapClickRef = useRef(false)
+  const aiEnabled = isAiPlanningEnabled()
 
   useEffect(() => {
     let cancelled = false
@@ -1940,6 +1957,27 @@ export function Map() {
         }
         actions={
           <div className={styles.toolbar}>
+            {canEdit && aiEnabled && (
+              <AiPlannerButton
+                journeyId={journeyId}
+                className={styles.iconBtn}
+              />
+            )}
+            {canEdit && aiEnabled && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className={styles.iconBtn}
+                onClick={() => {
+                  setAiError('')
+                  setAiOpen(true)
+                }}
+                aria-label="Suggest places with AI"
+                title="Suggest places"
+              >
+                <Sparkles size={14} aria-hidden="true" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -2358,6 +2396,123 @@ export function Map() {
         confirming={deleting}
         onConfirm={confirmDeleteIdea}
       />
+
+      <Modal
+        open={aiOpen}
+        onDismiss={() => !aiBusy && !aiApplying && setAiOpen(false)}
+        title="Suggest places"
+      >
+        <div className={aiStyles.sheet}>
+          <div className={styles.field}>
+            <Label htmlFor="ai-places-prompt">What should we look for?</Label>
+            <Textarea
+              id="ai-places-prompt"
+              rows={3}
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder="Scenic viewpoints, late-night eats, rainy-day museums…"
+            />
+          </div>
+          {aiError && (
+            <p className={styles.error} role="alert">
+              {aiError}
+            </p>
+          )}
+          <Button
+            onClick={async () => {
+              setAiBusy(true)
+              setAiError('')
+              try {
+                const res = await suggestPlacesForJourney({
+                  journeyId,
+                  prompt: aiPrompt,
+                  lat: center?.lat,
+                  lng: center?.lng,
+                })
+                setAiSuggestions(res.placeIdeas)
+                setAiSelected(
+                  new Set(res.placeIdeas.map((_, i) => String(i))),
+                )
+              } catch (err) {
+                setAiError(mapAiError(err))
+              } finally {
+                setAiBusy(false)
+              }
+            }}
+            disabled={aiBusy || aiApplying}
+            fullWidth
+          >
+            <Sparkles size={14} />
+            {aiBusy ? 'Suggesting…' : 'Suggest places'}
+          </Button>
+          {aiSuggestions.length > 0 && (
+            <ul className={aiStyles.previewList}>
+              {aiSuggestions.map((idea, i) => {
+                const key = String(i)
+                return (
+                  <li key={key} className={aiStyles.previewItem}>
+                    <input
+                      type="checkbox"
+                      checked={aiSelected.has(key)}
+                      onChange={() => {
+                        setAiSelected((prev) => {
+                          const next = new Set(prev)
+                          if (next.has(key)) next.delete(key)
+                          else next.add(key)
+                          return next
+                        })
+                      }}
+                    />
+                    <span>
+                      <strong>{idea.name}</strong>
+                      {idea.note ? (
+                        <span className={styles.hint}> — {idea.note}</span>
+                      ) : null}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+          {aiSuggestions.length > 0 && (
+            <Button
+              onClick={async () => {
+                setAiApplying(true)
+                setAiError('')
+                try {
+                  const picked = aiSuggestions.filter((_, i) =>
+                    aiSelected.has(String(i)),
+                  )
+                  const { errors } = await applySelectedPlaceIdeas(
+                    journeyId,
+                    picked,
+                    user.id,
+                  )
+                  invalidate()
+                  setIdeasOpen(true)
+                  if (errors.length) {
+                    setAiError(errors.join('; '))
+                  } else {
+                    setAiOpen(false)
+                    setAiSuggestions([])
+                    setAiPrompt('')
+                  }
+                } catch (err) {
+                  setAiError(err.message || 'Could not add places')
+                } finally {
+                  setAiApplying(false)
+                }
+              }}
+              disabled={aiApplying || aiSelected.size === 0}
+              fullWidth
+            >
+              {aiApplying
+                ? 'Adding…'
+                : `Add selected (${aiSelected.size})`}
+            </Button>
+          )}
+        </div>
+      </Modal>
     </div>
   )
 }
