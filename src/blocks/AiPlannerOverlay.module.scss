@@ -371,7 +371,8 @@
   box-shadow: none !important;
   padding: 0.15rem 0.4rem 0.25rem !important;
   outline: none;
-  font-size: var(--text-sm) !important;
+  // iOS Safari zooms focused fields under 16px; keep a11y rem scaling upward.
+  font-size: max(16px, var(--text-sm)) !important;
   line-height: 1.5 !important;
 
   &::placeholder {

@@ -1,24 +1,54 @@
-// App-nav toolbar strip at the tail of a page header row.
+// Grip-triggered page shortcuts at the tail of a page header row.
 .strip {
   display: flex;
   align-items: center;
   gap: var(--space-1);
   min-width: 0;
   margin-left: auto;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  flex-shrink: 0;
 }
 
-// Vertical pipe before the sibling-page shortcut buttons.
 .separator {
   width: 1px;
   height: 20px;
   background: var(--border);
   flex-shrink: 0;
   margin-right: var(--space-1);
+}
+
+.menu {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1);
+  display: grid;
+  gap: 2px;
+  min-width: 11rem;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: var(--radius-sm, 0.5rem);
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--fg) 8%, transparent);
+    outline: none;
+  }
+
+  svg {
+    flex-shrink: 0;
+    opacity: 0.85;
+  }
 }

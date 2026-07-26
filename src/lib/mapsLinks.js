@@ -21,6 +21,31 @@ export function googleMapsPlaceUrl(place) {
   return null
 }
 
+/** Apple Maps place / search deep link (not directions). */
+export function appleMapsPlaceUrl(place) {
+  if (!place) return null
+  const q = String(place.address || place.name || place.placeName || '').trim()
+  if (Number.isFinite(place.lat) && Number.isFinite(place.lng)) {
+    const params = new URLSearchParams({
+      ll: `${place.lat},${place.lng}`,
+    })
+    if (q) params.set('q', q)
+    else params.set('q', `${place.lat},${place.lng}`)
+    return `https://maps.apple.com/?${params.toString()}`
+  }
+  if (q) return `https://maps.apple.com/?q=${encodeURIComponent(q)}`
+  return null
+}
+
+/**
+ * Single place deep-link for the user's preferred maps app.
+ * URLs are computed on the fly — never persist them.
+ */
+export function openMapsPlaceUrl(place, { provider = 'google' } = {}) {
+  if (provider === 'apple') return appleMapsPlaceUrl(place)
+  return googleMapsPlaceUrl(place)
+}
+
 function pointLabel(wp) {
   if (Number.isFinite(wp?.lat) && Number.isFinite(wp?.lng)) {
     return `${wp.lat},${wp.lng}`

@@ -69,7 +69,8 @@
   min-height: 200px;
   padding: var(--space-3);
   outline: none;
-  font-size: var(--text-sm);
+  // iOS Safari zooms focused contenteditable under 16px; keep a11y rem scaling upward.
+  font-size: max(16px, var(--text-sm));
   line-height: 1.5;
   color: var(--fg);
 

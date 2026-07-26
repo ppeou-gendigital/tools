@@ -415,6 +415,49 @@
   position: relative;
 }
 
+.rowActionMenu {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1);
+  display: grid;
+  gap: 2px;
+  min-width: 11rem;
+}
+
+.rowActionMenuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: var(--radius-sm, 0.5rem);
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--fg) 8%, transparent);
+    outline: none;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  svg {
+    flex-shrink: 0;
+    opacity: 0.85;
+  }
+}
+
 .rowInfo {
   @include m.interactive-control;
 

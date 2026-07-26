@@ -87,3 +87,19 @@ a {
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+// iOS Safari zooms when focusing editable fields under 16px. Floor form
+// controls on coarse pointers so one-off page inputs / contenteditable
+// don’t regress; pinch-zoom stays available (no viewport scale lock).
+@media (hover: none) and (pointer: coarse) {
+  input:not([type='button']):not([type='submit']):not([type='reset']):not(
+      [type='checkbox']
+    ):not([type='radio']):not([type='range']):not([type='file']):not(
+      [type='color']
+    ):not([type='image']),
+  textarea,
+  select,
+  [contenteditable='true'] {
+    font-size: max(16px, 1em);
+  }
+}

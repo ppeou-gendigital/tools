@@ -12,7 +12,8 @@
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-sans);
-  font-size: var(--text-sm);
+  // iOS Safari zooms focused fields under 16px; keep a11y rem scaling upward.
+  font-size: max(16px, var(--text-sm));
   line-height: 1.4;
   resize: vertical;
   transition: border-color 0.15s ease;

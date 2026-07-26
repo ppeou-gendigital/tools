@@ -11,7 +11,8 @@
   border: 1px solid var(--input);
   background: var(--bg);
   color: var(--fg);
-  font-size: var(--text-sm);
+  // iOS Safari zooms focused fields under 16px; keep a11y rem scaling upward.
+  font-size: max(16px, var(--text-sm));
   transition: border-color 0.15s ease;
 
   &::placeholder {

@@ -10,14 +10,17 @@ import {
   CloudRain,
   CloudSnow,
   CloudSun,
+  EllipsisVertical,
   ExternalLink,
   Grid2x2Check,
   ListChecks,
   ListMusic,
   Loader2,
+  Map as MapIcon,
   MapPin,
   Navigation,
   Plane,
+  Route,
   Plus,
   Settings,
   Shapes,
@@ -61,7 +64,7 @@ import {
   formatFlightStatusDetails,
   formatFlightStatusLine,
 } from '@/lib/flightStatus'
-import { openMapsRouteUrl } from '@/lib/mapsLinks'
+import { openMapsPlaceUrl, openMapsRouteUrl } from '@/lib/mapsLinks'
 import {
   allGeoWaypoints,
   resolveTimelineContext,
@@ -101,21 +104,25 @@ function EntryRowActions({
   onOpenExpense,
   onAddExpense,
   onRefreshFlight,
+  placeUrl,
+  placeTitle,
   mapsUrl,
   mapsTitle,
 }) {
-  const [panel, setPanel] = useState(null) // 'expenses' | 'people' | 'flight' | null
+  const [panel, setPanel] = useState(null) // 'menu' | 'expenses' | 'people' | 'flight' | null
   const [flightBusy, setFlightBusy] = useState(false)
   const [flightError, setFlightError] = useState('')
   const [flightStatus, setFlightStatus] = useState(null)
-  const expensesBtnRef = useRef(null)
-  const peopleBtnRef = useRef(null)
-  const flightBtnRef = useRef(null)
+  const menuBtnRef = useRef(null)
   // Editors always get Wallet so they can add the first expense from the row.
   const showExpenses = canEdit || entryExpenses.length > 0
   const showPeople = whoIds.length > 1
   const flightLookup = flightLookupFromEntry(entry)
   const showFlight = canEdit && entry?.activityId === 'flight'
+  const showPlace = Boolean(placeUrl)
+  const showMaps = Boolean(mapsUrl)
+  const hasActions =
+    showFlight || showExpenses || showPeople || showPlace || showMaps
 
   async function handleFlightRefresh() {
     if (flightBusy) return
@@ -144,82 +151,117 @@ function EntryRowActions({
     flightStatus || entry?.details,
   )
 
+  if (!hasActions) return null
+
   return (
     <div className={styles.rowActions}>
-      {showFlight && (
-        <button
-          ref={flightBtnRef}
-          type="button"
-          className={styles.rowInfo}
-          aria-label="Refresh flight status"
-          title="Refresh flight status"
-          aria-expanded={panel === 'flight'}
-          aria-haspopup="dialog"
-          disabled={flightBusy}
-          onClick={() => {
-            if (panel === 'flight') {
-              setPanel(null)
-              return
-            }
-            handleFlightRefresh()
-          }}
-        >
-          {flightBusy ? (
-            <Loader2 size={16} className={styles.spin} aria-hidden="true" />
-          ) : (
-            <Plane size={16} aria-hidden="true" />
+      <button
+        ref={menuBtnRef}
+        type="button"
+        className={styles.rowInfo}
+        aria-label="Activity actions"
+        title="Activity actions"
+        aria-expanded={panel != null}
+        aria-haspopup="menu"
+        disabled={flightBusy && panel === 'flight'}
+        onClick={() => setPanel((p) => (p === 'menu' ? null : 'menu'))}
+      >
+        {flightBusy && panel === 'flight' ? (
+          <Loader2 size={16} className={styles.spin} aria-hidden="true" />
+        ) : (
+          <EllipsisVertical size={16} aria-hidden="true" />
+        )}
+      </button>
+
+      <AnchoredPopover
+        open={panel === 'menu'}
+        onClose={() => setPanel(null)}
+        anchorRef={menuBtnRef}
+        align="end"
+        fluid
+        role="menu"
+        aria-label="Activity actions"
+      >
+        <ul className={styles.rowActionMenu}>
+          {showFlight && (
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.rowActionMenuItem}
+                disabled={flightBusy}
+                onClick={() => handleFlightRefresh()}
+              >
+                <Plane size={16} aria-hidden="true" />
+                <span>Flight status</span>
+              </button>
+            </li>
           )}
-        </button>
-      )}
-      {showExpenses && (
-        <button
-          ref={expensesBtnRef}
-          type="button"
-          className={styles.rowInfo}
-          aria-label="Expenses"
-          title="Expenses"
-          aria-expanded={panel === 'expenses'}
-          aria-haspopup="dialog"
-          onClick={() =>
-            setPanel((p) => (p === 'expenses' ? null : 'expenses'))
-          }
-        >
-          <CircleDollarSign size={16} aria-hidden="true" />
-        </button>
-      )}
-      {showPeople && (
-        <button
-          ref={peopleBtnRef}
-          type="button"
-          className={styles.rowInfo}
-          aria-label="Participants"
-          title="Participants"
-          aria-expanded={panel === 'people'}
-          aria-haspopup="dialog"
-          onClick={() => setPanel((p) => (p === 'people' ? null : 'people'))}
-        >
-          <Users size={16} aria-hidden="true" />
-        </button>
-      )}
-      {mapsUrl ? (
-        <a
-          className={styles.rowInfo}
-          href={mapsUrl}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={mapsTitle || 'Open in Maps'}
-          title={mapsTitle || 'Open in Maps'}
-        >
-          <Navigation size={16} aria-hidden="true" />
-        </a>
-      ) : null}
+          {showExpenses && (
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.rowActionMenuItem}
+                onClick={() => setPanel('expenses')}
+              >
+                <CircleDollarSign size={16} aria-hidden="true" />
+                <span>Expenses</span>
+              </button>
+            </li>
+          )}
+          {showPeople && (
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.rowActionMenuItem}
+                onClick={() => setPanel('people')}
+              >
+                <Users size={16} aria-hidden="true" />
+                <span>Participants</span>
+              </button>
+            </li>
+          )}
+          {showPlace && (
+            <li role="none">
+              <a
+                role="menuitem"
+                className={styles.rowActionMenuItem}
+                href={placeUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setPanel(null)}
+              >
+                <MapIcon size={16} aria-hidden="true" />
+                <span>{placeTitle || 'Open location in Maps'}</span>
+              </a>
+            </li>
+          )}
+          {showMaps && (
+            <li role="none">
+              <a
+                role="menuitem"
+                className={styles.rowActionMenuItem}
+                href={mapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setPanel(null)}
+              >
+                <Route size={16} aria-hidden="true" />
+                <span>{mapsTitle || 'Open in Maps'}</span>
+              </a>
+            </li>
+          )}
+        </ul>
+      </AnchoredPopover>
 
       {showFlight && (
         <AnchoredPopover
           open={panel === 'flight'}
           onClose={() => setPanel(null)}
           title="Flight status"
-          anchorRef={flightBtnRef}
+          anchorRef={menuBtnRef}
         >
           {flightBusy && !flightStatus ? (
             <p className={popoverStyles.hint}>Checking live status…</p>
@@ -248,7 +290,7 @@ function EntryRowActions({
           open={panel === 'expenses'}
           onClose={() => setPanel(null)}
           title="Expenses"
-          anchorRef={expensesBtnRef}
+          anchorRef={menuBtnRef}
         >
           {entryExpenses.length === 0 ? (
             <p className={popoverStyles.hint}>No expenses yet.</p>
@@ -311,7 +353,7 @@ function EntryRowActions({
           open={panel === 'people'}
           onClose={() => setPanel(null)}
           title="Participants"
-          anchorRef={peopleBtnRef}
+          anchorRef={menuBtnRef}
         >
           <ul className={popoverStyles.list}>
             {whoIds.map((pid) => (
@@ -794,6 +836,11 @@ export function Journey() {
                 const supposedLabel =
                   timelineCtx.supposedKind === 'next' ? 'Next' : 'Now'
                 const geoIndex = tripGeoIndexById.get(entry.id)
+                const mapsAppLabel =
+                  mapsProvider === 'apple' ? 'Apple' : 'Google'
+                const placeUrl = openMapsPlaceUrl(entry, {
+                  provider: mapsProvider,
+                })
                 const placeMapsUrl =
                   geoIndex != null
                     ? openMapsRouteUrl(tripGeo.slice(geoIndex), {
@@ -812,8 +859,11 @@ export function Journey() {
                 const weatherSummary = weather?.summary
                   ? String(weather.summary)
                   : ''
+                const placeTitle = placeUrl
+                  ? `Open location in ${mapsAppLabel} Maps`
+                  : ''
                 const mapsTitle = placeMapsUrl
-                  ? `Route from here through later stops in ${mapsProvider === 'apple' ? 'Apple' : 'Google'} Maps`
+                  ? `Route from here through later stops in ${mapsAppLabel} Maps`
                   : ''
                 return (
                   <li
@@ -890,6 +940,8 @@ export function Journey() {
                         displayLocale={displayLocale}
                         currentUserId={user?.id}
                         canEdit={canEdit}
+                        placeUrl={placeUrl}
+                        placeTitle={placeTitle}
                         mapsUrl={placeMapsUrl}
                         mapsTitle={mapsTitle}
                         onOpenExpense={(ex) =>
