@@ -49,26 +49,47 @@ export function formatWallDate(isoOrDate, timeZone, locale) {
   }
 }
 
+function civilDayKey(iso, timeZone) {
+  if (!iso) return null
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: timeZone || undefined,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date(iso))
+    const y = parts.find((p) => p.type === 'year')?.value
+    const m = parts.find((p) => p.type === 'month')?.value
+    const d = parts.find((p) => p.type === 'day')?.value
+    if (y && m && d) return `${y}-${m}-${d}`
+  } catch {
+    // fall through
+  }
+  return String(iso).slice(0, 10) || null
+}
+
 export function entryDayKey(entry) {
   if (entry.occursAt && entry.timezone) {
-    try {
-      const parts = new Intl.DateTimeFormat('en-CA', {
-        timeZone: entry.timezone,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }).formatToParts(new Date(entry.occursAt))
-      const y = parts.find((p) => p.type === 'year')?.value
-      const m = parts.find((p) => p.type === 'month')?.value
-      const d = parts.find((p) => p.type === 'day')?.value
-      if (y && m && d) return `${y}-${m}-${d}`
-    } catch {
-      // fall through
-    }
+    const key = civilDayKey(entry.occursAt, entry.timezone)
+    if (key) return key
   }
   if (entry.occursOn) return entry.occursOn
   if (entry.occursAt) return entry.occursAt.slice(0, 10)
   return 'undated'
+}
+
+/**
+ * Checkout / dropoff civil day for multi-day lodging or rental.
+ * Null when there is no separate end day from check-in.
+ */
+export function entryCheckoutDayKey(entry) {
+  if (!entry?.endsAt) return null
+  const endTz = entry.endTimezone || entry.timezone
+  const endKey = civilDayKey(entry.endsAt, endTz)
+  if (!endKey) return null
+  const startKey = entryDayKey(entry)
+  if (!startKey || startKey === 'undated' || endKey === startKey) return null
+  return endKey
 }
 
 function sameCivilDay(aIso, bIso, timeZone) {
@@ -107,6 +128,14 @@ export function formatEntryTimeLine(entry, locale) {
   }
   const startTz = entry.startTimezone || entry.timezone
   const endTz = entry.endTimezone || entry.timezone
+
+  // Timeline checkout appearance: show only the end wall time.
+  if (entry.timelineRole === 'checkout' && entry.endsAt) {
+    const label = shortTz(endTz || startTz, entry.endsAt)
+    const time = formatWallTime(entry.endsAt, endTz || startTz, locale)
+    return label ? `${time} ${label}`.trim() : time
+  }
+
   const start = entry.occursAt
     ? formatWallTime(entry.occursAt, startTz, locale)
     : ''
@@ -119,6 +148,11 @@ export function formatEntryTimeLine(entry, locale) {
   if (entry.endsAt) {
     const tz = endTz || startTz
     const label = shortTz(tz, entry.occursAt || entry.endsAt)
+    // Multi-night stay on check-in day: emphasize check-in; full range stays available in edit.
+    if (!sameCivilDay(entry.occursAt, entry.endsAt, tz) && entryCheckoutDayKey(entry)) {
+      const checkInLabel = shortTz(startTz, entry.occursAt)
+      return checkInLabel ? `${start} ${checkInLabel}`.trim() : start
+    }
     if (!sameCivilDay(entry.occursAt, entry.endsAt, tz)) {
       return `${formatWallDateTime(entry.occursAt, startTz, locale)} – ${formatWallDateTime(entry.endsAt, tz, locale)} ${label}`.trim()
     }

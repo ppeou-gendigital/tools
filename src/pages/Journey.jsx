@@ -48,6 +48,7 @@ import {
 import { isAiPlanningEnabled } from '@/lib/ai/enabled'
 import {
   entryDayKey,
+  entryCheckoutDayKey,
   formatEntryTimeLine,
   formatMoney,
   formatParticipantHint,
@@ -570,12 +571,37 @@ export function Journey() {
 
   const grouped = useMemo(() => {
     const groups = new Map()
-    for (const entry of entries) {
-      const key = entryDayKey(entry)
+    const push = (key, entry) => {
+      if (!key) return
       if (!groups.has(key)) groups.set(key, [])
       groups.get(key).push(entry)
     }
-    return [...groups.entries()]
+    for (const entry of entries) {
+      push(entryDayKey(entry), entry)
+      // Multi-night lodging/rental: also show checkout/dropoff on the end day.
+      const checkoutKey = entryCheckoutDayKey(entry)
+      if (checkoutKey) {
+        push(checkoutKey, { ...entry, timelineRole: 'checkout' })
+      }
+    }
+    for (const [, dayEntries] of groups) {
+      dayEntries.sort((a, b) => {
+        const ta =
+          a.timelineRole === 'checkout'
+            ? a.endsAt || ''
+            : a.occursAt || a.occursOn || ''
+        const tb =
+          b.timelineRole === 'checkout'
+            ? b.endsAt || ''
+            : b.occursAt || b.occursOn || ''
+        return String(ta).localeCompare(String(tb))
+      })
+    }
+    return [...groups.entries()].sort(([a], [b]) => {
+      if (a === 'undated') return 1
+      if (b === 'undated') return -1
+      return a.localeCompare(b)
+    })
   }, [entries])
 
   const timelineCtx = useMemo(
@@ -812,11 +838,13 @@ export function Journey() {
                     entryId: entry.id,
                     activityId: entry.activityId,
                   })
-                const title =
-                  entry.title || activity?.label || 'Activity'
+                const isCheckout = entry.timelineRole === 'checkout'
+                const title = isCheckout
+                  ? `Checkout · ${entry.title || activity?.label || 'Stay'}`
+                  : entry.title || activity?.label || 'Activity'
                 const ActivityIcon = activityIcon(entry.activityId)
                 const metaPrimary = [
-                  activity?.label,
+                  isCheckout ? 'Checkout' : activity?.label,
                   formatEntryTimeLine(entry, displayLocale),
                   entry.placeName,
                 ]
@@ -867,7 +895,11 @@ export function Journey() {
                   : ''
                 return (
                   <li
-                    key={entry.id}
+                    key={
+                      entry.timelineRole === 'checkout'
+                        ? `${entry.id}:checkout`
+                        : entry.id
+                    }
                     className={cx(
                       styles.entryRow,
                       styles.entryRowTimeline,
