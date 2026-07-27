@@ -942,6 +942,13 @@
   }
 }
 
+// Entry Edit transit/rental blocks: equal Departure / Arrival columns.
+.dualZoneEqual {
+  @include m.md {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
 .dualZoneSolo {
   @include m.md {
     grid-template-columns: 1fr;

@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { asyncStorage } from '../lib/storage.js'
@@ -14,7 +15,7 @@ const ThemeContext = createContext(null)
 
 const BASE_THEMES = ['light', 'dark', 'system']
 
-function resolveTheme(pref, { resolveDaynight } = {}) {
+function resolveTheme(pref, resolveDaynight) {
   if (pref === 'system') {
     const prefersDark =
       globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches
@@ -38,7 +39,9 @@ function applyTheme(resolved) {
  * @param {string} props.appId
  * @param {string} [props.defaultTheme]
  * @param {boolean} [props.enableDaynight]
- * @param {() => 'light'|'dark'} [props.resolveDaynight] — viaggio solar/geo hook
+ * @param {() => 'light'|'dark'} [props.resolveDaynight] — held in a ref so
+ *   unstable function identity cannot churn context / re-run paint effects
+ *   (React #185 when a geo bridge setState'd the resolver).
  * @param {(userId: string, theme: string) => Promise<void>} [props.pushRemote]
  */
 export function ThemeProvider({
@@ -61,13 +64,18 @@ export function ThemeProvider({
   const [ready, setReady] = useState(false)
   const [tick, setTick] = useState(0)
 
+  // Keep latest resolver without putting it in effect/context deps.
+  const resolveDaynightRef = useRef(resolveDaynight)
+  resolveDaynightRef.current = resolveDaynight
+  const hasCustomResolver = typeof resolveDaynight === 'function'
+
   useEffect(() => {
     let mounted = true
     asyncStorage.getItem(storageKey).then((stored) => {
       if (!mounted) return
       const next = themes.includes(stored) ? stored : defaultTheme
       setPref(next)
-      applyTheme(resolveTheme(next, { resolveDaynight }))
+      applyTheme(resolveTheme(next, resolveDaynightRef.current))
       setReady(true)
     })
     return () => { mounted = false }
@@ -77,8 +85,8 @@ export function ThemeProvider({
 
   useEffect(() => {
     if (!ready) return
-    applyTheme(resolveTheme(pref, { resolveDaynight }))
-  }, [pref, ready, tick, resolveDaynight])
+    applyTheme(resolveTheme(pref, resolveDaynightRef.current))
+  }, [pref, ready, tick])
 
   useEffect(() => {
     if (pref !== 'system') return
@@ -91,10 +99,10 @@ export function ThemeProvider({
 
   // Clock-based daynight boundary timer when no custom resolver is provided.
   useEffect(() => {
-    if (!ready || pref !== 'daynight' || resolveDaynight) return
+    if (!ready || pref !== 'daynight' || hasCustomResolver) return
     const id = setTimeout(() => setTick((t) => t + 1), msUntilNextClockBoundary())
     return () => clearTimeout(id)
-  }, [ready, pref, tick, resolveDaynight])
+  }, [ready, pref, tick, hasCustomResolver])
 
   const setTheme = useCallback(
     async (next, { fromRemote = false } = {}) => {
@@ -114,12 +122,14 @@ export function ThemeProvider({
   const value = useMemo(
     () => ({
       theme: pref,
-      resolvedTheme: resolveTheme(pref, { resolveDaynight }),
+      resolvedTheme: resolveTheme(pref, resolveDaynightRef.current),
       setTheme,
       ready,
       themes,
     }),
-    [pref, setTheme, ready, themes, resolveDaynight],
+    // `tick` refreshes resolvedTheme at daynight boundaries without depending
+    // on resolveDaynight function identity.
+    [pref, setTheme, ready, themes, tick],
   )
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

@@ -58,31 +58,33 @@ export function AiPlannerProvider({ children }) {
   }, [openCreate, openChat])
 
   // Deep links / old routes → open overlay and bounce to a sensible page.
+  // Depend on route/params primitives + stable replace — not the whole `nav`
+  // object (new identity every navigation).
+  const { route, replace } = nav
+  const journeyIdParam = nav.params?.journeyId
   useEffect(() => {
-    if (nav.route === 'ai-generate') {
+    if (route === 'ai-generate') {
       openCreate()
-      nav.replace('home')
+      replace('home')
       return
     }
-    if (nav.route === 'ai-planner') {
-      const id = nav.params?.journeyId
-      if (id) {
-        openChat(id)
-        nav.replace('journey', { journeyId: id })
+    if (route === 'ai-planner') {
+      if (journeyIdParam) {
+        openChat(journeyIdParam)
+        replace('journey', { journeyId: journeyIdParam })
       } else {
         openCreate()
-        nav.replace('home')
+        replace('home')
       }
       return
     }
-    if (nav.route === 'ai-enrich') {
-      const id = nav.params?.journeyId
-      if (id) {
-        openChat(id)
-        nav.replace('journey', { journeyId: id })
+    if (route === 'ai-enrich') {
+      if (journeyIdParam) {
+        openChat(journeyIdParam)
+        replace('journey', { journeyId: journeyIdParam })
       }
     }
-  }, [nav.route, nav.params?.journeyId, nav, openCreate, openChat])
+  }, [route, journeyIdParam, replace, openCreate, openChat])
 
   const value = useMemo(
     () => ({

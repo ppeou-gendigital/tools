@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
+import { BootErrorBoundary } from '@/blocks/BootErrorBoundary'
 import '@tools/ui/css'
 import '@tools/behavioral/css'
 import './brand.scss'
@@ -18,7 +19,9 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <BootErrorBoundary>
+      <App />
+    </BootErrorBoundary>
   </StrictMode>,
 )
 

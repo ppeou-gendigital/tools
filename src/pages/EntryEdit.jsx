@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Loader2, Plus, Save, Trash2 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
@@ -23,6 +23,12 @@ import {
   normalizeFlightDetails,
   suggestFlightTitle,
 } from '@/lib/flightIdentity'
+import {
+  biasForCluster,
+  clusterJourneyPlaces,
+  collectJourneyGeoPoints,
+  defaultCluster,
+} from '@/lib/journeyGeo'
 import { parseRichBody, serializeRichBody } from '@/lib/richBody'
 import {
   formatMoney,
@@ -35,9 +41,11 @@ import {
   fetchDisplayNames,
   getEntry,
   getJourney,
+  listEntries,
   listExpensesForEntry,
   listJourneyPeople,
   listParticipantsForEntry,
+  listPlaceIdeas,
   myMembership,
   upsertEntry,
 } from '@/lib/viaggioApi'
@@ -217,6 +225,19 @@ function EntryEditForm({
   const readOnly = !canEdit
   const fields = useMemo(() => new Set(schema?.fields ?? []), [schema])
   const defaultTz = journey.defaultTimezone || ''
+  const hasGeoFields = fields.has('lat') && fields.has('lng')
+
+  const { data: journeyEntries = [] } = useQuery({
+    queryKey: ['viaggio', 'entries', journey.id],
+    queryFn: () => listEntries(journey.id),
+    enabled: !!journey.id && hasGeoFields,
+  })
+
+  const { data: placeIdeas = [] } = useQuery({
+    queryKey: ['viaggio', 'place-ideas', journey.id],
+    queryFn: () => listPlaceIdeas(journey.id),
+    enabled: !!journey.id && hasGeoFields,
+  })
 
   const [title, setTitle] = useState(existing?.title || '')
   const [placeName, setPlaceName] = useState(existing?.placeName || '')
@@ -228,7 +249,7 @@ function EntryEditForm({
     Number.isFinite(existing?.lng) ? existing.lng : null,
   )
   const [occursOn, setOccursOn] = useState(existing?.occursOn || '')
-  const hasGeoFields = fields.has('lat') && fields.has('lng')
+  const [selectedCityId, setSelectedCityId] = useState(null)
   const [timezone, setTimezone] = useState(existing?.timezone || defaultTz)
   const [startTimezone, setStartTimezone] = useState(
     existing?.startTimezone || existing?.timezone || defaultTz,
@@ -253,6 +274,38 @@ function EntryEditForm({
   const [body, setBody] = useState(() =>
     serializeRichBody(parseRichBody(existing?.body).doc),
   )
+  const cityClusters = useMemo(() => {
+    if (!hasGeoFields) return []
+    const points = collectJourneyGeoPoints(journeyEntries, placeIdeas)
+    return clusterJourneyPlaces(points)
+  }, [hasGeoFields, journeyEntries, placeIdeas])
+
+  const cityOptions = useMemo(
+    () => cityClusters.map((c) => ({ id: c.id, label: c.label })),
+    [cityClusters],
+  )
+
+  useEffect(() => {
+    if (!cityClusters.length) {
+      setSelectedCityId(null)
+      return
+    }
+    setSelectedCityId((prev) => {
+      if (prev && cityClusters.some((c) => c.id === prev)) return prev
+      const pick = defaultCluster({
+        clusters: cityClusters,
+        entryOccursOn: occursOn || existing?.occursOn || null,
+        entries: journeyEntries,
+      })
+      return pick?.id ?? cityClusters[0].id
+    })
+  }, [cityClusters, occursOn, existing?.occursOn, journeyEntries])
+
+  const locationBias = useMemo(() => {
+    const cluster = cityClusters.find((c) => c.id === selectedCityId)
+    return biasForCluster(cluster)
+  }, [cityClusters, selectedCityId])
+
   const [selected, setSelected] = useState(() => {
     if (existing) return new Set(participantIds)
     if (defaultParticipantMode(activityId) === 'all') {
@@ -282,10 +335,38 @@ function EntryEditForm({
   }
 
   const isFlight = activityId === 'flight'
-  const flightHintKeys = new Set(['airline', 'flight_number', 'confirmation'])
-  const genericHints = (activity?.detailHints || []).filter((hint) =>
-    isFlight ? !flightHintKeys.has(hint.key) : true,
+  const detailHints = activity?.detailHints || []
+  const hintKeys = useMemo(
+    () => new Set(detailHints.map((h) => h.key)),
+    [detailHints],
   )
+  // Route-style transit: From/To live in dual-zone blocks; hide competing Place.
+  const nestRouteEndpoints =
+    dualZone && hintKeys.has('from') && hintKeys.has('to')
+  const dualZoneTitles =
+    activityId === 'flight'
+      ? { start: 'Departure', end: 'Arrival' }
+      : activityId === 'car_rental'
+        ? { start: 'Pickup', end: 'Drop-off' }
+        : { start: 'Depart', end: 'Arrive' }
+  const reservedHintKeys = useMemo(() => {
+    const keys = new Set()
+    if (isFlight) {
+      keys.add('airline')
+      keys.add('flight_number')
+      keys.add('confirmation')
+    }
+    if (nestRouteEndpoints) {
+      keys.add('from')
+      keys.add('to')
+    }
+    return keys
+  }, [isFlight, nestRouteEndpoints])
+  const genericHints = detailHints.filter((hint) => !reservedHintKeys.has(hint.key))
+  const fromHintLabel =
+    detailHints.find((h) => h.key === 'from')?.label || 'From'
+  const toHintLabel = detailHints.find((h) => h.key === 'to')?.label || 'To'
+  const suggestedFlightTitle = isFlight ? suggestFlightTitle(details) : ''
 
   const saveMut = useMutation({
     mutationFn: () => {
@@ -448,6 +529,15 @@ function EntryEditForm({
                 disabled={readOnly}
                 onChange={(e) => setTitle(e.target.value)}
               />
+              {isFlight && (
+                <p className={styles.hint}>
+                  {String(title || '').trim()
+                    ? 'Leave blank to auto-fill from airline and route on save.'
+                    : suggestedFlightTitle
+                      ? `Suggested: ${suggestedFlightTitle}`
+                      : 'Auto-fills from airline and route on save when left blank.'}
+                </p>
+              )}
             </div>
           )}
 
@@ -465,9 +555,31 @@ function EntryEditForm({
           )}
 
           {dualZone ? (
-            <div className={cx(styles.dualZone, styles.formSpan2)}>
+            <div
+              className={cx(
+                styles.dualZone,
+                styles.dualZoneEqual,
+                styles.formSpan2,
+              )}
+            >
               <div className={styles.block}>
-                <p className={styles.blockTitle}>Depart / pickup</p>
+                <p className={styles.blockTitle}>{dualZoneTitles.start}</p>
+                {nestRouteEndpoints && (
+                  <div className={styles.field}>
+                    <Label htmlFor="d-from">{fromHintLabel}</Label>
+                    <Input
+                      id="d-from"
+                      value={details.from || ''}
+                      disabled={readOnly}
+                      onChange={(e) =>
+                        setDetails((prev) => ({
+                          ...prev,
+                          from: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                )}
                 <div className={styles.field}>
                   <Label htmlFor="startAt">Time</Label>
                   <Input
@@ -489,7 +601,23 @@ function EntryEditForm({
                 </div>
               </div>
               <div className={styles.block}>
-                <p className={styles.blockTitle}>Arrive / dropoff</p>
+                <p className={styles.blockTitle}>{dualZoneTitles.end}</p>
+                {nestRouteEndpoints && (
+                  <div className={styles.field}>
+                    <Label htmlFor="d-to">{toHintLabel}</Label>
+                    <Input
+                      id="d-to"
+                      value={details.to || ''}
+                      disabled={readOnly}
+                      onChange={(e) =>
+                        setDetails((prev) => ({
+                          ...prev,
+                          to: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                )}
                 <div className={styles.field}>
                   <Label htmlFor="endAt">Time</Label>
                   <Input
@@ -562,6 +690,10 @@ function EntryEditForm({
                 lat={lat}
                 lng={lng}
                 disabled={readOnly}
+                locationBias={locationBias}
+                cities={cityOptions}
+                selectedCityId={selectedCityId}
+                onCityChange={setSelectedCityId}
                 onChange={(next) => {
                   setPlaceName(next.placeName ?? '')
                   setAddress(next.address ?? '')
@@ -576,7 +708,7 @@ function EntryEditForm({
             </div>
           ) : (
             <>
-              {fields.has('place_name') && (
+              {fields.has('place_name') && !nestRouteEndpoints && (
                 <div className={styles.field}>
                   <Label htmlFor="place">Place</Label>
                   <Input
@@ -603,49 +735,52 @@ function EntryEditForm({
           )}
 
           {isFlight && (
-            <>
-              <div className={styles.field}>
-                <Label htmlFor="d-airline">Airline</Label>
-                <AirlineAutocomplete
-                  id="d-airline"
-                  value={details.airline || ''}
-                  disabled={readOnly}
-                  onChange={(iata) =>
-                    setDetails((prev) => ({ ...prev, airline: iata }))
-                  }
-                />
+            <div className={styles.formSpan2}>
+              <p className={styles.sectionTitle}>Flight</p>
+              <div className={styles.formGrid}>
+                <div className={styles.field}>
+                  <Label htmlFor="d-airline">Airline</Label>
+                  <AirlineAutocomplete
+                    id="d-airline"
+                    value={details.airline || ''}
+                    disabled={readOnly}
+                    onChange={(iata) =>
+                      setDetails((prev) => ({ ...prev, airline: iata }))
+                    }
+                  />
+                </div>
+                <div className={styles.field}>
+                  <Label htmlFor="d-flight_number">Flight number</Label>
+                  <Input
+                    id="d-flight_number"
+                    value={details.flight_number || ''}
+                    disabled={readOnly}
+                    placeholder="440 or TP440"
+                    onChange={(e) =>
+                      setDetails((prev) => ({
+                        ...prev,
+                        flight_number: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className={styles.field}>
+                  <Label htmlFor="d-confirmation">Confirmation #</Label>
+                  <Input
+                    id="d-confirmation"
+                    value={details.confirmation || ''}
+                    disabled={readOnly}
+                    placeholder="Optional"
+                    onChange={(e) =>
+                      setDetails((prev) => ({
+                        ...prev,
+                        confirmation: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
               </div>
-              <div className={styles.field}>
-                <Label htmlFor="d-flight_number">Flight number</Label>
-                <Input
-                  id="d-flight_number"
-                  value={details.flight_number || ''}
-                  disabled={readOnly}
-                  placeholder="440 or TP440"
-                  onChange={(e) =>
-                    setDetails((prev) => ({
-                      ...prev,
-                      flight_number: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className={styles.field}>
-                <Label htmlFor="d-confirmation">Confirmation #</Label>
-                <Input
-                  id="d-confirmation"
-                  value={details.confirmation || ''}
-                  disabled={readOnly}
-                  placeholder="Optional"
-                  onChange={(e) =>
-                    setDetails((prev) => ({
-                      ...prev,
-                      confirmation: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </>
+            </div>
           )}
 
           {genericHints.map((hint) => (

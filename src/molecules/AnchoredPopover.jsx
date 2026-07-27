@@ -6,6 +6,15 @@ import styles from './AnchoredPopover.module.scss'
 const GAP = 6
 const VIEW_PAD = 8
 
+function samePos(a, b) {
+  return (
+    a.top === b.top &&
+    a.left === b.left &&
+    a.width === b.width &&
+    a.ready === b.ready
+  )
+}
+
 /**
  * Portaled popover anchored to a trigger element with collision flip.
  * Use for contextual lists (expenses, people, chip pickers). Modals stay for blocking flows.
@@ -62,23 +71,34 @@ export function AnchoredPopover({
     }
     left = Math.max(VIEW_PAD, Math.min(left, vw - p.width - VIEW_PAD))
 
-    setPos({ top, left, width, ready: true })
+    const next = { top, left, width, ready: true }
+    setPos((prev) => (samePos(prev, next) ? prev : next))
   }, [anchorRef, align, matchAnchorWidth, fluid])
 
   useLayoutEffect(() => {
     if (!open) {
-      setPos((s) => ({ ...s, ready: false }))
+      // Bail out when already closed — avoid a setState on every parent re-render.
+      setPos((s) => (s.ready === false ? s : { ...s, ready: false }))
       return
     }
     place()
+    const panel = panelRef.current
     const onScroll = () => place()
     window.addEventListener('resize', place)
     window.addEventListener('scroll', onScroll, true)
+    // Reposition when menu content size changes (replaces a `children` effect dep,
+    // which recreated every parent render and could loop with setPos).
+    let ro
+    if (panel && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => place())
+      ro.observe(panel)
+    }
     return () => {
       window.removeEventListener('resize', place)
       window.removeEventListener('scroll', onScroll, true)
+      ro?.disconnect()
     }
-  }, [open, place, children])
+  }, [open, place])
 
   useEffect(() => {
     if (!open) return

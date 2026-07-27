@@ -253,10 +253,11 @@ export function PlaylistPlayer({
   useEffect(() => {
     if (safeIndex >= 0) return
     if (playableIndexes.length === 0) return
-    onIndexChange?.(playableIndexes[0])
+    // Read from ref so an inline onIndexChange identity cannot re-fire this effect.
+    stateRef.current.onIndexChange?.(playableIndexes[0])
     setAutoplay(false)
     setIsPlaying(false)
-  }, [safeIndex, playableIndexes, onIndexChange])
+  }, [safeIndex, playableIndexes])
 
   useEffect(() => {
     function onMessage(event) {

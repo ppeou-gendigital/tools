@@ -3,6 +3,7 @@ import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps'
 import { GOOGLE_MAPS_API_KEY } from '@/env'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
+import { cx } from '@/lib/cx'
 import styles from './PlaceLocationField.module.scss'
 
 const PLACE_FIELDS = [
@@ -30,8 +31,9 @@ function placeDisplayName(place, fallback = '') {
   return fallback
 }
 
-function AutocompleteMount({ disabled, onPick }) {
+function AutocompleteMount({ disabled, onPick, locationBias }) {
   const hostRef = useRef(null)
+  const elementRef = useRef(null)
   const places = useMapsLibrary('places')
   const onPickRef = useRef(onPick)
   const PlaceAutocompleteElement = places?.PlaceAutocompleteElement
@@ -52,6 +54,7 @@ function AutocompleteMount({ disabled, onPick }) {
     el.setAttribute('aria-label', 'Search for a place')
     if (disabled) el.disabled = true
     hostRef.current.replaceChildren(el)
+    elementRef.current = el
 
     const onSelect = async (event) => {
       try {
@@ -78,8 +81,34 @@ function AutocompleteMount({ disabled, onPick }) {
     return () => {
       el.removeEventListener('gmp-select', onSelect)
       el.remove()
+      elementRef.current = null
     }
-  }, [places, disabled, PlaceAutocompleteElement])
+  }, [places, PlaceAutocompleteElement])
+
+  useEffect(() => {
+    const el = elementRef.current
+    if (!el) return
+    if (locationBias) {
+      el.locationBias = locationBias
+      try {
+        el.locationRestriction = null
+      } catch {
+        // older builds
+      }
+    } else {
+      try {
+        el.locationBias = null
+      } catch {
+        // ignore
+      }
+    }
+  }, [locationBias, places])
+
+  useEffect(() => {
+    const el = elementRef.current
+    if (!el) return
+    el.disabled = Boolean(disabled)
+  }, [disabled, places])
 
   if (unavailable) {
     return (
@@ -95,6 +124,11 @@ function AutocompleteMount({ disabled, onPick }) {
 /**
  * Place picker that fills placeName / address / lat / lng via Google Places.
  * Falls back to plain text fields when Maps API key is missing.
+ *
+ * @param {object} [props.locationBias] — soft bias (center or LatLngBoundsLiteral)
+ * @param {Array<{ id: string, label: string }>} [props.cities] — multi-city chips
+ * @param {string|null} [props.selectedCityId]
+ * @param {(id: string) => void} [props.onCityChange]
  */
 export function PlaceLocationField({
   placeName,
@@ -103,9 +137,14 @@ export function PlaceLocationField({
   lng,
   disabled = false,
   onChange,
+  locationBias = null,
+  cities = [],
+  selectedCityId = null,
+  onCityChange,
 }) {
   const hasKey = Boolean(GOOGLE_MAPS_API_KEY)
   const hasCoords = Number.isFinite(lat) && Number.isFinite(lng)
+  const showCityChips = cities.length > 1
 
   function patch(partial) {
     onChange?.({
@@ -150,12 +189,44 @@ export function PlaceLocationField({
     <>
       <div>
         <Label>Find on map</Label>
+        {showCityChips ? (
+          <div
+            className={styles.cityChips}
+            role="group"
+            aria-label="Search near city"
+          >
+            {cities.map((city) => (
+              <button
+                key={city.id}
+                type="button"
+                className={cx(
+                  styles.cityChip,
+                  selectedCityId === city.id && styles.cityChipActive,
+                )}
+                disabled={disabled}
+                aria-pressed={selectedCityId === city.id}
+                onClick={() => onCityChange?.(city.id)}
+              >
+                {city.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
         <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={['places']}>
           <AutocompleteMount
             disabled={disabled}
+            locationBias={locationBias}
             onPick={(picked) => patch(picked)}
           />
         </APIProvider>
+        {selectedCityId && showCityChips ? (
+          <p className={styles.meta}>
+            Ranking places near{' '}
+            {cities.find((c) => c.id === selectedCityId)?.label || 'this city'}.
+          </p>
+        ) : locationBias ? (
+          <p className={styles.meta}>Ranking places near your itinerary.</p>
+        ) : null}
       </div>
       <div>
         <Label htmlFor="place">Place</Label>

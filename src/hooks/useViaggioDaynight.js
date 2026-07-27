@@ -22,9 +22,12 @@ function sameCoords(a, b) {
 /**
  * Solar/geo daynight for Viaggio. Call inside Tools ThemeProvider.
  *
- * Updates a stable resolver ref via syncResolve (no setState). Re-applies the
- * theme by writing documentElement directly via applyDaynight — never bumps
- * React state, so geo refresh cannot hit React #185 max update depth.
+ * CRITICAL — avoid React #185:
+ * - `syncResolve` must install the function into a *ref* on the parent
+ *   (or ThemeProvider's resolveDaynight ref). Never `setState(resolve)`.
+ * - Theme paint goes through `applyDaynight` (DOM only), not ThemeProvider setState.
+ * - This hook stores `syncResolve` / `applyDaynight` in refs so inline parent
+ *   callbacks cannot re-trigger install/paint effects.
  *
  * @param {(resolve: () => 'light'|'dark') => void} syncResolve
  * @param {() => void} [applyDaynight]
@@ -44,6 +47,10 @@ export function useViaggioDaynight(syncResolve, applyDaynight) {
   const firstAskDoneRef = useRef(false)
   const forceClockRef = useRef(forceClock)
   const lastAppliedRef = useRef('')
+  const syncResolveRef = useRef(syncResolve)
+  const applyDaynightRef = useRef(applyDaynight)
+  syncResolveRef.current = syncResolve
+  applyDaynightRef.current = applyDaynight
 
   useEffect(() => {
     coordsRef.current = coords
@@ -57,6 +64,7 @@ export function useViaggioDaynight(syncResolve, applyDaynight) {
     setCoordsState((prev) => (sameCoords(prev, next) ? prev : next))
   }, [])
 
+  // Stable identity — always reads latest refs.
   const resolve = useCallback(() => {
     const c = forceClockRef.current ? null : coordsRef.current
     const day =
@@ -64,10 +72,10 @@ export function useViaggioDaynight(syncResolve, applyDaynight) {
     return day ? 'light' : 'dark'
   }, [])
 
-  // Install stable resolver once; it always reads latest refs.
+  // Install once when resolve identity is ready; ignore syncResolve identity churn.
   useEffect(() => {
-    syncResolve?.(resolve)
-  }, [resolve, syncResolve])
+    syncResolveRef.current?.(resolve)
+  }, [resolve])
 
   // Paint theme when inputs change — DOM only, no ThemeProvider setState.
   useEffect(() => {
@@ -82,8 +90,8 @@ export function useViaggioDaynight(syncResolve, applyDaynight) {
     ].join('|')
     if (lastAppliedRef.current === key) return
     lastAppliedRef.current = key
-    applyDaynight?.()
-  }, [theme, coords, tick, forceClock, resolve, applyDaynight])
+    applyDaynightRef.current?.()
+  }, [theme, coords, tick, forceClock, resolve])
 
   useEffect(() => {
     if (theme !== 'daynight' || forceClock) return
@@ -158,7 +166,10 @@ export function useViaggioDaynight(syncResolve, applyDaynight) {
   }, [theme, coords, forceClock])
 }
 
-/** Mount inside Tools ThemeProvider to drive solar daynight. */
+/**
+ * Mount inside Tools ThemeProvider to drive solar daynight.
+ * Parent must pass a syncResolve that writes a ref — never setState(resolve).
+ */
 export function ViaggioDaynightBridge({ syncResolve, applyDaynight }) {
   useViaggioDaynight(syncResolve, applyDaynight)
   return null
