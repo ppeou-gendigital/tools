@@ -20,6 +20,8 @@ import {
   telHref,
   websiteHref,
 } from '@/lib/contactLinks'
+import { AiCareButton } from '@/molecules/AiCareButton'
+import { OfficeAddressField } from '@/molecules/OfficeAddressField'
 import styles from './SectionPage.module.scss'
 
 export function Doctors() {
@@ -46,18 +48,21 @@ export function Doctors() {
         title="Doctors"
         subtitle="Profiles, offices, and tap-to-call / maps links."
         actions={
-          vault.canWrite ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowForm((v) => !v)}
-              className={styles.iconBtn}
-              aria-label="Add doctor"
-              title="Add doctor"
-            >
-              <Plus size={16} aria-hidden="true" />
-            </Button>
-          ) : null
+          <>
+            <AiCareButton className={styles.iconBtn} />
+            {vault.canWrite ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowForm((v) => !v)}
+                className={styles.iconBtn}
+                aria-label="Add doctor"
+                title="Add doctor"
+              >
+                <Plus size={16} aria-hidden="true" />
+              </Button>
+            ) : null}
+          </>
         }
         shortcuts={
           <PageShortcuts current="doctors" className={styles.iconBtn} />
@@ -182,8 +187,27 @@ function DoctorForm({ userId, patientId, getKey, onSaved, onCancel }) {
   const [city, setCity] = useState('')
   const [region, setRegion] = useState('')
   const [postalCode, setPostalCode] = useState('')
+  const [country, setCountry] = useState('US')
+  const [googlePlaceId, setGooglePlaceId] = useState(null)
+  const [lat, setLat] = useState(null)
+  const [lng, setLng] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+
+  function onPlacePick(picked) {
+    if (!picked) return
+    if (picked.addressLine1 != null) setAddressLine1(picked.addressLine1)
+    if (picked.city != null) setCity(picked.city)
+    if (picked.region != null) setRegion(picked.region)
+    if (picked.postalCode != null) setPostalCode(picked.postalCode)
+    if (picked.country != null) setCountry(picked.country || 'US')
+    setGooglePlaceId(picked.googlePlaceId || null)
+    setLat(Number.isFinite(picked.lat) ? picked.lat : null)
+    setLng(Number.isFinite(picked.lng) ? picked.lng : null)
+    if (picked.phone && !phone.trim()) setPhone(picked.phone)
+    if (picked.website && !website.trim()) setWebsite(picked.website)
+    if (picked.displayName && !name.trim()) setName(picked.displayName)
+  }
 
   async function onSubmit(e) {
     e.preventDefault()
@@ -191,7 +215,12 @@ function DoctorForm({ userId, patientId, getKey, onSaved, onCancel }) {
     setError(null)
     try {
       const offices = []
-      if (addressLine1 || phone) {
+      const hasOffice =
+        addressLine1 ||
+        phone ||
+        googlePlaceId ||
+        (Number.isFinite(lat) && Number.isFinite(lng))
+      if (hasOffice) {
         offices.push({
           id: createId(),
           label: officeLabel || 'Office',
@@ -200,7 +229,10 @@ function DoctorForm({ userId, patientId, getKey, onSaved, onCancel }) {
           city: city || '',
           region: region || undefined,
           postalCode: postalCode || undefined,
-          country: 'US',
+          country: country || 'US',
+          googlePlaceId: googlePlaceId || undefined,
+          lat: Number.isFinite(lat) ? lat : undefined,
+          lng: Number.isFinite(lng) ? lng : undefined,
         })
       }
       await saveDoctor({
@@ -243,6 +275,9 @@ function DoctorForm({ userId, patientId, getKey, onSaved, onCancel }) {
       </div>
       <p className={styles.muted}>Office (optional — add more later from edit)</p>
       <div className={styles.field}>
+        <OfficeAddressField disabled={saving} onPick={onPlacePick} />
+      </div>
+      <div className={styles.field}>
         <Label>Office label</Label>
         <Input value={officeLabel} onChange={(e) => setOfficeLabel(e.target.value)} />
       </div>
@@ -259,6 +294,11 @@ function DoctorForm({ userId, patientId, getKey, onSaved, onCancel }) {
         <Input placeholder="State" value={region} onChange={(e) => setRegion(e.target.value)} />
         <Input placeholder="ZIP" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
       </div>
+      {Number.isFinite(lat) && Number.isFinite(lng) ? (
+        <p className={styles.muted}>
+          Pinned · {lat.toFixed(5)}, {lng.toFixed(5)}
+        </p>
+      ) : null}
       {error && <p className={styles.empty}>{error}</p>}
       <div className={styles.row}>
         <Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save doctor'}</Button>

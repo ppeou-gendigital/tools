@@ -23,6 +23,9 @@ function serializeOffice(o) {
     region: o.region,
     postalCode: o.postalCode,
     country: o.country,
+    googlePlaceId: o.googlePlaceId,
+    lat: Number.isFinite(o.lat) ? o.lat : undefined,
+    lng: Number.isFinite(o.lng) ? o.lng : undefined,
   })
 }
 

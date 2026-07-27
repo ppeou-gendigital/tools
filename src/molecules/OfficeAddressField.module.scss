@@ -1,0 +1,39 @@
+.host {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 2.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  overflow: visible;
+
+  :global(gmp-place-autocomplete) {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 2.5rem;
+    border: none !important;
+    border-radius: var(--radius) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color-scheme: inherit;
+    color: var(--fg);
+    font: inherit;
+    font-size: var(--text-sm);
+  }
+}
+
+.meta {
+  margin: 0.35rem 0 0;
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+  line-height: 1.35;
+}
+
+.unavailable {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+}

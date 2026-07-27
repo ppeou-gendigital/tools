@@ -93,7 +93,10 @@
         "city": { "type": "string" },
         "region": { "type": "string" },
         "postalCode": { "type": "string" },
-        "country": { "type": "string" }
+        "country": { "type": "string" },
+        "googlePlaceId": { "type": "string" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" }
       }
     },
     "doctor": {

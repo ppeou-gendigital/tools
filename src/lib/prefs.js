@@ -19,6 +19,7 @@ const DEFAULTS = {
   theme: 'system',
   fontSize: FONT_DEFAULT,
   fabCorner: 'bottom-right',
+  aiFabCorner: 'bottom-left',
 }
 
 /** Keys this tool normalizes and may rewrite on the shared prefs blob. */
@@ -26,6 +27,7 @@ export const PREFS_OWNED_KEYS = new Set([
   'theme',
   'fontSize',
   'fabCorner',
+  'aiFabCorner',
   'updatedAt',
 ])
 
@@ -51,6 +53,22 @@ export function normalizeFabCorner(v) {
   return CORNERS.includes(v) ? v : DEFAULTS.fabCorner
 }
 
+/** Horizontal opposite — keeps FABs from stacking on first migrate. */
+export function oppositeFabCorner(corner) {
+  const c = normalizeFabCorner(corner)
+  if (c === 'top-left') return 'top-right'
+  if (c === 'top-right') return 'top-left'
+  if (c === 'bottom-left') return 'bottom-right'
+  return 'bottom-left'
+}
+
+/** AI FAB corner; missing/invalid → opposite of menu; never equal to menu. */
+export function normalizeAiFabCorner(v, menuCorner) {
+  const menu = normalizeFabCorner(menuCorner)
+  if (CORNERS.includes(v) && v !== menu) return v
+  return oppositeFabCorner(menu)
+}
+
 // Snap to the FONT_STEP grid inside [MIN, MAX] and rescue any stale
 // odd-numbered values from earlier builds.
 export function normalizeFontSize(v) {
@@ -66,11 +84,13 @@ export function normalizeFontSize(v) {
 // applying it via the provider setters. Clamps owned keys; preserves
 // sibling-tool keys opaquely.
 export function normalizeRemotePrefs(remote) {
+  const fabCorner = normalizeFabCorner(remote?.fabCorner)
   return {
     ...extractForeignPrefs(remote),
     theme: normalizeTheme(remote?.theme),
     fontSize: normalizeFontSize(remote?.fontSize),
-    fabCorner: normalizeFabCorner(remote?.fabCorner),
+    fabCorner,
+    aiFabCorner: normalizeAiFabCorner(remote?.aiFabCorner, fabCorner),
   }
 }
 

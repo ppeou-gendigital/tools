@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Check, Plus, Trash2 } from 'lucide-react'
+import { AiCareButton } from '@/molecules/AiCareButton'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -96,18 +97,21 @@ export function Appointments() {
         title="Appointments"
         subtitle="Upcoming checkups, blood draws, imaging, and more."
         actions={
-          vault.canWrite ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowForm((v) => !v)}
-              className={styles.iconBtn}
-              aria-label="Add appointment"
-              title="Add appointment"
-            >
-              <Plus size={16} aria-hidden="true" />
-            </Button>
-          ) : null
+          <>
+            <AiCareButton className={styles.iconBtn} />
+            {vault.canWrite ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowForm((v) => !v)}
+                className={styles.iconBtn}
+                aria-label="Add appointment"
+                title="Add appointment"
+              >
+                <Plus size={16} aria-hidden="true" />
+              </Button>
+            ) : null}
+          </>
         }
         shortcuts={
           <PageShortcuts current="appointments" className={styles.iconBtn} />

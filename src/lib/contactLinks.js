@@ -43,11 +43,43 @@ export function formatAddress(office) {
 
 /** Apple Maps on Apple platforms; Google Maps elsewhere. */
 export function mapsHref(office) {
-  const q = formatAddress(office)
-  if (!q) return null
-  const encoded = encodeURIComponent(q)
+  if (!office || typeof office !== 'object') return null
   const ua = globalThis.navigator?.userAgent ?? ''
   const isApple = /iPhone|iPad|iPod|Macintosh/i.test(ua)
-  if (isApple) return `https://maps.apple.com/?q=${encoded}`
-  return `https://www.google.com/maps/search/?api=1&query=${encoded}`
+  const lat = Number(office.lat)
+  const lng = Number(office.lng)
+  const hasCoords = Number.isFinite(lat) && Number.isFinite(lng)
+  const q = formatAddress(office)
+  const placeId =
+    typeof office.googlePlaceId === 'string' && office.googlePlaceId.trim()
+      ? office.googlePlaceId.trim()
+      : null
+
+  if (isApple) {
+    if (hasCoords) {
+      const params = new URLSearchParams({ ll: `${lat},${lng}` })
+      params.set('q', q || `${lat},${lng}`)
+      return `https://maps.apple.com/?${params.toString()}`
+    }
+    if (q) return `https://maps.apple.com/?q=${encodeURIComponent(q)}`
+    return null
+  }
+
+  if (placeId) {
+    const params = new URLSearchParams({
+      api: '1',
+      query_place_id: placeId,
+    })
+    if (q) params.set('query', q)
+    else if (hasCoords) params.set('query', `${lat},${lng}`)
+    else params.set('query', 'place')
+    return `https://www.google.com/maps/search/?${params.toString()}`
+  }
+  if (hasCoords) {
+    return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+  }
+  if (q) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`
+  }
+  return null
 }

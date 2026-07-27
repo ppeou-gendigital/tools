@@ -76,6 +76,27 @@
   &[data-corner='top-right'] { top: var(--fab-corner-offset); right: var(--fab-corner-offset); }
   &[data-corner='bottom-left'] { bottom: var(--fab-corner-offset); left: var(--fab-corner-offset); }
   &[data-corner='bottom-right'] { bottom: var(--fab-corner-offset); right: var(--fab-corner-offset); }
+
+  // AI FAB: rose accent (apps may override via --ai-fab-bg).
+  &[data-fab='ai'] {
+    z-index: 1001;
+    background: var(--ai-fab-bg, #f43f5e);
+    &:hover:not([data-dragging='true']) {
+      background: var(--ai-fab-bg-hover, #e11d48);
+    }
+
+    // Safety: if both FABs share a corner, stack AI inward so it stays tappable.
+    &[data-stacked='true'] {
+      &[data-corner='top-left'],
+      &[data-corner='top-right'] {
+        top: calc(var(--fab-corner-offset) + var(--fab-size) + var(--fab-gap));
+      }
+      &[data-corner='bottom-left'],
+      &[data-corner='bottom-right'] {
+        bottom: calc(var(--fab-corner-offset) + var(--fab-size) + var(--fab-gap));
+      }
+    }
+  }
 }
 
 .bh-menu-panel {

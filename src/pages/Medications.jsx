@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Check, Pause, Play, Plus, Square, Trash2 } from 'lucide-react'
+import { AiCareButton } from '@/molecules/AiCareButton'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -78,18 +79,21 @@ export function Medications() {
         title="Medications"
         subtitle="Dose slots by schedule, as-needed logs, and suspend/resume."
         actions={
-          vault.canWrite ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowForm((v) => !v)}
-              className={styles.iconBtn}
-              aria-label="Add medication"
-              title="Add medication"
-            >
-              <Plus size={16} aria-hidden="true" />
-            </Button>
-          ) : null
+          <>
+            <AiCareButton className={styles.iconBtn} />
+            {vault.canWrite ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowForm((v) => !v)}
+                className={styles.iconBtn}
+                aria-label="Add medication"
+                title="Add medication"
+              >
+                <Plus size={16} aria-hidden="true" />
+              </Button>
+            ) : null}
+          </>
         }
         shortcuts={
           <PageShortcuts current="medications" className={styles.iconBtn} />

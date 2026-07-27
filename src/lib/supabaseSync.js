@@ -273,4 +273,9 @@ export async function pullSync({ stream, userId, local, dirtyKeys } = {}) {
 }
 
 // Re-export op factories so callers can import everything from one place.
-export { opSetTheme, opSetFontSize, opSetFabCorner } from '@/lib/userDataOps'
+export {
+  opSetTheme,
+  opSetFontSize,
+  opSetFabCorner,
+  opSetAiFabCorner,
+} from '@/lib/userDataOps'

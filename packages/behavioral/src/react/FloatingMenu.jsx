@@ -16,7 +16,9 @@ export function FloatingMenu({
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
   const skipClickToggleRef = useRef(false)
-  const { corner, dragOffset, isDragging, wasDragged, bind } = useCornerDrag()
+  const { corner, dragOffset, isDragging, wasDragged, bind } = useCornerDrag({
+    fabId: 'menu',
+  })
   const { onPointerDown: dragPointerDown, ...restBind } = bind
 
   useEffect(() => {

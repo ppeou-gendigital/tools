@@ -1,4 +1,5 @@
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
+import { AiCareProvider } from '@/providers/AiCareProvider'
 import { AuthProvider } from '@/providers/AuthProvider'
 import { FabCornerProvider } from '@/providers/FabCornerProvider'
 import { FontSizeProvider } from '@/providers/FontSizeProvider'
@@ -58,16 +59,18 @@ export function App() {
             <FabCornerProvider>
               <PrefsSync />
               <PatientVaultProvider>
-                <NavigationProvider>
-                  <AppShell>
-                    <AuthGate>
-                      <PatientVaultGate>
-                        <BiometricEnrollPrompt />
-                        <Router />
-                      </PatientVaultGate>
-                    </AuthGate>
-                  </AppShell>
-                </NavigationProvider>
+                <AiCareProvider>
+                  <NavigationProvider>
+                    <AppShell>
+                      <AuthGate>
+                        <PatientVaultGate>
+                          <BiometricEnrollPrompt />
+                          <Router />
+                        </PatientVaultGate>
+                      </AuthGate>
+                    </AppShell>
+                  </NavigationProvider>
+                </AiCareProvider>
               </PatientVaultProvider>
             </FabCornerProvider>
           </FontSizeProvider>

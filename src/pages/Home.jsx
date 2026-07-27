@@ -10,6 +10,7 @@ import {
   Stethoscope,
 } from 'lucide-react'
 import { cx } from '@/lib/cx'
+import { AiCareButton } from '@/molecules/AiCareButton'
 import { PageHeader } from '@/patterns/PageHeader'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
 import { PatientSwitcher } from '@/patterns/PatientSwitcher'
@@ -169,7 +170,12 @@ export function Home() {
       <PageHeader
         title="Home"
         subtitle={`Hi, ${name} — care timeline${roleNote}.`}
-        actions={layoutToggle}
+        actions={
+          <>
+            <AiCareButton className={styles.iconBtn} />
+            {layoutToggle}
+          </>
+        }
         shortcuts={
           <PageShortcuts current="home" className={styles.iconBtn} />
         }

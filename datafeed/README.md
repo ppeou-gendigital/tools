@@ -124,6 +124,9 @@ When importing a typed feed that references `doctorId` / `medicationId`, either
 | `region` | string | no | State / province. |
 | `postalCode` | string | no | |
 | `country` | string | no | |
+| `googlePlaceId` | string | no | Google Place id (from Places autocomplete). |
+| `lat` | number | no | Latitude for maps deep links. |
+| `lng` | number | no | Longitude for maps deep links. |
 
 ### Appointment
 

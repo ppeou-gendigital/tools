@@ -64,6 +64,12 @@ export function normalizePatientProfile(raw) {
   }
 }
 
+function optNum(v) {
+  if (v == null || v === '') return undefined
+  const n = typeof v === 'number' ? v : Number(v)
+  return Number.isFinite(n) ? n : undefined
+}
+
 export function normalizeOffice(raw) {
   return {
     id: optId(raw?.id),
@@ -78,6 +84,9 @@ export function normalizeOffice(raw) {
     region: optStr(raw?.region),
     postalCode: optStr(raw?.postalCode),
     country: optStr(raw?.country),
+    googlePlaceId: optStr(raw?.googlePlaceId),
+    lat: optNum(raw?.lat),
+    lng: optNum(raw?.lng),
   }
 }
 
