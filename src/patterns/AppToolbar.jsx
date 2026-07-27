@@ -1,4 +1,4 @@
-import { CreditCard, KeyRound, Settings } from 'lucide-react'
+import { CreditCard, Home, KeyRound, Settings } from 'lucide-react'
 import { AutofillButton } from '@/patterns/AutofillButton'
 import { FillCardButton } from '@/patterns/FillCardButton'
 import { HeaderIconButton } from '@/patterns/PageHeader'
@@ -12,6 +12,13 @@ import { useNavigation } from '@/providers/NavigationProvider'
 // giving users an unobtrusive "you are here" signal without a
 // dedicated breadcrumb.
 const ITEMS = [
+  {
+    id: 'home',
+    label: 'Home',
+    Icon: Home,
+    routes: ['home'],
+    onGo: (nav) => nav.goHome(),
+  },
   {
     id: 'credentials',
     label: 'Credentials',
@@ -30,7 +37,7 @@ const ITEMS = [
     id: 'settings',
     label: 'Settings',
     Icon: Settings,
-    routes: ['settings', 'vault-settings'],
+    routes: ['settings', 'vault-settings', 'datafeed-settings'],
     onGo: (nav) => nav.goSettings(),
   },
 ]

@@ -343,7 +343,8 @@ create policy "credentials self-delete" on public.credentials for delete using (
 {
   "urlOrApp": "https://gmail.com",
   "accounts": [{ "username": "...", "password": "..." }],
-  "notes": "..."
+  "notes": "...",
+  "isFavorite": false
 }
 ```
 

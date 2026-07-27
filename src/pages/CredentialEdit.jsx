@@ -6,6 +6,7 @@ import {
   Lock,
   LockKeyhole,
   Plus,
+  Star,
   Trash2,
   TriangleAlert,
   Wand2,
@@ -69,6 +70,7 @@ export function CredentialEdit() {
   const [urlOrApp, setUrlOrApp] = useState('')
   const [accounts, setAccounts] = useState([newAccount()])
   const [notes, setNotes] = useState('')
+  const [isFavorite, setIsFavorite] = useState(false)
   const [hydratedFor, setHydratedFor] = useState(null)
   const [reveal, setReveal] = useState({})
   const [error, setError] = useState(null)
@@ -115,6 +117,7 @@ export function CredentialEdit() {
           setUrlOrApp(nextUrl)
           setAccounts(nextAccounts)
           setNotes('')
+          setIsFavorite(false)
           setHydratedFor('new')
         }
         return
@@ -175,6 +178,7 @@ export function CredentialEdit() {
         setUrlOrApp(plain?.urlOrApp ?? '')
         setAccounts(nextAccounts)
         setNotes(plain?.notes ?? '')
+        setIsFavorite(Boolean(plain?.isFavorite))
         setHydratedFor(row.id)
       } catch (err) {
         if (cancelled) return
@@ -233,6 +237,7 @@ export function CredentialEdit() {
           // any row where at least one field is set.
           .filter((a) => a.username.length > 0 || a.password.length > 0),
         notes: notes ?? '',
+        isFavorite: Boolean(isFavorite),
       }
       if (payload.accounts.length === 0) {
         payload.accounts = [{ username: '', password: '' }]
@@ -322,7 +327,7 @@ export function CredentialEdit() {
   const { isLocked, requestUnlock } = vault
   useEffect(() => {
     if (isLocked) {
-      requestUnlock({ dismissible: false })
+      requestUnlock({ dismissible: true })
     }
   }, [isLocked, requestUnlock])
 
@@ -340,7 +345,7 @@ export function CredentialEdit() {
           </p>
           <Button
             size="sm"
-            onClick={() => vault.requestUnlock({ dismissible: false })}
+            onClick={() => vault.requestUnlock({ dismissible: true })}
           >
             <Lock size={14} aria-hidden="true" />
             Unlock
@@ -408,6 +413,28 @@ export function CredentialEdit() {
             onChange={(e) => setUrlOrApp(e.target.value)}
             disabled={isBusy}
           />
+        </div>
+
+        <div className={styles.field}>
+          <button
+            type="button"
+            className={cx(
+              styles.favoriteToggle,
+              isFavorite && styles.favoriteToggleOn,
+            )}
+            onClick={() => setIsFavorite((v) => !v)}
+            disabled={isBusy}
+            aria-pressed={isFavorite}
+          >
+            <Star
+              size={14}
+              fill={isFavorite ? 'currentColor' : 'none'}
+              aria-hidden="true"
+            />
+            {isFavorite
+              ? 'Favorite — shown first when filling'
+              : 'Mark as favorite'}
+          </button>
         </div>
 
         <div className={styles.field}>

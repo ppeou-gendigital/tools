@@ -278,7 +278,7 @@ export function CreditCardEdit() {
   const { isLocked, requestUnlock } = vault
   useEffect(() => {
     if (isLocked) {
-      requestUnlock({ dismissible: false })
+      requestUnlock({ dismissible: true })
     }
   }, [isLocked, requestUnlock])
 
@@ -296,7 +296,7 @@ export function CreditCardEdit() {
           </p>
           <Button
             size="sm"
-            onClick={() => vault.requestUnlock({ dismissible: false })}
+            onClick={() => vault.requestUnlock({ dismissible: true })}
           >
             <Lock size={14} aria-hidden="true" />
             Unlock

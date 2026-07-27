@@ -41,6 +41,7 @@ import {
 } from '@/lib/vaultIdleOptions'
 import {
   clearBiometricEnrollment,
+  BIO_PRF_UNAVAILABLE_MESSAGE,
   enrollBiometrics as enrollBiometricsDevice,
   probeBiometricsCapability,
   readBiometricEnrollment,
@@ -504,13 +505,29 @@ export function VaultProvider({ children }) {
           'Re-unlock with your passphrase, then enable biometrics.',
         )
       }
-      const enrollment = await enrollBiometricsDevice(
-        userId,
-        passphrase,
-        options,
-      )
-      setBiometrics((prev) => ({ ...prev, enrollment }))
-      return enrollment
+      try {
+        const enrollment = await enrollBiometricsDevice(
+          userId,
+          passphrase,
+          options,
+        )
+        setBiometrics((prev) => ({ ...prev, enrollment }))
+        return enrollment
+      } catch (err) {
+        const msg = err?.message ?? String(err)
+        if (msg === BIO_PRF_UNAVAILABLE_MESSAGE || /PRF key/i.test(msg)) {
+          setBiometrics((prev) => ({
+            ...prev,
+            enrollment: null,
+            capability: {
+              available: false,
+              reason: BIO_PRF_UNAVAILABLE_MESSAGE,
+              label: prev.capability?.label,
+            },
+          }))
+        }
+        throw err
+      }
     },
     [userId],
   )

@@ -1,7 +1,8 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  // Above FAB (1000) so unlock / confirm dialogs aren't covered.
+  z-index: 1100;
   display: grid;
   place-items: center;
   padding: var(--space-4);

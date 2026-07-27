@@ -48,7 +48,10 @@ export function OfflineCredentials() {
         return false
       })
     }
-    return out
+    return [...out].sort((a, b) => {
+      if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1
+      return (a.displayName || '').localeCompare(b.displayName || '')
+    })
   }, [decrypted, search])
 
   const detail = useMemo(

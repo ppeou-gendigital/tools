@@ -88,6 +88,7 @@ async function createEncryptedCredential(userId, vault, queryClient, item) {
       ? item.accounts
       : [{ username: '', password: '' }],
     notes: item.notes ?? '',
+    isFavorite: Boolean(item.isFavorite),
   }
   const { ciphertext, iv } = await vault.encryptRecord(payload)
   const rowId = crypto.randomUUID()

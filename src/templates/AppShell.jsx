@@ -11,7 +11,7 @@ export function AppShell({ children }) {
       hideChrome={hideChrome}
       chrome={<FloatingMenu />}
     >
-      {children}
+      <div className="is-fluid-width">{children}</div>
     </ToolsAppShell>
   )
 }

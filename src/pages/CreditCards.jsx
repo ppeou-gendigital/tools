@@ -232,13 +232,13 @@ export function CreditCards() {
   const { isLocked, requestUnlock } = vault
   useEffect(() => {
     if (isLocked) {
-      requestUnlock({ dismissible: false })
+      requestUnlock({ dismissible: true })
     }
   }, [isLocked, requestUnlock])
 
   if (vault.isLocked) {
     return (
-      <LockedPlaceholder onUnlock={() => vault.requestUnlock({ dismissible: false })} />
+      <LockedPlaceholder onUnlock={() => vault.requestUnlock({ dismissible: true })} />
     )
   }
 

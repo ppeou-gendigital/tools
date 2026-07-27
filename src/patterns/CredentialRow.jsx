@@ -5,6 +5,7 @@ import {
   Key,
   KeyRound,
   Pencil,
+  Star,
   StickyNote,
   TriangleAlert,
   User,
@@ -45,8 +46,16 @@ async function writeClipboard(value) {
 // list. Columns: favicon + name, URL, user-copy, pass-copy, note,
 // edit. Icons open a popover picker when the credential has 2+
 // accounts and copy directly when there's just one.
-export function CredentialRow({ credential, onEdit }) {
-  const { id, displayName, urlOrApp, accounts, notes, error } = credential
+export function CredentialRow({ credential, onEdit, onToggleFavorite }) {
+  const {
+    id,
+    displayName,
+    urlOrApp,
+    accounts,
+    notes,
+    isFavorite,
+    error,
+  } = credential
   const userBtnRef = useRef(null)
   const passBtnRef = useRef(null)
   const noteBtnRef = useRef(null)
@@ -134,6 +143,17 @@ export function CredentialRow({ credential, onEdit }) {
   return (
     <div className={styles.row} role="row">
       <div className={styles.nameCell} role="cell">
+        <button
+          type="button"
+          className={cx(styles.favBtn, isFavorite && styles.favBtnOn)}
+          onClick={() => onToggleFavorite?.(credential)}
+          aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          aria-pressed={Boolean(isFavorite)}
+          disabled={!onToggleFavorite}
+        >
+          <Star size={12} fill={isFavorite ? 'currentColor' : 'none'} />
+        </button>
         <span className={styles.icon} aria-hidden="true">
           {favicon ? <FaviconOrFallback src={favicon} /> : <KeyRound size={16} />}
         </span>

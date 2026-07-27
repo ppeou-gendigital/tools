@@ -9,20 +9,34 @@ import {
   TriangleAlert,
   Wand2,
 } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { CredentialRow } from '@/patterns/CredentialRow'
 import { HeaderIconButton, PageHeader } from '@/patterns/PageHeader'
 import { VaultIntegrityBanner } from '@/patterns/VaultIntegrityBanner'
+import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { useVault } from '@/providers/VaultProvider'
 import { useDecryptedCredentials } from '@/hooks/useDecryptedCredentials'
+import { updateCredential } from '@/lib/credentialsApi'
 import { capturePageCredentials } from '@/lib/pageCapture'
 import { findMatchingCredential, hostnameOf } from '@/lib/urlMatch'
+import {
+  clearVaultItemDirty,
+  markVaultItemDirty,
+} from '@/lib/vaultItemDirty'
+import {
+  optimisticUpsertVaultItem,
+  revertVaultItemCaches,
+  snapshotVaultItemCaches,
+} from '@/lib/vaultItemsCache'
 import { usePersistedListView } from '@/hooks/usePersistedListView'
 import { isExtension } from '@/env'
 import { cx } from '@/lib/cx'
 import styles from './Credentials.module.scss'
+
+const STREAM = 'credentials'
 
 const SORT_OPTIONS = [
   { value: 'updated_desc', label: 'Recently updated' },
@@ -32,6 +46,7 @@ const SORT_OPTIONS = [
 
 const FILTER_OPTIONS = [
   { value: 'all', label: 'All' },
+  { value: 'favorites', label: 'Favorites' },
   { value: 'has_notes', label: 'Has notes' },
   { value: 'multi_account', label: 'Multiple accounts' },
 ]
@@ -39,8 +54,11 @@ const FILTER_OPTIONS = [
 const LIST_VIEW_STORAGE_KEY = 'accesso.credentials.listView'
 
 export function Credentials() {
+  const { user } = useAuth()
+  const userId = user?.id ?? null
   const vault = useVault()
   const { goCredentialNew, goCredentialEdit } = useNavigation()
+  const queryClient = useQueryClient()
 
   const { search, setSearch, sort, setSort, filter, setFilter } =
     usePersistedListView({
@@ -62,10 +80,61 @@ export function Credentials() {
     listQuery,
   } = useDecryptedCredentials()
 
+  const favoriteMutation = useMutation({
+    mutationFn: async ({ credential, nextFavorite }) => {
+      if (!userId) throw new Error('not signed in')
+      const payload = {
+        urlOrApp: credential.urlOrApp ?? '',
+        accounts: Array.isArray(credential.accounts)
+          ? credential.accounts.map((a) => ({
+              username: a?.username ?? '',
+              password: a?.password ?? '',
+            }))
+          : [{ username: '', password: '' }],
+        notes: credential.notes ?? '',
+        isFavorite: nextFavorite,
+      }
+      const { ciphertext, iv } = await vault.encryptRecord(payload)
+      const now = new Date().toISOString()
+      const optimistic = {
+        id: credential.id,
+        user_id: userId,
+        display_name: credential.displayName ?? '',
+        ciphertext,
+        iv,
+        created_at: credential.createdAt ?? now,
+        updated_at: now,
+      }
+      const snapshot = snapshotVaultItemCaches(
+        queryClient,
+        STREAM,
+        userId,
+        credential.id,
+      )
+      markVaultItemDirty(STREAM, credential.id)
+      optimisticUpsertVaultItem(queryClient, STREAM, userId, optimistic)
+      try {
+        const result = await updateCredential(userId, credential.id, {
+          displayName: credential.displayName ?? '',
+          ciphertext,
+          iv,
+        })
+        clearVaultItemDirty(STREAM, credential.id)
+        return result
+      } catch (err) {
+        revertVaultItemCaches(queryClient, snapshot)
+        clearVaultItemDirty(STREAM, credential.id)
+        throw err
+      }
+    },
+  })
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     let out = decrypted
-    if (filter === 'has_notes') {
+    if (filter === 'favorites') {
+      out = out.filter((c) => c.isFavorite)
+    } else if (filter === 'has_notes') {
       out = out.filter((c) => c.notes && c.notes.trim().length > 0)
     } else if (filter === 'multi_account') {
       out = out.filter((c) => (c.accounts?.length ?? 0) > 1)
@@ -87,6 +156,8 @@ export function Credentials() {
       sorted.sort((a, b) => b.displayName.localeCompare(a.displayName))
     } else {
       sorted.sort((a, b) => {
+        // Favorites float to the top within "recently updated".
+        if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1
         return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       })
     }
@@ -102,7 +173,7 @@ export function Credentials() {
   const { isLocked, requestUnlock } = vault
   useEffect(() => {
     if (isLocked) {
-      requestUnlock({ dismissible: false })
+      requestUnlock({ dismissible: true })
     }
   }, [isLocked, requestUnlock])
 
@@ -168,7 +239,7 @@ export function Credentials() {
     }
   }
 
-  if (vault.isLocked) return <LockedPlaceholder onUnlock={() => vault.requestUnlock({ dismissible: false })} />
+  if (vault.isLocked) return <LockedPlaceholder onUnlock={() => vault.requestUnlock({ dismissible: true })} />
 
   const loading = isLoading || isDecrypting
   const isEmpty = !loading && filtered.length === 0
@@ -298,6 +369,12 @@ export function Credentials() {
                 <CredentialRow
                   credential={cred}
                   onEdit={(id) => goCredentialEdit(id)}
+                  onToggleFavorite={(c) =>
+                    favoriteMutation.mutate({
+                      credential: c,
+                      nextFavorite: !c.isFavorite,
+                    })
+                  }
                 />
               </li>
             ))}

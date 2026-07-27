@@ -7,7 +7,7 @@
 // opaquely so prefs CAS never wipes sibling fields. Crypto salt/verifier
 // live in public.vault_meta (see vaultMetaApi.js), not here.
 
-const THEMES = ['light', 'dark', 'system']
+const THEMES = ['light', 'dark', 'system', 'daynight']
 const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
 
 const FONT_MIN = 12
@@ -16,7 +16,7 @@ const FONT_STEP = 2
 const FONT_DEFAULT = 16
 
 const DEFAULTS = {
-  theme: 'system',
+  theme: 'daynight',
   fontSize: FONT_DEFAULT,
   fabCorner: 'bottom-right',
 }

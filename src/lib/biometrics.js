@@ -17,6 +17,9 @@ const STORAGE_PREFIX = 'accesso.vault.biometrics.'
 const RP_NAME = 'Accesso'
 const PRF_SALT = new TextEncoder().encode('accesso-vault-bio-prf-v1')
 
+export const BIO_PRF_UNAVAILABLE_MESSAGE =
+  'This browser/device does not expose a PRF key for biometrics. Passphrase unlock still works.'
+
 export const BIO_REAUTH_OPTIONS = [
   { value: 0, label: 'Every unlock' },
   { value: 24 * 60 * 60 * 1000, label: 'Every 24 hours' },
@@ -68,23 +71,28 @@ export async function probeBiometricsCapability() {
   }
 
   // PRF probe: some browsers expose support via getClientCapabilities.
-  let prfSupported = false
+  // When the API says PRF is missing, do not offer enrollment.
+  // When unknown (older browsers), allow a soft try — enroll fails clearly
+  // if the authenticator does not return a PRF key.
+  let prfKnown = null
   try {
     const caps = await PublicKeyCredential.getClientCapabilities?.()
     if (caps && typeof caps === 'object' && 'extension:prf' in caps) {
-      prfSupported = Boolean(caps['extension:prf'])
+      prfKnown = Boolean(caps['extension:prf'])
     }
   } catch {
-    // fall through — try a soft assume for Chromium
+    // unknown — soft try below
   }
-  if (!prfSupported) {
-    // Chromium has supported PRF for platform authenticators; we still
-    // enroll and fail clearly if the extension result is missing.
-    prfSupported = true
+  if (prfKnown === false) {
+    return {
+      available: false,
+      reason: BIO_PRF_UNAVAILABLE_MESSAGE,
+      label: platformBiometricLabel(),
+    }
   }
 
   return {
-    available: prfSupported,
+    available: true,
     reason: null,
     label: platformBiometricLabel(),
   }
@@ -258,9 +266,7 @@ export async function enrollBiometrics(userId, passphrase, options = {}) {
 
   const prfKey = prfResultsFromCredential(assertion)
   if (!prfKey) {
-    throw new Error(
-      'This browser/device does not expose a PRF key for biometrics. Passphrase unlock still works.',
-    )
+    throw new Error(BIO_PRF_UNAVAILABLE_MESSAGE)
   }
 
   const aesKey = await importAesKey(prfKey)

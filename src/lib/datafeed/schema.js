@@ -33,6 +33,7 @@ export function normalizeCredentialItem(raw) {
     accounts:
       accounts.length > 0 ? accounts : [{ username: '', password: '' }],
     notes: String(raw?.notes ?? ''),
+    isFavorite: Boolean(raw?.isFavorite),
   }
 }
 

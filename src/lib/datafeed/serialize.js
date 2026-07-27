@@ -21,6 +21,7 @@ export function buildCredentialsFeed(credentials, { exportedAt } = {}) {
             }))
           : [{ username: '', password: '' }],
         notes: c.notes ?? '',
+        isFavorite: Boolean(c.isFavorite),
       })),
   }
 }

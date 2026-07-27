@@ -17,10 +17,13 @@ export function ThemeProvider({ children }) {
     })
   }, [])
 
+  // Daynight uses the package clock resolver (6:00–18:00 local).
+  // Matches Viaggio prod — geo/solar bridge stays opt-in later.
   return (
     <ToolsThemeProvider
       appId="accesso"
-      defaultTheme="system"
+      defaultTheme="daynight"
+      enableDaynight
       pushRemote={pushRemote}
     >
       {children}

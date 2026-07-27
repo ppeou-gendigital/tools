@@ -14,9 +14,8 @@
   color: var(--fg);
 }
 
-// .main is a passive scroll region. It never controls width — width comes
-// from the surface (<html>) and from layout wrappers like `.is-fluid-width`
-// or `.is-static-width` used inside individual pages.
+// .main is a passive scroll region. Width comes from the surface (<html>)
+// and the `.is-fluid-width` wrapper in AppShell.jsx (caps at --bp-xl).
 .main {
   flex: 1;
   min-height: 0;

@@ -7,10 +7,11 @@ import { resolve } from 'node:path'
 import manifest from './manifest.json' with { type: 'json' }
 import pkg from './package.json' with { type: 'json' }
 
-// Two build targets share this single Vite config:
-//   npm run dev          -> web dev server (index.html)
-//   npm run build        -> extension prod build (uses manifest.json via CRXJS)  [mode=extension]
-//   npm run build:web    -> web prod build to dist-web/                          [mode=web]
+// Build targets share this single Vite config:
+//   npm run dev             -> web dev server (index.html)
+//   npm run build           -> extension prod build (CRXJS)              [mode=extension]
+//   npm run build:web       -> GitHub Pages build (base /tools/accesso/) [mode=web]
+//   npm run build:firebase  -> Firebase Hosting at site root (base /)    [mode=web --base /]
 
 /** package.json version + short git SHA, e.g. 0.1.0+1db81d8 */
 function buildAppVersion() {
@@ -36,11 +37,10 @@ export default defineConfig(({ command, mode }) => {
     define: {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
     },
-    // Web PROD build is intended to be served from
-    // https://<user>.github.io/tools/accesso/, so every asset URL must
-    // be prefixed with the repo-and-tool subpath. Dev server (`npm run
-    // dev`) keeps '/' so http://localhost:5173/ works, and the extension
-    // build always resolves at the extension root.
+    // Default web PROD base is GitHub Pages:
+    // https://<user>.github.io/tools/accesso/
+    // Override with `vite build --base /` for Firebase root hosting
+    // (`npm run build:firebase`). Dev + extension always use '/'.
     base: !isExtension && isBuild ? webBase : '/',
     // Serve committed icons/ as static assets for the web build (PWA
     // icons + apple-touch-icon). Extension build keeps icons via the

@@ -36,6 +36,7 @@ Each item:
 | `urlOrApp` | string | no | Site URL or app name. Matching uses hostname only. |
 | `accounts` | array | no | Zero or more `{ username, password }` objects. |
 | `notes` | string | no | Free text. |
+| `isFavorite` | boolean | no | Defaults to `false`. Preferenced in autofill among hostname matches. |
 
 `accounts[].username` and `accounts[].password` are strings (may be empty).
 Empty account rows are dropped on import; if none remain, one empty account

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { Check, Loader2, Sparkles, TriangleAlert } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Check, Loader2, Sparkles, Star, TriangleAlert } from 'lucide-react'
 import { HeaderIconButton } from '@/patterns/PageHeader'
 import { Popover } from '@/patterns/Popover'
 import { useAuth } from '@/providers/AuthProvider'
@@ -21,7 +21,8 @@ import styles from './AutofillButton.module.scss'
 //
 // One-match-one-account is a single click. Multiple accounts or
 // multiple matching credentials get a small picker popover so the
-// user always picks which identity is going in.
+// user always picks which identity is going in. Favorites for the
+// host are preferred (same pattern as FillCardButton).
 //
 // Firing the fill happens in the active tab, not the popup. See
 // src/lib/pageAutofill.js + src/lib/pageFiller.js — same permission
@@ -61,6 +62,7 @@ export function AutofillButton() {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [status, setStatus] = useState(null) // { kind: 'ok' | 'err', message?: string } | null
+  const [showAll, setShowAll] = useState(false)
   const anchorRef = useRef(null)
   const timerRef = useRef(null)
 
@@ -76,12 +78,33 @@ export function AutofillButton() {
     timerRef.current = setTimeout(() => setStatus(null), ms)
   }
 
+  const matches = useMemo(() => {
+    if (!tabInfo?.hostname) return []
+    return findAllMatchingCredentials(decrypted, tabInfo.hostname)
+  }, [decrypted, tabInfo?.hostname])
+
+  const favorites = useMemo(
+    () => matches.filter((c) => c.isFavorite),
+    [matches],
+  )
+  const others = useMemo(
+    () => matches.filter((c) => !c.isFavorite),
+    [matches],
+  )
+
+  // Prefer favorites when any match is starred; otherwise all matches.
+  const pickerMatches = favorites.length > 0 ? favorites : matches
+  const showOtherSection = favorites.length > 0 && others.length > 0
+  const listMatches = showAll ? matches : pickerMatches
+  const entries = useMemo(() => flattenEntries(listMatches), [listMatches])
+  const pickerEntries = useMemo(
+    () => flattenEntries(pickerMatches),
+    [pickerMatches],
+  )
+
   if (!enabled) return null
   if (!tabInfo?.hostname) return null
-
-  const matches = findAllMatchingCredentials(decrypted, tabInfo.hostname)
-  const entries = flattenEntries(matches)
-  if (entries.length === 0) return null
+  if (matches.length === 0) return null
 
   async function runFill(entry) {
     setOpen(false)
@@ -116,17 +139,21 @@ export function AutofillButton() {
 
   function handleClick() {
     if (busy) return
-    if (entries.length === 1) {
-      runFill(entries[0])
+    // Single favorite account (or single match when none are favorited).
+    if (pickerEntries.length === 1 && !showOtherSection) {
+      runFill(pickerEntries[0])
       return
     }
+    setShowAll(false)
     setOpen((v) => !v)
   }
 
-  const singleMatch = entries.length === 1
+  const singleMatch = pickerEntries.length === 1 && !showOtherSection
   const label = singleMatch
-    ? `Fill ${entries[0].credentialName} on ${tabInfo.hostname}`
-    : `${entries.length} matches for ${tabInfo.hostname} — pick one`
+    ? `Fill ${pickerEntries[0].credentialName} on ${tabInfo.hostname}`
+    : favorites.length > 0
+      ? `Fill a favorite login on ${tabInfo.hostname}`
+      : `${pickerEntries.length} matches for ${tabInfo.hostname} — pick one`
 
   const Icon = busy
     ? Loader2
@@ -166,7 +193,17 @@ export function AutofillButton() {
         className={styles.popover}
       >
         <div className={styles.pickerHeader}>
-          Autofill on <span className={styles.host}>{tabInfo.hostname}</span>
+          {favorites.length > 0 && !showAll ? (
+            <>
+              Favorites on{' '}
+              <span className={styles.host}>{tabInfo.hostname}</span>
+            </>
+          ) : (
+            <>
+              Autofill on{' '}
+              <span className={styles.host}>{tabInfo.hostname}</span>
+            </>
+          )}
         </div>
         <ul className={styles.pickerList} role="menu">
           {entries.map((entry) => (
@@ -178,6 +215,13 @@ export function AutofillButton() {
                 onClick={() => runFill(entry)}
               >
                 <span className={styles.pickerName} title={entry.credentialName}>
+                  {entry.isFavorite && (
+                    <Star
+                      size={10}
+                      aria-hidden="true"
+                      className={styles.pickerStar}
+                    />
+                  )}
                   {entry.credentialName}
                 </span>
                 <span
@@ -193,14 +237,25 @@ export function AutofillButton() {
             </li>
           ))}
         </ul>
+        {showOtherSection && !showAll && (
+          <button
+            type="button"
+            className={styles.pickerItem}
+            onClick={() => setShowAll(true)}
+          >
+            <span className={styles.pickerUser}>
+              Show all accounts ({flattenEntries(others).length} more)
+            </span>
+          </button>
+        )}
       </Popover>
     </>
   )
 }
 
 // Turn `[credential, ...]` into `[{ credentialId, credentialName,
-// accountIdx, username, password, key }, ...]` — one row per account.
-// Credentials with zero accounts are dropped (nothing to fill).
+// accountIdx, username, password, isFavorite, key }, ...]` — one row
+// per account. Credentials with zero accounts are dropped.
 function flattenEntries(matches) {
   const out = []
   for (const cred of matches) {
@@ -218,6 +273,7 @@ function flattenEntries(matches) {
         accountIdx: i,
         username,
         password,
+        isFavorite: Boolean(cred.isFavorite),
       })
     }
   }

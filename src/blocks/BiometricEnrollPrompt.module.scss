@@ -2,8 +2,12 @@
   position: fixed;
   left: var(--space-3);
   right: var(--space-3);
-  bottom: var(--space-3);
-  z-index: 40;
+  // Sit above the FAB so the rose fingerprint never covers actions.
+  bottom: calc(
+    var(--fab-size, 3rem) + var(--fab-corner-offset, 1rem) + var(--space-3)
+  );
+  // Above FAB (1000) and menu panel (999); below popovers (1100).
+  z-index: 1050;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: var(--space-3);

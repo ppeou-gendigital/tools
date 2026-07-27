@@ -1,4 +1,4 @@
-import { ArrowLeftRight, KeyRound } from 'lucide-react'
+import { ArrowLeftRight, ChevronRight, KeyRound } from 'lucide-react'
 import { PageHeader } from '@/patterns/PageHeader'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { useAuth } from '@/providers/AuthProvider'
@@ -61,6 +61,11 @@ function SettingsCard({ icon: Icon, title, description, onClick }) {
           <span className={styles.cardTitle}>{title}</span>
           <span className={styles.cardDescription}>{description}</span>
         </span>
+        <ChevronRight
+          size={16}
+          className={styles.cardChevron}
+          aria-hidden="true"
+        />
       </button>
     </li>
   )

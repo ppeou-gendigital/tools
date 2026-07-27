@@ -12,7 +12,8 @@
           "password": "replace-me"
         }
       ],
-      "notes": "Combined vault feed example."
+      "notes": "Combined vault feed example.",
+      "isFavorite": true
     }
   ],
   "creditCards": [
