@@ -215,6 +215,14 @@
   font-size: var(--text-sm);
 }
 
+.actionPreview {
+  margin: 0;
+  white-space: pre-line;
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--muted-fg, color-mix(in srgb, var(--fg) 55%, transparent));
+  line-height: 1.45;
+}
+
 .actionActions {
   display: flex;
   flex-wrap: wrap;

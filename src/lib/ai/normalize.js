@@ -436,8 +436,40 @@ export function normalizeChatTurn(raw) {
     warnings.push(`Dropped ${dropped} invalid action(s).`)
   }
 
+  const assistant_message = asString(raw?.assistant_message || raw?.message).trim()
+  let type = asString(raw?.type).trim().toLowerCase()
+  if (!['chat', 'ask_user', 'propose_actions', 'need_tool'].includes(type)) {
+    type = actions.length > 0 ? 'propose_actions' : 'chat'
+  }
+  if (type === 'propose_actions' && actions.length === 0 && !raw?.type) {
+    type = 'chat'
+  }
+
+  const expecting = Array.isArray(raw?.expecting)
+    ? raw.expecting.map((e) => asString(e).trim()).filter(Boolean)
+    : undefined
+
+  let tool = null
+  if (type === 'need_tool' && raw?.tool && typeof raw.tool === 'object') {
+    const name = asString(raw.tool.name).trim()
+    const args =
+      raw.tool.args && typeof raw.tool.args === 'object' ? raw.tool.args : {}
+    if (name === 'search_doctors') {
+      tool = {
+        name,
+        args: {
+          textQuery: asString(args.textQuery || args.query).trim(),
+          maxResults: asNum(args.maxResults) ?? 5,
+        },
+      }
+    }
+  }
+
   return {
-    assistant_message: asString(raw?.assistant_message || raw?.message).trim(),
+    type,
+    assistant_message,
+    expecting,
+    tool,
     actions,
     warnings,
   }

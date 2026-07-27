@@ -62,7 +62,7 @@ import { cx } from '@/lib/cx'
 import styles from './AiCareOverlay.module.scss'
 
 const WELCOME =
-  'Ask me to schedule appointments, log visits, track medications or readings, or update doctors — or attach a photo/PDF of a med bottle, appointment card, or reading. Tap the mic to talk. I’ll propose changes you can Accept. Or Export JSON to edit in ChatGPT and Import it back. I’m an organizer — not a doctor.'
+  'Ask me to schedule appointments, log visits, track medications or readings, update doctors, or find clinics near a ZIP via Google Places — or attach a photo/PDF of a med bottle, appointment card, or reading. Tap the mic to talk. I’ll propose changes you can Accept. Or Export JSON to edit in ChatGPT and Import it back. I’m an organizer — not a doctor.'
 
 const CHATGPT_BLURB = `Please edit this Docto patient datafeed JSON.
 
@@ -77,9 +77,21 @@ function actionPreview(action) {
     return n ? `${n} item${n === 1 ? '' : 's'}` : ''
   }
   if (action.doctor) {
-    return [action.doctor.name, action.doctor.specialty]
+    const d = action.doctor
+    const office = Array.isArray(d.offices) ? d.offices[0] : null
+    const addr = office
+      ? [
+          office.addressLine1,
+          [office.city, office.region, office.postalCode]
+            .filter(Boolean)
+            .join(', '),
+        ]
+          .filter(Boolean)
+          .join(' · ')
+      : ''
+    return [d.name, d.specialty, office?.phone, addr, d.website]
       .filter(Boolean)
-      .join(' · ')
+      .join('\n')
   }
   if (action.appointment) {
     const a = action.appointment
@@ -768,7 +780,7 @@ export function AiCareOverlay({ open, patientId, onClose }) {
                       {(m.actions || []).map((action) => (
                         <div key={action.id} className={styles.actionCard}>
                           <strong>{action.label}</strong>
-                          <span className={styles.hint}>
+                          <span className={styles.actionPreview}>
                             {actionPreview(action)}
                           </span>
                           {action.risky &&
