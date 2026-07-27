@@ -13,7 +13,6 @@
 //   - Sweeps `toolname` (storage keys, console prefixes, package.json name)
 //     -> "foo" (lowercase)
 //   - Renames workflow files:
-//       .github/workflows/deploy-TOOLNAME-pages.yml    -> deploy-foo-pages.yml
 //       .github/workflows/release-TOOLNAME-extension.yml -> release-foo-extension.yml
 //
 // The script is idempotent: rerunning it with the same --name after edits is
@@ -96,10 +95,6 @@ const TEXT_FILES = [
 // Workflow files are handled separately because they may need to be
 // renamed as well as have their contents rewritten.
 const WORKFLOW_RENAMES = [
-  {
-    from: '.github/workflows/deploy-TOOLNAME-pages.yml',
-    to: `.github/workflows/deploy-${kebab}-pages.yml`,
-  },
   {
     from: '.github/workflows/release-TOOLNAME-extension.yml',
     to: `.github/workflows/release-${kebab}-extension.yml`,
