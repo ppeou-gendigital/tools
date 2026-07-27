@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useRef } from 'react'
 import { ThemeProvider as ToolsThemeProvider, useTheme } from '@tools/service'
 import { isClockDaylight } from '@/lib/solar'
 import { applySyncOp, enqueueSyncOp } from '@/lib/supabaseSync'
@@ -9,25 +9,26 @@ function clockResolve() {
   return isClockDaylight() ? 'light' : 'dark'
 }
 
+function applyResolvedTheme(resolved) {
+  if (typeof document === 'undefined') return
+  if (resolved !== 'light' && resolved !== 'dark') return
+  document.documentElement.dataset.theme = resolved
+  document.documentElement.style.colorScheme = resolved
+}
+
 export function ThemeProvider({ children }) {
   const resolverRef = useRef(clockResolve)
-  // Epoch rebuilds the thin wrapper so Tools ThemeProvider re-applies theme
-  // at solar/clock boundaries without syncResolve setState storms.
-  const [epoch, setEpoch] = useState(0)
-
-  // epoch is intentional: new wrapper identity makes Tools ThemeProvider re-apply.
-  const resolveDaynight = useMemo(
-    () => () => resolverRef.current(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- bump via epoch
-    [epoch],
-  )
+  // Forever-stable callback — must NOT change identity (avoids ThemeContext
+  // update storms / React #185 max update depth).
+  const resolveDaynight = useCallback(() => resolverRef.current(), [])
 
   const syncResolve = useCallback((fn) => {
     if (typeof fn === 'function') resolverRef.current = fn
   }, [])
 
-  const bumpDaynight = useCallback(() => {
-    setEpoch((n) => n + 1)
+  /** Re-paint daynight without setState / context invalidation. */
+  const applyDaynight = useCallback(() => {
+    applyResolvedTheme(resolverRef.current())
   }, [])
 
   const pushRemote = useCallback(async (userId, theme) => {
@@ -53,7 +54,7 @@ export function ThemeProvider({ children }) {
     >
       <ViaggioDaynightBridge
         syncResolve={syncResolve}
-        bumpDaynight={bumpDaynight}
+        applyDaynight={applyDaynight}
       />
       {children}
     </ToolsThemeProvider>

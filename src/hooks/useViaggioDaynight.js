@@ -22,30 +22,28 @@ function sameCoords(a, b) {
 /**
  * Solar/geo daynight for Viaggio. Call inside Tools ThemeProvider.
  *
- * Resolver identity stays stable via syncResolve(ref). Theme re-apply is driven
- * by bumpDaynight() when coords/tick/forceClock change — avoids React #185
- * max-update-depth from setState-on-every-resolve.
- *
- * Location is resolved non-interactively after the first ask so reopening the
- * app does not re-trigger the system permission dialog.
+ * Updates a stable resolver ref via syncResolve (no setState). Re-applies the
+ * theme by writing documentElement directly via applyDaynight — never bumps
+ * React state, so geo refresh cannot hit React #185 max update depth.
  *
  * @param {(resolve: () => 'light'|'dark') => void} syncResolve
- * @param {() => void} [bumpDaynight]
+ * @param {() => void} [applyDaynight]
  */
-export function useViaggioDaynight(syncResolve, bumpDaynight) {
+export function useViaggioDaynight(syncResolve, applyDaynight) {
   const { theme } = useTheme()
   const offline = useOfflineOptional()
-  const forceClock =
-    offline?.isOfflineMode ||
-    offline?.isOfflineEmpty ||
-    offline?.online === false
+  // Only treat explicit offline product modes as clock-forced — do not use
+  // `online === false` alone (flaps during connectivity probes and remounts).
+  const forceClock = Boolean(
+    offline?.isOfflineMode || offline?.isOfflineEmpty,
+  )
 
   const [coords, setCoordsState] = useState(null)
   const [tick, setTick] = useState(0)
   const coordsRef = useRef(null)
   const firstAskDoneRef = useRef(false)
   const forceClockRef = useRef(forceClock)
-  const lastBumpKeyRef = useRef('')
+  const lastAppliedRef = useRef('')
 
   useEffect(() => {
     coordsRef.current = coords
@@ -59,6 +57,34 @@ export function useViaggioDaynight(syncResolve, bumpDaynight) {
     setCoordsState((prev) => (sameCoords(prev, next) ? prev : next))
   }, [])
 
+  const resolve = useCallback(() => {
+    const c = forceClockRef.current ? null : coordsRef.current
+    const day =
+      c != null ? isDaylight({ lat: c.lat, lng: c.lng }) : isClockDaylight()
+    return day ? 'light' : 'dark'
+  }, [])
+
+  // Install stable resolver once; it always reads latest refs.
+  useEffect(() => {
+    syncResolve?.(resolve)
+  }, [resolve, syncResolve])
+
+  // Paint theme when inputs change — DOM only, no ThemeProvider setState.
+  useEffect(() => {
+    if (theme !== 'daynight') return
+    const c = forceClock ? null : coords
+    const resolved = resolve()
+    const key = [
+      forceClock ? 'clock' : 'geo',
+      c ? `${c.lat},${c.lng}` : 'none',
+      String(tick),
+      resolved,
+    ].join('|')
+    if (lastAppliedRef.current === key) return
+    lastAppliedRef.current = key
+    applyDaynight?.()
+  }, [theme, coords, tick, forceClock, resolve, applyDaynight])
+
   useEffect(() => {
     if (theme !== 'daynight' || forceClock) return
 
@@ -71,8 +97,6 @@ export function useViaggioDaynight(syncResolve, bumpDaynight) {
       if (cancelled) return
       if (cached) setCoords(cached)
 
-      // First daynight session with no cache: one interactive ask, then never
-      // auto-prompt again (resolveCoords also persists geoPrompted).
       if (
         allowFirstAsk &&
         !firstAskDoneRef.current &&
@@ -132,39 +156,10 @@ export function useViaggioDaynight(syncResolve, bumpDaynight) {
       globalThis.clearTimeout(timerId)
     }
   }, [theme, coords, forceClock])
-
-  const resolve = useCallback(() => {
-    const c = forceClockRef.current ? null : coordsRef.current
-    const day =
-      c != null ? isDaylight({ lat: c.lat, lng: c.lng }) : isClockDaylight()
-    return day ? 'light' : 'dark'
-  }, [])
-
-  // Keep Tools ThemeProvider's resolver ref pointed at latest logic.
-  useEffect(() => {
-    syncResolve?.(resolve)
-  }, [resolve, syncResolve])
-
-  // Re-apply theme when inputs that affect light/dark may have changed.
-  // Deduplicate by key so Strict Mode double-effects don't epoch-storm.
-  useEffect(() => {
-    if (theme !== 'daynight') return
-    const c = forceClock ? null : coords
-    const key = [
-      theme,
-      forceClock ? 'clock' : 'geo',
-      c ? `${c.lat},${c.lng}` : 'none',
-      String(tick),
-      resolve(),
-    ].join('|')
-    if (lastBumpKeyRef.current === key) return
-    lastBumpKeyRef.current = key
-    bumpDaynight?.()
-  }, [theme, coords, tick, forceClock, resolve, bumpDaynight])
 }
 
 /** Mount inside Tools ThemeProvider to drive solar daynight. */
-export function ViaggioDaynightBridge({ syncResolve, bumpDaynight }) {
-  useViaggioDaynight(syncResolve, bumpDaynight)
+export function ViaggioDaynightBridge({ syncResolve, applyDaynight }) {
+  useViaggioDaynight(syncResolve, applyDaynight)
   return null
 }
