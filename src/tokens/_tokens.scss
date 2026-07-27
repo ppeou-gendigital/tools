@@ -94,6 +94,9 @@
   --fab-bg: #d946ef;
   --fab-bg-hover: #c026d3;
   --fab-fg: #ffffff;
+  // AI FAB — rose so it reads apart from the menu fuchsia FAB.
+  --ai-fab-bg: #f43f5e;
+  --ai-fab-bg-hover: #e11d48;
 
   // Layout breakpoints (exposed for JS / inline calculations). SCSS media
   // queries use the $bp-* mirrors in _mixins.scss because @media expressions

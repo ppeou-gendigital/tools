@@ -16,7 +16,9 @@ export function FloatingMenu({
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
   const skipClickToggleRef = useRef(false)
-  const { corner, dragOffset, isDragging, wasDragged, bind } = useCornerDrag()
+  const { corner, dragOffset, isDragging, wasDragged, bind } = useCornerDrag({
+    fabId: 'menu',
+  })
   const { onPointerDown: dragPointerDown, ...restBind } = bind
 
   useEffect(() => {
@@ -63,6 +65,7 @@ export function FloatingMenu({
       <button
         type="button"
         className="bh-fab"
+        data-fab="menu"
         data-corner={corner}
         data-dragging={isDragging ? 'true' : undefined}
         aria-label={label}

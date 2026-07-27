@@ -16,8 +16,13 @@ export function PrefsSync({ appId, pullPrefs, extra = [] }) {
   const { user, loading: authLoading } = useAuth()
   const { theme, setTheme, ready: themeReady } = useTheme()
   const { size: fontSize, setSize: setFontSize, ready: fontReady } = useFontSize()
-  const { corner: fabCorner, setCorner: setFabCorner, ready: fabReady } =
-    useFabCorner()
+  const {
+    corner: fabCorner,
+    setCorner: setFabCorner,
+    aiCorner,
+    setAiCorner,
+    ready: fabReady,
+  } = useFabCorner()
 
   const initialPulledForUserRef = useRef(null)
   const prefsRef = useRef(null)
@@ -26,6 +31,12 @@ export function PrefsSync({ appId, pullPrefs, extra = [] }) {
     { key: 'theme', get: () => theme, set: setTheme, ready: themeReady },
     { key: 'fontSize', get: () => fontSize, set: setFontSize, ready: fontReady },
     { key: 'fabCorner', get: () => fabCorner, set: setFabCorner, ready: fabReady },
+    {
+      key: 'aiFabCorner',
+      get: () => aiCorner,
+      set: setAiCorner,
+      ready: fabReady,
+    },
     ...extra,
   ]
 

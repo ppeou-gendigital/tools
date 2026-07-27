@@ -75,6 +75,7 @@ function prefsRowsEqual(a, b) {
     a.data.theme === b.data.theme &&
     a.data.fontSize === b.data.fontSize &&
     a.data.fabCorner === b.data.fabCorner &&
+    a.data.aiFabCorner === b.data.aiFabCorner &&
     a.data.displayLocale === b.data.displayLocale &&
     a.data.defaultCurrency === b.data.defaultCurrency &&
     a.data.mapsProvider === b.data.mapsProvider &&
@@ -88,6 +89,7 @@ function toDbPrefsPayload(userId, row) {
     theme: row.data.theme,
     fontSize: row.data.fontSize,
     fabCorner: row.data.fabCorner,
+    aiFabCorner: row.data.aiFabCorner,
     displayLocale: row.data.displayLocale,
     defaultCurrency: row.data.defaultCurrency,
     mapsProvider: row.data.mapsProvider,
@@ -265,6 +267,9 @@ export async function pullSync({ stream, userId, local, dirtyKeys } = {}) {
     if (!dirty.has('fabCorner') && !dirty.has('data')) {
       next.data.fabCorner = remote.data.fabCorner
     }
+    if (!dirty.has('aiFabCorner') && !dirty.has('data')) {
+      next.data.aiFabCorner = remote.data.aiFabCorner
+    }
     if (!dirty.has('displayLocale') && !dirty.has('data')) {
       next.data.displayLocale = remote.data.displayLocale
     }
@@ -297,6 +302,7 @@ export {
   opSetTheme,
   opSetFontSize,
   opSetFabCorner,
+  opSetAiFabCorner,
   opSetDisplayLocale,
   opSetDefaultCurrency,
   opSetMapsProvider,

@@ -1,5 +1,17 @@
-// Viaggio brand — fuchsia FAB (package default is violet).
+// Viaggio brand — menu FAB stays fuchsia; AI FAB uses rose.
 :root {
   --fab-bg: #d946ef;
   --fab-bg-hover: #c026d3;
+
+  --ai-fab-bg: #f43f5e;
+  --ai-fab-bg-hover: #e11d48;
+}
+
+// Brand-level override (loads after @tools/behavioral) so AI always reads rose.
+.bh-fab[data-fab='ai'] {
+  background: var(--ai-fab-bg);
+
+  &:hover:not([data-dragging='true']) {
+    background: var(--ai-fab-bg-hover);
+  }
 }

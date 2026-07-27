@@ -11,6 +11,7 @@
 // examples (aemDomains, pinnedSites, …).
 
 import {
+  normalizeAiFabCorner,
   normalizeDefaultCurrency,
   normalizeDisplayLocale,
   normalizeFabCorner,
@@ -27,6 +28,7 @@ function emptyRow() {
       theme: 'daynight',
       fontSize: 16,
       fabCorner: 'bottom-right',
+      aiFabCorner: 'bottom-left',
       displayLocale: null,
       defaultCurrency: null,
       mapsProvider: 'google',
@@ -72,7 +74,18 @@ export function opSetFabCorner(corner) {
   return (row) => {
     const cur = cloneRow(row)
     if (cur.data.fabCorner === next) return row ?? cur
-    return withData(cur, { fabCorner: next })
+    // Keep AI FAB off the same corner if menu moves onto it.
+    const aiFabCorner = normalizeAiFabCorner(cur.data.aiFabCorner, next)
+    return withData(cur, { fabCorner: next, aiFabCorner })
+  }
+}
+
+export function opSetAiFabCorner(corner) {
+  return (row) => {
+    const cur = cloneRow(row)
+    const next = normalizeAiFabCorner(corner, cur.data.fabCorner)
+    if (cur.data.aiFabCorner === next) return row ?? cur
+    return withData(cur, { aiFabCorner: next })
   }
 }
 
