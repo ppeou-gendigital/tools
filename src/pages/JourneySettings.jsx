@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Archive,
@@ -18,7 +18,10 @@ import { LoadingState } from '@/molecules/LoadingState'
 import { Select } from '@/molecules/Select'
 import { TimezoneAutocomplete } from '@/molecules/TimezoneAutocomplete'
 import { ConfirmDialog } from '@/patterns/ConfirmDialog'
+import { FormActionsFloat } from '@/patterns/FormActionsFloat'
 import { PageHeader } from '@/patterns/PageHeader'
+import { PageShortcuts } from '@/patterns/PageShortcuts'
+import { journeyAllShortcuts } from '@/lib/journeyNav'
 import { COMMON_CURRENCIES } from '@/lib/catalog'
 import {
   buildJourneySnapshot,
@@ -39,7 +42,8 @@ import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function JourneySettings() {
-  const { params, goBack, previousRouteLabel, goHome } = useNavigation()
+  const nav = useNavigation()
+  const { params, goBack, previousRouteLabel, goHome } = nav
   const journeyId = params.journeyId
   const { user } = useAuth()
 
@@ -142,7 +146,13 @@ function JourneySettingsForm({
     refreshPacks,
   } = useOffline()
   const [error, setError] = useState('')
+  const errorRef = useRef(null)
   const [savedFlash, setSavedFlash] = useState(false)
+
+  useEffect(() => {
+    if (!error) return
+    errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [error])
   const [confirm, setConfirm] = useState(null) // 'archive' | 'delete' | null
   const [busy, setBusy] = useState(false)
   const [offlineBusy, setOfflineBusy] = useState(false)
@@ -292,6 +302,13 @@ function JourneySettingsForm({
             </div>
           ) : null
         }
+        shortcuts={
+          <PageShortcuts
+            current="journey-settings"
+            className={styles.iconBtn}
+            shortcuts={journeyAllShortcuts(journey.id, nav)}
+          />
+        }
       />
       <div className={cx('is-fluid-width', styles.body)}>
         {!canEdit && (
@@ -363,7 +380,7 @@ function JourneySettingsForm({
             </div>
           </div>
           {error && (
-            <p className={styles.error} role="alert">
+            <p ref={errorRef} className={styles.error} role="alert">
               {error}
             </p>
           )}
@@ -485,6 +502,19 @@ function JourneySettingsForm({
           )}
         </div>
       </div>
+
+      {canEdit ? (
+        <FormActionsFloat
+          onSave={() => {
+            setError('')
+            saveMut.mutate()
+          }}
+          saving={saveMut.isPending}
+          canSave={isDirty && !dateRangeInvalid && !saveMut.isPending}
+          canDelete={false}
+          saveLabel="Save changes"
+        />
+      ) : null}
 
       <ConfirmDialog
         open={confirm === 'archive'}

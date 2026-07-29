@@ -58,19 +58,33 @@ export function clampFabCell(cell, grid = FAB_GRID_XL) {
 }
 
 /**
+ * Remap one axis with nearest-edge offset (FABs are edge furniture).
+ * Exact center only falls back to proportional stretch.
+ * @param {number} index
+ * @param {number} fromCount
+ * @param {number} toCount
+ */
+function remapAxisNearestEdge(index, fromCount, toCount) {
+  if (toCount <= 1) return 0
+  if (fromCount <= 1) return 0
+  const fromMax = fromCount - 1
+  const toMax = toCount - 1
+  const fromStart = index
+  const fromEnd = fromMax - index
+  if (fromEnd < fromStart) return toMax - fromEnd
+  if (fromStart < fromEnd) return fromStart
+  // Exact center — proportional.
+  return Math.round((index * toMax) / fromMax)
+}
+
+/**
  * @param {{ col: number, row: number }} cell
  * @param {{ cols: number, rows: number }} fromGrid
  * @param {{ cols: number, rows: number }} toGrid
  */
 export function remapFabCell(cell, fromGrid, toGrid) {
-  const col =
-    fromGrid.cols <= 1
-      ? 0
-      : Math.round((cell.col * (toGrid.cols - 1)) / (fromGrid.cols - 1))
-  const row =
-    fromGrid.rows <= 1
-      ? 0
-      : Math.round((cell.row * (toGrid.rows - 1)) / (fromGrid.rows - 1))
+  const col = remapAxisNearestEdge(cell.col, fromGrid.cols, toGrid.cols)
+  const row = remapAxisNearestEdge(cell.row, fromGrid.rows, toGrid.rows)
   return clampFabCell({ col, row }, toGrid)
 }
 

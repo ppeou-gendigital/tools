@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
@@ -19,6 +19,7 @@ import { ParticipantChips } from '@/molecules/ParticipantChips'
 import { ReceiptField } from '@/molecules/ReceiptField'
 import { Select } from '@/molecules/Select'
 import { ConfirmDialog } from '@/patterns/ConfirmDialog'
+import { FormActionsFloat } from '@/patterns/FormActionsFloat'
 import { PageHeader } from '@/patterns/PageHeader'
 import {
   deleteAttachment,
@@ -214,6 +215,12 @@ function ExpenseEditForm({
 }) {
   const qc = useQueryClient()
   const [error, setError] = useState('')
+  const errorRef = useRef(null)
+
+  useEffect(() => {
+    if (!error) return
+    errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [error])
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [pendingReceipts, setPendingReceipts] = useState([])
   const [receiptBusy, setReceiptBusy] = useState(false)
@@ -764,13 +771,33 @@ function ExpenseEditForm({
             </p>
           )}
           {error && (
-            <p className={cx(styles.error, styles.formSpan2)} role="alert">
+            <p
+              ref={errorRef}
+              className={cx(styles.error, styles.formSpan2)}
+              role="alert"
+            >
               {error}
             </p>
           )}
 
         </div>
       </div>
+
+      {canEdit ? (
+        <FormActionsFloat
+          onSave={() => {
+            setError('')
+            saveMut.mutate()
+          }}
+          onDelete={() => setConfirmDelete(true)}
+          saving={saveMut.isPending}
+          deleting={deleteMut.isPending}
+          canSave={splitOk && linksOk && !saveMut.isPending}
+          canDelete={Boolean(expenseId)}
+          saveLabel="Save expense"
+          deleteLabel="Delete expense"
+        />
+      ) : null}
     </div>
   )
 }

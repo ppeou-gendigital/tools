@@ -14,6 +14,7 @@ import { PlaceLocationField } from '@/molecules/PlaceLocationField'
 import { RichNoteEditor } from '@/molecules/RichNoteEditor'
 import { TimezoneAutocomplete } from '@/molecules/TimezoneAutocomplete'
 import { ConfirmDialog } from '@/patterns/ConfirmDialog'
+import { FormActionsFloat } from '@/patterns/FormActionsFloat'
 import { PageHeader } from '@/patterns/PageHeader'
 import {
   defaultParticipantMode,
@@ -234,7 +235,13 @@ function EntryEditForm({
 }) {
   const qc = useQueryClient()
   const [error, setError] = useState('')
+  const errorRef = useRef(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+
+  useEffect(() => {
+    if (!error) return
+    errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [error])
   const activity = getActivity(activityId)
   const schemaId = activity
     ? resolveSchemaForActivity(activityId)
@@ -875,7 +882,11 @@ function EntryEditForm({
           )}
 
           {error && (
-            <p className={cx(styles.error, styles.formSpan2)} role="alert">
+            <p
+              ref={errorRef}
+              className={cx(styles.error, styles.formSpan2)}
+              role="alert"
+            >
               {error}
             </p>
           )}
@@ -976,6 +987,22 @@ function EntryEditForm({
 
         </div>
       </div>
+
+      {!readOnly ? (
+        <FormActionsFloat
+          onSave={() => {
+            setError('')
+            saveMut.mutate()
+          }}
+          onDelete={() => setConfirmDelete(true)}
+          saving={saveMut.isPending}
+          deleting={deleteMut.isPending}
+          canSave={!saveMut.isPending}
+          canDelete={Boolean(entryId)}
+          saveLabel="Save activity"
+          deleteLabel="Delete activity"
+        />
+      ) : null}
     </div>
   )
 }

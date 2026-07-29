@@ -1,5 +1,5 @@
 .dock {
-  z-index: 90;
+  z-index: var(--z-chrome, 100);
   box-sizing: border-box;
   color: var(--fg);
 }

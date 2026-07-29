@@ -1807,7 +1807,8 @@ $$;
 revoke all on function public.update_journey_packs(uuid, text[]) from public;
 grant execute on function public.update_journey_packs(uuid, text[]) to authenticated;
 
--- Peek invite (for accept screen) — returns limited public fields if token valid
+-- Peek invite (for accept screen) — limited public fields; callable by anon so
+-- logged-out guests see journey title + “Sign in to join”. Accept stays authed.
 create or replace function public.peek_invite(p_token text)
 returns table (
   journey_id uuid,
@@ -1824,7 +1825,9 @@ declare
   v_inv public.viaggio_invites;
   v_title text;
 begin
-  if auth.uid() is null then raise exception 'not authenticated'; end if;
+  if p_token is null or length(trim(p_token)) = 0 then
+    return;
+  end if;
 
   select * into v_inv from public.viaggio_invites i where i.token = p_token limit 1;
   if v_inv.id is null then
@@ -1843,7 +1846,7 @@ end;
 $$;
 
 revoke all on function public.peek_invite(text) from public;
-grant execute on function public.peek_invite(text) to authenticated;
+grant execute on function public.peek_invite(text) to anon, authenticated;
 
 -- Journey roster RPCs (also in patches/drop_viaggio_people.sql)
 

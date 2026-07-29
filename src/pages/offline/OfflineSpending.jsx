@@ -66,10 +66,23 @@ export function OfflineSpending() {
     }
   }, [pack])
 
+  const backLeading = (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() =>
+        previousRouteLabel ? goBack() : goJourney(journeyId)
+      }
+    >
+      <ArrowLeft size={14} aria-hidden="true" />
+      {previousRouteLabel ?? 'Journey'}
+    </Button>
+  )
+
   if (loading) {
     return (
       <div className={styles.page}>
-        <PageHeader title="Spending" />
+        <PageHeader title="Spending" leading={backLeading} />
         <div className={cx('is-fluid-width', styles.body)}>
           <LoadingState>Loading…</LoadingState>
         </div>
@@ -80,9 +93,19 @@ export function OfflineSpending() {
   if (!pack) {
     return (
       <div className={styles.page}>
-        <PageHeader title="Spending" />
+        <PageHeader title="Spending" leading={backLeading} />
         <div className={cx('is-fluid-width', styles.body)}>
-          <p className={styles.error}>Not available offline.</p>
+          <div className={styles.empty}>
+            <p className={styles.error}>Not available offline.</p>
+            <Button
+              onClick={() =>
+                previousRouteLabel ? goBack() : goJourney(journeyId)
+              }
+              fullWidth
+            >
+              Back
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -92,18 +115,8 @@ export function OfflineSpending() {
     <div className={styles.page}>
       <PageHeader
         title="Spending"
-        leading={
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() =>
-              previousRouteLabel ? goBack() : goJourney(journeyId)
-            }
-          >
-            <ArrowLeft size={14} aria-hidden="true" />
-            {previousRouteLabel ?? 'Journey'}
-          </Button>
-        }
+        subtitle={pack.journey?.title}
+        leading={backLeading}
       />
       <div className={cx('is-fluid-width', styles.body)}>
         <OfflineBanner syncedAt={pack.syncedAt} />

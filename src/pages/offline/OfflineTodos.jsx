@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Check, Circle } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { LoadingState } from '@/molecules/LoadingState'
 import { PageHeader } from '@/patterns/PageHeader'
+import { formatWallDate } from '@/lib/format'
+import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 import { useOffline } from '@/providers/OfflineProvider'
 import { cx } from '@/lib/cx'
@@ -13,6 +15,7 @@ export function OfflineTodos() {
   const { params, goBack, previousRouteLabel, goJourney } = useNavigation()
   const journeyId = params.journeyId
   const { getPack } = useOffline()
+  const { displayLocale } = useDisplayPrefs()
   const [pack, setPack] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -44,10 +47,30 @@ export function OfflineTodos() {
     )
   }, [pack])
 
+  const openCount = todos.filter((t) => !t.done).length
+  const doneCount = todos.filter((t) => t.done).length
+  const countLabel =
+    todos.length > 0 ? `${openCount} open · ${doneCount} done` : null
+  const journeyTitle = pack?.journey?.title
+  const subtitle = [journeyTitle, countLabel].filter(Boolean).join(' · ')
+
+  const backLeading = (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() =>
+        previousRouteLabel ? goBack() : goJourney(journeyId)
+      }
+    >
+      <ArrowLeft size={14} aria-hidden="true" />
+      {previousRouteLabel ?? 'Journey'}
+    </Button>
+  )
+
   if (loading) {
     return (
       <div className={styles.page}>
-        <PageHeader title="To-dos" />
+        <PageHeader title="To-dos" leading={backLeading} />
         <div className={cx('is-fluid-width', styles.body)}>
           <LoadingState>Loading…</LoadingState>
         </div>
@@ -58,9 +81,19 @@ export function OfflineTodos() {
   if (!pack) {
     return (
       <div className={styles.page}>
-        <PageHeader title="To-dos" />
+        <PageHeader title="To-dos" leading={backLeading} />
         <div className={cx('is-fluid-width', styles.body)}>
-          <p className={styles.error}>Not available offline.</p>
+          <div className={styles.empty}>
+            <p className={styles.error}>Not available offline.</p>
+            <Button
+              onClick={() =>
+                previousRouteLabel ? goBack() : goJourney(journeyId)
+              }
+              fullWidth
+            >
+              Back
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -70,21 +103,14 @@ export function OfflineTodos() {
     <div className={styles.page}>
       <PageHeader
         title="To-dos"
-        leading={
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() =>
-              previousRouteLabel ? goBack() : goJourney(journeyId)
-            }
-          >
-            <ArrowLeft size={14} aria-hidden="true" />
-            {previousRouteLabel ?? 'Journey'}
-          </Button>
-        }
+        subtitle={subtitle || undefined}
+        leading={backLeading}
       />
       <div className={cx('is-fluid-width', styles.body)}>
         <OfflineBanner syncedAt={pack.syncedAt} />
+        <p className={styles.readOnlyBanner}>
+          Offline copy — changes sync when you’re back online.
+        </p>
         {todos.length === 0 ? (
           <p className={styles.hint}>No to-dos in this offline copy.</p>
         ) : (
@@ -93,10 +119,26 @@ export function OfflineTodos() {
               const names = (t.assigneeJourneyPersonIds ?? [])
                 .map((id) => peopleById.get(id)?.displayName)
                 .filter(Boolean)
+              const dueLabel = t.dueOn
+                ? formatWallDate(t.dueOn, null, displayLocale)
+                : ''
               return (
                 <li key={t.id} className={styles.entryRow}>
-                  <span className={styles.entryIcon} aria-hidden="true">
-                    {t.done ? <Check size={16} /> : <Circle size={16} />}
+                  <span
+                    className={styles.hint}
+                    style={{
+                      flexShrink: 0,
+                      width: '1.25rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: 0.55,
+                      fontSize: '0.75rem',
+                      lineHeight: 1,
+                    }}
+                    aria-label={t.done ? 'Done' : 'Open'}
+                  >
+                    {t.done ? '✓' : '○'}
                   </span>
                   <div className={styles.entryMain}>
                     <strong
@@ -113,8 +155,8 @@ export function OfflineTodos() {
                         {names.join(', ')}
                       </span>
                     )}
-                    {t.dueOn && (
-                      <span className={styles.hint}>Due {t.dueOn}</span>
+                    {dueLabel && (
+                      <span className={styles.hint}>Due {dueLabel}</span>
                     )}
                   </div>
                 </li>

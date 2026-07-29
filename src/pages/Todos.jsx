@@ -3,17 +3,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
   Check,
-  CircleDollarSign,
   GripVertical,
-  ListMusic,
-  MapPin,
   Minus,
-  Paperclip,
   Plus,
   RefreshCw,
-  Settings,
   Trash2,
-  Users,
 } from 'lucide-react'
 import { AiPlannerButton } from '@/molecules/AiPlannerButton'
 import { Button } from '@/molecules/Button'
@@ -26,6 +20,7 @@ import { ConfirmDialog } from '@/patterns/ConfirmDialog'
 import { Modal } from '@/patterns/Modal'
 import { PageHeader } from '@/patterns/PageHeader'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
+import { journeyAllShortcuts } from '@/lib/journeyNav'
 import {
   formatWallDate,
   labelForJourneyPerson,
@@ -166,17 +161,12 @@ function todoMeta(todo, { rosterById, currentUserId, displayLocale }) {
 }
 
 export function Todos() {
+  const nav = useNavigation()
   const {
     params,
     goBack,
     previousRouteLabel,
-    goMembers,
-    goSpending,
-    goAttachments,
-    goPlaylist,
-    goMap,
-    goJourneySettings,
-  } = useNavigation()
+  } = nav
   const journeyId = params.journeyId
   const aiEnabled = isAiPlanningEnabled()
   const { user } = useAuth()
@@ -589,44 +579,7 @@ export function Todos() {
           <PageShortcuts
             current="todos"
             className={styles.iconBtn}
-            shortcuts={[
-              {
-                id: 'members',
-                label: 'Travelers',
-                icon: Users,
-                pick: () => () => goMembers(journeyId),
-              },
-              {
-                id: 'spending',
-                label: 'Spending',
-                icon: CircleDollarSign,
-                pick: () => () => goSpending(journeyId),
-              },
-              {
-                id: 'attachments',
-                label: 'Attachments',
-                icon: Paperclip,
-                pick: () => () => goAttachments(journeyId),
-              },
-              {
-                id: 'playlist',
-                label: 'Playlist',
-                icon: ListMusic,
-                pick: () => () => goPlaylist(journeyId),
-              },
-              {
-                id: 'map',
-                label: 'Map',
-                icon: MapPin,
-                pick: () => () => goMap(journeyId),
-              },
-              {
-                id: 'journey-settings',
-                label: 'Settings',
-                icon: Settings,
-                pick: () => () => goJourneySettings(journeyId),
-              },
-            ]}
+            shortcuts={journeyAllShortcuts(journeyId, nav)}
           />
         }
       />

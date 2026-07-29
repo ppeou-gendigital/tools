@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
-  CheckSquare,
   Cloud,
   CloudDrizzle,
   CloudFog,
@@ -9,11 +8,7 @@ import {
   CloudRain,
   CloudSnow,
   CloudSun,
-  ListMusic,
-  MapPin,
   Sun,
-  Users,
-  Wallet,
 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { LoadingState } from '@/molecules/LoadingState'
@@ -57,7 +52,7 @@ const WEATHER_LEGEND = [
 ]
 
 export function OfflineJourney() {
-  const { params, goHome, navigate } = useNavigation()
+  const { params, goHome } = useNavigation()
   const journeyId = params.journeyId
   const { getPack } = useOffline()
   const { displayLocale } = useDisplayPrefs()
@@ -89,10 +84,17 @@ export function OfflineJourney() {
     })
   }, [pack])
 
+  const homeLeading = (
+    <Button variant="ghost" size="sm" onClick={goHome}>
+      <ArrowLeft size={14} aria-hidden="true" />
+      Home
+    </Button>
+  )
+
   if (loading) {
     return (
       <div className={styles.page}>
-        <PageHeader title="Journey" />
+        <PageHeader title="Journey" leading={homeLeading} />
         <div className={cx('is-fluid-width', styles.body)}>
           <LoadingState>Loading offline journey…</LoadingState>
         </div>
@@ -103,20 +105,14 @@ export function OfflineJourney() {
   if (!pack?.journey) {
     return (
       <div className={styles.page}>
-        <PageHeader
-          title="Journey"
-          leading={
-            <Button variant="ghost" size="sm" onClick={goHome}>
-              <ArrowLeft size={14} aria-hidden="true" />
-              Home
-            </Button>
-          }
-        />
+        <PageHeader title="Journey" leading={homeLeading} />
         <div className={cx('is-fluid-width', styles.body)}>
-          <p className={styles.error}>This journey is not available offline.</p>
-          <Button onClick={goHome} fullWidth>
-            Back
-          </Button>
+          <div className={styles.empty}>
+            <p className={styles.error}>This journey is not available offline.</p>
+            <Button onClick={goHome} fullWidth>
+              Back
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -129,58 +125,10 @@ export function OfflineJourney() {
     <div className={styles.page}>
       <PageHeader
         title={journey.title || 'Journey'}
-        leading={
-          <Button variant="ghost" size="sm" onClick={goHome}>
-            <ArrowLeft size={14} aria-hidden="true" />
-            Home
-          </Button>
-        }
+        leading={homeLeading}
       />
       <div className={cx('is-fluid-width', styles.body)}>
         <OfflineBanner syncedAt={pack.syncedAt} />
-
-        <div className={styles.chipRow}>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('spending', { journeyId })}
-          >
-            <Wallet size={14} aria-hidden="true" />
-            Spending
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('todos', { journeyId })}
-          >
-            <CheckSquare size={14} aria-hidden="true" />
-            To-dos
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('playlist', { journeyId })}
-          >
-            <ListMusic size={14} aria-hidden="true" />
-            Playlist
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('map', { journeyId })}
-          >
-            <MapPin size={14} aria-hidden="true" />
-            Places
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('members', { journeyId })}
-          >
-            <Users size={14} aria-hidden="true" />
-            Travelers
-          </Button>
-        </div>
 
         {pack.weather && Object.keys(pack.weather).length > 0 ? (
           <div className={styles.weatherLegend} aria-label="Weather legend">

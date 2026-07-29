@@ -17,6 +17,7 @@ export {
   cellToOffset,
   formatFabCell,
   gridForWidth,
+  gridFromMetrics,
   localCellToStorage,
   nearestFreeCell,
   pointToCell,
@@ -24,3 +25,9 @@ export {
   reservedCells,
   storageCellToLocal,
 } from '../lib/fabGrid.js'
+export {
+  getFabBottomRightReserved,
+  isBottomRightFabCollision,
+  setFabBottomRightReserved,
+  subscribeFabBottomRightReserved,
+} from '../lib/fabOccupancy.js'

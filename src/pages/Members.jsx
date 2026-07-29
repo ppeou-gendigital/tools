@@ -2,19 +2,15 @@ import { useMemo, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
+  Check,
   ChevronDown,
   Copy,
+  EllipsisVertical,
   Link2,
-  ListChecks,
-  ListMusic,
   Mail,
-  MapPin,
   MessageSquare,
-  MoreHorizontal,
-  Paperclip,
-  Settings,
+  Plus,
   Share2,
-  CircleDollarSign,
 } from 'lucide-react'
 import { AnchoredPopover } from '@/molecules/AnchoredPopover'
 import popoverStyles from '@/molecules/AnchoredPopover.module.scss'
@@ -23,11 +19,11 @@ import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { LoadingState } from '@/molecules/LoadingState'
-import { Select } from '@/molecules/Select'
 import { ConfirmDialog } from '@/patterns/ConfirmDialog'
 import { Modal } from '@/patterns/Modal'
 import { PageHeader } from '@/patterns/PageHeader'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
+import { journeyAllShortcuts } from '@/lib/journeyNav'
 import { labelForRole } from '@/lib/catalog'
 import { labelForJourneyPerson } from '@/lib/format'
 import {
@@ -67,18 +63,13 @@ function isInviteOpen(inv) {
 }
 
 export function Members() {
+  const nav = useNavigation()
   const {
     params,
     goBack,
     previousRouteLabel,
     goHome,
-    goSpending,
-    goAttachments,
-    goPlaylist,
-    goTodos,
-    goMap,
-    goJourneySettings,
-  } = useNavigation()
+  } = nav
   const journeyId = params.journeyId
   const { user } = useAuth()
   const qc = useQueryClient()
@@ -88,6 +79,7 @@ export function Members() {
   const [invitePhone, setInvitePhone] = useState('')
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
+  const [addOpen, setAddOpen] = useState(false)
   const [error, setError] = useState('')
   const [busyAction, setBusyAction] = useState('')
   const [confirm, setConfirm] = useState(null)
@@ -212,6 +204,39 @@ export function Members() {
     setRowInvitePhone('')
   }
 
+  function openAdd() {
+    setError('')
+    setAddOpen(true)
+  }
+
+  function closeAdd() {
+    if (busyAction === 'add-traveler') return
+    setAddOpen(false)
+    setNewName('')
+    setNewEmail('')
+  }
+
+  async function submitAdd() {
+    if (!newName.trim() || busyAction === 'add-traveler') return
+    setBusyAction('add-traveler')
+    setError('')
+    try {
+      await addJourneyPerson({
+        journeyId,
+        displayName: newName.trim(),
+        email: newEmail.trim() || null,
+      })
+      setNewName('')
+      setNewEmail('')
+      setAddOpen(false)
+      invalidate()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusyAction('')
+    }
+  }
+
   const pending = busyAction !== ''
   const rowInviteName = rowInvite
     ? labelForJourneyPerson(rowInvite, user?.id)
@@ -235,6 +260,16 @@ export function Members() {
                 journeyId={journeyId}
                 className={styles.iconBtn}
               />
+              <Button
+                variant="ghost"
+                size="sm"
+                className={styles.iconBtn}
+                onClick={openAdd}
+                aria-label="Add traveler"
+                title="Add traveler"
+              >
+                <Plus size={14} aria-hidden="true" />
+              </Button>
             </div>
           ) : null
         }
@@ -242,44 +277,7 @@ export function Members() {
           <PageShortcuts
             current="members"
             className={styles.iconBtn}
-            shortcuts={[
-              {
-                id: 'spending',
-                label: 'Spending',
-                icon: CircleDollarSign,
-                pick: () => () => goSpending(journeyId),
-              },
-              {
-                id: 'attachments',
-                label: 'Attachments',
-                icon: Paperclip,
-                pick: () => () => goAttachments(journeyId),
-              },
-              {
-                id: 'playlist',
-                label: 'Playlist',
-                icon: ListMusic,
-                pick: () => () => goPlaylist(journeyId),
-              },
-              {
-                id: 'todos',
-                label: 'To-dos',
-                icon: ListChecks,
-                pick: () => () => goTodos(journeyId),
-              },
-              {
-                id: 'map',
-                label: 'Map',
-                icon: MapPin,
-                pick: () => () => goMap(journeyId),
-              },
-              {
-                id: 'journey-settings',
-                label: 'Settings',
-                icon: Settings,
-                pick: () => () => goJourneySettings(journeyId),
-              },
-            ]}
+            shortcuts={journeyAllShortcuts(journeyId, nav)}
           />
         }
       />
@@ -297,7 +295,13 @@ export function Members() {
         {rosterLoading && <LoadingState>Loading travelers…</LoadingState>}
         {!rosterLoading && roster.length === 0 && (
           <div className={styles.empty}>
-            <p>No travelers yet. Add someone below or share a join link.</p>
+            <p>No travelers yet.</p>
+            {canEdit && (
+              <Button onClick={openAdd}>
+                <Plus size={14} aria-hidden="true" />
+                Add traveler
+              </Button>
+            )}
           </div>
         )}
 
@@ -318,7 +322,7 @@ export function Members() {
         <div
           className={cx(
             styles.dualZone,
-            !(canEdit || isOwner) && styles.dualZoneSolo,
+            !isOwner && styles.dualZoneSolo,
           )}
         >
           <ul className={styles.list} aria-label="Travelers">
@@ -335,7 +339,7 @@ export function Members() {
                   ? `Joined · ${labelForRole(journey, mem.role)}`
                   : 'Joined'
               return (
-                <li key={jp.id} className={styles.block}>
+                <li key={jp.id} className={cx(styles.block, styles.travelerCard)}>
                   <div className={styles.rowBody}>
                     <span className={styles.rowTitle}>{name}</span>
                     <span className={styles.statusLine}>
@@ -346,62 +350,25 @@ export function Members() {
                     </span>
                   </div>
                   {isOwner && !isSelf && (
-                    <div className={styles.actions}>
-                      {mem && (
-                        <Select
-                          fit
-                          aria-label={`Role for ${name}`}
-                          value={mem.role}
-                          onChange={async (e) => {
-                            try {
-                              await setMemberRole(
-                                journeyId,
-                                jp.linkedUserId,
-                                e.target.value,
-                              )
-                              invalidate()
-                            } catch (err) {
-                              setError(err.message)
-                            }
+                    <div className={styles.entryActions}>
+                      <div className={styles.rowActions}>
+                        <button
+                          type="button"
+                          className={styles.rowInfo}
+                          aria-label={`Actions for ${name}`}
+                          title="Traveler actions"
+                          aria-expanded={menuForId === jp.id}
+                          aria-haspopup="menu"
+                          disabled={pending}
+                          onClick={(e) => {
+                            const next = menuForId === jp.id ? null : jp.id
+                            if (next) moreBtnRef.current = e.currentTarget
+                            setMenuForId(next)
                           }}
                         >
-                          <option value="owner">
-                            {labelForRole(journey, 'owner')}
-                          </option>
-                          <option value="editor">
-                            {labelForRole(journey, 'editor')}
-                          </option>
-                          <option value="viewer">
-                            {labelForRole(journey, 'viewer')}
-                          </option>
-                        </Select>
-                      )}
-                      {isGuest && (
-                        <Button
-                          size="sm"
-                          aria-label={`Invite ${name}`}
-                          disabled={pending}
-                          onClick={() => openRowInvite(jp)}
-                        >
-                          <Mail size={14} aria-hidden="true" />
-                          Invite
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        aria-label={`More actions for ${name}`}
-                        aria-expanded={menuForId === jp.id}
-                        aria-haspopup="dialog"
-                        onClick={(e) => {
-                          const next = menuForId === jp.id ? null : jp.id
-                          if (next) moreBtnRef.current = e.currentTarget
-                          setMenuForId(next)
-                        }}
-                      >
-                        <MoreHorizontal size={14} aria-hidden="true" />
-                        More
-                      </Button>
+                          <EllipsisVertical size={16} aria-hidden="true" />
+                        </button>
+                      </div>
                     </div>
                   )}
                 </li>
@@ -409,57 +376,8 @@ export function Members() {
             })}
           </ul>
 
-          {(canEdit || isOwner) && (
+          {isOwner && (
           <div className={cx(styles.inviteColumn, styles.stickyPanel)}>
-            {canEdit && (
-              <section className={styles.form} aria-labelledby="add-traveler-heading">
-                <h2 id="add-traveler-heading" className={styles.sectionTitle}>
-                  Add traveler
-                </h2>
-                <div className={styles.field}>
-                  <Label htmlFor="new-name">Display name</Label>
-                  <Input
-                    id="new-name"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    placeholder="Display name"
-                  />
-                  {!newName.trim() && (
-                    <p className={styles.hint}>Enter a name to add a traveler.</p>
-                  )}
-                </div>
-                <div className={styles.field}>
-                  <Label htmlFor="new-email">Email (optional)</Label>
-                  <Input
-                    id="new-email"
-                    type="email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                  />
-                </div>
-                <Button
-                  disabled={!newName.trim()}
-                  onClick={async () => {
-                    try {
-                      await addJourneyPerson({
-                        journeyId,
-                        displayName: newName.trim(),
-                        email: newEmail.trim() || null,
-                      })
-                      setNewName('')
-                      setNewEmail('')
-                      invalidate()
-                    } catch (err) {
-                      setError(err.message)
-                    }
-                  }}
-                >
-                  Add traveler
-                </Button>
-              </section>
-            )}
-
-            {isOwner && (
               <section
                 className={styles.form}
                 aria-labelledby="share-access-heading"
@@ -498,12 +416,36 @@ export function Members() {
 
                 {shareExpanded && (
                   <>
-                    <p className={styles.hint}>
-                      We’ll email a sign-in link when possible; otherwise copy
-                      or share the link.
-                    </p>
                     <div className={styles.field}>
-                      <Label htmlFor="invite-email">Email (for send)</Label>
+                      <Label id="invite-role-label">Role when they join</Label>
+                      <div
+                        className={styles.segmented}
+                        role="radiogroup"
+                        aria-labelledby="invite-role-label"
+                      >
+                        {[
+                          { value: 'editor', label: labelForRole(journey, 'editor') },
+                          { value: 'viewer', label: labelForRole(journey, 'viewer') },
+                          { value: 'owner', label: labelForRole(journey, 'owner') },
+                        ].map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            role="radio"
+                            aria-checked={inviteRole === opt.value}
+                            className={cx(
+                              styles.segment,
+                              inviteRole === opt.value && styles.segmentActive,
+                            )}
+                            onClick={() => setInviteRole(opt.value)}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className={styles.field}>
+                      <Label htmlFor="invite-email">Email (optional)</Label>
                       <Input
                         id="invite-email"
                         type="email"
@@ -511,12 +453,6 @@ export function Members() {
                         onChange={(e) => setInviteEmail(e.target.value)}
                         placeholder="friend@example.com"
                       />
-                      {!inviteEmail.trim() && (
-                        <p className={styles.hint}>
-                          Add an email to enable Send invite. Copy and Message
-                          work without it.
-                        </p>
-                      )}
                     </div>
                     <div className={styles.field}>
                       <Label htmlFor="invite-phone">Phone (optional)</Label>
@@ -525,31 +461,40 @@ export function Members() {
                         type="tel"
                         value={invitePhone}
                         onChange={(e) => setInvitePhone(e.target.value)}
+                        placeholder="+1…"
                       />
                     </div>
-                    <details className={styles.disclosure}>
-                      <summary>Advanced</summary>
-                      <div className={styles.field}>
-                        <Label htmlFor="invite-role">Role when they join</Label>
-                        <Select
-                          id="invite-role"
-                          value={inviteRole}
-                          onChange={(e) => setInviteRole(e.target.value)}
+                    <div
+                      className={styles.shareActions}
+                      role="group"
+                      aria-label="Share join link"
+                    >
+                      {canNativeShare() && (
+                        <Button
+                          className={styles.shareActionBtn}
+                          onClick={() =>
+                            withInvite(
+                              async (url) => {
+                                await nativeShareInvite({
+                                  journeyTitle: journey?.title,
+                                  url,
+                                })
+                              },
+                              'share',
+                              'Share sheet opened.',
+                              {},
+                            )
+                          }
+                          disabled={pending}
+                          aria-label="Share"
+                          title="Share via Messages, Mail, and more"
                         >
-                          <option value="editor">
-                            {labelForRole(journey, 'editor')}
-                          </option>
-                          <option value="viewer">
-                            {labelForRole(journey, 'viewer')}
-                          </option>
-                          <option value="owner">
-                            {labelForRole(journey, 'owner')}
-                          </option>
-                        </Select>
-                      </div>
-                    </details>
-                    <div className={styles.actions}>
+                          <Share2 size={18} aria-hidden="true" />
+                        </Button>
+                      )}
                       <Button
+                        variant={canNativeShare() ? 'outline' : 'default'}
+                        className={styles.shareActionBtn}
                         onClick={() =>
                           withInvite(
                             async (url) => {
@@ -566,12 +511,14 @@ export function Members() {
                           )
                         }
                         disabled={pending}
+                        aria-label="Copy link"
+                        title="Copy link"
                       >
-                        <Link2 size={14} aria-hidden="true" />
-                        {busyAction === 'copy' ? 'Working…' : 'Copy link'}
+                        <Copy size={18} aria-hidden="true" />
                       </Button>
                       <Button
                         variant="outline"
+                        className={styles.shareActionBtn}
                         onClick={() =>
                           withInvite(
                             async (url, inv) => {
@@ -598,12 +545,18 @@ export function Members() {
                           )
                         }
                         disabled={pending || !inviteEmail.trim()}
+                        aria-label="Send invite email"
+                        title={
+                          inviteEmail.trim()
+                            ? 'Send invite email'
+                            : 'Add an email to send'
+                        }
                       >
-                        <Mail size={14} aria-hidden="true" />
-                        {busyAction === 'email' ? 'Working…' : 'Send invite'}
+                        <Mail size={18} aria-hidden="true" />
                       </Button>
                       <Button
                         variant="outline"
+                        className={styles.shareActionBtn}
                         onClick={() =>
                           withInvite(
                             async (url) => {
@@ -619,32 +572,11 @@ export function Members() {
                           )
                         }
                         disabled={pending}
+                        aria-label="Message"
+                        title="Open Messages with invite link"
                       >
-                        <MessageSquare size={14} aria-hidden="true" />
-                        {busyAction === 'sms' ? 'Working…' : 'Message'}
+                        <MessageSquare size={18} aria-hidden="true" />
                       </Button>
-                      {canNativeShare() && (
-                        <Button
-                          variant="outline"
-                          onClick={() =>
-                            withInvite(
-                              async (url) => {
-                                await nativeShareInvite({
-                                  journeyTitle: journey?.title,
-                                  url,
-                                })
-                              },
-                              'share',
-                              'Share sheet opened.',
-                              {},
-                            )
-                          }
-                          disabled={pending}
-                        >
-                          <Share2 size={14} aria-hidden="true" />
-                          {busyAction === 'share' ? 'Working…' : 'Share'}
-                        </Button>
-                      )}
                     </div>
 
                     {openInvites.length > 0 && (
@@ -718,7 +650,6 @@ export function Members() {
                   </>
                 )}
               </section>
-            )}
           </div>
           )}
         </div>
@@ -756,82 +687,195 @@ export function Members() {
         open={!!menuForId}
         onClose={() => setMenuForId(null)}
         anchorRef={moreBtnRef}
-        title="Actions"
+        align="end"
+        fluid
+        role="menu"
         aria-label="Traveler actions"
       >
         {(() => {
           const jp = roster.find((r) => r.id === menuForId)
           if (!jp) return null
           const name = labelForJourneyPerson(jp, user?.id)
-          if (jp.linkedUserId) {
-            return (
-              <div className={popoverStyles.actions}>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  fullWidth
-                  onClick={() => {
-                    setMenuForId(null)
-                    setConfirm({
-                      title: 'Remove access?',
-                      message: `${name} will lose access to this journey.`,
-                      confirmLabel: 'Remove access',
-                      run: async () => {
-                        await removeMember(journeyId, jp.linkedUserId)
-                        invalidate()
-                      },
-                    })
-                  }}
-                >
-                  Remove access
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  fullWidth
-                  onClick={() => {
-                    setMenuForId(null)
-                    setConfirm({
-                      title: 'Block this traveler?',
-                      message: `${name} will be removed and cannot rejoin with an invite.`,
-                      confirmLabel: 'Block',
-                      run: async () => {
-                        await blockMember(journeyId, jp.linkedUserId)
-                        invalidate()
-                      },
-                    })
-                  }}
-                >
-                  Block
-                </Button>
-              </div>
-            )
-          }
+          const mem = jp.linkedUserId
+            ? memberByUser.get(jp.linkedUserId)
+            : null
+          const isGuest = !jp.linkedUserId
+          const roles = ['editor', 'viewer', 'owner']
           return (
-            <div className={popoverStyles.actions}>
-              <Button
-                size="sm"
-                variant="outline"
-                fullWidth
-                onClick={() => {
-                  setMenuForId(null)
-                  setConfirm({
-                    title: 'Remove traveler?',
-                    message: `Remove ${name} from this journey?`,
-                    confirmLabel: 'Remove',
-                    run: async () => {
-                      await removeJourneyPerson(jp.id)
-                      invalidate()
-                    },
-                  })
-                }}
-              >
-                Remove
-              </Button>
-            </div>
+            <>
+              <ul className={styles.rowActionMenu}>
+                {mem &&
+                  roles.map((role) => {
+                    const active = mem.role === role
+                    return (
+                      <li key={role} role="none">
+                        <button
+                          type="button"
+                          role="menuitemradio"
+                          aria-checked={active}
+                          className={styles.rowActionMenuItem}
+                          disabled={pending}
+                          onClick={async () => {
+                            setMenuForId(null)
+                            if (active) return
+                            try {
+                              await setMemberRole(
+                                journeyId,
+                                jp.linkedUserId,
+                                role,
+                              )
+                              invalidate()
+                            } catch (err) {
+                              setError(err.message)
+                            }
+                          }}
+                        >
+                          <span className={styles.rowActionMenuIcon}>
+                            {active ? (
+                              <Check size={16} aria-hidden="true" />
+                            ) : null}
+                          </span>
+                          <span>{labelForRole(journey, role)}</span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                {isGuest && (
+                  <li role="none">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={styles.rowActionMenuItem}
+                      disabled={pending}
+                      onClick={() => {
+                        setMenuForId(null)
+                        openRowInvite(jp)
+                      }}
+                    >
+                      <Mail size={16} aria-hidden="true" />
+                      <span>Invite</span>
+                    </button>
+                  </li>
+                )}
+              </ul>
+              <div className={popoverStyles.actions}>
+                {jp.linkedUserId ? (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      fullWidth
+                      onClick={() => {
+                        setMenuForId(null)
+                        setConfirm({
+                          title: 'Remove access?',
+                          message: `${name} will lose access to this journey.`,
+                          confirmLabel: 'Remove access',
+                          run: async () => {
+                            await removeMember(journeyId, jp.linkedUserId)
+                            invalidate()
+                          },
+                        })
+                      }}
+                    >
+                      Remove access
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      fullWidth
+                      onClick={() => {
+                        setMenuForId(null)
+                        setConfirm({
+                          title: 'Block this traveler?',
+                          message: `${name} will be removed and cannot rejoin with an invite.`,
+                          confirmLabel: 'Block',
+                          run: async () => {
+                            await blockMember(journeyId, jp.linkedUserId)
+                            invalidate()
+                          },
+                        })
+                      }}
+                    >
+                      Block
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    fullWidth
+                    onClick={() => {
+                      setMenuForId(null)
+                      setConfirm({
+                        title: 'Remove traveler?',
+                        message: `Remove ${name} from this journey?`,
+                        confirmLabel: 'Remove',
+                        run: async () => {
+                          await removeJourneyPerson(jp.id)
+                          invalidate()
+                        },
+                      })
+                    }}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
+            </>
           )
         })()}
       </AnchoredPopover>
+
+      <Modal
+        open={addOpen}
+        onDismiss={closeAdd}
+        title="Add traveler"
+      >
+        <form
+          className={styles.sheet}
+          onSubmit={(e) => {
+            e.preventDefault()
+            submitAdd()
+          }}
+        >
+          {error && addOpen && (
+            <p className={styles.error} role="alert">
+              {error}
+            </p>
+          )}
+          <div className={styles.field}>
+            <Label htmlFor="new-name">Display name</Label>
+            <Input
+              id="new-name"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Display name"
+              required
+              autoFocus
+            />
+            {!newName.trim() && (
+              <p className={styles.hint}>Enter a name to add a traveler.</p>
+            )}
+          </div>
+          <div className={styles.field}>
+            <Label htmlFor="new-email">Email (optional)</Label>
+            <Input
+              id="new-email"
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={!newName.trim() || busyAction === 'add-traveler'}
+            fullWidth
+          >
+            {busyAction === 'add-traveler' ? 'Adding…' : 'Add traveler'}
+          </Button>
+        </form>
+      </Modal>
 
       <Modal
         open={!!rowInvite}

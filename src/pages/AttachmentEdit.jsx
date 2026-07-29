@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
@@ -13,6 +13,7 @@ import { ExpenseLinkChips } from '@/molecules/ExpenseLinkChips'
 import { LoadingState } from '@/molecules/LoadingState'
 import { ReceiptField } from '@/molecules/ReceiptField'
 import { ConfirmDialog } from '@/patterns/ConfirmDialog'
+import { FormActionsFloat } from '@/patterns/FormActionsFloat'
 import { PageHeader } from '@/patterns/PageHeader'
 import {
   deleteAttachment,
@@ -168,6 +169,12 @@ function AttachmentEditForm({
 }) {
   const qc = useQueryClient()
   const [error, setError] = useState('')
+  const errorRef = useRef(null)
+
+  useEffect(() => {
+    if (!error) return
+    errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [error])
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [pendingFiles, setPendingFiles] = useState([])
   const [downloadBusy, setDownloadBusy] = useState(false)
@@ -445,12 +452,33 @@ function AttachmentEditForm({
           )}
 
           {error && (
-            <p className={cx(styles.error, styles.formSpan2)} role="alert">
+            <p
+              ref={errorRef}
+              className={cx(styles.error, styles.formSpan2)}
+              role="alert"
+            >
               {error}
             </p>
           )}
+
         </div>
       </div>
+
+      {canEdit ? (
+        <FormActionsFloat
+          onSave={() => {
+            setError('')
+            saveMut.mutate()
+          }}
+          onDelete={() => setConfirmDelete(true)}
+          saving={saveMut.isPending}
+          deleting={deleteMut.isPending}
+          canSave={canSave && !saveMut.isPending}
+          canDelete={Boolean(attachmentId)}
+          saveLabel="Save attachment"
+          deleteLabel="Delete attachment"
+        />
+      ) : null}
 
       <ConfirmDialog
         open={confirmDelete}

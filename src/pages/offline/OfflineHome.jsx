@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { CalendarRange, Plane } from 'lucide-react'
 import { PageHeader } from '@/patterns/PageHeader'
 import { useNavigation } from '@/providers/NavigationProvider'
@@ -28,12 +29,19 @@ function formatRange(startsOn, endsOn) {
 export function OfflineHome() {
   const { packs } = useOffline()
   const nav = useNavigation()
+  const latestSyncedAt = useMemo(() => {
+    if (!packs.length) return null
+    const max = Math.max(
+      ...packs.map((p) => new Date(p.syncedAt).getTime()).filter(Number.isFinite),
+    )
+    return Number.isFinite(max) ? new Date(max).toISOString() : null
+  }, [packs])
 
   return (
     <div className={styles.page}>
       <PageHeader title="Offline journeys" />
       <div className={cx('is-fluid-width', styles.body)}>
-        <OfflineBanner />
+        <OfflineBanner syncedAt={latestSyncedAt} />
         <ul className={cx(styles.list, homeStyles.listGrid)}>
           {packs.map((pack) => {
             const j = pack.journey

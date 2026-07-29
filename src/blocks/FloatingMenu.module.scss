@@ -7,7 +7,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 100;
+  z-index: var(--z-chrome, 100);
 }
 
 .fab {
@@ -15,7 +15,7 @@
   // viewport. This means in browser-preview popup mode the FAB stays
   // inside the 400x600 frame instead of drifting to the browser edge.
   position: absolute;
-  z-index: 1000;
+  z-index: var(--z-chrome, 100);
   pointer-events: auto;
   width: var(--fab-size);
   height: var(--fab-size);

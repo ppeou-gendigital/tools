@@ -35,10 +35,32 @@ export function breakpointForWidth(width) {
 }
 
 /**
+ * Legacy breakpoint tables — prefer `gridFromMetrics` for runtime snap.
  * @param {number} width
  */
 export function gridForWidth(width) {
   return FAB_GRIDS[breakpointForWidth(width)]
+}
+
+/**
+ * Snap lattice from shell size + FAB metrics (not hardcoded breakpoint tables).
+ * @param {number} wrapW
+ * @param {number} wrapH
+ * @param {{ offset: number, fabSize: number, fabGap: number }} metrics
+ * @returns {{ cols: number, rows: number }}
+ */
+export function gridFromMetrics(wrapW, wrapH, metrics) {
+  const offset = Number(metrics?.offset) || DEFAULT_OFFSET_PX
+  const fabSize = Number(metrics?.fabSize) || DEFAULT_FAB_SIZE_PX
+  const fabGap = Number(metrics?.fabGap)
+  const gap = Number.isFinite(fabGap) ? fabGap : 8
+  const stride = Math.max(1, fabSize + gap)
+  const spanX = Math.max(0, wrapW - 2 * offset - fabSize)
+  const spanY = Math.max(0, wrapH - 2 * offset - fabSize)
+  return {
+    cols: Math.max(2, Math.floor(spanX / stride) + 1),
+    rows: Math.max(2, Math.floor(spanY / stride) + 1),
+  }
 }
 
 /**
@@ -229,16 +251,31 @@ export function nearestFreeCell(cell, grid, reserved, occupied = new Set()) {
   return start
 }
 
-/** XL storage token → cell in the active viewport grid. */
-export function storageCellToLocal(token, width) {
-  const grid = gridForWidth(width)
+/**
+ * XL storage token → cell in the active viewport grid.
+ * @param {string} token
+ * @param {{ cols: number, rows: number } | number} gridOrWidth
+ *   Pass a metrics-derived grid. Number width kept for legacy callers.
+ */
+export function storageCellToLocal(token, gridOrWidth) {
+  const grid =
+    typeof gridOrWidth === 'number'
+      ? gridForWidth(gridOrWidth)
+      : gridOrWidth
   const cell = parseFabCell(token) || { col: 0, row: 0 }
   return remapFabCell(clampFabCell(cell, FAB_GRID_XL), FAB_GRID_XL, grid)
 }
 
-/** Active-grid cell → XL storage token. */
-export function localCellToStorage(cell, width) {
-  const grid = gridForWidth(width)
+/**
+ * Active-grid cell → XL storage token.
+ * @param {{ col: number, row: number }} cell
+ * @param {{ cols: number, rows: number } | number} gridOrWidth
+ */
+export function localCellToStorage(cell, gridOrWidth) {
+  const grid =
+    typeof gridOrWidth === 'number'
+      ? gridForWidth(gridOrWidth)
+      : gridOrWidth
   const xl = remapFabCell(clampFabCell(cell, grid), grid, FAB_GRID_XL)
   return formatFabCell(xl)
 }

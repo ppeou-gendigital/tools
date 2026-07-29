@@ -3,29 +3,32 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  z-index: 2000;
+  z-index: var(--z-preview, 1400);
   display: grid;
   place-items: center;
   padding: var(--space-4);
   margin: 0;
   border: 0;
-  background: color-mix(in srgb, #000 72%, transparent);
+  background: color-mix(in srgb, var(--fg) 40%, transparent);
+  backdrop-filter: blur(2px);
   cursor: zoom-out;
 }
 
 .panel {
   width: min(100%, 56rem);
-  height: min(85vh, 48rem);
-  max-height: 85vh;
+  height: min(85dvh, 48rem);
+  max-height: 85dvh;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: var(--space-2);
   padding: var(--space-3);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
   background: var(--card);
   color: var(--fg);
   cursor: default;
-  box-shadow: 0 12px 40px color-mix(in srgb, #000 45%, transparent);
+  outline: none;
+  box-shadow: var(--shadow-popover);
 }
 
 .header {
@@ -70,7 +73,7 @@
   height: 100%;
   min-height: 20rem;
   border: 0;
-  background: #fff;
+  background: var(--card);
 }
 
 .loading,

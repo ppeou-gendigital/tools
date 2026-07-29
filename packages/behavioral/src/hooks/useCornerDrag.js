@@ -1,10 +1,21 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 import { useFabCorner } from '@tools/service'
+import {
+  getFabBottomRightReserved,
+  isBottomRightFabCollision,
+  subscribeFabBottomRightReserved,
+} from '../lib/fabOccupancy.js'
 import {
   cellEdges,
   cellToOffset,
   formatFabCell,
-  gridForWidth,
+  gridFromMetrics,
   localCellToStorage,
   parseFabCell,
   pointToCell,
@@ -63,17 +74,31 @@ export function useCornerDrag({ fabId = 'menu' } = {}) {
     return () => ro.disconnect()
   }, [measure, storageToken])
 
-  const grid = gridForWidth(wrapSize.width)
-  const localCell = storageCellToLocal(storageToken, wrapSize.width)
-  const otherLocal = storageCellToLocal(otherToken, wrapSize.width)
+  const bottomRightReserved = useSyncExternalStore(
+    subscribeFabBottomRightReserved,
+    getFabBottomRightReserved,
+    () => false,
+  )
+
+  const grid = gridFromMetrics(wrapSize.width, wrapSize.height, metrics)
+  const localCell = storageCellToLocal(storageToken, grid)
+  const otherLocal = storageCellToLocal(otherToken, grid)
+  // FormActionsFloat reserves BR — show last-col / one-row-up (prefs unchanged).
+  const displayCell =
+    bottomRightReserved && isBottomRightFabCollision(localCell, grid)
+      ? {
+          col: Math.min(localCell.col, grid.cols - 1),
+          row: Math.max(0, grid.rows - 2),
+        }
+      : localCell
   const offset = cellToOffset(
-    localCell,
+    displayCell,
     wrapSize.width,
     wrapSize.height,
     grid,
     metrics,
   )
-  const edges = cellEdges(localCell, grid)
+  const edges = cellEdges(displayCell, grid)
   const stacked =
     fabId === 'ai' && formatFabCell(localCell) === formatFabCell(otherLocal)
 
@@ -87,7 +112,7 @@ export function useCornerDrag({ fabId = 'menu' } = {}) {
       : stacked
         ? {
             transform: `translate(${
-              localCell.col <= (grid.cols - 1) / 2
+              displayCell.col <= (grid.cols - 1) / 2
                 ? metrics.fabSize + metrics.fabGap
                 : -(metrics.fabSize + metrics.fabGap)
             }px, 0px)`,
@@ -151,15 +176,15 @@ export function useCornerDrag({ fabId = 'menu' } = {}) {
         const cy = rect.top + rect.height / 2 - parentRect.top
         const width = parentRect.width
         const height = parentRect.height
-        const nextGrid = gridForWidth(width)
         const nextMetrics = readFabMetrics(target)
+        const nextGrid = gridFromMetrics(width, height, nextMetrics)
         const raw = pointToCell(cx, cy, width, height, nextGrid, nextMetrics)
-        const otherLocalCell = storageCellToLocal(otherToken, width)
+        const otherLocalCell = storageCellToLocal(otherToken, nextGrid)
         // Dropping onto the other FAB → swap.
         if (formatFabCell(raw) === formatFabCell(otherLocalCell)) {
           void swapFabCorners()
         } else {
-          const storage = localCellToStorage(raw, width)
+          const storage = localCellToStorage(raw, nextGrid)
           if (fabId === 'ai') {
             void setAiCorner(storage)
           } else {

@@ -5,17 +5,11 @@ import {
   ExternalLink,
   GripVertical,
   Link2,
-  ListChecks,
-  MapPin,
   Music2,
-  Paperclip,
   Plus,
   RefreshCw,
-  Settings,
   Trash2,
-  Users,
   Video,
-  CircleDollarSign,
 } from 'lucide-react'
 import { AiPlannerButton } from '@/molecules/AiPlannerButton'
 import { Button } from '@/molecules/Button'
@@ -30,6 +24,7 @@ import { ConfirmDialog } from '@/patterns/ConfirmDialog'
 import { Modal } from '@/patterns/Modal'
 import { PageHeader } from '@/patterns/PageHeader'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
+import { journeyAllShortcuts } from '@/lib/journeyNav'
 import { formatRelativeDay, labelForUserId } from '@/lib/format'
 import { parseMediaLink } from '@/lib/mediaEmbed'
 import {
@@ -113,17 +108,12 @@ function indexFromPoint(listEl, clientY) {
 }
 
 export function Playlist() {
+  const nav = useNavigation()
   const {
     params,
     goBack,
     previousRouteLabel,
-    goMembers,
-    goSpending,
-    goAttachments,
-    goTodos,
-    goMap,
-    goJourneySettings,
-  } = useNavigation()
+  } = nav
   const journeyId = params.journeyId
   const { user } = useAuth()
   const { displayLocale } = useDisplayPrefs()
@@ -258,22 +248,6 @@ export function Playlist() {
     if (dragRef.current || reorderMut.isPending) return
     setOrdered(items)
   }, [items, reorderMut.isPending])
-
-  // Default: select first playable track (paused) so the play bar is visible.
-  useEffect(() => {
-    if (!journeyId || ordered.length === 0) return
-    if (playingJourneyId === journeyId && playingTrackId) return
-    const first =
-      ordered.find((item) => parseMediaLink(item.url).playable) || ordered[0]
-    if (!first?.id) return
-    playAt({ journeyId, trackId: first.id, autoplay: false })
-  }, [
-    journeyId,
-    ordered,
-    playingJourneyId,
-    playingTrackId,
-    playAt,
-  ])
 
   function playTrack(item) {
     if (!journeyId || !item?.id) return
@@ -425,44 +399,7 @@ export function Playlist() {
           <PageShortcuts
             current="playlist"
             className={styles.iconBtn}
-            shortcuts={[
-              {
-                id: 'members',
-                label: 'Travelers',
-                icon: Users,
-                pick: () => () => goMembers(journeyId),
-              },
-              {
-                id: 'spending',
-                label: 'Spending',
-                icon: CircleDollarSign,
-                pick: () => () => goSpending(journeyId),
-              },
-              {
-                id: 'attachments',
-                label: 'Attachments',
-                icon: Paperclip,
-                pick: () => () => goAttachments(journeyId),
-              },
-              {
-                id: 'todos',
-                label: 'To-dos',
-                icon: ListChecks,
-                pick: () => () => goTodos(journeyId),
-              },
-              {
-                id: 'map',
-                label: 'Map',
-                icon: MapPin,
-                pick: () => () => goMap(journeyId),
-              },
-              {
-                id: 'journey-settings',
-                label: 'Settings',
-                icon: Settings,
-                pick: () => () => goJourneySettings(journeyId),
-              },
-            ]}
+            shortcuts={journeyAllShortcuts(journeyId, nav)}
           />
         }
       />

@@ -1,15 +1,25 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 import { createPortal } from 'react-dom'
 import { Component, Sun } from 'lucide-react'
 import {
   cellEdges,
   cellToOffset,
   formatFabCell,
-  gridForWidth,
+  getFabBottomRightReserved,
+  gridFromMetrics,
+  isBottomRightFabCollision,
   localCellToStorage,
   pointToCell,
   readFabMetrics,
   storageCellToLocal,
+  subscribeFabBottomRightReserved,
 } from '@tools/behavioral'
 import { useFabCorner } from '@/providers/FabCornerProvider'
 import styles from '@/pages/Page.module.scss'
@@ -90,18 +100,32 @@ export function FloatingIdeasButton({
     return () => ro.disconnect()
   }, [measure, storageToken, hidden])
 
-  const grid = gridForWidth(wrapSize.width)
-  const localCell = storageCellToLocal(storageToken, wrapSize.width)
-  const menuLocal = storageCellToLocal(menuCorner, wrapSize.width)
-  const aiLocal = storageCellToLocal(aiCorner, wrapSize.width)
+  const bottomRightReserved = useSyncExternalStore(
+    subscribeFabBottomRightReserved,
+    getFabBottomRightReserved,
+    () => false,
+  )
+
+  const grid = gridFromMetrics(wrapSize.width, wrapSize.height, metrics)
+  const localCell = storageCellToLocal(storageToken, grid)
+  const menuLocal = storageCellToLocal(menuCorner, grid)
+  const aiLocal = storageCellToLocal(aiCorner, grid)
+  // Map (and FormActionsFloat) reserve BR — show one row up; stored cell unchanged.
+  const displayCell =
+    bottomRightReserved && isBottomRightFabCollision(localCell, grid)
+      ? {
+          col: Math.min(localCell.col, grid.cols - 1),
+          row: Math.max(0, grid.rows - 2),
+        }
+      : localCell
   const offset = cellToOffset(
-    localCell,
+    displayCell,
     wrapSize.width,
     wrapSize.height,
     grid,
     metrics,
   )
-  const edges = cellEdges(localCell, grid)
+  const edges = cellEdges(displayCell, grid)
   const stackedOnOther =
     formatFabCell(localCell) === formatFabCell(menuLocal) ||
     formatFabCell(localCell) === formatFabCell(aiLocal)
@@ -160,11 +184,11 @@ export function FloatingIdeasButton({
         const cy = rect.top + rect.height / 2 - parentRect.top
         const width = parentRect.width
         const height = parentRect.height
-        const nextGrid = gridForWidth(width)
         const nextMetrics = readFabMetrics(target)
+        const nextGrid = gridFromMetrics(width, height, nextMetrics)
         const raw = pointToCell(cx, cy, width, height, nextGrid, nextMetrics)
-        const menuKey = formatFabCell(storageCellToLocal(menuCorner, width))
-        const aiKey = formatFabCell(storageCellToLocal(aiCorner, width))
+        const menuKey = formatFabCell(storageCellToLocal(menuCorner, nextGrid))
+        const aiKey = formatFabCell(storageCellToLocal(aiCorner, nextGrid))
         const rawKey = formatFabCell(raw)
         // Dropping onto menu/AI → nudge one step toward center instead of stealing.
         let next = raw
@@ -196,7 +220,7 @@ export function FloatingIdeasButton({
             }
           }
         }
-        const token = localCellToStorage(next, width)
+        const token = localCellToStorage(next, nextGrid)
         setStorageToken(token)
         writeStoredCell(token)
         skipClickRef.current = true
@@ -227,7 +251,7 @@ export function FloatingIdeasButton({
       : stackedOnOther
         ? {
             transform: `translate(${
-              localCell.col <= (grid.cols - 1) / 2
+              displayCell.col <= (grid.cols - 1) / 2
                 ? metrics.fabSize + metrics.fabGap
                 : -(metrics.fabSize + metrics.fabGap)
             }px, 0px)`,
@@ -261,7 +285,7 @@ export function FloatingIdeasButton({
           className={styles.mapIdeasFab}
           aria-label={open ? 'Collapse Ideas' : 'Ideas'}
           aria-expanded={open}
-          aria-controls="map-ideas-body"
+          aria-controls="map-ideas-panel"
           title="Ideas"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}

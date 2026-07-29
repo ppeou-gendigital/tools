@@ -1022,21 +1022,14 @@
   }
 }
 
+/* Legacy in-flow sticky actions — prefer FormActionsFloat on edit pages. */
 .actionsSticky {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
   margin-top: var(--space-2);
   padding: var(--space-3) 0;
-  background: linear-gradient(
-    to top,
-    var(--bg) 70%,
-    color-mix(in srgb, var(--bg) 0%, transparent)
-  );
   border-top: 1px solid var(--border);
 }
 
@@ -1138,6 +1131,19 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
+}
+
+.shareActions {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.shareActionBtn {
+  flex: 1 1 0;
+  min-width: var(--control-touch, 44px);
+  min-height: var(--control-touch, 44px);
+  padding-inline: var(--space-2);
 }
 
 .disclosure {
@@ -1807,6 +1813,33 @@
   background: var(--card);
 }
 
+.travelerCard {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+
+  .rowBody {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .entryActions {
+    flex-shrink: 0;
+    margin-block: -2px;
+    margin-inline-end: -4px;
+  }
+}
+
+.rowActionMenuIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--muted-fg);
+}
+
 .blockTitle {
   font-size: var(--text-sm);
   font-weight: 600;
@@ -1856,16 +1889,27 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--bg);
-  width: fit-content;
+  width: 100%;
+
+  @include m.md {
+    width: fit-content;
+  }
 }
 
 .segment {
   @include m.interactive-control;
 
+  flex: 1 1 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-1);
+  min-height: var(--control-touch, 44px);
+
+  @include m.md {
+    flex: 0 1 auto;
+    min-height: var(--control-sm);
+  }
   border: none;
   background: transparent;
   color: var(--muted-fg);
@@ -1875,11 +1919,26 @@
   padding: var(--space-1) var(--space-3);
   border-radius: calc(var(--radius) - 2px);
   cursor: pointer;
-  min-height: var(--control-sm);
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+}
+
+.segmentLabelShort {
+  display: inline;
+
+  @include m.md {
+    display: none;
+  }
+}
+
+.segmentLabelFull {
+  display: none;
+
+  @include m.md {
+    display: inline;
   }
 }
 
@@ -1952,6 +2011,11 @@
 }
 
 .mapStage {
+  --map-bottom-safe: calc(
+    var(--fab-size) + var(--fab-corner-offset) + var(--space-3) +
+      env(safe-area-inset-bottom, 0px)
+  );
+
   position: relative;
   flex: 1;
   min-height: 0;
@@ -1997,6 +2061,11 @@
   // Tight lift — popover shadow is too soft/large and merges into a slab
   // behind adjacent chips.
   --map-control-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 2px 6px rgba(0, 0, 0, 0.16);
+  // Bottom chrome reserved for FABs + place card / route bar.
+  --map-bottom-safe: calc(
+    var(--fab-size) + var(--fab-corner-offset) + var(--space-3) +
+      env(safe-area-inset-bottom, 0px)
+  );
 
   position: absolute;
   z-index: 4;
@@ -2008,25 +2077,27 @@
   align-items: flex-start;
   gap: var(--space-2);
   // Never pin to the bottom — keep pan/zoom/POI clicks on the map.
-  max-height: min(48vh, 22rem);
+  max-height: min(35vh, 18rem);
   padding: 0;
   border: none;
   background: transparent;
   overflow: visible;
   pointer-events: none;
 
+  @include m.md {
+    max-height: min(48vh, 22rem);
+  }
 }
 
 .mapExploreTop {
   display: flex;
   flex: 0 0 auto;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-  // SM: span the dock so search can grow beside locate + category.
   width: 100%;
   max-width: 100%;
-  height: var(--map-control-h);
+  min-height: var(--map-control-h);
   overflow: visible;
   pointer-events: none;
 
@@ -2035,14 +2106,15 @@
   }
 
   @include m.md {
+    flex-wrap: nowrap;
     width: auto;
+    height: var(--map-control-h);
   }
 }
 
 .mapExploreSearch {
-  // SM: fill leftover width in the same row as locate + category.
-  flex: 1 1 auto;
-  width: auto;
+  flex: 1 1 100%;
+  width: 100%;
   min-width: 0;
   height: var(--map-control-h);
   position: relative;
@@ -2051,8 +2123,7 @@
 
   @include m.md {
     flex: 0 1 auto;
-    // Cap width once there is room; leave space for side buttons.
-    width: min(22rem, calc(100vw - 13rem));
+    width: min(22rem, calc(100dvw - 13rem));
     min-width: 9.5rem;
   }
 }
@@ -2286,7 +2357,7 @@
   grid-template-rows: auto minmax(0, 1fr);
   gap: var(--space-2);
   width: min(22.5rem, 100%);
-  max-height: min(36vh, 16rem);
+  max-height: min(28vh, 12rem);
   min-height: 0;
   padding: var(--space-2);
   border: 1px solid var(--border);
@@ -2295,6 +2366,10 @@
   box-shadow: var(--map-control-shadow);
   overflow: hidden;
   pointer-events: auto;
+
+  @include m.md {
+    max-height: min(36vh, 16rem);
+  }
 }
 
 .mapExploreStatus,
@@ -2342,11 +2417,11 @@
   z-index: 6;
   left: var(--space-3);
   right: var(--space-3);
-  bottom: calc(var(--fab-size) + var(--fab-corner-offset) + var(--space-3));
+  bottom: var(--map-bottom-safe, calc(var(--fab-size) + var(--fab-corner-offset) + var(--space-3)));
   display: grid;
   gap: var(--space-2);
   width: min(26rem, calc(100% - 2 * var(--space-3)));
-  max-height: min(42vh, 18rem);
+  max-height: min(36vh, 16rem);
   padding: var(--space-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -2359,6 +2434,7 @@
     left: var(--space-3);
     right: auto;
     bottom: var(--space-3);
+    max-height: min(42vh, 18rem);
   }
 }
 
@@ -2733,7 +2809,7 @@
   z-index: 5;
   left: var(--space-3);
   right: var(--space-3);
-  bottom: calc(var(--fab-size) + var(--fab-corner-offset) + var(--space-3));
+  bottom: var(--map-bottom-safe, calc(var(--fab-size) + var(--fab-corner-offset) + var(--space-3)));
   display: grid;
   gap: 0.4rem;
   max-width: 22rem;
@@ -2749,6 +2825,11 @@
     right: auto;
     width: min(22rem, calc(100% - 2 * var(--space-3)));
   }
+}
+
+// When place card is open, hide route bar so only one bottom inspect shows.
+.mapStage:has(.mapPlaceCard) .mapRouteBar {
+  display: none;
 }
 
 .mapRouteBarTop {
@@ -2890,7 +2971,7 @@
   position: absolute;
   z-index: 5;
   left: 50%;
-  bottom: calc(var(--fab-size) + var(--fab-corner-offset) + var(--space-3));
+  bottom: var(--map-bottom-safe, calc(var(--fab-size) + var(--fab-corner-offset) + var(--space-3)));
   transform: translateX(-50%);
   margin: 0;
   padding: var(--space-1) var(--space-2);
@@ -2904,6 +2985,11 @@
   @include m.md {
     bottom: var(--space-3);
   }
+}
+
+.mapStage:has(.mapPlaceCard) .mapFloatHintBanner,
+.mapStage:has(.mapPlaceCard) .mapFloatErrorBanner {
+  display: none;
 }
 
 .mapFloatErrorBanner {

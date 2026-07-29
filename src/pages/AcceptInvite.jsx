@@ -36,6 +36,7 @@ export function AcceptInvite() {
   if (!token) {
     return (
       <div className={styles.page}>
+        <PageHeader title="Join journey" />
         <div className={cx('is-fluid-width', styles.body)}>
           <div className={styles.empty}>
             <p className={styles.error}>Missing invite token.</p>
@@ -48,14 +49,27 @@ export function AcceptInvite() {
 
   if (!session && showSignIn) {
     return (
-      <SignInForm
-        contextMessage={
-          peek?.journeyTitle
-            ? `Sign in to join “${peek.journeyTitle}”.`
-            : 'Sign in to accept this invite.'
-        }
-        onBack={() => setShowSignIn(false)}
-      />
+      <div className={styles.page}>
+        <PageHeader
+          title="Join journey"
+          subtitle={peek?.journeyTitle}
+        />
+        <div className={cx('is-fluid-width', styles.body)}>
+          {peek?.journeyTitle && (
+            <div className={styles.block}>
+              <span className={styles.rowTitle}>{peek.journeyTitle}</span>
+            </div>
+          )}
+          <SignInForm
+            contextMessage={
+              peek?.journeyTitle
+                ? `Sign in to join “${peek.journeyTitle}”.`
+                : 'Sign in to accept this invite.'
+            }
+            onBack={() => setShowSignIn(false)}
+          />
+        </div>
+      </div>
     )
   }
 
@@ -72,9 +86,22 @@ export function AcceptInvite() {
       />
       <div className={cx('is-fluid-width', styles.body)}>
         {isLoading && <LoadingState>Checking invite…</LoadingState>}
-        {(peekError || (!isLoading && !peek)) && (
+        {!isLoading && !peek && !peekError && (
           <div className={styles.empty}>
             <p className={styles.error}>Invite not found or no longer valid.</p>
+            <Button onClick={goHome}>Go home</Button>
+          </div>
+        )}
+        {peekError && (
+          <div className={styles.empty}>
+            <p className={styles.error} role="alert">
+              Could not check this invite. ({peekError.message})
+            </p>
+            {!session && (
+              <Button onClick={() => setShowSignIn(true)} fullWidth>
+                Sign in to join
+              </Button>
+            )}
             <Button onClick={goHome}>Go home</Button>
           </div>
         )}

@@ -18,8 +18,9 @@
 14. **`patches/expense_journey_optional.sql`** — journey-level expenses (0–N activities): `journey_id` on expenses, nullable `entry_id`, journey-scoped receipts, updated upsert signature with `p_journey_id`.
 15. **`patches/attachment_links.sql`** — attachment ↔ activity / expense M:N (`viaggio_attachment_entries`, `viaggio_attachment_expenses`), required `journey_id`, journey-root storage paths, `set_attachment_links`.
 16. **`patches/expense_relink_entry.sql`** — older fix to allow changing an expense’s primary `entry_id` (superseded by #13/#14).
+17. **`patches/peek_invite_anon.sql`** — let logged-out guests call `peek_invite` (title/role/expiry only); `accept_invite` stays authenticated.
 
-Fresh `viaggio_schema.sql` already includes the traveler people model, place ideas, todos (+ assignees), attachment links, expense entry links, and journey-level expenses.
+Fresh `viaggio_schema.sql` already includes the traveler people model, place ideas, todos (+ assignees), attachment links, expense entry links, journey-level expenses, and anon-readable `peek_invite`.
 
 Portable import/export format: **`docs/journey-snapshot.md`** (sample: `src/samples/journey-snapshot.sample.json`).
 

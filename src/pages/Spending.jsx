@@ -5,14 +5,8 @@ import {
   ArrowLeftRight,
   BadgeInfo,
   Grid2x2Check,
-  ListChecks,
-  ListMusic,
-  MapPin,
-  Paperclip,
   Plus,
-  Settings,
   Shapes,
-  Users,
 } from 'lucide-react'
 import { AnchoredPopover } from '@/molecules/AnchoredPopover'
 import { AiPlannerButton } from '@/molecules/AiPlannerButton'
@@ -22,6 +16,7 @@ import { LoadingState } from '@/molecules/LoadingState'
 import { Modal } from '@/patterns/Modal'
 import { PageHeader } from '@/patterns/PageHeader'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
+import { journeyAllShortcuts } from '@/lib/journeyNav'
 import { activityIcon } from '@/lib/activityIcons'
 import { getActivity, guessDeviceCurrency } from '@/lib/catalog'
 import {
@@ -291,19 +286,14 @@ function FxRatesBody({
 }
 
 export function Spending() {
+  const nav = useNavigation()
   const {
     params,
     goBack,
     previousRouteLabel,
     goExpenseEdit,
     goJourney,
-    goMembers,
-    goPlaylist,
-    goTodos,
-    goMap,
-    goJourneySettings,
-    goAttachments,
-  } = useNavigation()
+  } = nav
   const journeyId = params.journeyId
   const { user } = useAuth()
   const { displayLocale, defaultCurrency } = useDisplayPrefs()
@@ -1027,44 +1017,7 @@ export function Spending() {
           <PageShortcuts
             current="spending"
             className={styles.iconBtn}
-            shortcuts={[
-              {
-                id: 'members',
-                label: 'Travelers',
-                icon: Users,
-                pick: () => () => goMembers(journeyId),
-              },
-              {
-                id: 'attachments',
-                label: 'Attachments',
-                icon: Paperclip,
-                pick: () => () => goAttachments(journeyId),
-              },
-              {
-                id: 'playlist',
-                label: 'Playlist',
-                icon: ListMusic,
-                pick: () => () => goPlaylist(journeyId),
-              },
-              {
-                id: 'todos',
-                label: 'To-dos',
-                icon: ListChecks,
-                pick: () => () => goTodos(journeyId),
-              },
-              {
-                id: 'map',
-                label: 'Map',
-                icon: MapPin,
-                pick: () => () => goMap(journeyId),
-              },
-              {
-                id: 'journey-settings',
-                label: 'Settings',
-                icon: Settings,
-                pick: () => () => goJourneySettings(journeyId),
-              },
-            ]}
+            shortcuts={journeyAllShortcuts(journeyId, nav)}
           />
         }
       />
@@ -1084,7 +1037,8 @@ export function Spending() {
               aria-pressed={view === 'mine'}
               onClick={() => setView('mine')}
             >
-              My expenses
+              <span className={styles.segmentLabelFull}>My expenses</span>
+              <span className={styles.segmentLabelShort}>Mine</span>
             </button>
             <button
               type="button"
@@ -1095,7 +1049,8 @@ export function Spending() {
               aria-pressed={view === 'journey'}
               onClick={() => setView('journey')}
             >
-              Journey
+              <span className={styles.segmentLabelFull}>Journey</span>
+              <span className={styles.segmentLabelShort}>All</span>
             </button>
           </div>
         )}

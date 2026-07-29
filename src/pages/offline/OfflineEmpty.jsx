@@ -11,7 +11,7 @@ export function OfflineEmpty() {
       <div className={cx('is-fluid-width', styles.body)}>
         <div className={styles.empty}>
           <WifiOff size={28} aria-hidden="true" />
-          <p className={styles.error}>You’re offline</p>
+          <p className={styles.rowTitle}>You’re offline</p>
           <p className={styles.hint}>
             Connect once and open a journey, then use{' '}
             <strong>Available offline</strong> in journey settings before your

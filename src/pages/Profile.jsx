@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { ArrowLeft, Check, Loader2, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, Check, TriangleAlert } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { LoadingState } from '@/molecules/LoadingState'
+import { FormActionsFloat } from '@/patterns/FormActionsFloat'
 import { PageHeader } from '@/patterns/PageHeader'
 import { useAuth } from '@/providers/AuthProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
@@ -126,21 +127,19 @@ export function Profile() {
               <TriangleAlert size={12} aria-hidden="true" /> {errorMessage}
             </p>
           )}
-
-          <div className={styles.actionsSticky}>
-            <Button type="submit" disabled={isLoading || isSaving || !dirty}>
-              {isSaving ? (
-                <>
-                  <Loader2 size={14} aria-hidden="true" />
-                  Saving
-                </>
-              ) : (
-                'Save changes'
-              )}
-            </Button>
-          </div>
         </form>
       </div>
+
+      <FormActionsFloat
+        onSave={() => {
+          if (!user || isLoading || isSaving || !dirty) return
+          saveProfile.mutate(displayName)
+        }}
+        saving={isSaving}
+        canSave={!isLoading && !isSaving && dirty}
+        canDelete={false}
+        saveLabel="Save changes"
+      />
     </div>
   )
 }

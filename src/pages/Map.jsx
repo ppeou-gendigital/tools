@@ -25,14 +25,11 @@ import {
   Grip,
   Hospital,
   Landmark,
-  ListChecks,
-  ListMusic,
   LocateFixed,
   MapPin,
   Pill,
   Plus,
   RefreshCw,
-  Settings,
   Shield,
   ShoppingBag,
   ShoppingCart,
@@ -42,11 +39,9 @@ import {
   TrainFront,
   Trash2,
   Utensils,
-  Users,
-  CircleDollarSign,
-  Paperclip,
   X,
 } from 'lucide-react'
+import { setFabBottomRightReserved } from '@tools/behavioral'
 import { FloatingIdeasButton } from '@/blocks/FloatingIdeasButton'
 import { AnchoredPopover } from '@/molecules/AnchoredPopover'
 import { AiPlannerButton } from '@/molecules/AiPlannerButton'
@@ -55,8 +50,9 @@ import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
 import { LoadingState } from '@/molecules/LoadingState'
 import { ConfirmDialog } from '@/patterns/ConfirmDialog'
-import { PageHeader } from '@/patterns/PageHeader'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
+import { journeyAllShortcuts } from '@/lib/journeyNav'
+import { PageHeader } from '@/patterns/PageHeader'
 import { GOOGLE_MAPS_API_KEY } from '@/env'
 import { isAiPlanningEnabled } from '@/lib/ai/enabled'
 import { cx } from '@/lib/cx'
@@ -1758,53 +1754,6 @@ function PlacesExplorePanel({
   )
 }
 
-function journeyShortcuts(journeyId, go) {
-  return [
-    {
-      id: 'members',
-      label: 'Travelers',
-      icon: Users,
-      pick: () => () => go.goMembers(journeyId),
-    },
-    {
-      id: 'spending',
-      label: 'Spending',
-      icon: CircleDollarSign,
-      pick: () => () => go.goSpending(journeyId),
-    },
-    {
-      id: 'attachments',
-      label: 'Attachments',
-      icon: Paperclip,
-      pick: () => () => go.goAttachments(journeyId),
-    },
-    {
-      id: 'playlist',
-      label: 'Playlist',
-      icon: ListMusic,
-      pick: () => () => go.goPlaylist(journeyId),
-    },
-    {
-      id: 'todos',
-      label: 'To-dos',
-      icon: ListChecks,
-      pick: () => () => go.goTodos(journeyId),
-    },
-    {
-      id: 'map',
-      label: 'Map',
-      icon: MapPin,
-      pick: () => () => go.goMap(journeyId),
-    },
-    {
-      id: 'journey-settings',
-      label: 'Settings',
-      icon: Settings,
-      pick: () => () => go.goJourneySettings(journeyId),
-    },
-  ]
-}
-
 export function Map() {
   const nav = useNavigation()
   const { params, goBack, previousRouteLabel, goEntryEdit } = nav
@@ -1846,6 +1795,12 @@ export function Map() {
   /** Ignore the map click that follows a marker click (avoids instant dismiss). */
   const ignoreEmptyMapClickRef = useRef(false)
   const aiEnabled = isAiPlanningEnabled()
+
+  // Keep Google Maps zoom / controls clear of FABs in the BR cell.
+  useEffect(() => {
+    setFabBottomRightReserved(true)
+    return () => setFabBottomRightReserved(false)
+  }, [])
 
   useEffect(() => {
     const saved = readMapViewport(journeyId)
@@ -2084,7 +2039,6 @@ export function Map() {
   }
 
   const hasMapsKey = Boolean(GOOGLE_MAPS_API_KEY)
-  const shortcuts = journeyShortcuts(journeyId, nav)
   const ready = !isLoading && !membershipLoading && !loadError
 
   return (
@@ -2136,7 +2090,7 @@ export function Map() {
           <PageShortcuts
             current="map"
             className={styles.iconBtn}
-            shortcuts={shortcuts}
+            shortcuts={journeyAllShortcuts(journeyId, nav)}
           />
         }
       />

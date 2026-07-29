@@ -396,15 +396,60 @@ export function AiPlannerOverlay({
 
   useEffect(() => {
     if (!open) return
+    const previouslyFocused =
+      typeof document !== 'undefined' ? document.activeElement : null
+    const panel = panelRef.current
+    if (panel) {
+      const first = panel.querySelector(
+        'input, textarea, select, button, [tabindex]:not([tabindex="-1"])',
+      )
+      if (first instanceof HTMLElement) first.focus()
+      else panel.focus()
+    }
+    return () => {
+      if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus()
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
     const onKey = (e) => {
       if (e.key === 'Escape') {
+        // Nested Import / Confirm dialogs own Escape first.
+        if (importOpen || confirmReplace || plusOpen) return
         e.stopPropagation()
+        e.preventDefault()
         onClose?.()
+        return
+      }
+      if (e.key !== 'Tab') return
+      if (importOpen || confirmReplace) return
+      const panel = panelRef.current
+      if (!panel) return
+      const focusables = panel.querySelectorAll(
+        'input:not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+      )
+      if (focusables.length === 0) {
+        e.preventDefault()
+        panel.focus()
+        return
+      }
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = document.activeElement
+      if (e.shiftKey) {
+        if (active === first || !panel.contains(active)) {
+          e.preventDefault()
+          last.focus()
+        }
+      } else if (active === last || !panel.contains(active)) {
+        e.preventDefault()
+        first.focus()
       }
     }
     document.addEventListener('keydown', onKey, true)
     return () => document.removeEventListener('keydown', onKey, true)
-  }, [open, onClose])
+  }, [open, onClose, importOpen, confirmReplace, plusOpen])
 
   useEffect(() => {
     if (!open) return

@@ -13,17 +13,12 @@ import {
   EllipsisVertical,
   ExternalLink,
   Grid2x2Check,
-  ListChecks,
-  ListMusic,
   Loader2,
   Map as MapIcon,
-  MapPin,
   Navigation,
-  Paperclip,
   Plane,
   Route,
   Plus,
-  Settings,
   Shapes,
   Sparkles,
   Sun,
@@ -37,6 +32,7 @@ import { LoadingState } from '@/molecules/LoadingState'
 import { Modal } from '@/patterns/Modal'
 import { PageHeader } from '@/patterns/PageHeader'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
+import { journeyAllShortcuts } from '@/lib/journeyNav'
 import { cx } from '@/lib/cx'
 import { activityIcon } from '@/lib/activityIcons'
 import {
@@ -419,21 +415,15 @@ function entryProvenance(entry, currentUserId, displayNames, displayLocale) {
 }
 
 export function Journey() {
+  const nav = useNavigation()
   const {
     params,
     goBack,
     previousRouteLabel,
     goEntryEdit,
     goExpenseEdit,
-    goAttachments,
-    goMembers,
-    goSpending,
-    goPlaylist,
-    goTodos,
-    goMap,
-    goJourneySettings,
     goAiPlanner,
-  } = useNavigation()
+  } = nav
   const journeyId = params.journeyId
   const aiEnabled = isAiPlanningEnabled()
   const { user } = useAuth()
@@ -708,50 +698,7 @@ export function Journey() {
           <PageShortcuts
             current="journey"
             className={styles.iconBtn}
-            shortcuts={[
-              {
-                id: 'members',
-                label: 'Travelers',
-                icon: Users,
-                pick: () => () => goMembers(journeyId),
-              },
-              {
-                id: 'spending',
-                label: 'Spending',
-                icon: CircleDollarSign,
-                pick: () => () => goSpending(journeyId),
-              },
-              {
-                id: 'attachments',
-                label: 'Attachments',
-                icon: Paperclip,
-                pick: () => () => goAttachments(journeyId),
-              },
-              {
-                id: 'playlist',
-                label: 'Playlist',
-                icon: ListMusic,
-                pick: () => () => goPlaylist(journeyId),
-              },
-              {
-                id: 'todos',
-                label: 'To-dos',
-                icon: ListChecks,
-                pick: () => () => goTodos(journeyId),
-              },
-              {
-                id: 'map',
-                label: 'Map',
-                icon: MapPin,
-                pick: () => () => goMap(journeyId),
-              },
-              {
-                id: 'journey-settings',
-                label: 'Settings',
-                icon: Settings,
-                pick: () => () => goJourneySettings(journeyId),
-              },
-            ]}
+            shortcuts={journeyAllShortcuts(journeyId, nav)}
           />
         }
       />

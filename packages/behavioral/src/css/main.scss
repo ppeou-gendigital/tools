@@ -43,12 +43,12 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 100;
+  z-index: var(--z-chrome, 100);
 }
 
 .bh-fab {
   position: absolute;
-  z-index: 1000;
+  z-index: var(--z-chrome, 100);
   pointer-events: auto;
   width: var(--fab-size);
   height: var(--fab-size);
@@ -76,7 +76,7 @@
 
   // AI FAB: rose accent (apps may override via --ai-fab-bg).
   &[data-fab='ai'] {
-    z-index: 1001;
+    z-index: calc(var(--z-chrome, 100) + 1);
     background: var(--ai-fab-bg, #f43f5e);
     &:hover:not([data-dragging='true']) {
       background: var(--ai-fab-bg-hover, #e11d48);
@@ -86,7 +86,7 @@
 
 .bh-menu-panel {
   position: absolute;
-  z-index: 999;
+  z-index: var(--z-chrome, 100);
   pointer-events: auto;
   min-width: 12rem;
   max-width: 15rem;
@@ -227,11 +227,21 @@
 .bh-page-header__trailing {
   grid-area: trailing;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-1);
   min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+
+  @include m.md {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
 }
 
 .bh-page-header__title-block {

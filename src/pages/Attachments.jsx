@@ -1,20 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  ArrowLeft,
-  CircleDollarSign,
-  ListChecks,
-  ListMusic,
-  MapPin,
-  Plus,
-  Settings,
-  Users,
-} from 'lucide-react'
+import { ArrowLeft, Plus } from 'lucide-react'
 import { AiPlannerButton } from '@/molecules/AiPlannerButton'
 import { AttachmentCard } from '@/molecules/AttachmentCard'
 import { Button } from '@/molecules/Button'
 import { LoadingState } from '@/molecules/LoadingState'
 import { PageHeader } from '@/patterns/PageHeader'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
+import { journeyAllShortcuts } from '@/lib/journeyNav'
 import {
   formatByteSize,
   listAttachmentsForJourney,
@@ -42,18 +34,13 @@ function attachmentMeta(att) {
 }
 
 export function Attachments() {
+  const nav = useNavigation()
   const {
     params,
     goBack,
     previousRouteLabel,
     goAttachmentEdit,
-    goMembers,
-    goSpending,
-    goPlaylist,
-    goTodos,
-    goMap,
-    goJourneySettings,
-  } = useNavigation()
+  } = nav
   const journeyId = params.journeyId
   const { user } = useAuth()
   const aiEnabled = isAiPlanningEnabled()
@@ -131,44 +118,7 @@ export function Attachments() {
           <PageShortcuts
             current="attachments"
             className={styles.iconBtn}
-            shortcuts={[
-              {
-                id: 'members',
-                label: 'Travelers',
-                icon: Users,
-                pick: () => () => goMembers(journeyId),
-              },
-              {
-                id: 'spending',
-                label: 'Spending',
-                icon: CircleDollarSign,
-                pick: () => () => goSpending(journeyId),
-              },
-              {
-                id: 'playlist',
-                label: 'Playlist',
-                icon: ListMusic,
-                pick: () => () => goPlaylist(journeyId),
-              },
-              {
-                id: 'todos',
-                label: 'To-dos',
-                icon: ListChecks,
-                pick: () => () => goTodos(journeyId),
-              },
-              {
-                id: 'map',
-                label: 'Map',
-                icon: MapPin,
-                pick: () => () => goMap(journeyId),
-              },
-              {
-                id: 'journey-settings',
-                label: 'Settings',
-                icon: Settings,
-                pick: () => () => goJourneySettings(journeyId),
-              },
-            ]}
+            shortcuts={journeyAllShortcuts(journeyId, nav)}
           />
         }
       />
