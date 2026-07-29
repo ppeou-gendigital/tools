@@ -23,9 +23,24 @@
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
-.ui-btn--sm { height: 32px; padding: 0 var(--space-3); font-size: var(--text-xs); }
+.ui-btn--sm {
+  height: 32px;
+  min-height: var(--control-touch, 44px);
+  padding: 0 var(--space-3);
+  font-size: var(--text-xs);
+}
 .ui-btn--lg { height: 40px; padding: 0 var(--space-5); font-size: var(--text-base); }
-.ui-btn--icon { width: 36px; height: 36px; padding: 0; }
+.ui-btn--icon {
+  width: var(--control-touch, 44px);
+  height: var(--control-touch, 44px);
+  min-width: var(--control-touch, 44px);
+  min-height: var(--control-touch, 44px);
+  padding: 0;
+}
+// Icon-only ghost sm (PageHeader toolbars): expand hit area without growing visual chrome.
+.ui-btn--sm.ui-btn--ghost:not(.ui-btn--full) {
+  min-width: var(--control-touch, 44px);
+}
 .ui-btn--secondary { background: var(--secondary); color: var(--secondary-fg); border-color: var(--border); }
 .ui-btn--outline {
   background: transparent; color: var(--fg); border-color: var(--border);

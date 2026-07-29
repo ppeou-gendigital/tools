@@ -7,17 +7,21 @@ import { PrefsSync } from '@/providers/PrefsSync'
 import { ThemeProvider } from '@/providers/ThemeProvider'
 import { AppShell } from '@/templates/AppShell'
 import { AuthGate } from '@/blocks/AuthGate'
+import { AcceptInvite } from '@/pages/AcceptInvite'
 import { Home } from '@/pages/Home'
 import { Profile } from '@/pages/Profile'
 import { DeckDemo } from '@/pages/DeckDemo'
 import { RichTextDemo } from '@/pages/RichTextDemo'
 import { Settings } from '@/pages/Settings'
+import { Workspace } from '@/pages/Workspace'
 import { APP_VERSION } from '@/env'
 import { queryClient } from '@/lib/queryClient'
 import { queryPersister } from '@/lib/queryPersister'
 
 function Router() {
   const { route } = useNavigation()
+  if (route === 'accept-invite') return <AcceptInvite />
+  if (route === 'workspace') return <Workspace />
   if (route === 'profile') return <Profile />
   if (route === 'deck-demo') return <DeckDemo />
   if (route === 'rich-text-demo') return <RichTextDemo />

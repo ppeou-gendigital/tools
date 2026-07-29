@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   CircleUserRound,
   Clock,
@@ -7,9 +8,13 @@ import {
   LayoutList,
   LayoutTemplate,
   Mail,
+  Plus,
+  Users,
 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
+import { Input } from '@/molecules/Input'
 import { cx } from '@/lib/cx'
+import { createWorkspace, listWorkspaces } from '@/lib/invitesApi'
 import { PageHeader } from '@/patterns/PageHeader'
 import { PageShortcuts } from '@/patterns/PageShortcuts'
 import { useAuth } from '@/providers/AuthProvider'
@@ -39,7 +44,16 @@ function formatDate(iso) {
 export function Home() {
   const { user } = useAuth()
   const nav = useNavigation()
+  const qc = useQueryClient()
   const [layout, setLayout] = useState(readHomeLayout)
+  const [newTitle, setNewTitle] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState('')
+
+  const { data: workspaces = [], isLoading: workspacesLoading } = useQuery({
+    queryKey: ['toolname', 'workspaces'],
+    queryFn: listWorkspaces,
+  })
 
   function changeLayout(next) {
     const value = next === 'tiles' ? 'tiles' : 'list'
@@ -48,6 +62,27 @@ export function Home() {
       localStorage.setItem(HOME_LAYOUT_KEY, value)
     } catch {
       // ignore
+    }
+  }
+
+  async function onCreateWorkspace(e) {
+    e.preventDefault()
+    const title = newTitle.trim()
+    if (!title || creating) return
+    setCreating(true)
+    setCreateError('')
+    try {
+      const ws = await createWorkspace(title)
+      setNewTitle('')
+      await qc.invalidateQueries({ queryKey: ['toolname', 'workspaces'] })
+      nav.goWorkspace(ws.id)
+    } catch (err) {
+      setCreateError(
+        err?.message ??
+          'Could not create workspace. Run supabase/template_invites.sql first.',
+      )
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -143,6 +178,61 @@ export function Home() {
             </div>
           </div>
         </div>
+
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Workspaces</h2>
+          <p className={styles.sectionHint}>
+            Demo invite flow: create a workspace, share a join link, guests
+            peek while logged out then sign in to accept.
+          </p>
+          <form className={styles.createRow} onSubmit={onCreateWorkspace}>
+            <Input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Workspace title"
+              aria-label="Workspace title"
+            />
+            <Button type="submit" disabled={creating || !newTitle.trim()}>
+              <Plus size={14} aria-hidden="true" />
+              {creating ? 'Creating…' : 'Create'}
+            </Button>
+          </form>
+          {createError && (
+            <p className={styles.createError} role="alert">
+              {createError}
+            </p>
+          )}
+          {workspacesLoading && (
+            <p className={styles.sectionHint}>Loading workspaces…</p>
+          )}
+          {!workspacesLoading && workspaces.length === 0 && (
+            <p className={styles.sectionHint}>No workspaces yet.</p>
+          )}
+          {workspaces.length > 0 && (
+            <ul className={itemsClass}>
+              {workspaces.map((ws) => (
+                <li
+                  key={ws.id}
+                  className={isTiles ? styles.tileItem : undefined}
+                >
+                  <button
+                    type="button"
+                    className={cx(styles.card, isTiles && styles.tileCard)}
+                    onClick={() => nav.goWorkspace(ws.id)}
+                  >
+                    <Users size={16} className={styles.cardIcon} aria-hidden="true" />
+                    <span className={styles.cardBody}>
+                      <span className={styles.cardTitle}>{ws.title}</span>
+                      <span className={styles.cardMeta}>
+                        Updated {formatDate(ws.updatedAt)}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Get started</h2>

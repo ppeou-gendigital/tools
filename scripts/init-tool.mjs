@@ -89,6 +89,14 @@ const TEXT_FILES = [
   'src/blocks/FloatingMenu.jsx',
   'src/patterns/MenuPanel.jsx',
   'supabase/template_attachments.sql',
+  'supabase/template_invites.sql',
+  'src/lib/invitesApi.js',
+  'src/lib/inviteShare.js',
+  'src/pages/AcceptInvite.jsx',
+  'src/pages/Workspace.jsx',
+  'src/pages/Home.jsx',
+  'src/providers/NavigationProvider.jsx',
+  'src/blocks/AuthGate.jsx',
   '.gitignore',
 ]
 

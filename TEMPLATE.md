@@ -65,6 +65,7 @@ Follow [README.md → Supabase setup](README.md#supabase-setup):
 - [ ] Run the `user_data` table + RLS SQL.
 - [ ] (Optional, E2EE tools) Run [`supabase/vault_meta.sql`](supabase/vault_meta.sql) for per-app salt/verifier storage. **Do not** put crypto meta in `user_data.data`.
 - [ ] (Optional) Rich text attachments: run [`supabase/template_attachments.sql`](supabase/template_attachments.sql) after init (renames `toolname_*` → your tool). Add an FK from `parent_id` to your domain table when you have one.
+- [ ] (Optional) Invites: run [`supabase/template_invites.sql`](supabase/template_invites.sql) after init (renames `toolname_*` → your tool). Demo workspaces + join links live on Home / Workspace / `/?invite=TOKEN`. Specialize tables/RPCs for your domain (journey, vault, …).
 - [ ] (Optional) Configure a Test OTP and set `VITE_DEV_AUTOLOGIN_EMAIL` / `_TOKEN` in `.env.local` for dev auto-login.
 
 ## 5. Add repo secrets

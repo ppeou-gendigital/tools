@@ -43,12 +43,12 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 100;
+  z-index: var(--z-chrome, 100);
 }
 
 .bh-fab {
   position: absolute;
-  z-index: 1000;
+  z-index: var(--z-chrome, 100);
   pointer-events: auto;
   width: var(--fab-size);
   height: var(--fab-size);
@@ -76,7 +76,7 @@
 
   // AI FAB: rose accent (apps may override via --ai-fab-bg).
   &[data-fab='ai'] {
-    z-index: 1001;
+    z-index: calc(var(--z-chrome, 100) + 1);
     background: var(--ai-fab-bg, #f43f5e);
     &:hover:not([data-dragging='true']) {
       background: var(--ai-fab-bg-hover, #e11d48);
@@ -86,7 +86,7 @@
 
 .bh-menu-panel {
   position: absolute;
-  z-index: 999;
+  z-index: var(--z-chrome, 100);
   pointer-events: auto;
   min-width: 12rem;
   max-width: 15rem;
@@ -180,22 +180,40 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+
+  // Desktop: nav + title share one row — border under the whole header.
+  @include m.md {
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+  }
 }
 
 .bh-page-header__row {
   display: grid;
   grid-template-columns: 1fr auto;
+  // Mobile: keep leading/trailing as a top-nav strip with a rule below.
   grid-template-areas:
     'leading trailing'
+    'rule rule'
     'title title';
   align-items: center;
   column-gap: var(--space-2);
   row-gap: var(--space-1);
   min-width: 0;
 
+  &::after {
+    content: '';
+    grid-area: rule;
+    border-bottom: 1px solid var(--border);
+  }
+
   @include m.md {
     grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas: 'leading title trailing';
+
+    &::after {
+      content: none;
+    }
   }
 }
 
@@ -209,10 +227,29 @@
 .bh-page-header__trailing {
   grid-area: trailing;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-1);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+
+  @include m.md {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
+
+.bh-page-header__title-block {
+  grid-area: title;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -229,12 +266,22 @@
   @include m.md { font-size: var(--text-xl); }
 }
 
+.bh-page-header__title-block .bh-page-header__title {
+  grid-area: unset;
+  flex: 1 1 auto;
+}
+
 .bh-page-header__subtitle {
   color: var(--muted-fg);
   font-size: var(--text-xs);
   margin: 0;
 
   @include m.md { font-size: var(--text-sm); }
+}
+
+.bh-page-header__title-block .bh-page-header__subtitle {
+  flex: 0 0 auto;
+  text-align: right;
 }
 
 .bh-shortcuts {

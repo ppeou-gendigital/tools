@@ -263,6 +263,19 @@ For end-to-end encryption, store salt / verifier / hint / idle in **`public.vaul
 
 Ciphertext stays in feature tables (`ciphertext` + `iv`). Full reference: [`tool/accesso`](../../tree/tool/accesso).
 
+### 4c. Invites (optional)
+
+Run [`supabase/template_invites.sql`](supabase/template_invites.sql) after init (renames `toolname_*` → your tool). Ships:
+
+| Piece | Role |
+|-------|------|
+| `toolname_workspaces` / `_members` / `_invites` | Demo shared resource + membership + tokens |
+| `toolname_peek_invite` | **anon + authenticated** — logged-out guests see title/role |
+| `toolname_create_invite` / `_accept_invite` / `_revoke_invite` | Owner create/revoke; accept requires sign-in |
+| Home / Workspace / AcceptInvite | Create workspace → copy join link → `/?invite=TOKEN` |
+
+Client: [`src/lib/invitesApi.js`](src/lib/invitesApi.js), [`src/lib/inviteShare.js`](src/lib/inviteShare.js). Specialize by renaming workspace → your domain (journey, vault, notebook) and extending `accept` side-effects. See Viaggio for seat-claim invites (`journey_person_id`).
+
 ### 5. Dev auto-login (optional)
 
 Skip the OTP UI during development. Uses Supabase's built-in **Test OTP** feature, so no fake accounts or mocked sessions — it's the real OTP flow against a whitelisted email that Supabase accepts a static code for.

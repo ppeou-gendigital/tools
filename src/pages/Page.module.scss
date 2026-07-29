@@ -1,0 +1,135 @@
+@use 'tokens/mixins' as m;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: var(--space-3) 0 var(--space-8);
+  gap: var(--space-2);
+
+  @include m.md {
+    padding: var(--space-4) 0 var(--space-10);
+    gap: var(--space-3);
+  }
+}
+
+.body {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+
+  @include m.md {
+    gap: var(--space-4);
+  }
+}
+
+.empty {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  padding: var(--space-4);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+}
+
+.block {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+}
+
+.rowTitle {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.rowMeta {
+  font-size: var(--text-sm);
+  color: var(--muted-fg);
+}
+
+.error {
+  color: var(--danger, #ef4444);
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.hint {
+  font-size: var(--text-sm);
+  color: var(--muted-fg);
+  margin: 0;
+}
+
+.toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.iconBtn {
+  color: var(--muted-fg);
+  flex-shrink: 0;
+
+  &:hover {
+    color: var(--fg);
+  }
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  color: inherit;
+
+  &:hover {
+    border-color: var(--fg);
+  }
+}
+
+.inviteActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.select {
+  width: 100%;
+  min-height: 2.25rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}

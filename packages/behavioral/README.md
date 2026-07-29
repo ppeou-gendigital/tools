@@ -7,14 +7,24 @@ Config/slot interaction shells: AppShell, FloatingMenu, MenuPanel, nav, auth gat
 One form for every tool: **email → 6-digit code → session**. No Sign in / Sign up tabs. New users are created implicitly (`shouldCreateUser: true`).
 
 ```jsx
-<SignInForm appName="Viaggio" logoIcon={PlaneTakeoff} />
-// Invite / pre-auth context:
+<SignInForm appName="TOOLNAME" logoIcon={Wrench} />
+// Invite / pre-auth context (see supabase/template_invites.sql + AcceptInvite):
 <SignInForm
-  appName="Viaggio"
-  logoIcon={PlaneTakeoff}
-  contextMessage="Sign in to join the journey."
+  appName="TOOLNAME"
+  logoIcon={Wrench}
+  contextMessage="Sign in to join the workspace."
   onBack={() => goHome()}
 />
+```
+
+Wire `AuthGate` with `renderPreAuth` so `accept-invite` renders while logged out:
+
+```jsx
+<AuthGate
+  route={route}
+  renderPreAuth={(r) => (r === 'accept-invite' ? <AcceptInvite /> : null)}
+  signIn={<SignInForm … />}
+>
 ```
 
 ### Supabase email templates (required)
