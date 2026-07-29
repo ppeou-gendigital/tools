@@ -9,7 +9,7 @@ import { cx } from '@/lib/cx'
 import styles from './ReceiptField.module.scss'
 
 /**
- * Receipt picker for expense edit:
+ * File picker (receipts or general attachments):
  * - Take photo (capture=environment on supporting devices)
  * - Upload image / PDF
  * Shows pending local files + remote attachments.
@@ -20,9 +20,13 @@ export function ReceiptField({
   onRemovePending,
   attachments = [],
   onRemoveAttachment,
+  onOpenAttachment,
   readOnly = false,
   busy = false,
   className,
+  label = 'Receipts',
+  emptyHint = 'Add a photo or PDF of the receipt.',
+  emptyReadOnlyHint = 'No receipts attached.',
 }) {
   const labelId = useId()
   const uploadRef = useRef(null)
@@ -53,7 +57,7 @@ export function ReceiptField({
     <div className={cx(styles.wrap, className)}>
       <div className={styles.header}>
         <p id={labelId} className={styles.label}>
-          Receipts
+          {label}
         </p>
         {!readOnly && (
           <div className={styles.actions}>
@@ -111,9 +115,7 @@ export function ReceiptField({
 
       {empty ? (
         <p className={styles.hint}>
-          {readOnly
-            ? 'No receipts attached.'
-            : 'Add a photo or PDF of the receipt.'}
+          {readOnly ? emptyReadOnlyHint : emptyHint}
         </p>
       ) : (
         <ul className={styles.list} aria-labelledby={labelId}>
@@ -126,7 +128,17 @@ export function ReceiptField({
                   <FileText size={14} />
                 )}
               </span>
-              <span className={styles.name}>{att.fileName}</span>
+              {onOpenAttachment ? (
+                <button
+                  type="button"
+                  className={styles.nameBtn}
+                  onClick={() => onOpenAttachment(att)}
+                >
+                  {att.fileName}
+                </button>
+              ) : (
+                <span className={styles.name}>{att.fileName}</span>
+              )}
               <span className={styles.meta}>
                 {formatByteSize(att.byteSize)}
               </span>

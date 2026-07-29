@@ -48,11 +48,24 @@ function mapEntry(row) {
   }
 }
 
-function mapExpense(row) {
+function mapExpense(row, entryIds = null) {
   if (!row) return null
+  const primary = row.entry_id || null
+  const links =
+    Array.isArray(entryIds) && entryIds.length
+      ? [...new Set(entryIds.map(String).filter(Boolean))]
+      : primary
+        ? [primary]
+        : []
+  // Primary first when set
+  const ordered = primary
+    ? [primary, ...links.filter((id) => id !== primary)]
+    : links
   return {
     id: row.id,
-    entryId: row.entry_id,
+    journeyId: row.journey_id || null,
+    entryId: primary,
+    entryIds: ordered,
     title: row.title,
     amountCents: Number(row.amount_cents) || 0,
     currency: row.currency,
@@ -63,6 +76,61 @@ function mapExpense(row) {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
+}
+
+/** True when PostgREST can’t see viaggio_expense_entries (patch not applied). */
+function isMissingExpenseEntriesRelation(error) {
+  if (!error) return false
+  const code = String(error.code || '')
+  const msg = String(error.message || error.details || '').toLowerCase()
+  return (
+    code === 'PGRST205' ||
+    code === '42P01' ||
+    (msg.includes('viaggio_expense_entries') &&
+      (msg.includes('does not exist') ||
+        msg.includes('could not find') ||
+        msg.includes('schema cache')))
+  )
+}
+
+let warnedMissingExpenseEntries = false
+function warnMissingExpenseEntriesOnce() {
+  if (warnedMissingExpenseEntries) return
+  warnedMissingExpenseEntries = true
+  console.warn(
+    '[viaggio] viaggio_expense_entries missing — run supabase/patches/expense_entry_links.sql in the SQL Editor. Falling back to primary entry_id only.',
+  )
+}
+
+/** Batch-load linked entry ids for expenses. Returns Map<expenseId, entryId[]>. */
+export async function listEntryIdsForExpenses(expenseIds) {
+  const ids = [...new Set((expenseIds || []).filter(Boolean))]
+  const map = new Map()
+  if (!ids.length) return map
+  const { data, error } = await supabase
+    .from('viaggio_expense_entries')
+    .select('expense_id, entry_id')
+    .in('expense_id', ids)
+  if (error) {
+    if (isMissingExpenseEntriesRelation(error)) {
+      warnMissingExpenseEntriesOnce()
+      return map
+    }
+    throw error
+  }
+  for (const row of data ?? []) {
+    const list = map.get(row.expense_id) || []
+    list.push(row.entry_id)
+    map.set(row.expense_id, list)
+  }
+  return map
+}
+
+async function mapExpensesWithLinks(rows) {
+  const list = (rows ?? []).filter(Boolean)
+  if (!list.length) return []
+  const linkMap = await listEntryIdsForExpenses(list.map((r) => r.id))
+  return list.map((row) => mapExpense(row, linkMap.get(row.id) || null))
 }
 
 function mapMember(row) {
@@ -118,26 +186,11 @@ function mapInvite(row) {
   }
 }
 
-function mapPerson(row) {
-  if (!row) return null
-  return {
-    id: row.id,
-    ownerId: row.owner_id,
-    displayName: row.display_name,
-    email: row.email ?? null,
-    phoneE164: row.phone_e164 ?? null,
-    linkedUserId: row.linked_user_id ?? null,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }
-}
-
 function mapJourneyPerson(row) {
   if (!row) return null
   return {
     id: row.id,
     journeyId: row.journey_id,
-    personId: row.person_id ?? null,
     displayName: row.display_name,
     email: row.email ?? null,
     phoneE164: row.phone_e164 ?? null,
@@ -455,16 +508,60 @@ export async function deleteEntry(entryId) {
 }
 
 export async function listExpensesForEntry(entryId) {
-  const { data, error } = await supabase
+  if (!entryId) return []
+  // Prefer junction links; also include primary-only rows not yet backfilled.
+  let linkedIds = []
+  const { data: links, error: linkErr } = await supabase
+    .from('viaggio_expense_entries')
+    .select('expense_id')
+    .eq('entry_id', entryId)
+  if (linkErr) {
+    if (!isMissingExpenseEntriesRelation(linkErr)) throw linkErr
+    warnMissingExpenseEntriesOnce()
+  } else {
+    linkedIds = (links ?? []).map((r) => r.expense_id)
+  }
+
+  const { data: primaryRows, error: pErr } = await supabase
     .from('viaggio_expenses')
     .select('*')
     .eq('entry_id', entryId)
     .order('created_at', { ascending: true })
-  if (error) throw error
-  return (data ?? []).map(mapExpense)
+  if (pErr) throw pErr
+
+  let linkedRows = []
+  if (linkedIds.length) {
+    const { data, error } = await supabase
+      .from('viaggio_expenses')
+      .select('*')
+      .in('id', linkedIds)
+      .order('created_at', { ascending: true })
+    if (error) throw error
+    linkedRows = data ?? []
+  }
+
+  const byId = new Map()
+  for (const row of [...(primaryRows ?? []), ...linkedRows]) {
+    byId.set(row.id, row)
+  }
+  return mapExpensesWithLinks([...byId.values()].sort((a, b) =>
+    String(a.created_at).localeCompare(String(b.created_at)),
+  ))
 }
 
 export async function listExpensesForJourney(journeyId) {
+  if (!journeyId) return []
+  // Prefer journey_id (supports zero-activity / journey-level expenses).
+  const { data, error } = await supabase
+    .from('viaggio_expenses')
+    .select('*')
+    .eq('journey_id', journeyId)
+    .order('created_at', { ascending: true })
+  if (!error) return mapExpensesWithLinks(data ?? [])
+
+  // Legacy fallback: no journey_id column yet.
+  const msg = String(error.message || '').toLowerCase()
+  if (!msg.includes('journey_id')) throw error
   const { data: entries, error: e1 } = await supabase
     .from('viaggio_entries')
     .select('id')
@@ -472,14 +569,13 @@ export async function listExpensesForJourney(journeyId) {
   if (e1) throw e1
   const ids = (entries ?? []).map((e) => e.id)
   if (!ids.length) return []
-
-  const { data, error } = await supabase
+  const { data: legacy, error: e2 } = await supabase
     .from('viaggio_expenses')
     .select('*')
     .in('entry_id', ids)
     .order('created_at', { ascending: true })
-  if (error) throw error
-  return (data ?? []).map(mapExpense)
+  if (e2) throw e2
+  return mapExpensesWithLinks(legacy ?? [])
 }
 
 export async function getExpense(expenseId) {
@@ -489,7 +585,15 @@ export async function getExpense(expenseId) {
     .eq('id', expenseId)
     .maybeSingle()
   if (error) throw error
-  return mapExpense(data)
+  if (!data) return null
+  const linkMap = await listEntryIdsForExpenses([data.id])
+  return mapExpense(data, linkMap.get(data.id) || null)
+}
+
+export async function listEntryIdsForExpense(expenseId) {
+  if (!expenseId) return []
+  const map = await listEntryIdsForExpenses([expenseId])
+  return map.get(expenseId) || []
 }
 
 export async function listSplits(expenseId) {
@@ -506,9 +610,36 @@ export async function listSplits(expenseId) {
 }
 
 export async function upsertExpenseWithSplits(input) {
-  const { data, error } = await supabase.rpc('upsert_expense_with_splits', {
+  const entryIdsRaw = Array.isArray(input.entryIds)
+    ? input.entryIds.filter(Boolean)
+    : input.entryId
+      ? [input.entryId]
+      : []
+  const primary =
+    entryIdsRaw.length === 0
+      ? null
+      : input.entryId && entryIdsRaw.includes(input.entryId)
+        ? input.entryId
+        : entryIdsRaw[0]
+  const entryIds = primary
+    ? [primary, ...entryIdsRaw.filter((id) => id !== primary)]
+    : []
+
+  let journeyId = input.journeyId || null
+  if (!journeyId && primary) {
+    const entry = await getEntry(primary)
+    journeyId = entry?.journeyId || null
+  }
+  if (!journeyId && input.id) {
+    const existing = await getExpense(input.id)
+    journeyId = existing?.journeyId || null
+  }
+  if (!journeyId) throw new Error('journeyId is required')
+
+  const payload = {
     p_id: input.id ?? null,
-    p_entry_id: input.entryId,
+    p_journey_id: journeyId,
+    p_entry_id: primary,
     p_title: input.title ?? '',
     p_amount_cents: input.amountCents,
     p_currency: input.currency,
@@ -519,9 +650,14 @@ export async function upsertExpenseWithSplits(input) {
       journey_person_id: s.journeyPersonId,
       amount_cents: s.amountCents,
     })),
-  })
+    p_entry_ids: entryIds,
+  }
+  const { data, error } = await supabase.rpc(
+    'upsert_expense_with_splits',
+    payload,
+  )
   if (error) throw error
-  return mapExpense(data)
+  return mapExpense(data, entryIds)
 }
 
 export async function deleteExpense(expenseId) {
@@ -554,31 +690,6 @@ export async function myMembership(journeyId, userId) {
   return mapMember(data)
 }
 
-export async function listMyPeople() {
-  const { data, error } = await supabase
-    .from('viaggio_people')
-    .select('*')
-    .order('display_name', { ascending: true })
-  if (error) throw error
-  return (data ?? []).map(mapPerson)
-}
-
-export async function upsertPerson(input) {
-  const { data, error } = await supabase.rpc('upsert_person', {
-    p_id: input.id ?? null,
-    p_display_name: input.displayName,
-    p_email: input.email ?? null,
-    p_phone_e164: input.phoneE164 ?? null,
-  })
-  if (error) throw error
-  return mapPerson(data)
-}
-
-export async function deletePerson(personId) {
-  const { error } = await supabase.rpc('delete_person', { p_id: personId })
-  if (error) throw error
-}
-
 export async function listJourneyPeople(journeyId) {
   const { data, error } = await supabase
     .from('viaggio_journey_people')
@@ -586,14 +697,14 @@ export async function listJourneyPeople(journeyId) {
     .eq('journey_id', journeyId)
     .order('created_at', { ascending: true })
   if (error) throw error
+  // Journey-local names; profile is seed-only at create/accept.
   return (data ?? []).map(mapJourneyPerson)
 }
 
 export async function addJourneyPerson(input) {
   const { data, error } = await supabase.rpc('add_journey_person', {
     p_journey_id: input.journeyId,
-    p_person_id: input.personId ?? null,
-    p_display_name: input.displayName ?? null,
+    p_display_name: input.displayName,
     p_email: input.email ?? null,
     p_phone_e164: input.phoneE164 ?? null,
   })

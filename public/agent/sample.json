@@ -109,6 +109,7 @@
     {
       "id": "exp-meal",
       "entry_id": "entry-meal",
+      "entry_ids": ["entry-meal"],
       "title": "Pastéis + coffee",
       "amount_cents": 1800,
       "currency": "EUR",

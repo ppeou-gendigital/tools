@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://project-viaggio.web.app/agent/import.schema.json",
   "title": "Viaggio journey snapshot v1",
-  "description": "Portable JSON imported via Archives → Import JSON. See https://project-viaggio.web.app/agent/llms.txt",
+  "description": "Portable JSON imported via Archives → Import JSON. See https://project-viaggio.web.app/agent/llms.txt. Runtime validation is hand-written (Docto-style) in the app; this file is the external agent contract.",
   "type": "object",
   "additionalProperties": true,
   "required": ["format", "version", "journey", "people"],
@@ -31,12 +31,20 @@
       "properties": {
         "title": { "type": "string", "minLength": 1 },
         "type": { "enum": ["trip", "journal"] },
-        "preset": { "type": "string", "minLength": 1 },
+        "preset": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Catalog preset id (e.g. leisure_trip, road_trip, household)"
+        },
         "activity_packs": {
           "type": "array",
           "items": { "type": "string" }
         },
-        "default_timezone": { "type": "string", "minLength": 1 },
+        "default_timezone": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Plain IANA id only (e.g. Europe/Lisbon). Never Scope.* mashups."
+        },
         "default_currency": {
           "type": "string",
           "pattern": "^[A-Z]{3}$"
@@ -79,17 +87,126 @@
         "required": ["id", "activity_id"],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
-          "activity_id": { "type": "string", "minLength": 1 },
+          "activity_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Catalog activity id (flight, hotel, meal, sightseeing, …)"
+          },
           "schema": { "type": "string" },
           "title": { "type": "string" },
           "body": { "type": "object" },
-          "details": { "type": "object" },
-          "occurs_on": { "type": ["string", "null"] },
-          "occurs_at": { "type": ["string", "null"] },
+          "details": {
+            "type": "object",
+            "description": "Keys depend on activity_id (catalog detailHints). Put route/airports here — not only in title. Unknown keys allowed.",
+            "additionalProperties": true,
+            "properties": {
+              "airline": {
+                "type": "string",
+                "description": "flight: IATA preferred (e.g. ZG, TP)"
+              },
+              "flight_number": {
+                "type": "string",
+                "description": "flight: digits (+ optional letter), e.g. 015"
+              },
+              "confirmation": {
+                "type": "string",
+                "description": "flight, hotel, lodging, ferry, boat, train, car_rental, doctor_visit, dentist, …"
+              },
+              "from": {
+                "type": "string",
+                "description": "flight, train, ferry, boat, drive_leg: origin (IATA when known)"
+              },
+              "to": {
+                "type": "string",
+                "description": "flight, train, ferry, boat, drive_leg: destination"
+              },
+              "provider": {
+                "type": "string",
+                "description": "car_rental, rideshare, appointment, doctor_visit, dentist, contractor, boat"
+              },
+              "pickup_location": {
+                "type": "string",
+                "description": "car_rental"
+              },
+              "dropoff_location": {
+                "type": "string",
+                "description": "car_rental"
+              },
+              "vessel": {
+                "type": "string",
+                "description": "ferry"
+              },
+              "reservation": {
+                "type": "string",
+                "description": "restaurant"
+              },
+              "shop": {
+                "type": "string",
+                "description": "car_service, car_repair"
+              },
+              "odometer": {
+                "description": "fuel, car_service, car_repair"
+              },
+              "gallons_or_liters": {
+                "description": "fuel"
+              },
+              "assignee": {
+                "type": "string",
+                "description": "chore"
+              },
+              "due_date": {
+                "type": "string",
+                "description": "bill: YYYY-MM-DD"
+              },
+              "opponent": {
+                "type": "string",
+                "description": "game"
+              },
+              "home_away": {
+                "type": "string",
+                "description": "game"
+              }
+            }
+          },
+          "occurs_on": {
+            "type": ["string", "null"],
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "occurs_at_local": {
+            "type": ["string", "null"],
+            "description": "Preferred wall time YYYY-MM-DDTHH:mm at activity location"
+          },
+          "ends_at_local": {
+            "type": ["string", "null"],
+            "description": "Preferred end wall time; required for lodging checkout"
+          },
+          "occurs_at": {
+            "type": ["string", "null"],
+            "description": "UTC ISO instant (optional if occurs_at_local + timezone set)"
+          },
           "ends_at": { "type": ["string", "null"] },
-          "timezone": { "type": ["string", "null"] },
+          "timezone": {
+            "type": ["string", "null"],
+            "description": "IANA id for single-location activities"
+          },
+          "start_timezone": {
+            "type": ["string", "null"],
+            "description": "IANA origin zone for transit/rental"
+          },
+          "end_timezone": {
+            "type": ["string", "null"],
+            "description": "IANA destination zone for transit/rental"
+          },
           "place_name": { "type": ["string", "null"] },
-          "contact_id": { "type": ["string", "null"] }
+          "address": { "type": ["string", "null"] },
+          "lat": { "type": ["number", "null"] },
+          "lng": { "type": ["number", "null"] },
+          "contact_id": { "type": ["string", "null"] },
+          "participant_ids": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Optional shorthand; app also accepts entry_participants[]"
+          }
         }
       }
     },
@@ -109,13 +226,21 @@
       "items": {
         "type": "object",
         "additionalProperties": true,
-        "required": ["id", "entry_id", "amount_cents", "currency"],
+        "required": ["id", "amount_cents", "currency"],
         "properties": {
           "id": { "type": "string" },
-          "entry_id": { "type": "string" },
+          "entry_id": {
+            "type": ["string", "null"],
+            "description": "Primary activity id (optional). Null/omit with empty entry_ids = journey-level expense."
+          },
+          "entry_ids": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "0–N linked activity ids (include entry_id when set). Empty = journey expense."
+          },
           "title": { "type": "string" },
           "amount_cents": { "type": "integer", "minimum": 0 },
-          "currency": { "type": "string" },
+          "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
           "paid_by_person_id": { "type": "string" },
           "split_mode": { "enum": ["equal", "custom"] },
           "category": { "type": ["string", "null"] }
@@ -123,8 +248,54 @@
       }
     },
     "expense_splits": { "type": "array", "items": { "type": "object" } },
-    "playlist": { "type": "array", "items": { "type": "object" } },
-    "place_ideas": { "type": "array", "items": { "type": "object" } },
-    "todos": { "type": "array", "items": { "type": "object" } }
+    "playlist": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "title": { "type": "string" },
+          "url": { "type": "string" },
+          "search_query": { "type": "string" },
+          "platform": { "enum": ["spotify", "youtube"] }
+        }
+      }
+    },
+    "place_ideas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "address": { "type": "string" },
+          "lat": { "type": "number" },
+          "lng": { "type": "number" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "todos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1 },
+          "notes": { "type": "string" },
+          "due_on": {
+            "type": ["string", "null"],
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "done": { "type": "boolean" }
+        }
+      }
+    },
+    "summary": {
+      "type": "string",
+      "description": "Optional short plan blurb (AI generate); ignored on Archives import"
+    }
   }
 }

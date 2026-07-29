@@ -217,7 +217,13 @@ export async function buildJourneyAiContext(
 
   const expenseLines = (expenses ?? []).slice(0, 40).map((e) => ({
     id: e.id,
-    entry_id: e.entryId,
+    entry_id: e.entryId || null,
+    entry_ids:
+      e.entryIds?.length > 0
+        ? e.entryIds
+        : e.entryId
+          ? [e.entryId]
+          : [],
     title: e.title,
     amount_cents: e.amountCents,
     currency: e.currency,
@@ -333,7 +339,7 @@ export function journeySystemRulesPromptBlock(ctx) {
     'Always use existing ids from current_journey_context for update/remove. Never invent ids. Never touch people, members, or delete the whole journey.',
     'Money talk: journey.default_currency is bookkeeping; user_prefs.preferred_currency is how to talk to this user. Lead with preferred_currency; format for display_locale when set.',
     'Dates: clock.today / clock.weekday / clock.timeZone are authoritative for relative phrases.',
-    'For add_expense / update_expense: use an existing entry_id from context, paid_by_person_id from people (prefer is_current_user), store receipt currency — do not invent converted cents. split_mode "equal" by default.',
+    'For add_expense / update_expense: entry_id / entry_ids are optional (omit or [] = journey-level expense with no activity). Use entry_ids to link 0–N activities; primary = entry_id when set. paid_by_person_id from people (prefer is_current_user); store receipt currency — do not invent converted cents. split_mode "equal" by default. Use expense ids from current_journey_context.expenses (never invent ids).',
     'Playlist: emit add_playlist with titles (optional search_query). Never invent video IDs/URLs — the app looks up YouTube. Include url only if the user pasted a real link.',
     'Place suggestions: emit add_place_ideas with name + lat/lng near map_focus or existing pins. Avoid duplicates. Typically 5–10 ideas.',
     'If entries_meta.truncated is true, you only see a subset — do not invent certainty about unseen days.',

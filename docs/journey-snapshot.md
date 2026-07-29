@@ -8,6 +8,7 @@ Portable JSON for moving a journey between Viaggio instances or generating compa
 | **Current version** | `1` |
 | **Sample file** | [`src/samples/journey-snapshot.sample.json`](../src/samples/journey-snapshot.sample.json) |
 | **Builder / importer** | `src/lib/journeySnapshot.js` |
+| **Deep validators** | `src/lib/journeySnapshotSchema.js` (`validateSnapshotDeep` / `assertSnapshotValid`) — Docto-style field-path checks used by Archives import and AI repair |
 | **Live agent URLs** | [llms.txt](https://project-viaggio.web.app/agent/llms.txt) · [schema](https://project-viaggio.web.app/agent/import.schema.json) · [sample](https://project-viaggio.web.app/agent/sample.json) |
 
 ## Envelope
@@ -99,12 +100,13 @@ Who is on each activity.
 
 ## `expenses` (optional)
 
-Each expense belongs to an entry.
+Expenses belong to the journey. Activities are **0–N** via `entry_ids` (empty = journey-level expense). Optional `entry_id` is the primary for activity aggregates / entry-scoped receipts. Journey totals count each expense once.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | string | Local id |
-| `entry_id` | string | Local entry id |
+| `entry_id` | string \| null | Optional primary local entry id |
+| `entry_ids` | string[] | 0–N linked entry ids (include primary when set). `[]` = journey expense |
 | `title` | string | |
 | `amount_cents` | integer | Minor units (≥ 0) |
 | `currency` | string | ISO 4217 |

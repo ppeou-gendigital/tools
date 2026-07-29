@@ -5,7 +5,6 @@ import {
   ListMusic,
   MapPin,
   PlaneTakeoff,
-  UserRound,
   Users,
 } from 'lucide-react'
 import { Divider, MenuRow } from '@tools/ui'
@@ -35,7 +34,14 @@ const JOURNEY_ROUTES = new Set([
   'journey-settings',
 ])
 
-export function MenuPanel({ corner, onClose }) {
+export function MenuPanel({
+  corner,
+  edgeX,
+  edgeY,
+  fabLeft,
+  fabTop,
+  onClose,
+}) {
   const { user } = useAuth()
   const nav = useNavigation()
   const signedIn = !!user
@@ -46,6 +52,10 @@ export function MenuPanel({ corner, onClose }) {
   return (
     <ToolsMenuPanel
       corner={corner}
+      edgeX={edgeX}
+      edgeY={edgeY}
+      fabLeft={fabLeft}
+      fabTop={fabTop}
       onClose={onClose}
       brandConfig={{ name: TOOL_NAME, icon: PlaneTakeoff, logoAlt: TOOL_NAME }}
       version={APP_VERSION}
@@ -95,12 +105,6 @@ export function MenuPanel({ corner, onClose }) {
           <Divider />
           <MenuSectionLabel>App</MenuSectionLabel>
           <AppNavItems onClose={onClose} />
-          <MenuRow
-            icon={UserRound}
-            label="People"
-            onClose={onClose}
-            onClick={nav.goPeople}
-          />
           <MenuRow
             icon={Archive}
             label="Archives"

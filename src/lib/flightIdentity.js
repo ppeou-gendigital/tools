@@ -98,6 +98,71 @@ export function normalizeFlightDetails(details) {
   return next
 }
 
+function detailBlank(v) {
+  return !String(v || '').trim()
+}
+
+/**
+ * Fill missing airline / flight_number / from / to from a human title
+ * (e.g. "ZIPAIR ZG015: Houston (IAH) to Tokyo (NRT)"). Never overwrites
+ * non-empty detail fields.
+ * @param {Record<string, unknown> | null | undefined} details
+ * @param {string | null | undefined} title
+ */
+export function enrichFlightDetailsFromTitle(details, title) {
+  const next = { ...(details || {}) }
+  const t = String(title || '').trim()
+  if (!t) return normalizeFlightDetails(next)
+
+  if (detailBlank(next.from) || detailBlank(next.to)) {
+    let from = ''
+    let to = ''
+    const parenRoute = t.match(
+      /\(([A-Z]{3})\)\s*(?:to|→|->|–|—|-)\s*[^(]*\(([A-Z]{3})\)/i,
+    )
+    const plainRoute = t.match(/\b([A-Z]{3})\s*(?:→|->|to|–|—)\s*([A-Z]{3})\b/i)
+    const reverseRoute = t.match(/\b([A-Z]{3})\s*(?:←|<-)\s*([A-Z]{3})\b/i)
+    if (parenRoute) {
+      from = parenRoute[1].toUpperCase()
+      to = parenRoute[2].toUpperCase()
+    } else if (plainRoute) {
+      from = plainRoute[1].toUpperCase()
+      to = plainRoute[2].toUpperCase()
+    } else if (reverseRoute) {
+      from = reverseRoute[2].toUpperCase()
+      to = reverseRoute[1].toUpperCase()
+    }
+    if (from && detailBlank(next.from)) next.from = from
+    if (to && detailBlank(next.to)) next.to = to
+  }
+
+  if (detailBlank(next.airline) || detailBlank(next.flight_number)) {
+    const flightMatch = t.match(
+      /\b([A-Z]{2}|[A-Z][0-9]|[0-9][A-Z])\s*([0-9]{1,4}[A-Z]?)\b/i,
+    )
+    if (flightMatch) {
+      const parsed = parseFlightIdentity(
+        `${flightMatch[1]}${flightMatch[2]}`,
+        next.airline,
+      )
+      if (parsed.airline && detailBlank(next.airline)) next.airline = parsed.airline
+      if (parsed.flightNumber && detailBlank(next.flight_number)) {
+        next.flight_number = parsed.flightNumber
+      }
+    } else if (detailBlank(next.airline)) {
+      const nameMatch = t.match(
+        /^([A-Za-z][A-Za-z0-9 .&'-]{1,40}?)(?:\s+[A-Z0-9]{2}\d|\s*:)/,
+      )
+      if (nameMatch) {
+        const airline = normalizeAirline(nameMatch[1])
+        if (airline) next.airline = airline
+      }
+    }
+  }
+
+  return normalizeFlightDetails(next)
+}
+
 /**
  * @param {{ airline?: string, flight_number?: string, from?: string, to?: string }} details
  */

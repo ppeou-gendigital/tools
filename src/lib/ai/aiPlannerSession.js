@@ -21,15 +21,34 @@ function stripMessagesForStorage(messages) {
       const {
         receiptFile: _rf,
         receiptPreviewUrl: _ru,
+        receipts: rawReceipts,
         ...rest
       } = m
       // Drop non-serializable File; keep name/mime for UI hint.
+      const receipts = (Array.isArray(rawReceipts) ? rawReceipts : [])
+        .map((r) =>
+          r && typeof r === 'object'
+            ? {
+                name: r.name || 'file',
+                mime: r.mime || '',
+              }
+            : null,
+        )
+        .filter(Boolean)
       const actions = (rest.actions || []).map((a) => {
         if (!a || typeof a !== 'object') return a
-        const { receiptFile: _arf, ...actionRest } = a
+        const {
+          receiptFile: _arf,
+          receiptFiles: _arfs,
+          ...actionRest
+        } = a
         return actionRest
       })
-      return { ...rest, actions }
+      return {
+        ...rest,
+        ...(receipts.length ? { receipts } : {}),
+        actions,
+      }
     })
     .filter(Boolean)
 }

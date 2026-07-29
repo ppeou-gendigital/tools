@@ -11,7 +11,8 @@ Entry object fields:
 - timezone: IANA (single-location activities)
 - start_timezone / end_timezone: IANA (transit + rental — depart/pickup vs arrive/dropoff)
 - occurs_at / ends_at: real UTC ISO only if you must; prefer *_local + zones (app converts)
-- place_name, address, lat, lng, details, participant_ids (journey person ids from context)
+- place_name, address, lat, lng, participant_ids (journey person ids from context)
+- details: object whose keys depend on activity_id (see catalog "Entry details keys by activity_id"). Examples: flight → airline, flight_number, confirmation, from, to; hotel → confirmation; car_rental → provider, confirmation, pickup_location, dropoff_location. Put route/airports in details.from/to when those keys exist for the activity — not only in title.
 `.trim()
 
 export const JOURNEY_SNAPSHOT_PROMPT_SCHEMA = `
@@ -63,8 +64,9 @@ Rules:
 - Prefer occurs_at_local/ends_at_local + timezone(s). Never encode local clock as …Z.
 - Multi-night lodging must include ends_at_local (checkout). Checkout before return transit on the last day.
 - Transit/rental: start_timezone + end_timezone required when origin ≠ destination zone.
-- details is a JSON object, not a string.
+- details is a JSON object (not a string); keys depend on activity_id — fill catalog detail keys when visible (hotel confirmation → details.confirmation).
 - Match journey.type to preset (trip vs journal).
+- people[]: include distinct travelers (id + display_name). When names come from bookings, do not invent passengers. After the planner confirms which passenger they are (or none), map the planner to the owner person and list other booking names as guests; set entry participant_ids when a booking covers specific people.
 - Playlist: prefer { title, search_query? } without inventing URLs — the app resolves YouTube watch links. Only include url when the user pasted a real youtube.com/watch or open.spotify.com track/album/playlist link.
 `.trim()
 
@@ -87,7 +89,8 @@ Return JSON only:
     "playlist": [playlist objects with id for update…],
     "expense": {
       "id": existing expense id (required for update_expense),
-      "entry_id": existing entry id from context,
+      "entry_id": primary activity id (optional; omit for journey-level),
+      "entry_ids": [activity ids…] // 0–N; empty = journey expense; include primary when set,
       "title": string,
       "amount_cents": integer,
       "currency": "USD" | "EUR" | …,
@@ -110,8 +113,9 @@ Rules:
 - Prefer occurs_at_local/ends_at_local + timezone(s). Never encode local clock as …Z.
 - Lodging checkout = ends_at_local on the hotel/lodging entry — never a separate checkout entry.
 - update_entries for time fixes: only touch affected ids; do not move unrelated days' occurs_on.
+- update_entries details: send a partial details object (e.g. { "confirmation": "…" }); the app merges into existing details. Put confirmation under details.confirmation — not a top-level field. Never invent lat/lng 0,0.
 - participant_ids: set when tagging who goes (parallel/split-group activities OK). Omit on update to leave participants unchanged.
-- Receipt photo/PDF → propose add_expense (one per receipt).
+- Receipt photo/PDF → propose add_expense (one per receipt). Link 0–N activities via entry_ids (empty = journey expense; primary = entry_id when set).
 - Playlist search/add: emit add_playlist with 3–8 { title, search_query? } items — do NOT invent youtube/spotify URLs. The app resolves real youtube.com/watch links. Include url only if the user pasted a real link. Replacing Spotify → remove_playlist by id + add_playlist titles.
 - Do not delete people/members or the whole journey. Never emit Scope.* mashups.
 - CRITICAL — Accept gate: you never write to the journey yourself. Concrete edits (fix/update/move/add/remove/reorder/checkout/times) MUST include non-empty "actions" so the app shows Accept/Reject. Do not only describe the change in assistant_message. Keep assistant_message short and say the user should Accept the proposed action(s). Chat-only (no actions) only for questions/brainstorming with no concrete write.
@@ -126,6 +130,7 @@ Return JSON only:
   "place_ideas": [place idea objects…],
   "playlist": [playlist objects…]
 }
-Prefer occurs_at_local/ends_at_local + IANA timezones. No Scope.* mashups. details is an object.
+Prefer occurs_at_local/ends_at_local + IANA timezones. No Scope.* mashups.
+details keys depend on activity_id (catalog detailHints) — fill when visible; do not leave flight airports only in title.
 Playlist: titles (+ optional search_query) OK without urls; app resolves YouTube. Never invent video IDs.
 `.trim()

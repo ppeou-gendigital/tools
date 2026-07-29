@@ -4,17 +4,22 @@
 2. Run shared template pieces if needed (`vault_meta.sql`, user_data prefs table from your project).
 3. Run **`viaggio_schema.sql`** in the SQL Editor — creates domain tables, then helpers, RLS, and RPCs (tables must exist before the membership helper functions).
 4. Run **`patches/profiles_read_co_travelers.sql`** so Members / expenses can show co-traveler `display_name` (profiles RLS is otherwise read-own-only).
-5. On existing projects that already ran an older schema:
+5. Run **`patches/sync_profile_display_name.sql`** so Profile saves push `display_name` onto linked journey seats (and invite accept prefers profile name over stale roster copy).
+6. On existing projects that already ran an older schema:
    - **`patches/entry_participants.sql`** (if not already applied)
    - **`patches/journey_people.sql`** — personal people library + journey roster; migrates entry participants and expense splits to `journey_person_id`
-6. **`patches/journey_archives.sql`** — archive table + `archive_journey` / `delete_journey_archive` RPCs (store snapshot JSON, hard-delete live journey).
-7. **`patches/place_ideas.sql`** — shared map shortlist (`viaggio_place_ideas`) for brainstorming places before promoting to activities.
-8. **`patches/attachments_expense_id.sql`** — optional `expense_id` on `viaggio_attachments` for expense receipts (cascade delete with the expense).
-9. **`patches/todos.sql`** — shared journey checklist (`viaggio_todos`) for pre-trip prep items (Visa, eSim, etc.).
-10. **`patches/todo_assignees.sql`** — multi-assignee junction (`viaggio_todo_assignees`); migrates legacy single-assignee column if present.
-11. **`patches/todo_assignee_done.sql`** — per-assignee `done` / `done_at` + rollup to todo.done; adds assignee UPDATE RLS.
+7. **`patches/journey_archives.sql`** — archive table + `archive_journey` / `delete_journey_archive` RPCs (store snapshot JSON, hard-delete live journey).
+8. **`patches/place_ideas.sql`** — shared map shortlist (`viaggio_place_ideas`) for brainstorming places before promoting to activities.
+9. **`patches/attachments_expense_id.sql`** — optional `expense_id` on `viaggio_attachments` for expense receipts (cascade delete with the expense).
+10. **`patches/todos.sql`** — shared journey checklist (`viaggio_todos`) for pre-trip prep items (Visa, eSim, etc.).
+11. **`patches/todo_assignees.sql`** — multi-assignee junction (`viaggio_todo_assignees`); migrates legacy single-assignee column if present.
+12. **`patches/todo_assignee_done.sql`** — per-assignee `done` / `done_at` + rollup to todo.done; adds assignee UPDATE RLS.
+13. **`patches/expense_entry_links.sql`** — many-to-many expense ↔ activity (`viaggio_expense_entries`) + `upsert_expense_with_splits(..., p_entry_ids)`.
+14. **`patches/expense_journey_optional.sql`** — journey-level expenses (0–N activities): `journey_id` on expenses, nullable `entry_id`, journey-scoped receipts, updated upsert signature with `p_journey_id`.
+15. **`patches/attachment_links.sql`** — attachment ↔ activity / expense M:N (`viaggio_attachment_entries`, `viaggio_attachment_expenses`), required `journey_id`, journey-root storage paths, `set_attachment_links`.
+16. **`patches/expense_relink_entry.sql`** — older fix to allow changing an expense’s primary `entry_id` (superseded by #13/#14).
 
-Fresh `viaggio_schema.sql` already includes the traveler people model, place ideas, todos (+ assignees), and attachment `expense_id`.
+Fresh `viaggio_schema.sql` already includes the traveler people model, place ideas, todos (+ assignees), attachment links, expense entry links, and journey-level expenses.
 
 Portable import/export format: **`docs/journey-snapshot.md`** (sample: `src/samples/journey-snapshot.sample.json`).
 

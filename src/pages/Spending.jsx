@@ -8,6 +8,7 @@ import {
   ListChecks,
   ListMusic,
   MapPin,
+  Paperclip,
   Plus,
   Settings,
   Shapes,
@@ -301,6 +302,7 @@ export function Spending() {
     goTodos,
     goMap,
     goJourneySettings,
+    goAttachments,
   } = useNavigation()
   const journeyId = params.journeyId
   const { user } = useAuth()
@@ -915,6 +917,23 @@ export function Spending() {
     return `Paid by ${person.displayName || 'traveler'}`
   }
 
+  const activityLinksLabel = (ex) => {
+    const ids =
+      ex.entryIds?.length > 0
+        ? ex.entryIds
+        : ex.entryId
+          ? [ex.entryId]
+          : []
+    if (!ids.length) return 'Journey'
+    const titles = ids
+      .map((id) => entryById.get(id)?.title?.trim())
+      .filter(Boolean)
+    if (!titles.length) return 'Journey'
+    if (titles.length === 1) return titles[0]
+    if (titles.length === 2) return `${titles[0]} · ${titles[1]}`
+    return `${titles[0]} +${titles.length - 1} more`
+  }
+
   const openAdd = () => {
     setActivityQuery('')
     setAddOpen(true)
@@ -927,6 +946,11 @@ export function Spending() {
   const pickEntry = (entryId) => {
     closeAdd()
     goExpenseEdit({ journeyId, entryId })
+  }
+
+  const pickJourneyExpense = () => {
+    closeAdd()
+    goExpenseEdit({ journeyId })
   }
 
   return (
@@ -1009,6 +1033,12 @@ export function Spending() {
                 label: 'Travelers',
                 icon: Users,
                 pick: () => () => goMembers(journeyId),
+              },
+              {
+                id: 'attachments',
+                label: 'Attachments',
+                icon: Paperclip,
+                pick: () => () => goAttachments(journeyId),
               },
               {
                 id: 'playlist',
@@ -1299,7 +1329,9 @@ export function Spending() {
                                 onClick={() =>
                                   goExpenseEdit({
                                     journeyId,
-                                    entryId: ex.entryId,
+                                    ...(ex.entryId
+                                      ? { entryId: ex.entryId }
+                                      : {}),
                                     expenseId: ex.id,
                                   })
                                 }
@@ -1331,7 +1363,12 @@ export function Spending() {
                                     </span>
                                   </span>
                                   <span className={styles.rowMeta}>
-                                    {[paid, when, `Bill ${original}`]
+                                    {[
+                                      activityLinksLabel(ex),
+                                      paid,
+                                      when,
+                                      `Bill ${original}`,
+                                    ]
                                       .filter(Boolean)
                                       .join(' · ')}
                                   </span>
@@ -1629,7 +1666,9 @@ export function Spending() {
                               onClick={() =>
                                 goExpenseEdit({
                                   journeyId,
-                                  entryId: ex.entryId,
+                                  ...(ex.entryId
+                                    ? { entryId: ex.entryId }
+                                    : {}),
                                   expenseId: ex.id,
                                 })
                               }
@@ -1661,7 +1700,9 @@ export function Spending() {
                                   </span>
                                 </span>
                                 <span className={styles.rowMeta}>
-                                  {[paid, when].filter(Boolean).join(' · ')}
+                                  {[activityLinksLabel(ex), paid, when]
+                                    .filter(Boolean)
+                                    .join(' · ')}
                                 </span>
                               </span>
                               <span className={styles.spendRowAmount}>
@@ -1688,69 +1729,78 @@ export function Spending() {
       <Modal
         open={addOpen}
         onDismiss={closeAdd}
-        title="Add expense to which activity?"
+        title="Add expense"
       >
         <div className={styles.spendPick}>
           {entriesLoading && (
             <LoadingState>Loading activities…</LoadingState>
           )}
-          {!entriesLoading && entries.length === 0 && (
-            <div className={styles.empty}>
-              <p>
-                Expenses attach to an activity. Create one on the journey
-                timeline first.
-              </p>
-              <Button
-                onClick={() => {
-                  closeAdd()
-                  goJourney(journeyId)
-                }}
-              >
-                Back to journey
-              </Button>
-            </div>
-          )}
-          {!entriesLoading && entries.length > 0 && (
+          {!entriesLoading && (
             <>
-              <Input
-                className={styles.spendPickSearch}
-                type="search"
-                value={activityQuery}
-                onChange={(e) => setActivityQuery(e.target.value)}
-                placeholder="Search activities"
-                aria-label="Search activities"
-                autoFocus
-              />
-              {entryChoices.length === 0 ? (
-                <p className={styles.hint}>No activities match that search.</p>
+              <ul className={styles.spendPickList}>
+                <li>
+                  <button
+                    type="button"
+                    className={styles.spendPickRow}
+                    onClick={pickJourneyExpense}
+                  >
+                    <span className={styles.rowTitle}>Journey (no activity)</span>
+                    <span className={styles.rowMeta}>
+                      General spending for this trip
+                    </span>
+                  </button>
+                </li>
+              </ul>
+              {entries.length === 0 ? (
+                <p className={styles.hint}>
+                  Or create an activity on the timeline, then attach spending
+                  there.
+                </p>
               ) : (
-                <ul className={styles.spendPickList}>
-                  {entryChoices.map((entry) => (
-                    <li key={entry.id}>
-                      <button
-                        type="button"
-                        className={styles.spendPickRow}
-                        onClick={() => pickEntry(entry.id)}
-                      >
-                        <span className={styles.rowTitle}>
-                          {entry.title || 'Untitled activity'}
-                        </span>
-                        <span className={styles.rowMeta}>
-                          {[
-                            getActivity(entry.activityId)?.label ||
-                              entry.activityId,
-                            formatRelativeDay(
-                              entryActivityIso(entry),
-                              displayLocale,
-                            ),
-                          ]
-                            .filter(Boolean)
-                            .join(' · ')}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <Input
+                    className={styles.spendPickSearch}
+                    type="search"
+                    value={activityQuery}
+                    onChange={(e) => setActivityQuery(e.target.value)}
+                    placeholder="Search activities"
+                    aria-label="Search activities"
+                    autoFocus
+                  />
+                  {entryChoices.length === 0 ? (
+                    <p className={styles.hint}>
+                      No activities match that search.
+                    </p>
+                  ) : (
+                    <ul className={styles.spendPickList}>
+                      {entryChoices.map((entry) => (
+                        <li key={entry.id}>
+                          <button
+                            type="button"
+                            className={styles.spendPickRow}
+                            onClick={() => pickEntry(entry.id)}
+                          >
+                            <span className={styles.rowTitle}>
+                              {entry.title || 'Untitled activity'}
+                            </span>
+                            <span className={styles.rowMeta}>
+                              {[
+                                getActivity(entry.activityId)?.label ||
+                                  entry.activityId,
+                                formatRelativeDay(
+                                  entryActivityIso(entry),
+                                  displayLocale,
+                                ),
+                              ]
+                                .filter(Boolean)
+                                .join(' · ')}
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
               )}
             </>
           )}

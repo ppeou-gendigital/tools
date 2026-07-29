@@ -46,11 +46,12 @@ export function Profile() {
 
   const saveProfile = useMutation({
     mutationFn: async (name) => {
+      const trimmed = name.trim() || null
       const { error } = await supabase.from('profiles').upsert(
         {
           id: user.id,
           email: user.email,
-          display_name: name.trim() || null,
+          display_name: trimmed,
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'id' },
@@ -60,6 +61,7 @@ export function Profile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile', user.id] })
+      queryClient.invalidateQueries({ queryKey: ['viaggio', 'display-names'] })
     },
   })
 

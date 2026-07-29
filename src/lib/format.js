@@ -1,5 +1,8 @@
 /** Locale-aware formatting helpers. */
 
+import { getActivity } from '@/lib/catalog'
+import { shortTimeZoneLabel } from '@/lib/timezone'
+
 /** Human label for expense split_mode (`equal` | `custom`). */
 export function labelForSplitMode(splitMode) {
   return splitMode === 'custom' ? 'Paying separately' : 'Paying equally'
@@ -79,10 +82,22 @@ export function entryDayKey(entry) {
 }
 
 /**
- * Checkout / dropoff civil day for multi-day lodging or rental.
- * Null when there is no separate end day from check-in.
+ * Schema for end-day timeline clones: lodging checkout or rental drop-off only.
+ * Transit and other activities never get a synthetic end-day row.
+ */
+export function entryEndDayCloneSchema(entry) {
+  const schema =
+    entry?.schema || getActivity(entry?.activityId)?.schema || null
+  if (schema === 'lodging' || schema === 'rental') return schema
+  return null
+}
+
+/**
+ * Checkout / drop-off civil day for multi-day lodging or rental.
+ * Null for transit and everything else (even when endsAt is another day).
  */
 export function entryCheckoutDayKey(entry) {
+  if (!entryEndDayCloneSchema(entry)) return null
   if (!entry?.endsAt) return null
   const endTz = entry.endTimezone || entry.timezone
   const endKey = civilDayKey(entry.endsAt, endTz)
@@ -163,20 +178,9 @@ export function formatEntryTimeLine(entry, locale) {
   return label ? `${start} ${label}`.trim() : start
 }
 
-/** Short zone label (PST, CST, …) at the given instant for DST accuracy. */
+/** Short zone label (JST, CDT, …) at the given instant for DST accuracy. */
 function shortTz(tz, instant) {
-  if (!tz) return ''
-  try {
-    const when = instant ? new Date(instant) : new Date()
-    if (Number.isNaN(when.getTime())) return ''
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone: tz,
-      timeZoneName: 'short',
-    }).formatToParts(when)
-    return parts.find((p) => p.type === 'timeZoneName')?.value || ''
-  } catch {
-    return ''
-  }
+  return shortTimeZoneLabel(tz, instant || null)
 }
 
 /** Parse "12.34" dollars into cents. */
@@ -199,7 +203,12 @@ export function labelForMember(member, currentUserId) {
   return member.userId.slice(0, 8)
 }
 
-/** Label for a journey roster person. */
+/**
+ * Label for a journey roster person.
+ * Prefer live profiles.display_name (profileNames Map keyed by user id) for linked
+ * members — roster displayName is often a stale invite-time copy.
+ * Self → "You"; else profile / roster name; else short id.
+ */
 export function labelForJourneyPerson(person, currentUserId) {
   if (!person?.id) return ''
   if (currentUserId && person.linkedUserId === currentUserId) return 'You'
@@ -237,6 +246,26 @@ export function formatWhen(iso, locale) {
     }).format(new Date(iso))
   } catch {
     return String(iso)
+  }
+}
+
+/** Compact relative time for “Checked 5 secs ago” style meta. */
+export function formatRelativeAgo(iso) {
+  if (!iso) return ''
+  try {
+    const t = new Date(iso).getTime()
+    if (Number.isNaN(t)) return ''
+    const sec = Math.max(0, Math.round((Date.now() - t) / 1000))
+    if (sec < 5) return 'just now'
+    if (sec < 60) return `${sec} secs ago`
+    const min = Math.round(sec / 60)
+    if (min < 60) return min === 1 ? '1 min ago' : `${min} mins ago`
+    const hr = Math.round(min / 60)
+    if (hr < 48) return hr === 1 ? '1 hr ago' : `${hr} hrs ago`
+    const day = Math.round(hr / 24)
+    return day === 1 ? '1 day ago' : `${day} days ago`
+  } catch {
+    return ''
   }
 }
 

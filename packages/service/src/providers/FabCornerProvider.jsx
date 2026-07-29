@@ -7,22 +7,20 @@ import {
   useState,
 } from 'react'
 import { asyncStorage } from '../lib/storage.js'
+import {
+  DEFAULT_AI_CELL,
+  DEFAULT_MENU_CELL,
+  normalizeAiFabCell,
+  normalizeFabCell,
+  oppositeFabCell,
+  parseFabCell,
+} from '../lib/fabCell.js'
 import { useAuth } from './AuthProvider.jsx'
 
 const FabCornerContext = createContext(null)
-const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
-const DEFAULT_MENU_CORNER = 'bottom-right'
-const DEFAULT_AI_CORNER = 'bottom-left'
 
-function isValidCorner(v) {
-  return typeof v === 'string' && CORNERS.includes(v)
-}
-
-function oppositeCorner(corner) {
-  if (corner === 'top-left') return 'top-right'
-  if (corner === 'top-right') return 'top-left'
-  if (corner === 'bottom-left') return 'bottom-right'
-  return 'bottom-left'
+function isValidCellToken(v) {
+  return parseFabCell(v) != null
 }
 
 /**
@@ -35,8 +33,8 @@ export function FabCornerProvider({ children, appId, pushRemote }) {
   const aiKey = `${appId}.aiFabCorner`
   const { user } = useAuth()
   const userId = user?.id ?? null
-  const [corner, setCornerState] = useState(DEFAULT_MENU_CORNER)
-  const [aiCorner, setAiCornerState] = useState(DEFAULT_AI_CORNER)
+  const [corner, setCornerState] = useState(DEFAULT_MENU_CELL)
+  const [aiCorner, setAiCornerState] = useState(DEFAULT_AI_CELL)
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
@@ -46,13 +44,16 @@ export function FabCornerProvider({ children, appId, pushRemote }) {
       asyncStorage.getItem(aiKey),
     ]).then(async ([menuStored, aiStored]) => {
       if (!mounted) return
-      const menu = isValidCorner(menuStored) ? menuStored : DEFAULT_MENU_CORNER
-      let ai = isValidCorner(aiStored) ? aiStored : oppositeCorner(menu)
-      if (ai === menu) ai = oppositeCorner(menu)
+      const menu = isValidCellToken(menuStored)
+        ? normalizeFabCell(menuStored)
+        : DEFAULT_MENU_CELL
+      let ai = isValidCellToken(aiStored)
+        ? normalizeAiFabCell(aiStored, menu)
+        : oppositeFabCell(menu)
+      if (ai === menu) ai = oppositeFabCell(menu)
       setCornerState(menu)
       setAiCornerState(ai)
-      // Persist defaults / collision fixes so a missing aiFabCorner doesn't
-      // leave both FABs fighting for the same corner after reload.
+      // Persist defaults / collision fixes / legacy corner → cell migrations.
       const writes = []
       if (menu !== menuStored) writes.push(asyncStorage.setItem(menuKey, menu))
       if (ai !== aiStored) writes.push(asyncStorage.setItem(aiKey, ai))
@@ -67,19 +68,20 @@ export function FabCornerProvider({ children, appId, pushRemote }) {
 
   const setCorner = useCallback(
     async (next, { fromRemote = false } = {}) => {
-      if (!isValidCorner(next)) return
+      if (!isValidCellToken(next)) return
+      const resolved = normalizeFabCell(next)
       let nextAi = null
-      setCornerState(next)
+      setCornerState(resolved)
       setAiCornerState((prev) => {
-        if (prev !== next) return prev
-        nextAi = oppositeCorner(next)
+        if (prev !== resolved) return prev
+        nextAi = oppositeFabCell(resolved)
         return nextAi
       })
-      await asyncStorage.setItem(menuKey, next)
+      await asyncStorage.setItem(menuKey, resolved)
       if (nextAi) await asyncStorage.setItem(aiKey, nextAi)
       if (fromRemote || !userId || !pushRemote) return
       try {
-        const patch = { fabCorner: next }
+        const patch = { fabCorner: resolved }
         if (nextAi) patch.aiFabCorner = nextAi
         await pushRemote(userId, patch)
       } catch (err) {
@@ -91,8 +93,8 @@ export function FabCornerProvider({ children, appId, pushRemote }) {
 
   const setAiCorner = useCallback(
     async (next, { fromRemote = false } = {}) => {
-      if (!isValidCorner(next)) return
-      const resolved = next === corner ? oppositeCorner(corner) : next
+      if (!isValidCellToken(next)) return
+      const resolved = normalizeAiFabCell(next, corner)
       setAiCornerState(resolved)
       await asyncStorage.setItem(aiKey, resolved)
       if (fromRemote || !userId || !pushRemote) return

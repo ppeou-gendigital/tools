@@ -37,6 +37,7 @@ import {
   AI_RECEIPT_MIME,
   assertReceiptFile,
   createPlannerChat,
+  MAX_AI_CHAT_FILES,
 } from '@/lib/ai/plannerChat'
 import {
   queryMicrophonePermission,
@@ -64,6 +65,7 @@ import {
   replaceJourneyFromSnapshot,
   snapshotFilename,
 } from '@/lib/journeySnapshot'
+import { supabase } from '@/lib/supabase'
 import { getJourney, myMembership } from '@/lib/viaggioApi'
 import { useAuth } from '@/providers/AuthProvider'
 import { useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
@@ -78,7 +80,55 @@ const WELCOME_CHAT_MAP =
   'I can suggest places near this map view (with pins you can accept), or help with activities, todos, playlist, and expenses. Ask for ideas — e.g. “scenic viewpoints” or “late-night eats”.'
 
 const WELCOME_CREATE =
-  'Chat with me about your trip — destination, dates, vibe, food, constraints. We can go back and forth as long as you like. When a plan looks right I’ll show a draft; Create journey when you’re ready to commit.'
+  'Chat with me about your trip — destination, dates, vibe, food, constraints. Attach booking screenshots, tickets, or PDFs and I’ll pull flights, stays, and travelers — then confirm which passenger is you. When a plan looks right I’ll show a draft; Create journey when you’re ready to commit.'
+
+async function resolvePlannerDisplayName(user) {
+  if (user?.id) {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .maybeSingle()
+      const fromProfile = String(data?.display_name || '').trim()
+      if (fromProfile) return fromProfile
+    } catch {
+      /* fall through */
+    }
+  }
+  return (
+    String(user?.user_metadata?.display_name || '').trim() ||
+    String(user?.user_metadata?.full_name || '').trim() ||
+    user?.email?.split('@')[0] ||
+    'Traveler'
+  )
+}
+
+function travelerNamesFromSnapshot(snapshot) {
+  return (Array.isArray(snapshot?.people) ? snapshot.people : [])
+    .map((p) => String(p?.display_name || p?.displayName || '').trim())
+    .filter(Boolean)
+}
+
+function SnapshotDraftStats({ snapshot }) {
+  const names = travelerNamesFromSnapshot(snapshot)
+  return (
+    <>
+      <ul>
+        <li>
+          {names.length} traveler{names.length === 1 ? '' : 's'}
+        </li>
+        <li>{(snapshot?.entries || []).length} activities</li>
+        <li>{(snapshot?.todos || []).length} todos</li>
+        <li>{(snapshot?.place_ideas || []).length} place ideas</li>
+        <li>{(snapshot?.playlist || []).length} playlist items</li>
+      </ul>
+      {names.length > 0 && (
+        <p className={styles.hint}>Travelers: {names.join(', ')}</p>
+      )}
+    </>
+  )
+}
 
 const CHATGPT_BLURB = `Please edit this Viaggio journey snapshot JSON.
 
@@ -185,12 +235,29 @@ function filesFromDataTransfer(dt) {
     .filter(Boolean)
 }
 
-function firstReceiptFile(files) {
-  return (
-    (files || []).find((f) =>
-      AI_RECEIPT_MIME.has(String(f?.type || '').toLowerCase()),
-    ) || null
+function receiptFilesFromList(files) {
+  return (files || []).filter((f) =>
+    AI_RECEIPT_MIME.has(String(f?.type || '').toLowerCase()),
   )
+}
+
+function newAttachmentId() {
+  return `att-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+function messageReceipts(m) {
+  if (Array.isArray(m?.receipts) && m.receipts.length) return m.receipts
+  if (m?.receiptFile || m?.receiptName) {
+    return [
+      {
+        file: m.receiptFile || null,
+        name: m.receiptName || 'file',
+        mime: m.receiptMime || '',
+        previewUrl: m.receiptPreviewUrl || null,
+      },
+    ]
+  }
+  return []
 }
 
 export function AiPlannerOverlay({
@@ -238,8 +305,8 @@ export function AiPlannerOverlay({
   const [busy, setBusy] = useState(false)
   const [copyHint, setCopyHint] = useState('')
   const [createResult, setCreateResult] = useState(null)
-  const [pendingReceipt, setPendingReceipt] = useState(null)
-  const [pendingPreviewUrl, setPendingPreviewUrl] = useState(null)
+  /** @type {[{ id: string, file: File, previewUrl: string | null }]} */
+  const [pendingAttachments, setPendingAttachments] = useState([])
   /** idle | listening | speaking */
   const [voicePhase, setVoicePhase] = useState('idle')
   const [micDenied, setMicDenied] = useState(false)
@@ -254,9 +321,12 @@ export function AiPlannerOverlay({
 
   useEffect(() => {
     return () => {
-      if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl)
+      for (const att of pendingAttachments) {
+        if (att.previewUrl) URL.revokeObjectURL(att.previewUrl)
+      }
     }
-  }, [pendingPreviewUrl])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- revoke only on unmount
+  }, [])
 
   function haltSpeechEngines() {
     voiceActiveRef.current = false
@@ -345,11 +415,7 @@ export function AiPlannerOverlay({
     setImportPreview(null)
     setBusy(false)
     setPlusOpen(false)
-    setPendingReceipt(null)
-    setPendingPreviewUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev)
-      return null
-    })
+    clearPendingAttachments()
     setVoicePhase('idle')
     haltSpeechEngines()
 
@@ -378,10 +444,7 @@ export function AiPlannerOverlay({
             preferredCurrency: defaultCurrency,
             displayLocale,
             getDraft: () => createDraftRef.current,
-            importerName:
-              user?.user_metadata?.display_name ||
-              user?.email?.split('@')[0] ||
-              'Traveler',
+            importerName: await resolvePlannerDisplayName(user),
           })
           if (cancelled) return
           modelHistoryRef.current = history
@@ -510,6 +573,8 @@ export function AiPlannerOverlay({
     if (!journeyId) return
     qc.invalidateQueries({ queryKey: ['viaggio', 'journey', journeyId] })
     qc.invalidateQueries({ queryKey: ['viaggio', 'entries', journeyId] })
+    qc.invalidateQueries({ queryKey: ['viaggio', 'entry'] })
+    qc.invalidateQueries({ queryKey: ['viaggio', 'entry-participants'] })
     qc.invalidateQueries({ queryKey: ['viaggio', 'todos', journeyId] })
     qc.invalidateQueries({ queryKey: ['viaggio', 'place-ideas', journeyId] })
     qc.invalidateQueries({ queryKey: ['viaggio', 'playlist', journeyId] })
@@ -517,26 +582,47 @@ export function AiPlannerOverlay({
   }
 
   const applyMut = useMutation({
-    mutationFn: async ({ action, receiptFile }) => {
+    mutationFn: async ({ action, receiptFiles }) => {
       const result = await applyChatAction(journeyId, action, user.id)
+      const files = (
+        receiptFiles?.length
+          ? receiptFiles
+          : action.receiptFiles?.length
+            ? action.receiptFiles
+            : action.receiptFile
+              ? [action.receiptFile]
+              : []
+      ).filter(Boolean)
       if (
         !result.errors.length &&
         action.type === 'add_expense' &&
-        receiptFile &&
+        files.length &&
         result.applied?.expenses?.[0]
       ) {
         const saved = result.applied.expenses[0]
-        try {
-          await uploadAttachment({
-            entryId: saved.entryId || action.expense?.entry_id,
-            userId: user.id,
-            file: receiptFile,
-            expenseId: saved.id,
-          })
-        } catch (err) {
-          result.errors.push(
-            `Expense saved, but receipt upload failed: ${err.message}`,
-          )
+        for (const file of files) {
+          try {
+            await uploadAttachment({
+              journeyId: journeyId || saved.journeyId || null,
+              userId: user.id,
+              file,
+              expenseIds: saved.id ? [saved.id] : [],
+              entryIds: [
+                ...new Set(
+                  [
+                    ...(saved.entryIds || []),
+                    saved.entryId,
+                    action.expense?.entry_id,
+                    ...(action.expense?.entry_ids || []),
+                  ].filter(Boolean),
+                ),
+              ],
+            })
+          } catch (err) {
+            result.errors.push(
+              `Expense saved, but receipt upload failed: ${err.message}`,
+            )
+          }
         }
       }
       return result
@@ -615,61 +701,114 @@ export function AiPlannerOverlay({
     if (importFileRef.current) importFileRef.current.value = ''
   }
 
-  function clearPendingReceipt() {
-    setPendingReceipt(null)
-    setPendingPreviewUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev)
-      return null
+  function clearPendingAttachments() {
+    setPendingAttachments((prev) => {
+      for (const att of prev) {
+        if (att.previewUrl) URL.revokeObjectURL(att.previewUrl)
+      }
+      return []
+    })
+    if (cameraRef.current) cameraRef.current.value = ''
+    if (receiptUploadRef.current) receiptUploadRef.current.value = ''
+  }
+
+  function removePendingAttachment(id) {
+    setPendingAttachments((prev) => {
+      const next = []
+      for (const att of prev) {
+        if (att.id === id) {
+          if (att.previewUrl) URL.revokeObjectURL(att.previewUrl)
+        } else {
+          next.push(att)
+        }
+      }
+      return next
     })
     if (cameraRef.current) cameraRef.current.value = ''
     if (receiptUploadRef.current) receiptUploadRef.current.value = ''
   }
 
   function onPickReceipt(fileList) {
-    const file = [...(fileList || [])].filter(Boolean)[0]
-    if (!file) return
-    try {
-      assertReceiptFile(file)
-    } catch (err) {
-      setError(err.message || 'Could not attach file')
+    const incoming = [...(fileList || [])].filter(Boolean)
+    if (!incoming.length) return
+
+    const accepted = []
+    const errors = []
+    for (const file of incoming) {
+      try {
+        assertReceiptFile(file)
+        accepted.push(file)
+      } catch (err) {
+        errors.push(err.message || 'Could not attach file')
+      }
+    }
+    if (!accepted.length) {
+      setError(errors[0] || 'Could not attach file')
       return
     }
-    setError('')
-    setPendingPreviewUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev)
-      return isImageMime(file.type) ? URL.createObjectURL(file) : null
+
+    let skippedForCap = 0
+    setPendingAttachments((prev) => {
+      const room = MAX_AI_CHAT_FILES - prev.length
+      if (room <= 0) {
+        skippedForCap = accepted.length
+        return prev
+      }
+      const take = accepted.slice(0, room)
+      skippedForCap = accepted.length - take.length
+      return [
+        ...prev,
+        ...take.map((file) => ({
+          id: newAttachmentId(),
+          file,
+          previewUrl: isImageMime(file.type)
+            ? URL.createObjectURL(file)
+            : null,
+        })),
+      ]
     })
-    setPendingReceipt(file)
+
+    if (skippedForCap > 0) {
+      setError(
+        `Only ${MAX_AI_CHAT_FILES} files allowed; extra files were skipped.`,
+      )
+    } else if (errors.length) {
+      setError(errors[0])
+    } else {
+      setError('')
+    }
   }
 
   function tryAttachReceiptFiles(files) {
-    if (!isChat) return false
-    const file = firstReceiptFile(files)
-    if (!file) return false
-    onPickReceipt([file])
+    if (!isChat && !isCreate) return false
+    const list = receiptFilesFromList(files)
+    if (!list.length) return false
+    onPickReceipt(list)
     return true
   }
 
   function onComposerPaste(event) {
-    if (!isChat) return
-    const file = firstReceiptFile(filesFromDataTransfer(event.clipboardData))
-    if (!file) return
+    if (!isChat && !isCreate) return
+    const list = receiptFilesFromList(
+      filesFromDataTransfer(event.clipboardData),
+    )
+    if (!list.length) return
     event.preventDefault()
     event.stopPropagation()
-    onPickReceipt([file])
+    onPickReceipt(list)
   }
 
   function onComposerDragOver(event) {
-    if (!isChat) return
+    if (!isChat && !isCreate) return
     if (![...(event.dataTransfer?.types || [])].includes('Files')) return
     event.preventDefault()
     event.stopPropagation()
   }
 
   function onComposerDrop(event) {
-    if (!isChat) return
+    if (!isChat && !isCreate) return
     const files = filesFromDataTransfer(event.dataTransfer)
-    if (!firstReceiptFile(files)) return
+    if (!receiptFilesFromList(files).length) return
     event.preventDefault()
     event.stopPropagation()
     tryAttachReceiptFiles(files)
@@ -798,7 +937,7 @@ export function AiPlannerOverlay({
     setCreateResult(null)
     createDraftRef.current = null
     setInput('')
-    clearPendingReceipt()
+    clearPendingAttachments()
     modelHistoryRef.current = []
     if (activeSessionKey) await clearSession(activeSessionKey)
 
@@ -811,10 +950,7 @@ export function AiPlannerOverlay({
           preferredCurrency: defaultCurrency,
           displayLocale,
           getDraft: () => createDraftRef.current,
-          importerName:
-            user?.user_metadata?.display_name ||
-            user?.email?.split('@')[0] ||
-            'Traveler',
+          importerName: await resolvePlannerDisplayName(user),
         })
         setMessages([
           {
@@ -857,27 +993,35 @@ export function AiPlannerOverlay({
 
   async function onSend({ text: textOverride, fromVoice = false } = {}) {
     const text = String(textOverride ?? input).trim()
-    const receipt = isChat ? pendingReceipt : null
-    if ((!text && !receipt) || busy) return
+    const attachments =
+      isChat || isCreate ? [...pendingAttachments] : []
+    const files = attachments.map((a) => a.file).filter(Boolean)
+    if ((!text && !files.length) || busy) return
     if (fromVoice) stopDictation()
     setBusy(true)
     setError('')
     setInput('')
     const userMsgId = `u-${Date.now()}`
     const userText =
-      text || (receipt ? `Receipt: ${receipt.name || 'receipt'}` : '')
-    const receiptMeta = receipt
+      text ||
+      (files.length === 1
+        ? `${isCreate ? 'Attachment' : 'Receipt'}: ${files[0].name || 'file'}`
+        : files.length > 1
+          ? `${isCreate ? 'Attachments' : 'Receipts'}: ${files.length} files`
+          : '')
+    const receiptMeta = files.length
       ? {
-          receiptFile: receipt,
-          receiptName: receipt.name || 'receipt',
-          receiptMime: receipt.type || '',
-          receiptPreviewUrl: pendingPreviewUrl,
+          receipts: attachments.map((a) => ({
+            file: a.file,
+            name: a.file?.name || 'file',
+            mime: a.file?.type || '',
+            previewUrl: a.previewUrl,
+          })),
         }
       : {}
-    // Keep preview URL owned by the message after send
-    if (receipt) {
-      setPendingReceipt(null)
-      setPendingPreviewUrl(null)
+    // Transfer ownership of preview URLs to the message; clear composer.
+    if (files.length) {
+      setPendingAttachments([])
       if (cameraRef.current) cameraRef.current.value = ''
       if (receiptUploadRef.current) receiptUploadRef.current.value = ''
     }
@@ -897,7 +1041,9 @@ export function AiPlannerOverlay({
     try {
       if (isCreate) {
         if (!chatRef.current) return
-        const turn = await chatRef.current.send(text)
+        const turn = await chatRef.current.send(text, {
+          files,
+        })
         assistantText = turn.assistant_message || ''
         modelHistoryRef.current = appendModelTurn(
           modelHistoryRef.current,
@@ -933,7 +1079,7 @@ export function AiPlannerOverlay({
       } else {
         if (!chatRef.current) return
         const turn = await chatRef.current.send(text, {
-          files: receipt ? [receipt] : [],
+          files,
         })
         assistantText = turn.assistant_message || ''
         modelHistoryRef.current = appendModelTurn(
@@ -941,12 +1087,27 @@ export function AiPlannerOverlay({
           userText,
           turn.assistant_message,
         )
+        const expenseActions = (turn.actions || []).filter(
+          (a) => a.type === 'add_expense',
+        )
         const actions = []
+        let expenseOrdinal = 0
         for (const a of turn.actions || []) {
+          let receiptFiles = null
+          if (a.type === 'add_expense' && files.length) {
+            if (expenseActions.length === 1) {
+              receiptFiles = files
+            } else if (expenseActions.length === files.length) {
+              receiptFiles = [files[expenseOrdinal]].filter(Boolean)
+            } else {
+              receiptFiles = files
+            }
+            expenseOrdinal += 1
+          }
           let next = {
             ...a,
             status: 'pending',
-            receiptFile: a.type === 'add_expense' ? receipt || null : null,
+            receiptFiles,
           }
           if (
             (a.type === 'add_playlist' || a.type === 'update_playlist') &&
@@ -1044,11 +1205,8 @@ export function AiPlannerOverlay({
   )
   const isSparse =
     messages.length <= 2 && !hasPendingActions && !createResult
-  const pastWelcomeCreate =
-    isCreate &&
-    (!!createResult || messages.some((m) => m.role === 'user'))
-  const showPlusMenu =
-    ready && ((isChat && canEdit) || pastWelcomeCreate)
+  // Match Docto: + menu as soon as chat is ready (create or editable journey).
+  const showPlusMenu = ready && ((isChat && canEdit) || isCreate)
 
   return createPortal(
     <>
@@ -1114,6 +1272,7 @@ export function AiPlannerOverlay({
                 index === 0 &&
                 !isUser &&
                 (m.id === 'welcome' || m.id === 'welcome-create')
+              const turnReceipts = messageReceipts(m)
               return (
                 <div
                   key={m.id}
@@ -1124,20 +1283,27 @@ export function AiPlannerOverlay({
                   )}
                 >
                   <div className={styles.bubble}>
-                    {m.receiptFile && (
-                      <div className={styles.receiptAttach}>
-                        {m.receiptPreviewUrl ? (
-                          <img
-                            src={m.receiptPreviewUrl}
-                            alt=""
-                            className={styles.receiptThumb}
-                          />
-                        ) : (
-                          <FileText size={16} aria-hidden="true" />
-                        )}
-                        <span className={styles.receiptName}>
-                          {m.receiptName || 'Receipt'}
-                        </span>
+                    {turnReceipts.length > 0 && (
+                      <div className={styles.receiptAttachRow}>
+                        {turnReceipts.map((r, i) => (
+                          <div
+                            key={`${m.id}-r-${i}`}
+                            className={styles.receiptAttach}
+                          >
+                            {r.previewUrl ? (
+                              <img
+                                src={r.previewUrl}
+                                alt=""
+                                className={styles.receiptThumb}
+                              />
+                            ) : (
+                              <FileText size={16} aria-hidden="true" />
+                            )}
+                            <span className={styles.receiptName}>
+                              {r.name || 'Receipt'}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     )}
                     {m.text}
@@ -1165,22 +1331,7 @@ export function AiPlannerOverlay({
                             {turnJourney.default_timezone} ·{' '}
                             {turnJourney.default_currency}
                           </p>
-                          <ul>
-                            <li>
-                              {(turnSnapshot.entries || []).length} activities
-                            </li>
-                            <li>
-                              {(turnSnapshot.todos || []).length} todos
-                            </li>
-                            <li>
-                              {(turnSnapshot.place_ideas || []).length} place
-                              ideas
-                            </li>
-                            <li>
-                              {(turnSnapshot.playlist || []).length} playlist
-                              items
-                            </li>
-                          </ul>
+                          <SnapshotDraftStats snapshot={turnSnapshot} />
                           <div className={styles.actionActions}>
                             <Button
                               size="sm"
@@ -1216,7 +1367,11 @@ export function AiPlannerOverlay({
                                     action,
                                     messageId: m.id,
                                     actionId: action.id,
-                                    receiptFile: action.receiptFile || null,
+                                    receiptFiles:
+                                      action.receiptFiles ||
+                                      (action.receiptFile
+                                        ? [action.receiptFile]
+                                        : []),
                                   })
                                 }
                                 disabled={applyMut.isPending}
@@ -1298,15 +1453,18 @@ export function AiPlannerOverlay({
                 hidden
                 onChange={(e) => {
                   onPickReceipt(e.target.files)
+                  e.target.value = ''
                 }}
               />
               <input
                 ref={receiptUploadRef}
                 type="file"
                 accept="image/*,application/pdf,.pdf"
+                multiple
                 hidden
                 onChange={(e) => {
                   onPickReceipt(e.target.files)
+                  e.target.value = ''
                 }}
               />
               <div
@@ -1315,33 +1473,35 @@ export function AiPlannerOverlay({
                 onDragOver={onComposerDragOver}
                 onDrop={onComposerDrop}
               >
-                {pendingReceipt && (
+                {pendingAttachments.length > 0 && (
                   <div className={styles.pendingChipRow}>
-                    <div className={styles.pendingChip}>
-                      {pendingPreviewUrl ? (
-                        <img
-                          src={pendingPreviewUrl}
-                          alt=""
-                          className={styles.pendingThumb}
-                        />
-                      ) : (
-                        <FileText size={14} aria-hidden="true" />
-                      )}
-                      <span className={styles.pendingChipText}>
-                        {pendingReceipt.name || 'Receipt'}
-                        <span className={styles.pendingChipMeta}>
-                          {formatByteSize(pendingReceipt.size)}
+                    {pendingAttachments.map((att) => (
+                      <div key={att.id} className={styles.pendingChip}>
+                        {att.previewUrl ? (
+                          <img
+                            src={att.previewUrl}
+                            alt=""
+                            className={styles.pendingThumb}
+                          />
+                        ) : (
+                          <FileText size={14} aria-hidden="true" />
+                        )}
+                        <span className={styles.pendingChipText}>
+                          {att.file?.name || 'Receipt'}
+                          <span className={styles.pendingChipMeta}>
+                            {formatByteSize(att.file?.size)}
+                          </span>
                         </span>
-                      </span>
-                      <button
-                        type="button"
-                        className={styles.pendingChipRemove}
-                        onClick={clearPendingReceipt}
-                        aria-label="Remove attachment"
-                      >
-                        <X size={14} aria-hidden="true" />
-                      </button>
-                    </div>
+                        <button
+                          type="button"
+                          className={styles.pendingChipRemove}
+                          onClick={() => removePendingAttachment(att.id)}
+                          aria-label={`Remove ${att.file?.name || 'attachment'}`}
+                        >
+                          <X size={14} aria-hidden="true" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
                 <Input
@@ -1354,14 +1514,14 @@ export function AiPlannerOverlay({
                       ? 'Listening…'
                       : voicePhase === 'speaking'
                         ? 'Speaking…'
-                        : pendingReceipt
+                        : pendingAttachments.length
                           ? 'Add a note (optional)…'
                           : isCreate
-                            ? 'Message the planner…'
+                            ? 'Message or attach booking(s)…'
                             : hasMapFocus
                               ? 'Suggest places near this map…'
                               : isChat
-                                ? 'Message or paste a receipt…'
+                                ? 'Message or paste receipt(s)…'
                                 : 'Write a message…'
                   }
                   onPaste={onComposerPaste}
@@ -1411,34 +1571,34 @@ export function AiPlannerOverlay({
                             <MessageSquarePlus size={14} />
                             New chat
                           </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className={styles.plusMenuBtn}
+                            onClick={() => {
+                              setPlusOpen(false)
+                              cameraRef.current?.click()
+                            }}
+                          >
+                            <Camera size={14} />
+                            Take photo
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className={styles.plusMenuBtn}
+                            onClick={() => {
+                              setPlusOpen(false)
+                              receiptUploadRef.current?.click()
+                            }}
+                          >
+                            <Upload size={14} />
+                            Upload file
+                          </Button>
                           {isChat && (
                             <>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className={styles.plusMenuBtn}
-                                onClick={() => {
-                                  setPlusOpen(false)
-                                  cameraRef.current?.click()
-                                }}
-                              >
-                                <Camera size={14} />
-                                Take photo
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className={styles.plusMenuBtn}
-                                onClick={() => {
-                                  setPlusOpen(false)
-                                  receiptUploadRef.current?.click()
-                                }}
-                              >
-                                <Upload size={14} />
-                                Upload file
-                              </Button>
                               <Button
                                 type="button"
                                 variant="ghost"
@@ -1531,7 +1691,8 @@ export function AiPlannerOverlay({
                       className={styles.promptSend}
                       onClick={() => void onSend()}
                       disabled={
-                        busy || (!input.trim() && !pendingReceipt)
+                        busy ||
+                        (!input.trim() && pendingAttachments.length === 0)
                       }
                       aria-label={busy ? 'Sending' : 'Send'}
                     >
@@ -1608,16 +1769,7 @@ export function AiPlannerOverlay({
                 {previewJourney.default_timezone} ·{' '}
                 {previewJourney.default_currency}
               </p>
-              <ul>
-                <li>{(previewSnap.entries || []).length} activities</li>
-                <li>{(previewSnap.todos || []).length} todos</li>
-                <li>
-                  {(previewSnap.place_ideas || []).length} place ideas
-                </li>
-                <li>
-                  {(previewSnap.playlist || []).length} playlist items
-                </li>
-              </ul>
+              <SnapshotDraftStats snapshot={previewSnap} />
               <div className={styles.actionActions}>
                 <Button
                   size="sm"

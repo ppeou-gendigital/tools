@@ -28,7 +28,6 @@ import {
   ListChecks,
   ListMusic,
   LocateFixed,
-  Component,
   MapPin,
   Pill,
   Plus,
@@ -45,8 +44,10 @@ import {
   Utensils,
   Users,
   CircleDollarSign,
+  Paperclip,
   X,
 } from 'lucide-react'
+import { FloatingIdeasButton } from '@/blocks/FloatingIdeasButton'
 import { AnchoredPopover } from '@/molecules/AnchoredPopover'
 import { AiPlannerButton } from '@/molecules/AiPlannerButton'
 import { Button } from '@/molecules/Button'
@@ -83,6 +84,58 @@ import styles from './Page.module.scss'
 const DEFAULT_CENTER = { lat: 48.8566, lng: 2.3522 }
 const DEFAULT_ZOOM = 11
 const SEARCH_RESULT_LIMIT = 12
+const MAP_VIEWPORT_KEY_PREFIX = 'viaggio:map-viewport:'
+
+function mapViewportStorageKey(journeyId) {
+  return `${MAP_VIEWPORT_KEY_PREFIX}${journeyId}`
+}
+
+/** @returns {{ lat: number, lng: number, zoom: number } | null} */
+function readMapViewport(journeyId) {
+  if (!journeyId) return null
+  try {
+    const raw = globalThis.localStorage?.getItem(mapViewportStorageKey(journeyId))
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    const lat = Number(parsed?.lat)
+    const lng = Number(parsed?.lng)
+    const zoom = Number(parsed?.zoom)
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng) ||
+      !Number.isFinite(zoom) ||
+      zoom < 1 ||
+      zoom > 22
+    ) {
+      return null
+    }
+    return { lat, lng, zoom }
+  } catch {
+    return null
+  }
+}
+
+function writeMapViewport(journeyId, viewport) {
+  if (!journeyId || !viewport) return
+  const lat = Number(viewport.lat)
+  const lng = Number(viewport.lng)
+  const zoom = Number(viewport.zoom)
+  if (
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng) ||
+    !Number.isFinite(zoom)
+  ) {
+    return
+  }
+  try {
+    globalThis.localStorage?.setItem(
+      mapViewportStorageKey(journeyId),
+      JSON.stringify({ lat, lng, zoom }),
+    )
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
 
 const QUICK_SEARCHES = [
   { id: 'restaurants', label: 'Restaurants', query: 'restaurants', Icon: Utensils },
@@ -344,6 +397,36 @@ function MapBoundsBridge({ onBounds }) {
   return null
 }
 
+/** Persist center + zoom per journey after pan/zoom settles. */
+function MapViewportPersist({ journeyId }) {
+  const map = useMap()
+  const timerRef = useRef(null)
+
+  useEffect(() => {
+    if (!map || !journeyId) return undefined
+    const onIdle = () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(() => {
+        const center = map.getCenter()
+        const zoom = map.getZoom()
+        if (!center || zoom == null) return
+        writeMapViewport(journeyId, {
+          lat: center.lat(),
+          lng: center.lng(),
+          zoom,
+        })
+      }, 300)
+    }
+    const listener = map.addListener('idle', onIdle)
+    return () => {
+      listener?.remove?.()
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [map, journeyId])
+
+  return null
+}
+
 /** Fly the map to a search focus target (city viewport or place point). */
 function MapFocus({ target }) {
   const map = useMap()
@@ -386,10 +469,17 @@ function MapFocus({ target }) {
   return null
 }
 
-function MapCamera({ ideas, selectedId, fallbackCenter, searchFocus }) {
+function MapCamera({
+  ideas,
+  selectedId,
+  fallbackCenter,
+  searchFocus,
+  restoredViewport,
+}) {
   const map = useMap()
   const appliedFallbackKey = useRef('')
   const fittedIdeasKey = useRef('')
+  const appliedRestoredKey = useRef('')
   const ideasRef = useRef(ideas)
   const layoutKey = ideas
     .map((i) => `${i.id}:${i.lat}:${i.lng}`)
@@ -404,6 +494,27 @@ function MapCamera({ ideas, selectedId, fallbackCenter, searchFocus }) {
     if (searchFocus) return
 
     const list = ideasRef.current
+
+    // Prefer last saved viewport for this journey over auto-fit / geo fallback.
+    if (
+      restoredViewport &&
+      Number.isFinite(restoredViewport.lat) &&
+      Number.isFinite(restoredViewport.lng) &&
+      Number.isFinite(restoredViewport.zoom)
+    ) {
+      const restoreKey = `${restoredViewport.lat},${restoredViewport.lng},${restoredViewport.zoom}`
+      if (appliedRestoredKey.current !== restoreKey) {
+        appliedRestoredKey.current = restoreKey
+        map.panTo({
+          lat: restoredViewport.lat,
+          lng: restoredViewport.lng,
+        })
+        map.setZoom(restoredViewport.zoom)
+        fittedIdeasKey.current = layoutKey
+        appliedFallbackKey.current = `${restoredViewport.lat},${restoredViewport.lng}`
+      }
+    }
+
     if (selectedId) {
       const selected = list.find((i) => i.id === selectedId)
       if (
@@ -417,6 +528,9 @@ function MapCamera({ ideas, selectedId, fallbackCenter, searchFocus }) {
       }
       return
     }
+
+    // Skip initial ideas fitBounds / fallback for this visit when restoring.
+    if (restoredViewport) return
 
     if (list.length > 0 && fittedIdeasKey.current !== layoutKey) {
       fittedIdeasKey.current = layoutKey
@@ -449,7 +563,14 @@ function MapCamera({ ideas, selectedId, fallbackCenter, searchFocus }) {
       map.setZoom(DEFAULT_ZOOM)
       appliedFallbackKey.current = key
     }
-  }, [map, layoutKey, selectedId, fallbackCenter, searchFocus])
+  }, [
+    map,
+    layoutKey,
+    selectedId,
+    fallbackCenter,
+    searchFocus,
+    restoredViewport,
+  ])
 
   return null
 }
@@ -1652,6 +1773,12 @@ function journeyShortcuts(journeyId, go) {
       pick: () => () => go.goSpending(journeyId),
     },
     {
+      id: 'attachments',
+      label: 'Attachments',
+      icon: Paperclip,
+      pick: () => () => go.goAttachments(journeyId),
+    },
+    {
       id: 'playlist',
       label: 'Playlist',
       icon: ListMusic,
@@ -1686,7 +1813,20 @@ export function Map() {
   const { mapsProvider } = useDisplayPrefs()
   const qc = useQueryClient()
 
-  const [center, setCenter] = useState(DEFAULT_CENTER)
+  const initialViewport = readMapViewport(journeyId)
+  const [center, setCenter] = useState(() =>
+    initialViewport
+      ? { lat: initialViewport.lat, lng: initialViewport.lng }
+      : DEFAULT_CENTER,
+  )
+  const [mapZoom, setMapZoom] = useState(
+    () => initialViewport?.zoom ?? DEFAULT_ZOOM,
+  )
+  /** Saved viewport for this visit — skips geo/auto-fit until the next Map open. */
+  const [restoredViewport, setRestoredViewport] = useState(
+    () => initialViewport,
+  )
+  const restoredViewportRef = useRef(initialViewport)
   const [mapBounds, setMapBounds] = useState(null)
   const [resultPins, setResultPins] = useState([])
   /** Prominent pin for the place currently opened from search / POI. */
@@ -1708,17 +1848,33 @@ export function Map() {
   const aiEnabled = isAiPlanningEnabled()
 
   useEffect(() => {
+    const saved = readMapViewport(journeyId)
+    restoredViewportRef.current = saved
+    if (saved) {
+      setCenter({ lat: saved.lat, lng: saved.lng })
+      setMapZoom(saved.zoom)
+      setRestoredViewport(saved)
+    } else {
+      setRestoredViewport(null)
+      setCenter(DEFAULT_CENTER)
+      setMapZoom(DEFAULT_ZOOM)
+    }
+  }, [journeyId])
+
+  useEffect(() => {
     let cancelled = false
     // Non-interactive: cache / already-granted only — no permission dialog on open.
     resolveCoords({ interactive: false }).then((coords) => {
       if (cancelled || !coords) return
-      setCenter({ lat: coords.lat, lng: coords.lng })
       setUserLocation({ lat: coords.lat, lng: coords.lng })
+      // Keep a restored journey viewport; do not jump to geolocation.
+      if (restoredViewportRef.current) return
+      setCenter({ lat: coords.lat, lng: coords.lng })
     })
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [journeyId])
 
   const { data: journey } = useQuery({
     queryKey: ['viaggio', 'journey', journeyId],
@@ -1934,13 +2090,16 @@ export function Map() {
   return (
     <div className={cx(styles.page, styles.mapPage)} data-map-page>
       <PageHeader
-        title="Map"
-        subtitle={journey?.title || 'Brainstorm places'}
         leading={
-          <Button variant="ghost" size="sm" onClick={goBack}>
-            <ArrowLeft size={14} aria-hidden="true" />
-            {previousRouteLabel ?? 'Back'}
-          </Button>
+          <div className={styles.mapHeaderLead}>
+            <Button variant="ghost" size="sm" onClick={goBack}>
+              <ArrowLeft size={14} aria-hidden="true" />
+              {previousRouteLabel ?? 'Back'}
+            </Button>
+            <h1 className={styles.mapHeaderJourney}>
+              {journey?.title || 'Brainstorm places'}
+            </h1>
+          </div>
         }
         actions={
           <div className={styles.toolbar}>
@@ -2016,8 +2175,9 @@ export function Map() {
             <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={['places']}>
               <div className={styles.mapCanvas}>
                 <GoogleMap
+                  key={journeyId}
                   defaultCenter={center}
-                  defaultZoom={DEFAULT_ZOOM}
+                  defaultZoom={mapZoom}
                   gestureHandling="greedy"
                   disableDefaultUI={false}
                   mapTypeControl={false}
@@ -2031,9 +2191,11 @@ export function Map() {
                     selectedId={selectedId}
                     fallbackCenter={center}
                     searchFocus={searchFocus}
+                    restoredViewport={restoredViewport}
                   />
                   <MapFocus target={searchFocus} />
                   <MapBoundsBridge onBounds={setMapBounds} />
+                  <MapViewportPersist journeyId={journeyId} />
                   <MapPoiClick
                     onPlaceId={openPlaceDetails}
                     onEmptyMapClick={dismissPlaceCard}
@@ -2151,212 +2313,164 @@ export function Map() {
             </APIProvider>
           )}
 
-          <aside
-            className={cx(
-              styles.mapIdeasPanel,
-              !ideasOpen && styles.mapIdeasPanelCollapsed,
-              detailsPlaceId && styles.mapIdeasPanelHidden,
-            )}
-            aria-label="Ideas"
-            aria-hidden={Boolean(detailsPlaceId)}
+          <FloatingIdeasButton
+            open={ideasOpen}
+            onOpenChange={setIdeasOpen}
+            count={ideas.length}
+            hidden={Boolean(detailsPlaceId)}
+            showFitAll={ideas.length > 0}
+            onFitAll={fitAllIdeas}
           >
-            <div className={styles.mapIdeasHeader}>
-              <button
-                type="button"
-                className={styles.mapIdeasToggle}
-                onClick={() => setIdeasOpen((open) => !open)}
-                aria-expanded={ideasOpen}
-                aria-controls="map-ideas-body"
+            <p className={styles.mapIdeasBlurb}>
+              Pin places, then tap one to measure straight-line distances to the
+              others. Promote a pin to the journey timeline when you decide to
+              go.
+            </p>
+            {ideas.length >= 2 && ideasProximityUrl ? (
+              <div
+                className={styles.mapIdeasProximity}
+                aria-label="Open Ideas in Maps"
               >
-                <MapPin size={14} aria-hidden="true" />
-                <span className={styles.mapIdeasTitle}>Ideas</span>
-                <span className={styles.mapIdeasCount}>{ideas.length}</span>
-              </button>
-              {ideas.length > 0 ? (
-                <button
-                  type="button"
-                  className={styles.mapIdeasFitBtn}
-                  onClick={fitAllIdeas}
-                  title="Show all Ideas on the map"
-                  aria-label="Show all Ideas on the map"
+                <a
+                  className={styles.mapRouteLink}
+                  href={ideasProximityUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={`Open all Ideas in ${mapsProvider === 'apple' ? 'Apple' : 'Google'} Maps`}
                 >
-                  <Component size={14} aria-hidden="true" />
-                </button>
-              ) : null}
-              <button
-                type="button"
-                className={styles.mapIdeasChevronBtn}
-                onClick={() => setIdeasOpen((open) => !open)}
-                aria-expanded={ideasOpen}
-                aria-controls="map-ideas-body"
-                aria-label={ideasOpen ? 'Collapse Ideas' : 'Expand Ideas'}
-              >
-                {ideasOpen ? (
-                  <ChevronDown size={16} aria-hidden="true" />
-                ) : (
-                  <ChevronUp size={16} aria-hidden="true" />
-                )}
-              </button>
-            </div>
-
-            {ideasOpen && (
-              <div id="map-ideas-body" className={styles.mapIdeasBody}>
-                <p className={styles.mapIdeasBlurb}>
-                  Pin places, then tap one to measure straight-line distances to
-                  the others. Promote a pin to the journey timeline when you
-                  decide to go.
-                </p>
-                {ideas.length >= 2 && ideasProximityUrl ? (
-                  <div
-                    className={styles.mapIdeasProximity}
-                    aria-label="Open Ideas in Maps"
-                  >
-                    <a
-                      className={styles.mapRouteLink}
-                      href={ideasProximityUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      title={`Open all Ideas in ${mapsProvider === 'apple' ? 'Apple' : 'Google'} Maps`}
-                    >
-                      Open all in Maps
-                      <ExternalLink size={11} aria-hidden="true" />
-                    </a>
-                  </div>
-                ) : null}
-
-                {ideas.length === 0 ? (
-                  <p className={styles.mapIdeasEmpty}>
-                    {canEdit
-                      ? 'Browse search results, read reviews, then tap Add to Ideas.'
-                      : 'No ideas yet.'}
-                  </p>
-                ) : (
-                  <ul className={styles.mapIdeaList}>
-                    {ideas.map((idea) => {
-                      const noteValue =
-                        noteDrafts[idea.id] !== undefined
-                          ? noteDrafts[idea.id]
-                          : idea.note || ''
-                      const isSelected = selectedId === idea.id
-                      const promoted = Boolean(idea.entryId)
-                      const fromSelected = segmentForIdea(proximity, idea.id)
-                      return (
-                        <li
-                          key={idea.id}
-                          className={cx(
-                            styles.mapIdeaRow,
-                            isSelected && styles.mapIdeaRowSelected,
-                          )}
-                        >
-                          <button
-                            type="button"
-                            className={styles.mapIdeaSelect}
-                            onClick={() => setSelectedId(idea.id)}
-                          >
-                            <span className={styles.rowTitle}>{idea.name}</span>
-                            {idea.address ? (
-                              <span className={styles.rowMeta}>
-                                {idea.address}
-                              </span>
-                            ) : null}
-                            {isSelected ? (
-                              <span
-                                className={cx(
-                                  styles.mapBadge,
-                                  styles.mapBadgeReference,
-                                )}
-                              >
-                                Reference
-                              </span>
-                            ) : fromSelected ? (
-                              <span className={styles.mapIdeaDistance}>
-                                {fromSelected.label}
-                                {selectedIdea?.name
-                                  ? ` from ${selectedIdea.name}`
-                                  : ' from selected'}
-                              </span>
-                            ) : null}
-                            {promoted ? (
-                              <span className={styles.mapBadge}>
-                                <Check size={12} aria-hidden="true" />
-                                Added to journey
-                              </span>
-                            ) : null}
-                          </button>
-
-                          {canEdit && (
-                            <div className={styles.mapIdeaNote}>
-                              <Label htmlFor={`place-note-${idea.id}`}>
-                                Note
-                              </Label>
-                              <Input
-                                id={`place-note-${idea.id}`}
-                                value={noteValue}
-                                placeholder="Why this place?"
-                                onChange={(e) =>
-                                  setNoteDrafts((prev) => ({
-                                    ...prev,
-                                    [idea.id]: e.target.value,
-                                  }))
-                                }
-                                onBlur={() => {
-                                  const next = String(noteValue || '')
-                                  if (next === (idea.note || '')) return
-                                  noteMut.mutate({ id: idea.id, note: next })
-                                }}
-                              />
-                            </div>
-                          )}
-
-                          <div className={styles.mapIdeaActions}>
-                            {promoted ? (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() =>
-                                  goEntryEdit({
-                                    journeyId,
-                                    entryId: idea.entryId,
-                                    activityId: 'place',
-                                  })
-                                }
-                              >
-                                <ExternalLink size={14} aria-hidden="true" />
-                                Open
-                              </Button>
-                            ) : canEdit ? (
-                              <Button
-                                size="sm"
-                                onClick={() => promoteMut.mutate(idea)}
-                                disabled={promotingId === idea.id}
-                              >
-                                <Plus size={14} aria-hidden="true" />
-                                {promotingId === idea.id
-                                  ? 'Adding…'
-                                  : 'Add to journey'}
-                              </Button>
-                            ) : null}
-                            {canEdit && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className={styles.iconBtnDanger}
-                                aria-label={`Remove ${idea.name}`}
-                                title="Remove"
-                                onClick={() => setConfirmDelete(idea)}
-                              >
-                                <Trash2 size={14} aria-hidden="true" />
-                              </Button>
-                            )}
-                          </div>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                )}
+                  Open all in Maps
+                  <ExternalLink size={11} aria-hidden="true" />
+                </a>
               </div>
+            ) : null}
+
+            {ideas.length === 0 ? (
+              <p className={styles.mapIdeasEmpty}>
+                {canEdit
+                  ? 'Browse search results, read reviews, then tap Add to Ideas.'
+                  : 'No ideas yet.'}
+              </p>
+            ) : (
+              <ul className={styles.mapIdeaList}>
+                {ideas.map((idea) => {
+                  const noteValue =
+                    noteDrafts[idea.id] !== undefined
+                      ? noteDrafts[idea.id]
+                      : idea.note || ''
+                  const isSelected = selectedId === idea.id
+                  const promoted = Boolean(idea.entryId)
+                  const fromSelected = segmentForIdea(proximity, idea.id)
+                  return (
+                    <li
+                      key={idea.id}
+                      className={cx(
+                        styles.mapIdeaRow,
+                        isSelected && styles.mapIdeaRowSelected,
+                      )}
+                    >
+                      <button
+                        type="button"
+                        className={styles.mapIdeaSelect}
+                        onClick={() => setSelectedId(idea.id)}
+                      >
+                        <span className={styles.rowTitle}>{idea.name}</span>
+                        {idea.address ? (
+                          <span className={styles.rowMeta}>{idea.address}</span>
+                        ) : null}
+                        {isSelected ? (
+                          <span
+                            className={cx(
+                              styles.mapBadge,
+                              styles.mapBadgeReference,
+                            )}
+                          >
+                            Reference
+                          </span>
+                        ) : fromSelected ? (
+                          <span className={styles.mapIdeaDistance}>
+                            {fromSelected.label}
+                            {selectedIdea?.name
+                              ? ` from ${selectedIdea.name}`
+                              : ' from selected'}
+                          </span>
+                        ) : null}
+                        {promoted ? (
+                          <span className={styles.mapBadge}>
+                            <Check size={12} aria-hidden="true" />
+                            Added to journey
+                          </span>
+                        ) : null}
+                      </button>
+
+                      {canEdit && (
+                        <div className={styles.mapIdeaNote}>
+                          <Label htmlFor={`place-note-${idea.id}`}>Note</Label>
+                          <Input
+                            id={`place-note-${idea.id}`}
+                            value={noteValue}
+                            placeholder="Why this place?"
+                            onChange={(e) =>
+                              setNoteDrafts((prev) => ({
+                                ...prev,
+                                [idea.id]: e.target.value,
+                              }))
+                            }
+                            onBlur={() => {
+                              const next = String(noteValue || '')
+                              if (next === (idea.note || '')) return
+                              noteMut.mutate({ id: idea.id, note: next })
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      <div className={styles.mapIdeaActions}>
+                        {promoted ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              goEntryEdit({
+                                journeyId,
+                                entryId: idea.entryId,
+                                activityId: 'place',
+                              })
+                            }
+                          >
+                            <ExternalLink size={14} aria-hidden="true" />
+                            Open
+                          </Button>
+                        ) : canEdit ? (
+                          <Button
+                            size="sm"
+                            onClick={() => promoteMut.mutate(idea)}
+                            disabled={promotingId === idea.id}
+                          >
+                            <Plus size={14} aria-hidden="true" />
+                            {promotingId === idea.id
+                              ? 'Adding…'
+                              : 'Add to journey'}
+                          </Button>
+                        ) : null}
+                        {canEdit && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className={styles.iconBtnDanger}
+                            aria-label={`Remove ${idea.name}`}
+                            title="Remove"
+                            onClick={() => setConfirmDelete(idea)}
+                          >
+                            <Trash2 size={14} aria-hidden="true" />
+                          </Button>
+                        )}
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
             )}
-          </aside>
+          </FloatingIdeasButton>
         </div>
       )}
 

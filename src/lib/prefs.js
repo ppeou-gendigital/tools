@@ -7,8 +7,15 @@
 // opaquely so prefs CAS never wipes sibling fields. Crypto salt/verifier
 // must NOT live here — use public.vault_meta (see vaultMetaApi.js).
 
+import {
+  DEFAULT_AI_CELL,
+  DEFAULT_MENU_CELL,
+  normalizeAiFabCell,
+  normalizeFabCell,
+  oppositeFabCell,
+} from '@tools/service/fabCell'
+
 const THEMES = ['light', 'dark', 'system', 'daynight']
-const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
 const MAPS_PROVIDERS = ['google', 'apple']
 
 const FONT_MIN = 12
@@ -19,8 +26,8 @@ const FONT_DEFAULT = 16
 const DEFAULTS = {
   theme: 'daynight',
   fontSize: FONT_DEFAULT,
-  fabCorner: 'bottom-right',
-  aiFabCorner: 'bottom-left',
+  fabCorner: DEFAULT_MENU_CELL,
+  aiFabCorner: DEFAULT_AI_CELL,
   displayLocale: null,
   defaultCurrency: null,
   mapsProvider: 'google',
@@ -58,24 +65,19 @@ export function normalizeTheme(v) {
   return THEMES.includes(v) ? v : DEFAULTS.theme
 }
 
+/** FAB cell token ("col:row" in XL space) or legacy corner → XL cell. */
 export function normalizeFabCorner(v) {
-  return CORNERS.includes(v) ? v : DEFAULTS.fabCorner
+  return normalizeFabCell(v)
 }
 
-/** Horizontal opposite — keeps FABs from stacking on first migrate. */
+/** Horizontal opposite in XL space — keeps FABs from stacking on migrate. */
 export function oppositeFabCorner(corner) {
-  const c = normalizeFabCorner(corner)
-  if (c === 'top-left') return 'top-right'
-  if (c === 'top-right') return 'top-left'
-  if (c === 'bottom-left') return 'bottom-right'
-  return 'bottom-left'
+  return oppositeFabCell(normalizeFabCell(corner))
 }
 
-/** AI FAB corner; missing/invalid → opposite of menu; never equal to menu. */
+/** AI FAB cell; missing/invalid → opposite of menu; never equal to menu. */
 export function normalizeAiFabCorner(v, menuCorner) {
-  const menu = normalizeFabCorner(menuCorner)
-  if (CORNERS.includes(v) && v !== menu) return v
-  return oppositeFabCorner(menu)
+  return normalizeAiFabCell(v, menuCorner)
 }
 
 // Snap to the FONT_STEP grid inside [MIN, MAX] and rescue any stale
@@ -112,13 +114,13 @@ export function normalizePrefsConfirmed(v) {
 // applying it via the provider setters. Clamps owned keys; preserves
 // sibling-tool keys opaquely.
 export function normalizeRemotePrefs(remote) {
-  const fabCorner = normalizeFabCorner(remote?.fabCorner)
+  const fabCorner = normalizeFabCell(remote?.fabCorner)
   return {
     ...extractForeignPrefs(remote),
     theme: normalizeTheme(remote?.theme),
     fontSize: normalizeFontSize(remote?.fontSize),
     fabCorner,
-    aiFabCorner: normalizeAiFabCorner(remote?.aiFabCorner, fabCorner),
+    aiFabCorner: normalizeAiFabCell(remote?.aiFabCorner, fabCorner),
     displayLocale: normalizeDisplayLocale(remote?.displayLocale),
     defaultCurrency: normalizeDefaultCurrency(remote?.defaultCurrency),
     mapsProvider: normalizeMapsProvider(remote?.mapsProvider),

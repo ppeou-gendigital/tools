@@ -103,13 +103,25 @@ export function AnchoredPopover({
   useEffect(() => {
     if (!open) return
     const onDown = (e) => {
-      if (panelRef.current?.contains(e.target)) return
-      if (anchorRef?.current?.contains(e.target)) return
-      if (guardRef?.current?.contains(e.target)) return
+      const t = e.target
+      if (!(t instanceof Node)) return
+      if (panelRef.current?.contains(t)) return
+      if (anchorRef?.current?.contains(t)) return
+      if (guardRef?.current?.contains(t)) return
+      // Nested portaled menus / file preview live outside this panel; keep open.
+      if (
+        t instanceof Element &&
+        (t.closest('[data-anchored-popover]') ||
+          t.closest('[data-file-preview]'))
+      ) {
+        return
+      }
       onClose?.()
     }
     const onKey = (e) => {
       if (e.key === 'Escape') {
+        // File preview handles Escape first (capture); skip if it is open.
+        if (document.querySelector('[data-file-preview]')) return
         e.stopPropagation()
         onClose?.()
       }
@@ -129,6 +141,7 @@ export function AnchoredPopover({
       ref={panelRef}
       role={role}
       aria-label={ariaLabel || title}
+      data-anchored-popover=""
       className={cx(styles.panel, fluid && styles.fluid, className)}
       style={{
         top: pos.top,

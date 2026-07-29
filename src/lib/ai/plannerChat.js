@@ -15,6 +15,9 @@ import { ensureAppCheck, getFirebaseApp } from '@/lib/firebaseApp'
 /** Soft cap for multimodal inlineData (Firebase request limit ~20 MB). */
 export const AI_RECEIPT_MAX_BYTES = 8 * 1024 * 1024
 
+/** Max image/PDF parts per chat turn (create + planner). */
+export const MAX_AI_CHAT_FILES = 8
+
 const AI_RECEIPT_MIME = new Set([
   'image/jpeg',
   'image/jpg',
@@ -42,7 +45,7 @@ function systemInstructionFor(ctx) {
     CHAT_TURN_PROMPT_SCHEMA,
     'Prefer update_* / remove_* with existing ids from current_journey_context; use add_* for new items.',
     'Full CRUD is allowed on entries, todos, place ideas, playlist, and expenses. update_journey for title/dates/timezone/currency. Never delete people/members or the whole journey.',
-    'When the user attaches a receipt photo or PDF, read it and propose add_expense.',
+    'When the user attaches receipt photo(s) or PDF(s), read them and propose add_expense (one action per receipt when amounts differ).',
     'place_ideas require approximate lat/lng on create. entries need valid activity_id values.',
     'Suggest places: when asked for place ideas / “near the map”, propose add_place_ideas (typically 5–10) near map_focus if present, else near existing pins. Distinct names, lat/lng required, short notes OK. Skip duplicates.',
     'Playlist: when the user asks to search/add songs, emit add_playlist with song or mix titles (and optional search_query). Do NOT invent YouTube/Spotify URLs — the app resolves real youtube.com/watch links via YouTube search. Prefer 3–8 titles. You may still pass a real pasted watch/playlist URL if the user provided one.',
@@ -52,11 +55,13 @@ function systemInstructionFor(ctx) {
   ].join('\n')
 }
 
-function assertReceiptFile(file) {
+export function assertReceiptFile(file) {
   if (!file) throw new Error('No file selected')
   const mime = String(file.type || '').toLowerCase()
   if (!AI_RECEIPT_MIME.has(mime)) {
-    throw new Error('Receipts must be an image (JPEG, PNG, WebP, GIF) or PDF.')
+    throw new Error(
+      'Attachments must be an image (JPEG, PNG, WebP, GIF) or PDF.',
+    )
   }
   if ((file.size ?? 0) > AI_RECEIPT_MAX_BYTES) {
     throw new Error(
@@ -65,7 +70,7 @@ function assertReceiptFile(file) {
   }
 }
 
-async function fileToInlineDataPart(file) {
+export async function fileToInlineDataPart(file) {
   assertReceiptFile(file)
   const dataUrl = await new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -124,14 +129,16 @@ export async function createPlannerChat(
     try {
       ctx = await buildJourneyAiContext(journeyId, ctxOpts)
       const text = String(message || '').trim()
-      const list = [...(files || [])].filter(Boolean).slice(0, 1)
+      const list = [...(files || [])].filter(Boolean).slice(0, MAX_AI_CHAT_FILES)
       list.forEach(assertReceiptFile)
 
       const envelope = {
         user_message:
           text ||
           (list.length
-            ? 'Please read this receipt and propose an add_expense action for this journey.'
+            ? list.length === 1
+              ? 'Please read this receipt and propose an add_expense action for this journey.'
+              : `Please read these ${list.length} receipts and propose add_expense action(s) for this journey.`
             : ''),
         current_journey_context: ctx,
         note: 'Use current_journey_context as the source of truth for ids, times (wall locals + zones), and participants. Prefer occurs_at_local/ends_at_local when editing times.',
@@ -241,4 +248,4 @@ export async function createPlannerChat(
   return { send, refreshContext, getContext: () => ctx }
 }
 
-export { assertReceiptFile, AI_RECEIPT_MIME }
+export { AI_RECEIPT_MIME }

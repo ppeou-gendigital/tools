@@ -11,6 +11,7 @@ import {
   MapPin,
   MessageSquare,
   MoreHorizontal,
+  Paperclip,
   Settings,
   Share2,
   CircleDollarSign,
@@ -46,7 +47,6 @@ import {
   listInvites,
   listJourneyPeople,
   listMembers,
-  listMyPeople,
   myMembership,
   removeJourneyPerson,
   removeMember,
@@ -72,8 +72,8 @@ export function Members() {
     goBack,
     previousRouteLabel,
     goHome,
-    goPeople,
     goSpending,
+    goAttachments,
     goPlaylist,
     goTodos,
     goMap,
@@ -88,7 +88,6 @@ export function Members() {
   const [invitePhone, setInvitePhone] = useState('')
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
-  const [libraryPersonId, setLibraryPersonId] = useState('')
   const [error, setError] = useState('')
   const [busyAction, setBusyAction] = useState('')
   const [confirm, setConfirm] = useState(null)
@@ -123,12 +122,6 @@ export function Members() {
     enabled: !!journeyId,
   })
 
-  const { data: library = [] } = useQuery({
-    queryKey: ['viaggio', 'my-people'],
-    queryFn: listMyPeople,
-    enabled: !!journeyId,
-  })
-
   const isOwner = membership?.role === 'owner'
   const canEdit =
     membership?.role === 'owner' || membership?.role === 'editor'
@@ -151,11 +144,6 @@ export function Members() {
     return map
   }, [members])
 
-  const libraryAvailable = useMemo(() => {
-    const onRoster = new Set(roster.map((r) => r.personId).filter(Boolean))
-    return library.filter((p) => !onRoster.has(p.id))
-  }, [library, roster])
-
   const openInvites = useMemo(
     () => invites.filter(isInviteOpen),
     [invites],
@@ -173,7 +161,6 @@ export function Members() {
     qc.invalidateQueries({ queryKey: ['viaggio', 'invites', journeyId] })
     qc.invalidateQueries({ queryKey: ['viaggio', 'blocks', journeyId] })
     qc.invalidateQueries({ queryKey: ['viaggio', 'membership', journeyId] })
-    qc.invalidateQueries({ queryKey: ['viaggio', 'my-people'] })
   }
 
   /** Open join-link invites only (no seat). Row invites pass journeyPersonId. */
@@ -261,6 +248,12 @@ export function Members() {
                 label: 'Spending',
                 icon: CircleDollarSign,
                 pick: () => () => goSpending(journeyId),
+              },
+              {
+                id: 'attachments',
+                label: 'Attachments',
+                icon: Paperclip,
+                pick: () => () => goAttachments(journeyId),
               },
               {
                 id: 'playlist',
@@ -423,55 +416,8 @@ export function Members() {
                 <h2 id="add-traveler-heading" className={styles.sectionTitle}>
                   Add traveler
                 </h2>
-                {libraryAvailable.length > 0 && (
-                  <div className={styles.field}>
-                    <Label htmlFor="from-library">From your people</Label>
-                    <Select
-                      id="from-library"
-                      value={libraryPersonId}
-                      onChange={(e) => setLibraryPersonId(e.target.value)}
-                    >
-                      <option value="">Select…</option>
-                      {libraryAvailable.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.displayName}
-                          {p.email ? ` (${p.email})` : ''}
-                        </option>
-                      ))}
-                    </Select>
-                    <div className={styles.actions}>
-                      <Button
-                        size="sm"
-                        disabled={!libraryPersonId}
-                        onClick={async () => {
-                          try {
-                            await addJourneyPerson({
-                              journeyId,
-                              personId: libraryPersonId,
-                            })
-                            setLibraryPersonId('')
-                            invalidate()
-                          } catch (err) {
-                            setError(err.message)
-                          }
-                        }}
-                      >
-                        Add from library
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => goPeople()}
-                      >
-                        Manage people
-                      </Button>
-                    </div>
-                  </div>
-                )}
                 <div className={styles.field}>
-                  <Label htmlFor="new-name">
-                    {libraryAvailable.length > 0 ? 'Or create new' : 'Display name'}
-                  </Label>
+                  <Label htmlFor="new-name">Display name</Label>
                   <Input
                     id="new-name"
                     value={newName}

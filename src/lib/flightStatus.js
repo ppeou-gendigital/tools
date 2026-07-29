@@ -3,12 +3,13 @@
  * Persist the edge JSON blob on entry.details.flight_live; format in the UI.
  */
 
-import { supabase } from '@/lib/supabase'
+import { formatRelativeAgo } from '@/lib/format'
 import {
   flightDateKey,
   normalizeAirline,
   normalizeFlightNumber,
 } from '@/lib/flightIdentity'
+import { supabase } from '@/lib/supabase'
 
 const CACHE_TTL_MS = 12 * 60 * 1000
 
@@ -299,7 +300,10 @@ export function formatFlightStatusDetails(statusOrDetails) {
     rows.push({ label: 'Source', value: String(status.provider) })
   }
   if (status.checkedAt) {
-    rows.push({ label: 'Checked', value: String(status.checkedAt) })
+    rows.push({
+      label: 'Checked',
+      value: formatRelativeAgo(status.checkedAt) || String(status.checkedAt),
+    })
   }
   return rows
 }

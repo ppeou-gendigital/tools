@@ -19,6 +19,7 @@ import {
   Map as MapIcon,
   MapPin,
   Navigation,
+  Paperclip,
   Plane,
   Route,
   Plus,
@@ -49,6 +50,7 @@ import { isAiPlanningEnabled } from '@/lib/ai/enabled'
 import {
   entryDayKey,
   entryCheckoutDayKey,
+  entryEndDayCloneSchema,
   formatEntryTimeLine,
   formatMoney,
   formatParticipantHint,
@@ -99,6 +101,7 @@ function EntryRowActions({
   entryExpenses,
   whoIds,
   peopleById,
+  displayNames,
   displayLocale,
   currentUserId,
   canEdit,
@@ -422,6 +425,7 @@ export function Journey() {
     previousRouteLabel,
     goEntryEdit,
     goExpenseEdit,
+    goAttachments,
     goMembers,
     goSpending,
     goPlaylist,
@@ -474,12 +478,6 @@ export function Journey() {
     enabled: !!journeyId,
   })
 
-  const peopleById = useMemo(() => {
-    const map = new Map()
-    for (const p of roster) map.set(p.id, p)
-    return map
-  }, [roster])
-
   const weatherRequestKey = useMemo(() => {
     if (!journey) return ''
     return entries
@@ -524,6 +522,12 @@ export function Journey() {
     enabled: labelUserIds.length > 0,
   })
 
+  const peopleById = useMemo(() => {
+    const map = new Map()
+    for (const p of roster) map.set(p.id, p)
+    return map
+  }, [roster])
+
   const canEdit = membership?.role === 'owner' || membership?.role === 'editor'
 
   async function refreshFlightEntry(entry, status) {
@@ -562,9 +566,17 @@ export function Journey() {
   const expenseByEntry = useMemo(() => {
     const map = new Map()
     for (const e of expenses) {
-      const list = map.get(e.entryId) || []
-      list.push(e)
-      map.set(e.entryId, list)
+      const ids =
+        e.entryIds?.length > 0
+          ? e.entryIds
+          : e.entryId
+            ? [e.entryId]
+            : []
+      for (const eid of ids) {
+        const list = map.get(eid) || []
+        list.push(e)
+        map.set(eid, list)
+      }
     }
     return map
   }, [expenses])
@@ -578,7 +590,7 @@ export function Journey() {
     }
     for (const entry of entries) {
       push(entryDayKey(entry), entry)
-      // Multi-night lodging/rental: also show checkout/dropoff on the end day.
+      // Lodging checkout / rental drop-off only (never transit).
       const checkoutKey = entryCheckoutDayKey(entry)
       if (checkoutKey) {
         push(checkoutKey, { ...entry, timelineRole: 'checkout' })
@@ -710,6 +722,12 @@ export function Journey() {
                 pick: () => () => goSpending(journeyId),
               },
               {
+                id: 'attachments',
+                label: 'Attachments',
+                icon: Paperclip,
+                pick: () => () => goAttachments(journeyId),
+              },
+              {
                 id: 'playlist',
                 label: 'Playlist',
                 icon: ListMusic,
@@ -838,13 +856,18 @@ export function Journey() {
                     entryId: entry.id,
                     activityId: entry.activityId,
                   })
-                const isCheckout = entry.timelineRole === 'checkout'
-                const title = isCheckout
-                  ? `Checkout · ${entry.title || activity?.label || 'Stay'}`
+                const isEndClone = entry.timelineRole === 'checkout'
+                const endCloneSchema = isEndClone
+                  ? entryEndDayCloneSchema(entry)
+                  : null
+                const endCloneLabel =
+                  endCloneSchema === 'rental' ? 'Drop-off' : 'Checkout'
+                const title = isEndClone
+                  ? `${endCloneLabel} · ${entry.title || activity?.label || (endCloneSchema === 'rental' ? 'Rental' : 'Stay')}`
                   : entry.title || activity?.label || 'Activity'
                 const ActivityIcon = activityIcon(entry.activityId)
                 const metaPrimary = [
-                  isCheckout ? 'Checkout' : activity?.label,
+                  isEndClone ? endCloneLabel : activity?.label,
                   formatEntryTimeLine(entry, displayLocale),
                   entry.placeName,
                 ]
@@ -969,6 +992,7 @@ export function Journey() {
                         entryExpenses={entryExpenses}
                         whoIds={whoIds}
                         peopleById={peopleById}
+                        displayNames={displayNames}
                         displayLocale={displayLocale}
                         currentUserId={user?.id}
                         canEdit={canEdit}

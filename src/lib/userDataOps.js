@@ -27,8 +27,8 @@ function emptyRow() {
     data: {
       theme: 'daynight',
       fontSize: 16,
-      fabCorner: 'bottom-right',
-      aiFabCorner: 'bottom-left',
+      fabCorner: '11:15',
+      aiFabCorner: '0:15',
       displayLocale: null,
       defaultCurrency: null,
       mapsProvider: 'google',

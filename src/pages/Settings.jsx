@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Archive, ArrowLeft, UserRound, Users } from 'lucide-react'
+import { Archive, ArrowLeft, UserRound } from 'lucide-react'
 import { Button } from '@/molecules/Button'
 import { Label } from '@/molecules/Label'
 import { LocaleAutocomplete } from '@/molecules/LocaleAutocomplete'
@@ -13,8 +13,7 @@ import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function Settings() {
-  const { goBack, previousRouteLabel, goPeople, goArchives, goProfile } =
-    useNavigation()
+  const { goBack, previousRouteLabel, goArchives, goProfile } = useNavigation()
   const {
     displayLocale,
     defaultCurrency,
@@ -67,21 +66,6 @@ export function Settings() {
                   <span className={styles.rowTitle}>Profile</span>
                   <span className={styles.rowMeta}>
                     How you appear to co-travelers
-                  </span>
-                </span>
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className={styles.rowBtn}
-                onClick={() => goPeople()}
-              >
-                <Users size={16} className={styles.rowIcon} aria-hidden="true" />
-                <span className={styles.rowBody}>
-                  <span className={styles.rowTitle}>People</span>
-                  <span className={styles.rowMeta}>
-                    Reusable travelers for any journey
                   </span>
                 </span>
               </button>

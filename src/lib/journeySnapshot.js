@@ -32,9 +32,15 @@ import {
   upsertExpenseWithSplits,
 } from '@/lib/viaggioApi'
 import { supabase } from '@/lib/supabase'
+import { assertSnapshotValid } from '@/lib/journeySnapshotSchema'
 
 export const JOURNEY_SNAPSHOT_FORMAT = 'viaggio.journey_snapshot'
 export const JOURNEY_SNAPSHOT_VERSION = 1
+
+export {
+  assertSnapshotValid,
+  validateSnapshotDeep,
+} from '@/lib/journeySnapshotSchema'
 
 /** @typedef {import('@/lib/viaggioApi')} */
 
@@ -198,7 +204,13 @@ export async function buildJourneySnapshot(journeyId) {
     })),
     expenses: expenses.map((e) => ({
       id: e.id,
-      entry_id: e.entryId,
+      entry_id: e.entryId || null,
+      entry_ids:
+        e.entryIds?.length > 0
+          ? e.entryIds
+          : e.entryId
+            ? [e.entryId]
+            : [],
       title: e.title,
       amount_cents: e.amountCents,
       currency: e.currency,
@@ -392,9 +404,24 @@ export async function importJourneySnapshot(raw, { user } = {}) {
   }
 
   for (const x of snap.expenses ?? []) {
-    const entryId = mapId(entryMap, x.entry_id)
+    const rawEntryIds =
+      Array.isArray(x.entry_ids) && x.entry_ids.length
+        ? x.entry_ids
+        : x.entry_id
+          ? [x.entry_id]
+          : []
+    const entryIds = [
+      ...new Set(
+        rawEntryIds.map((id) => mapId(entryMap, id)).filter(Boolean),
+      ),
+    ]
+    const entryId =
+      (x.entry_id ? mapId(entryMap, x.entry_id) : null) ||
+      entryIds[0] ||
+      null
     const paidBy = mapId(personMap, x.paid_by_person_id)
-    if (!entryId || !paidBy) continue
+    if (!paidBy) continue
+    if (entryId && !entryIds.includes(entryId)) entryIds.unshift(entryId)
     let splits = splitsByExpense.get(x.id) || []
     const amount = Number(x.amount_cents) || 0
     const sum = splits.reduce((a, s) => a + s.amountCents, 0)
@@ -403,7 +430,9 @@ export async function importJourneySnapshot(raw, { user } = {}) {
       splits = [{ journeyPersonId: paidBy, amountCents: amount }]
     }
     const created = await upsertExpenseWithSplits({
+      journeyId: journey.id,
       entryId,
+      entryIds,
       title: x.title ?? '',
       amountCents: amount,
       currency: x.currency,
@@ -631,9 +660,24 @@ export async function replaceJourneyFromSnapshot(
   }
 
   for (const x of snap.expenses ?? []) {
-    const entryId = mapId(entryMap, x.entry_id)
+    const rawEntryIds =
+      Array.isArray(x.entry_ids) && x.entry_ids.length
+        ? x.entry_ids
+        : x.entry_id
+          ? [x.entry_id]
+          : []
+    const entryIds = [
+      ...new Set(
+        rawEntryIds.map((id) => mapId(entryMap, id)).filter(Boolean),
+      ),
+    ]
+    const entryId =
+      (x.entry_id ? mapId(entryMap, x.entry_id) : null) ||
+      entryIds[0] ||
+      null
     const paidBy = mapId(personMap, x.paid_by_person_id)
-    if (!entryId || !paidBy) continue
+    if (!paidBy) continue
+    if (entryId && !entryIds.includes(entryId)) entryIds.unshift(entryId)
     let splits = splitsByExpense.get(x.id) || []
     const amount = Number(x.amount_cents) || 0
     const sum = splits.reduce((a, s) => a + s.amountCents, 0)
@@ -641,7 +685,9 @@ export async function replaceJourneyFromSnapshot(
       splits = [{ journeyPersonId: paidBy, amountCents: amount }]
     }
     await upsertExpenseWithSplits({
+      journeyId,
       entryId,
+      entryIds,
       title: x.title ?? '',
       amountCents: amount,
       currency: x.currency,
@@ -778,7 +824,8 @@ export async function readSnapshotFile(file) {
   } catch {
     throw new Error('File is not valid JSON')
   }
-  return validateJourneySnapshot(parsed)
+  validateJourneySnapshot(parsed)
+  return assertSnapshotValid(parsed)
 }
 
 /** Parse JSON without validating (for sanitize / AI-repair pipelines). */

@@ -4,10 +4,13 @@ import {
   ArrowLeft,
   Grid2x2Check,
   Loader2,
+  Pencil,
   Save,
   Shapes,
   Trash2,
 } from 'lucide-react'
+import { ActivityLinkChips } from '@/molecules/ActivityLinkChips'
+import { AttachmentCard } from '@/molecules/AttachmentCard'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -19,6 +22,7 @@ import { ConfirmDialog } from '@/patterns/ConfirmDialog'
 import { PageHeader } from '@/patterns/PageHeader'
 import {
   deleteAttachment,
+  formatByteSize,
   listAttachments,
   MAX_ATTACHMENT_BYTES,
   uploadAttachment,
@@ -34,6 +38,7 @@ import {
   deleteExpense,
   getExpense,
   getJourney,
+  listEntries,
   listJourneyPeople,
   listSplits,
   myMembership,
@@ -46,8 +51,16 @@ import { cx } from '@/lib/cx'
 import styles from './Page.module.scss'
 
 export function ExpenseEdit() {
-  const { params, goBack, previousRouteLabel, goHome } = useNavigation()
-  const { journeyId, entryId, expenseId } = params
+  const {
+    params,
+    goBack,
+    previousRouteLabel,
+    goHome,
+    goAttachmentEdit,
+    replace,
+  } = useNavigation()
+  const { journeyId, entryId, expenseId, viewOnly } = params
+  const isViewOnly = !!viewOnly
   const { user } = useAuth()
   const { displayLocale } = useDisplayPrefs()
 
@@ -90,7 +103,6 @@ export function ExpenseEdit() {
     (!journey || !user || (expenseId && !existing))
   const ready =
     !!journeyId &&
-    !!entryId &&
     !!journey &&
     !!user &&
     !journeyLoading &&
@@ -98,7 +110,7 @@ export function ExpenseEdit() {
     roster.length > 0 &&
     (!expenseId || (!expenseLoading && !splitsLoading && existing))
 
-  if (!journeyId || !entryId) {
+  if (!journeyId) {
     return (
       <div className={styles.page}>
         <div className={cx('is-fluid-width', styles.body)}>
@@ -155,20 +167,33 @@ export function ExpenseEdit() {
 
   return (
     <ExpenseEditForm
-      key={expenseId || `new-${entryId}`}
+      key={`${expenseId || `new-${entryId || 'journey'}`}-${isViewOnly ? 'view' : 'edit'}`}
       journey={journey}
       existing={existing || null}
       existingSplits={existingSplits}
       expenseId={expenseId || null}
-      entryId={entryId}
+      entryId={entryId || null}
+      viewOnly={isViewOnly}
       roster={roster}
       membership={membership}
       user={user}
       displayLocale={displayLocale}
       goBack={goBack}
       previousRouteLabel={previousRouteLabel}
+      goAttachmentEdit={goAttachmentEdit}
+      replace={replace}
     />
   )
+}
+
+function initialEntryIds(existing, routeEntryId) {
+  const fromExisting = existing?.entryIds?.length
+    ? existing.entryIds
+    : existing?.entryId
+      ? [existing.entryId]
+      : []
+  if (fromExisting.length) return fromExisting
+  return routeEntryId ? [routeEntryId] : []
 }
 
 function ExpenseEditForm({
@@ -177,20 +202,24 @@ function ExpenseEditForm({
   existingSplits,
   expenseId,
   entryId,
+  viewOnly = false,
   roster,
   membership,
   user,
   displayLocale,
   goBack,
   previousRouteLabel,
+  goAttachmentEdit,
+  replace,
 }) {
   const qc = useQueryClient()
   const [error, setError] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [pendingReceipts, setPendingReceipts] = useState([])
   const [receiptBusy, setReceiptBusy] = useState(false)
-  const canEdit =
+  const membershipCanEdit =
     membership?.role === 'owner' || membership?.role === 'editor'
+  const canEdit = membershipCanEdit && !viewOnly
 
   const selfPersonId =
     roster.find((p) => p.linkedUserId === user.id)?.id || roster[0]?.id
@@ -218,17 +247,34 @@ function ExpenseEditForm({
       ]),
     ),
   )
+  const [linkedEntryIds, setLinkedEntryIds] = useState(
+    () => new Set(initialEntryIds(existing, entryId)),
+  )
+  const [primaryEntryId, setPrimaryEntryId] = useState(
+    () => existing?.entryId || entryId || null,
+  )
+
+  const { data: journeyEntries = [] } = useQuery({
+    queryKey: ['viaggio', 'entries', journey.id],
+    queryFn: () => listEntries(journey.id),
+    enabled: !!journey.id,
+  })
 
   const receiptsQueryKey = [
     'viaggio',
     'expense-receipts',
-    entryId,
+    journey.id,
+    primaryEntryId || 'journey',
     expenseId,
   ]
   const { data: receipts = [] } = useQuery({
     queryKey: receiptsQueryKey,
-    queryFn: () => listAttachments(entryId, { expenseId }),
-    enabled: !!entryId && !!expenseId,
+    queryFn: () =>
+      listAttachments(primaryEntryId, {
+        expenseId,
+        journeyId: journey.id,
+      }),
+    enabled: !!expenseId,
   })
 
   async function uploadReceiptFiles(files, forExpenseId) {
@@ -240,12 +286,46 @@ function ExpenseEditForm({
         )
       }
       await uploadAttachment({
-        entryId,
+        journeyId: journey.id,
         userId: user.id,
         file,
-        expenseId: forExpenseId,
+        expenseIds: forExpenseId ? [forExpenseId] : [],
+        entryIds: [...linkedEntryIds],
       })
     }
+  }
+
+  function toggleEntryLink(id) {
+    setLinkedEntryIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+        if (primaryEntryId === id) {
+          setPrimaryEntryId([...next][0] || null)
+        }
+      } else {
+        next.add(id)
+        if (!primaryEntryId) setPrimaryEntryId(id)
+      }
+      return next
+    })
+  }
+
+  function setPrimary(id) {
+    if (!linkedEntryIds.has(id)) {
+      setLinkedEntryIds((prev) => new Set(prev).add(id))
+    }
+    setPrimaryEntryId(id)
+  }
+
+  function invalidateExpenseQueries(touchedEntryIds) {
+    const ids = [...new Set((touchedEntryIds || []).filter(Boolean))]
+    for (const id of ids) {
+      qc.invalidateQueries({ queryKey: ['viaggio', 'entry-expenses', id] })
+    }
+    qc.invalidateQueries({ queryKey: ['viaggio', 'expenses', journey.id] })
+    qc.invalidateQueries({ queryKey: ['viaggio', 'expense'] })
+    qc.invalidateQueries({ queryKey: ['viaggio', 'expense-receipts'] })
   }
 
   async function handleAddReceiptFiles(files) {
@@ -308,11 +388,25 @@ function ExpenseEditForm({
     computedSplits.length > 0 &&
     splitSum === amountCents
 
+  const linksOk =
+    linkedEntryIds.size === 0 ||
+    (primaryEntryId && linkedEntryIds.has(primaryEntryId))
+
   const saveMut = useMutation({
     mutationFn: async () => {
+      if (!linksOk) throw new Error('Pick a primary activity for the links.')
+      const entryIds =
+        linkedEntryIds.size === 0
+          ? []
+          : [
+              primaryEntryId,
+              ...[...linkedEntryIds].filter((id) => id !== primaryEntryId),
+            ]
       const saved = await upsertExpenseWithSplits({
         id: expenseId || null,
-        entryId,
+        journeyId: journey.id,
+        entryId: primaryEntryId || null,
+        entryIds,
         title,
         amountCents,
         currency,
@@ -324,14 +418,12 @@ function ExpenseEditForm({
       if (!expenseId && pendingReceipts.length > 0 && saved?.id) {
         await uploadReceiptFiles(pendingReceipts, saved.id)
       }
-      return saved
+      return { saved, entryIds }
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['viaggio', 'entry-expenses', entryId] })
-      qc.invalidateQueries({ queryKey: ['viaggio', 'expenses', journey.id] })
-      qc.invalidateQueries({ queryKey: ['viaggio', 'expense-receipts'] })
-      // Pop back to the entry — replace() was duplicating entry-edit on the stack
-      // so the header "Back" button appeared stuck.
+    onSuccess: ({ entryIds: savedEntryIds }) => {
+      const prev = initialEntryIds(existing, entryId)
+      invalidateExpenseQueries([...prev, ...savedEntryIds, entryId])
+      // Pop back — replace() was duplicating entry-edit on the stack.
       goBack()
     },
     onError: (err) => setError(err.message || 'Save failed'),
@@ -340,8 +432,11 @@ function ExpenseEditForm({
   const deleteMut = useMutation({
     mutationFn: () => deleteExpense(expenseId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['viaggio', 'entry-expenses', entryId] })
-      qc.invalidateQueries({ queryKey: ['viaggio', 'expenses', journey.id] })
+      invalidateExpenseQueries([
+        ...initialEntryIds(existing, entryId),
+        ...linkedEntryIds,
+        entryId,
+      ])
       goBack()
     },
   })
@@ -355,10 +450,16 @@ function ExpenseEditForm({
     })
   }
 
+  const headerTitle = viewOnly
+    ? 'Expense'
+    : expenseId
+      ? 'Edit expense'
+      : 'Add expense'
+
   return (
     <div className={styles.page}>
       <PageHeader
-        title={expenseId ? 'Edit expense' : 'Add expense'}
+        title={headerTitle}
         leading={
           <Button variant="ghost" size="sm" onClick={goBack}>
             <ArrowLeft size={14} />
@@ -366,13 +467,32 @@ function ExpenseEditForm({
           </Button>
         }
         actions={
-          canEdit ? (
+          viewOnly && membershipCanEdit && expenseId ? (
             <div className={styles.toolbar}>
               <Button
                 variant="ghost"
                 size="sm"
                 className={styles.iconBtn}
-                disabled={!splitOk || saveMut.isPending}
+                onClick={() =>
+                  replace('expense-edit', {
+                    journeyId: journey.id,
+                    entryId: entryId || undefined,
+                    expenseId,
+                  })
+                }
+                aria-label="Edit expense"
+                title="Edit"
+              >
+                <Pencil size={14} aria-hidden="true" />
+              </Button>
+            </div>
+          ) : canEdit ? (
+            <div className={styles.toolbar}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={styles.iconBtn}
+                disabled={!splitOk || !linksOk || saveMut.isPending}
                 onClick={() => {
                   setError('')
                   saveMut.mutate()
@@ -417,7 +537,9 @@ function ExpenseEditForm({
       <div className={cx('is-fluid-width', styles.body)}>
         {!canEdit && (
           <p className={styles.readOnlyBanner}>
-            You can view this expense. Only editors can change it.
+            {viewOnly
+              ? 'Preview mode. Open Edit to make changes.'
+              : 'You can view this expense. Only editors can change it.'}
           </p>
         )}
         <div className={cx(styles.form, styles.formNarrow, styles.formGrid)}>
@@ -430,6 +552,24 @@ function ExpenseEditForm({
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
+
+          <div className={cx(styles.formSpan2)}>
+            <p className={styles.sectionTitle}>Activities</p>
+            <p className={styles.hint}>
+              Optional. Link to one or more activities (star = primary for
+              activity totals). None → journey expense.
+            </p>
+            <ActivityLinkChips
+              entries={journeyEntries}
+              selected={linkedEntryIds}
+              primaryId={primaryEntryId}
+              onToggle={toggleEntryLink}
+              onSetPrimary={setPrimary}
+              readOnly={!canEdit}
+              displayLocale={displayLocale}
+            />
+          </div>
+
           <div className={styles.field}>
             <Label htmlFor="amount">Amount</Label>
             <Input
@@ -568,17 +708,54 @@ function ExpenseEditForm({
           </div>
 
           <div className={cx(styles.field, styles.formSpan2)}>
-            <ReceiptField
-              pendingFiles={pendingReceipts}
-              attachments={expenseId ? receipts : []}
-              readOnly={!canEdit}
-              busy={receiptBusy || saveMut.isPending}
-              onAddFiles={handleAddReceiptFiles}
-              onRemovePending={(idx) =>
-                setPendingReceipts((prev) => prev.filter((_, i) => i !== idx))
-              }
-              onRemoveAttachment={handleRemoveAttachment}
-            />
+            {viewOnly ? (
+              <>
+                <p className={styles.sectionTitle}>Attachments</p>
+                {receipts.length === 0 ? (
+                  <p className={styles.hint}>No files linked to this expense.</p>
+                ) : (
+                  <ul className={styles.list}>
+                    {receipts.map((att) => (
+                      <li key={att.id}>
+                        <AttachmentCard
+                          attachment={att}
+                          meta={formatByteSize(att.byteSize)}
+                          onOpen={() =>
+                            goAttachmentEdit({
+                              journeyId: journey.id,
+                              attachmentId: att.id,
+                              expenseId,
+                            })
+                          }
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            ) : (
+              <ReceiptField
+                pendingFiles={pendingReceipts}
+                attachments={expenseId ? receipts : []}
+                readOnly={!canEdit}
+                busy={receiptBusy || saveMut.isPending}
+                onAddFiles={handleAddReceiptFiles}
+                onRemovePending={(idx) =>
+                  setPendingReceipts((prev) => prev.filter((_, i) => i !== idx))
+                }
+                onRemoveAttachment={handleRemoveAttachment}
+                onOpenAttachment={
+                  expenseId
+                    ? (att) =>
+                        goAttachmentEdit({
+                          journeyId: journey.id,
+                          attachmentId: att.id,
+                          expenseId,
+                        })
+                    : undefined
+                }
+              />
+            )}
           </div>
 
           {!splitOk && amountCents != null && splitMode === 'equal' && (

@@ -1,4 +1,5 @@
 import {
+  coerceActivityId,
   knownActivityIds,
   schemaForActivity,
 } from '@/lib/ai/catalogContext'
@@ -7,8 +8,12 @@ import {
   JOURNEY_SNAPSHOT_VERSION,
   validateJourneySnapshot,
 } from '@/lib/journeySnapshot'
+import { validateSnapshotDeep } from '@/lib/journeySnapshotSchema'
+import { enrichFlightDetailsFromTitle } from '@/lib/flightIdentity'
 import { parseMediaLink } from '@/lib/mediaEmbed'
 import { wallTimeToUtcIso } from '@/lib/timezone'
+
+export { coerceActivityId } from '@/lib/ai/catalogContext'
 
 const ACTIVITY_SET = new Set(knownActivityIds())
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
@@ -90,7 +95,7 @@ export function asIanaTimezone(value, fallback = 'UTC') {
   let candidate = asString(primary).trim() || null
   if (candidate) {
     // Strip trailing garbage after a valid Zone/City pattern
-    const m = candidate.match(/^([A-Za-z_]+\/[A-Za-z0-9_+\-]+|UTC)/)
+    const m = candidate.match(/^([A-Za-z_]+\/[A-Za-z0-9_+-]+|UTC)/)
     if (m) candidate = m[1]
   }
   if (!candidate) return { timezone: fallback, recovered }
@@ -151,84 +156,6 @@ function mergeRecoveredIntoEntry(entry, recovered) {
     next.lng = asNumberOrNull(recovered.lng)
   }
   return next
-}
-
-/** Map common model mistakes onto catalog activity ids. */
-export function coerceActivityId(rawId) {
-  const raw = asString(rawId)
-    .trim()
-    .toLowerCase()
-    .replace(/[\s-]+/g, '_')
-  if (!raw) return null
-  if (ACTIVITY_SET.has(raw)) return raw
-
-  const aliases = {
-    drive: 'drive_leg',
-    driving: 'drive_leg',
-    car: 'drive_leg',
-    road: 'drive_leg',
-    road_trip: 'drive_leg',
-    day_leg: 'drive_leg',
-    museum: 'sightseeing',
-    museums: 'sightseeing',
-    attraction: 'sightseeing',
-    attractions: 'sightseeing',
-    tour: 'sightseeing',
-    gallery: 'sightseeing',
-    park: 'sightseeing',
-    food: 'meal',
-    dinner: 'meal',
-    lunch: 'meal',
-    breakfast: 'meal',
-    brunch: 'meal',
-    bbq: 'meal',
-    korean_bbq: 'meal',
-    kbbq: 'meal',
-    k_bbq: 'meal',
-    cafe: 'meal',
-    coffee: 'meal',
-    dining: 'meal',
-    eat: 'meal',
-    hotel_stay: 'hotel',
-    airbnb: 'lodging',
-    stay: 'lodging',
-    accommodation: 'lodging',
-    sleep: 'lodging',
-    activity: 'group_activity',
-    event: 'venue',
-    concert: 'venue',
-    show: 'venue',
-    taxi: 'rideshare',
-    uber: 'rideshare',
-    lyft: 'rideshare',
-    gas: 'fuel',
-  }
-  if (aliases[raw]) return aliases[raw]
-  if (raw.includes('drive') || raw.includes('road')) return 'drive_leg'
-  if (
-    raw.includes('museum') ||
-    raw.includes('sight') ||
-    raw.includes('gallery')
-  ) {
-    return 'sightseeing'
-  }
-  if (
-    raw.includes('bbq') ||
-    raw.includes('meal') ||
-    raw.includes('food') ||
-    raw.includes('dinner') ||
-    raw.includes('lunch') ||
-    raw.includes('breakfast') ||
-    raw.includes('restaurant') ||
-    raw.includes('dining')
-  ) {
-    return raw.includes('restaurant') ? 'restaurant' : 'meal'
-  }
-  if (raw.includes('hotel')) return 'hotel'
-  if (raw.includes('lodg') || raw.includes('airbnb')) return 'lodging'
-  if (raw.includes('flight') || raw.includes('plane')) return 'flight'
-  if (raw.includes('train')) return 'train'
-  return null
 }
 
 /** Coerce activity_id aliases on entries; never invent entries from place_ideas. */
@@ -361,8 +288,29 @@ export function normalizeEntry(raw, index = 0, { defaultTimezone = 'UTC' } = {})
     contact_id: null,
     details: parseDetails(raw?.details),
   }
+  // Hoist confirmation aliases; drop null-island coords.
+  const topConfirmation =
+    raw?.confirmation ??
+    raw?.confirmation_number ??
+    raw?.confirmation_code ??
+    raw?.confirmationNumber ??
+    raw?.confirmationCode
+  if (topConfirmation != null && String(topConfirmation).trim()) {
+    entry.details = {
+      ...(entry.details || {}),
+      confirmation: String(topConfirmation).trim(),
+    }
+  }
+  if (entry.lat === 0 && entry.lng === 0) {
+    entry.lat = null
+    entry.lng = null
+  }
   if (participantIds !== undefined) {
     entry.participant_ids = participantIds
+  }
+
+  if (activityId === 'flight') {
+    entry.details = enrichFlightDetailsFromTitle(entry.details, entry.title)
   }
 
   entry = mergeRecoveredIntoEntry(entry, tz.recovered)
@@ -446,12 +394,48 @@ export function normalizeEntryPatch(raw, { defaultTimezone = 'UTC' } = {}) {
   if (raw.lat != null) patch.lat = asNumberOrNull(raw.lat)
   if (raw.lng != null) patch.lng = asNumberOrNull(raw.lng)
   if (raw.details != null) patch.details = parseDetails(raw.details)
+  // Hoist common confirmation aliases onto details.confirmation
+  const topConfirmation =
+    raw.confirmation ??
+    raw.confirmation_number ??
+    raw.confirmation_code ??
+    raw.confirmationNumber ??
+    raw.confirmationCode
+  if (topConfirmation != null && String(topConfirmation).trim()) {
+    patch.details = {
+      ...(patch.details || {}),
+      confirmation: String(topConfirmation).trim(),
+    }
+  }
   if (raw.body != null) patch.body = raw.body
+
+  // Drop null-island coords from patches (AI often invents 0,0).
+  if (patch.lat === 0 && patch.lng === 0) {
+    delete patch.lat
+    delete patch.lng
+  } else {
+    if (raw.lat === 0 && raw.lng == null) delete patch.lat
+    if (raw.lng === 0 && raw.lat == null) delete patch.lng
+  }
 
   const participantIds = participantIdsFrom(raw)
   if (participantIds !== undefined) {
     patch.participant_ids = participantIds
     patch._participantsProvided = true
+  }
+
+  const flightActivity =
+    patch.activity_id === 'flight' ||
+    coerceActivityId(raw.activity_id || raw.activityId) === 'flight'
+  if (
+    flightActivity &&
+    (raw.details != null || raw.title != null || patch.activity_id === 'flight')
+  ) {
+    const title =
+      patch.title != null ? patch.title : asString(raw.title).trim()
+    const baseDetails =
+      patch.details != null ? patch.details : parseDetails(raw.details)
+    patch.details = enrichFlightDetailsFromTitle(baseDetails || {}, title)
   }
 
   return patch
@@ -623,6 +607,7 @@ export function normalizeJourneySnapshot(raw, { importerName, overrides } = {}) 
     'UTC',
   )
 
+  const personIdMap = new Map()
   const people = [
     {
       id: 'person-owner',
@@ -631,22 +616,63 @@ export function normalizeJourneySnapshot(raw, { importerName, overrides } = {}) 
       phone_e164: null,
       member_role: 'owner',
     },
-    ...peopleIn
-      .slice(0, 8)
-      .map((p, i) => ({
-        id: asString(p.id).trim() || `person-${i + 2}`,
-        display_name: asString(p.display_name || p.displayName).trim(),
-        email: null,
-        phone_e164: null,
-        member_role: null,
-      }))
-      .filter((p) => p.display_name && p.display_name !== ownerName),
   ]
+  for (const [i, p] of peopleIn.slice(0, 8).entries()) {
+    const displayName = asString(p.display_name || p.displayName).trim()
+    if (!displayName) continue
+    const rawId = asString(p.id).trim()
+    if (displayName === ownerName) {
+      if (rawId) personIdMap.set(rawId, 'person-owner')
+      continue
+    }
+    const id = rawId || `person-${i + 2}`
+    if (rawId) personIdMap.set(rawId, id)
+    people.push({
+      id,
+      display_name: displayName,
+      email: null,
+      phone_e164: null,
+      member_role: null,
+    })
+  }
+  const knownPersonIds = new Set(people.map((p) => p.id))
 
   const defaultTimezone = tz.timezone
   const entries = (Array.isArray(prepared?.entries) ? prepared.entries : [])
     .map((e, i) => normalizeEntry(e, i, { defaultTimezone }))
     .filter(Boolean)
+
+  const entry_participants = []
+  const seenParticipant = new Set()
+  for (const e of entries) {
+    const pids = Array.isArray(e.participant_ids) ? e.participant_ids : []
+    for (const pid of pids) {
+      const mapped =
+        personIdMap.get(pid) || (knownPersonIds.has(pid) ? pid : null)
+      if (!mapped) continue
+      const key = `${e.id}\0${mapped}`
+      if (seenParticipant.has(key)) continue
+      seenParticipant.add(key)
+      entry_participants.push({ entry_id: e.id, person_id: mapped })
+    }
+    delete e.participant_ids
+  }
+  // Also honor top-level entry_participants from imports / agents.
+  for (const row of Array.isArray(prepared?.entry_participants)
+    ? prepared.entry_participants
+    : []) {
+    const entryId = asString(row?.entry_id ?? row?.entryId).trim()
+    const rawPerson = asString(row?.person_id ?? row?.personId).trim()
+    const personId =
+      personIdMap.get(rawPerson) ||
+      (knownPersonIds.has(rawPerson) ? rawPerson : null)
+    if (!entryId || !personId) continue
+    if (!entries.some((e) => e.id === entryId)) continue
+    const key = `${entryId}\0${personId}`
+    if (seenParticipant.has(key)) continue
+    seenParticipant.add(key)
+    entry_participants.push({ entry_id: entryId, person_id: personId })
+  }
 
   const place_ideas = (Array.isArray(prepared?.place_ideas)
     ? prepared.place_ideas
@@ -688,7 +714,7 @@ export function normalizeJourneySnapshot(raw, { importerName, overrides } = {}) 
     people,
     contacts: [],
     entries,
-    entry_participants: [],
+    entry_participants,
     expenses: [],
     expense_splits: [],
     playlist,
@@ -740,7 +766,17 @@ function normalizeExpenseAction(raw, { requireId = false } = {}) {
   const src = raw?.expense && typeof raw.expense === 'object' ? raw.expense : raw
   const id = asString(src?.id).trim()
   if (requireId && !id) return null
-  const entryId = asString(src?.entry_id).trim()
+  const entryIdsFromArray = (Array.isArray(src?.entry_ids) ? src.entry_ids : [])
+    .map((v) => asString(v).trim())
+    .filter(Boolean)
+  const entryIdRaw = asString(src?.entry_id).trim()
+  const entryIds = [
+    ...new Set(
+      [entryIdRaw, ...entryIdsFromArray].filter(Boolean),
+    ),
+  ]
+  // Empty entry_ids = journey-level expense (no activity).
+  const entryId = entryIds[0] || ''
   const title = asString(src?.title).trim()
   let amountCents = Math.round(Number(src?.amount_cents))
   if (!Number.isFinite(amountCents) && src?.amount != null) {
@@ -758,7 +794,7 @@ function normalizeExpenseAction(raw, { requireId = false } = {}) {
       ? 'custom'
       : 'equal'
   const category = asNullableString(src?.category)
-  if (!entryId || !title || !Number.isFinite(amountCents) || amountCents < 0) {
+  if (!title || !Number.isFinite(amountCents) || amountCents < 0) {
     return null
   }
   if (!/^[A-Z]{3}$/.test(currency) || !paidBy) return null
@@ -777,7 +813,8 @@ function normalizeExpenseAction(raw, { requireId = false } = {}) {
 
   return {
     ...(id ? { id } : {}),
-    entry_id: entryId,
+    ...(entryId ? { entry_id: entryId } : {}),
+    entry_ids: entryIds,
     title,
     amount_cents: amountCents,
     currency,
@@ -1038,28 +1075,53 @@ export function normalizeChatTurn(raw, { defaultTimezone = 'UTC' } = {}) {
 }
 
 /** Collect human-readable validation issues without throwing. */
-export function collectSnapshotIssues(raw) {
-  const issues = []
+/**
+ * Field-path issues for AI repair / import diagnostics.
+ * Prefers deep validators; also records normalize failures.
+ */
+const AI_DEEP_OPTS = {
+  requireLodgingCheckout: true,
+  requirePlaceCoords: true,
+}
+
+export function collectSnapshotIssues(raw, { importerName, overrides } = {}) {
+  const { errors } = validateSnapshotDeep(raw, AI_DEEP_OPTS)
+  const issues = [...errors]
   try {
-    normalizeJourneySnapshot(raw)
+    normalizeJourneySnapshot(raw, { importerName, overrides })
   } catch (err) {
     issues.push(err.message || String(err))
   }
-  if (!raw || typeof raw !== 'object') {
-    issues.push('Root must be a JSON object')
-  }
-  const entries = Array.isArray(raw?.entries) ? raw.entries : []
-  entries.forEach((e, i) => {
-    const aid = asString(e?.activity_id).trim()
-    if (aid && !ACTIVITY_SET.has(aid)) {
-      issues.push(`entries[${i}]: unknown activity_id “${aid}”`)
-    }
-    if (/scope\./i.test(asString(e?.timezone))) {
-      issues.push(`entries[${i}]: timezone contains Scope.* mashup`)
-    }
-  })
-  if (/scope\./i.test(asString(raw?.journey?.starts_on))) {
-    issues.push('journey.starts_on contains Scope.* mashup')
-  }
   return [...new Set(issues)]
+}
+
+/**
+ * Normalize, then require deep-clean output. Throws with field-path issues.
+ * Used as generateJsonFromPrompt `validate` so repair retries get concrete errors.
+ */
+export function assertNormalizedSnapshot(raw, opts = {}) {
+  const preIssues = validateSnapshotDeep(raw, AI_DEEP_OPTS).errors
+  let snap
+  try {
+    snap = normalizeJourneySnapshot(raw, opts)
+  } catch (err) {
+    const issues = [...new Set([...preIssues, err.message || String(err)])]
+    throw new Error(issues.join('\n') || 'Invalid journey snapshot')
+  }
+  const rawEntryCount = Array.isArray(raw?.entries) ? raw.entries.length : 0
+  if (rawEntryCount > 0 && !(snap.entries || []).length) {
+    throw new Error(
+      [
+        ...preIssues,
+        'All entries were invalid — use catalog activity_id values (flight, hotel, meal, …)',
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    )
+  }
+  const post = validateSnapshotDeep(snap, AI_DEEP_OPTS)
+  if (!post.ok) {
+    throw new Error(post.errors.join('\n') || 'Invalid journey snapshot')
+  }
+  return snap
 }

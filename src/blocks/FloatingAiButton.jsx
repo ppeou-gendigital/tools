@@ -2,20 +2,25 @@ import { Sparkles } from 'lucide-react'
 import { useCornerDrag } from '@tools/behavioral'
 import { isAiPlanningEnabled } from '@/lib/ai/enabled'
 import { useAiPlanner } from '@/providers/AiPlannerProvider'
-import { useFabCorner } from '@/providers/FabCornerProvider'
 import { useNavigation } from '@/providers/NavigationProvider'
 
 /**
- * Draggable floating AI FAB — rose accent; defaults to the opposite corner
- * from the menu FAB so the two never stack.
+ * Draggable floating AI FAB — rose accent; grid-snapped opposite the menu FAB
+ * by default so the two never stack.
  */
 export function FloatingAiButton() {
   const enabled = isAiPlanningEnabled()
   const { openCreate, openChat } = useAiPlanner()
   const { params } = useNavigation()
-  const { corner: menuCorner } = useFabCorner()
   const journeyId = params?.journeyId || null
-  const { corner, dragOffset, isDragging, wasDragged, bind } = useCornerDrag({
+  const {
+    positionStyle,
+    stacked,
+    isDragging,
+    wasDragged,
+    setTargetRef,
+    bind,
+  } = useCornerDrag({
     fabId: 'ai',
   })
   const { onPointerDown: dragPointerDown, ...restBind } = bind
@@ -28,25 +33,20 @@ export function FloatingAiButton() {
     else openCreate()
   }
 
-  const fabStyle = dragOffset
-    ? { transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)` }
-    : undefined
-
   const label = journeyId ? 'AI planner' : 'Plan with AI'
-  const stacked = corner === menuCorner
 
   return (
     <div className="bh-fab-wrap" aria-hidden={false}>
       <button
         type="button"
         className="bh-fab"
-        data-corner={corner}
         data-fab="ai"
         data-stacked={stacked ? 'true' : undefined}
         data-dragging={isDragging ? 'true' : undefined}
         aria-label={label}
         title={label}
-        style={fabStyle}
+        style={positionStyle}
+        ref={setTargetRef}
         {...restBind}
         onPointerDown={dragPointerDown}
         onClick={handleClick}

@@ -78,28 +78,11 @@ create index if not exists viaggio_invites_journey_idx on public.viaggio_invites
 create index if not exists viaggio_invites_token_idx on public.viaggio_invites (token)
   where revoked_at is null;
 
--- Personal reusable people library (owned by a user).
-create table if not exists public.viaggio_people (
-  id              uuid primary key default gen_random_uuid(),
-  owner_id        uuid not null references auth.users(id) on delete cascade,
-  display_name    text not null,
-  email           text,
-  phone_e164      text check (phone_e164 is null or phone_e164 ~ '^\+[1-9]\d{1,14}$'),
-  linked_user_id  uuid references auth.users(id) on delete set null,
-  created_at      timestamptz not null default now(),
-  updated_at      timestamptz not null default now()
-);
-
-create index if not exists viaggio_people_owner_idx
-  on public.viaggio_people (owner_id);
-create index if not exists viaggio_people_linked_user_idx
-  on public.viaggio_people (linked_user_id);
-
 -- Journey roster (travelers; may or may not have an app account).
+-- Names are journey-local; profiles.display_name seeds new seats only.
 create table if not exists public.viaggio_journey_people (
   id              uuid primary key default gen_random_uuid(),
   journey_id      uuid not null references public.viaggio_journeys(id) on delete cascade,
-  person_id       uuid references public.viaggio_people(id) on delete set null,
   display_name    text not null,
   email           text,
   phone_e164      text check (phone_e164 is null or phone_e164 ~ '^\+[1-9]\d{1,14}$'),
@@ -114,9 +97,11 @@ create index if not exists viaggio_journey_people_journey_idx
 create unique index if not exists viaggio_journey_people_linked_uidx
   on public.viaggio_journey_people (journey_id, linked_user_id)
   where linked_user_id is not null;
-create unique index if not exists viaggio_journey_people_person_uidx
-  on public.viaggio_journey_people (journey_id, person_id)
-  where person_id is not null;
+
+-- Upgrade path: older installs had person_id → viaggio_people (table dropped after RPCs below).
+drop index if exists public.viaggio_journey_people_person_uidx;
+alter table public.viaggio_journey_people
+  drop column if exists person_id;
 
 alter table public.viaggio_invites
   drop constraint if exists viaggio_invites_journey_person_id_fkey;
@@ -187,7 +172,8 @@ create index if not exists viaggio_entries_contact_idx
 
 create table if not exists public.viaggio_expenses (
   id            uuid primary key default gen_random_uuid(),
-  entry_id      uuid not null references public.viaggio_entries(id) on delete cascade,
+  journey_id    uuid not null references public.viaggio_journeys(id) on delete cascade,
+  entry_id      uuid references public.viaggio_entries(id) on delete set null,
   title         text not null default '',
   amount_cents  bigint not null check (amount_cents >= 0),
   currency      text not null check (currency ~ '^[A-Z]{3}$'),
@@ -199,8 +185,19 @@ create table if not exists public.viaggio_expenses (
   updated_at    timestamptz not null default now()
 );
 
+create index if not exists viaggio_expenses_journey_idx on public.viaggio_expenses (journey_id);
 create index if not exists viaggio_expenses_entry_idx on public.viaggio_expenses (entry_id);
 create index if not exists viaggio_expenses_paid_by_idx on public.viaggio_expenses (paid_by);
+
+-- Many-to-many links (0–N); optional primary on viaggio_expenses.entry_id.
+create table if not exists public.viaggio_expense_entries (
+  expense_id  uuid not null references public.viaggio_expenses(id) on delete cascade,
+  entry_id    uuid not null references public.viaggio_entries(id) on delete cascade,
+  primary key (expense_id, entry_id)
+);
+
+create index if not exists viaggio_expense_entries_entry_idx
+  on public.viaggio_expense_entries (entry_id);
 
 create table if not exists public.viaggio_expense_splits (
   expense_id         uuid not null references public.viaggio_expenses(id) on delete cascade,
@@ -301,7 +298,8 @@ end $$;
 
 create table if not exists public.viaggio_attachments (
   id            uuid primary key default gen_random_uuid(),
-  entry_id      uuid not null references public.viaggio_entries(id) on delete cascade,
+  entry_id      uuid references public.viaggio_entries(id) on delete cascade,
+  journey_id    uuid not null references public.viaggio_journeys(id) on delete cascade,
   expense_id    uuid references public.viaggio_expenses(id) on delete cascade,
   uploaded_by   uuid not null references auth.users(id) on delete restrict,
   file_name     text not null,
@@ -310,14 +308,38 @@ create table if not exists public.viaggio_attachments (
   storage_path  text not null unique,
   iv            text,
   created_at    timestamptz not null default now(),
-  updated_at    timestamptz not null default now()
+  updated_at    timestamptz not null default now(),
+  constraint viaggio_attachments_scope_chk
+    check (journey_id is not null)
 );
 
 create index if not exists viaggio_attachments_entry_idx
   on public.viaggio_attachments (entry_id);
+create index if not exists viaggio_attachments_journey_idx
+  on public.viaggio_attachments (journey_id);
 create index if not exists viaggio_attachments_expense_idx
   on public.viaggio_attachments (expense_id)
   where expense_id is not null;
+
+-- Many-to-many links (0–N); empty = journey-level attachment.
+-- Legacy entry_id / expense_id columns are unused for new writes.
+create table if not exists public.viaggio_attachment_entries (
+  attachment_id uuid not null references public.viaggio_attachments(id) on delete cascade,
+  entry_id      uuid not null references public.viaggio_entries(id) on delete cascade,
+  primary key (attachment_id, entry_id)
+);
+
+create index if not exists viaggio_attachment_entries_entry_idx
+  on public.viaggio_attachment_entries (entry_id);
+
+create table if not exists public.viaggio_attachment_expenses (
+  attachment_id uuid not null references public.viaggio_attachments(id) on delete cascade,
+  expense_id    uuid not null references public.viaggio_expenses(id) on delete cascade,
+  primary key (attachment_id, expense_id)
+);
+
+create index if not exists viaggio_attachment_expenses_expense_idx
+  on public.viaggio_attachment_expenses (expense_id);
 
 -- ---------------------------------------------------------------------------
 -- Helpers (membership)
@@ -450,11 +472,11 @@ alter table public.viaggio_journeys enable row level security;
 alter table public.viaggio_journey_members enable row level security;
 alter table public.viaggio_journey_blocks enable row level security;
 alter table public.viaggio_invites enable row level security;
-alter table public.viaggio_people enable row level security;
 alter table public.viaggio_journey_people enable row level security;
 alter table public.viaggio_contacts enable row level security;
 alter table public.viaggio_entries enable row level security;
 alter table public.viaggio_expenses enable row level security;
+alter table public.viaggio_expense_entries enable row level security;
 alter table public.viaggio_expense_splits enable row level security;
 alter table public.viaggio_entry_participants enable row level security;
 alter table public.viaggio_playlist_items enable row level security;
@@ -462,6 +484,8 @@ alter table public.viaggio_place_ideas enable row level security;
 alter table public.viaggio_todos enable row level security;
 alter table public.viaggio_todo_assignees enable row level security;
 alter table public.viaggio_attachments enable row level security;
+alter table public.viaggio_attachment_entries enable row level security;
+alter table public.viaggio_attachment_expenses enable row level security;
 
 -- Journeys
 drop policy if exists "viaggio_journeys select" on public.viaggio_journeys;
@@ -510,26 +534,6 @@ create policy "viaggio_invites update"
   on public.viaggio_invites for update
   using (public.viaggio_is_owner(journey_id))
   with check (public.viaggio_is_owner(journey_id));
-
--- Personal people library
-drop policy if exists "viaggio_people select" on public.viaggio_people;
-drop policy if exists "viaggio_people insert" on public.viaggio_people;
-drop policy if exists "viaggio_people update" on public.viaggio_people;
-drop policy if exists "viaggio_people delete" on public.viaggio_people;
-
-create policy "viaggio_people select"
-  on public.viaggio_people for select
-  using (owner_id = auth.uid() or linked_user_id = auth.uid());
-create policy "viaggio_people insert"
-  on public.viaggio_people for insert
-  with check (owner_id = auth.uid());
-create policy "viaggio_people update"
-  on public.viaggio_people for update
-  using (owner_id = auth.uid())
-  with check (owner_id = auth.uid());
-create policy "viaggio_people delete"
-  on public.viaggio_people for delete
-  using (owner_id = auth.uid());
 
 -- Journey roster (mutations via RPC)
 drop policy if exists "viaggio_journey_people select" on public.viaggio_journey_people;
@@ -585,16 +589,36 @@ drop policy if exists "viaggio_expenses delete" on public.viaggio_expenses;
 
 create policy "viaggio_expenses select"
   on public.viaggio_expenses for select
-  using (public.viaggio_can_access_entry(entry_id));
+  using (public.viaggio_is_member(journey_id));
 create policy "viaggio_expenses insert"
   on public.viaggio_expenses for insert
-  with check (public.viaggio_can_edit_entry(entry_id) and created_by = auth.uid());
+  with check (public.viaggio_is_editor(journey_id) and created_by = auth.uid());
 create policy "viaggio_expenses update"
   on public.viaggio_expenses for update
-  using (public.viaggio_can_edit_entry(entry_id))
-  with check (public.viaggio_can_edit_entry(entry_id));
+  using (public.viaggio_is_editor(journey_id))
+  with check (public.viaggio_is_editor(journey_id));
 create policy "viaggio_expenses delete"
   on public.viaggio_expenses for delete
+  using (public.viaggio_is_editor(journey_id));
+
+-- Expense ↔ entry links
+drop policy if exists "viaggio_expense_entries select" on public.viaggio_expense_entries;
+drop policy if exists "viaggio_expense_entries insert" on public.viaggio_expense_entries;
+drop policy if exists "viaggio_expense_entries update" on public.viaggio_expense_entries;
+drop policy if exists "viaggio_expense_entries delete" on public.viaggio_expense_entries;
+
+create policy "viaggio_expense_entries select"
+  on public.viaggio_expense_entries for select
+  using (public.viaggio_can_access_entry(entry_id));
+create policy "viaggio_expense_entries insert"
+  on public.viaggio_expense_entries for insert
+  with check (public.viaggio_can_edit_entry(entry_id));
+create policy "viaggio_expense_entries update"
+  on public.viaggio_expense_entries for update
+  using (public.viaggio_can_edit_entry(entry_id))
+  with check (public.viaggio_can_edit_entry(entry_id));
+create policy "viaggio_expense_entries delete"
+  on public.viaggio_expense_entries for delete
   using (public.viaggio_can_edit_entry(entry_id));
 
 -- Splits
@@ -608,7 +632,7 @@ create policy "viaggio_expense_splits select"
   using (
     exists (
       select 1 from public.viaggio_expenses x
-      where x.id = expense_id and public.viaggio_can_access_entry(x.entry_id)
+      where x.id = expense_id and public.viaggio_is_member(x.journey_id)
     )
   );
 create policy "viaggio_expense_splits insert"
@@ -616,7 +640,7 @@ create policy "viaggio_expense_splits insert"
   with check (
     exists (
       select 1 from public.viaggio_expenses x
-      where x.id = expense_id and public.viaggio_can_edit_entry(x.entry_id)
+      where x.id = expense_id and public.viaggio_is_editor(x.journey_id)
     )
   );
 create policy "viaggio_expense_splits update"
@@ -624,13 +648,13 @@ create policy "viaggio_expense_splits update"
   using (
     exists (
       select 1 from public.viaggio_expenses x
-      where x.id = expense_id and public.viaggio_can_edit_entry(x.entry_id)
+      where x.id = expense_id and public.viaggio_is_editor(x.journey_id)
     )
   )
   with check (
     exists (
       select 1 from public.viaggio_expenses x
-      where x.id = expense_id and public.viaggio_can_edit_entry(x.entry_id)
+      where x.id = expense_id and public.viaggio_is_editor(x.journey_id)
     )
   );
 create policy "viaggio_expense_splits delete"
@@ -638,7 +662,7 @@ create policy "viaggio_expense_splits delete"
   using (
     exists (
       select 1 from public.viaggio_expenses x
-      where x.id = expense_id and public.viaggio_can_edit_entry(x.entry_id)
+      where x.id = expense_id and public.viaggio_is_editor(x.journey_id)
     )
   );
 
@@ -712,6 +736,7 @@ create policy "viaggio_todos delete"
 drop policy if exists "viaggio_todo_assignees select" on public.viaggio_todo_assignees;
 drop policy if exists "viaggio_todo_assignees insert" on public.viaggio_todo_assignees;
 drop policy if exists "viaggio_todo_assignees delete" on public.viaggio_todo_assignees;
+drop policy if exists "viaggio_todo_assignees update" on public.viaggio_todo_assignees;
 
 create policy "viaggio_todo_assignees select"
   on public.viaggio_todo_assignees for select
@@ -760,19 +785,162 @@ drop policy if exists "viaggio_attachments delete" on public.viaggio_attachments
 
 create policy "viaggio_attachments select"
   on public.viaggio_attachments for select
-  using (public.viaggio_can_access_entry(entry_id));
+  using (public.viaggio_is_member(journey_id));
 create policy "viaggio_attachments insert"
   on public.viaggio_attachments for insert
-  with check (public.viaggio_can_edit_entry(entry_id) and uploaded_by = auth.uid());
+  with check (
+    uploaded_by = auth.uid()
+    and public.viaggio_is_editor(journey_id)
+  );
 create policy "viaggio_attachments update"
   on public.viaggio_attachments for update
-  using (public.viaggio_can_edit_entry(entry_id))
-  with check (public.viaggio_can_edit_entry(entry_id));
+  using (public.viaggio_is_editor(journey_id))
+  with check (public.viaggio_is_editor(journey_id));
 create policy "viaggio_attachments delete"
   on public.viaggio_attachments for delete
-  using (public.viaggio_can_edit_entry(entry_id));
+  using (public.viaggio_is_editor(journey_id));
 
--- Storage bucket + path {entry_id}/{attachment_id}
+drop policy if exists "viaggio_attachment_entries select" on public.viaggio_attachment_entries;
+drop policy if exists "viaggio_attachment_entries insert" on public.viaggio_attachment_entries;
+drop policy if exists "viaggio_attachment_entries update" on public.viaggio_attachment_entries;
+drop policy if exists "viaggio_attachment_entries delete" on public.viaggio_attachment_entries;
+
+create policy "viaggio_attachment_entries select"
+  on public.viaggio_attachment_entries for select
+  using (
+    exists (
+      select 1 from public.viaggio_attachments a
+      where a.id = attachment_id and public.viaggio_is_member(a.journey_id)
+    )
+  );
+create policy "viaggio_attachment_entries insert"
+  on public.viaggio_attachment_entries for insert
+  with check (
+    exists (
+      select 1 from public.viaggio_attachments a
+      where a.id = attachment_id and public.viaggio_is_editor(a.journey_id)
+    )
+  );
+create policy "viaggio_attachment_entries update"
+  on public.viaggio_attachment_entries for update
+  using (
+    exists (
+      select 1 from public.viaggio_attachments a
+      where a.id = attachment_id and public.viaggio_is_editor(a.journey_id)
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.viaggio_attachments a
+      where a.id = attachment_id and public.viaggio_is_editor(a.journey_id)
+    )
+  );
+create policy "viaggio_attachment_entries delete"
+  on public.viaggio_attachment_entries for delete
+  using (
+    exists (
+      select 1 from public.viaggio_attachments a
+      where a.id = attachment_id and public.viaggio_is_editor(a.journey_id)
+    )
+  );
+
+drop policy if exists "viaggio_attachment_expenses select" on public.viaggio_attachment_expenses;
+drop policy if exists "viaggio_attachment_expenses insert" on public.viaggio_attachment_expenses;
+drop policy if exists "viaggio_attachment_expenses update" on public.viaggio_attachment_expenses;
+drop policy if exists "viaggio_attachment_expenses delete" on public.viaggio_attachment_expenses;
+
+create policy "viaggio_attachment_expenses select"
+  on public.viaggio_attachment_expenses for select
+  using (
+    exists (
+      select 1 from public.viaggio_attachments a
+      where a.id = attachment_id and public.viaggio_is_member(a.journey_id)
+    )
+  );
+create policy "viaggio_attachment_expenses insert"
+  on public.viaggio_attachment_expenses for insert
+  with check (
+    exists (
+      select 1 from public.viaggio_attachments a
+      where a.id = attachment_id and public.viaggio_is_editor(a.journey_id)
+    )
+  );
+create policy "viaggio_attachment_expenses update"
+  on public.viaggio_attachment_expenses for update
+  using (
+    exists (
+      select 1 from public.viaggio_attachments a
+      where a.id = attachment_id and public.viaggio_is_editor(a.journey_id)
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.viaggio_attachments a
+      where a.id = attachment_id and public.viaggio_is_editor(a.journey_id)
+    )
+  );
+create policy "viaggio_attachment_expenses delete"
+  on public.viaggio_attachment_expenses for delete
+  using (
+    exists (
+      select 1 from public.viaggio_attachments a
+      where a.id = attachment_id and public.viaggio_is_editor(a.journey_id)
+    )
+  );
+
+-- Storage: {entry_id}/{att}, {journey_id}/expense/{expense_id}/{att}, or {journey_id}/{att}
+create or replace function public.viaggio_can_access_attachment_path(p_name text)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  parts text[];
+begin
+  parts := storage.foldername(p_name);
+  if parts is null or cardinality(parts) < 1 then
+    return false;
+  end if;
+  if cardinality(parts) >= 2 and parts[2] = 'expense' then
+    return public.viaggio_is_member(parts[1]::uuid);
+  end if;
+  if exists (
+    select 1 from public.viaggio_journeys j where j.id = parts[1]::uuid
+  ) then
+    return public.viaggio_is_member(parts[1]::uuid);
+  end if;
+  return public.viaggio_can_access_entry(parts[1]::uuid);
+end;
+$$;
+
+create or replace function public.viaggio_can_edit_attachment_path(p_name text)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  parts text[];
+begin
+  parts := storage.foldername(p_name);
+  if parts is null or cardinality(parts) < 1 then
+    return false;
+  end if;
+  if cardinality(parts) >= 2 and parts[2] = 'expense' then
+    return public.viaggio_is_editor(parts[1]::uuid);
+  end if;
+  if exists (
+    select 1 from public.viaggio_journeys j where j.id = parts[1]::uuid
+  ) then
+    return public.viaggio_is_editor(parts[1]::uuid);
+  end if;
+  return public.viaggio_can_edit_entry(parts[1]::uuid);
+end;
+$$;
+
 insert into storage.buckets (id, name, public)
 values ('viaggio-attachments', 'viaggio-attachments', false)
 on conflict (id) do update set public = excluded.public;
@@ -786,70 +954,37 @@ create policy "viaggio_attachments storage read"
   on storage.objects for select
   using (
     bucket_id = 'viaggio-attachments'
-    and public.viaggio_can_access_entry(((storage.foldername(name))[1])::uuid)
+    and public.viaggio_can_access_attachment_path(name)
   );
 
 create policy "viaggio_attachments storage insert"
   on storage.objects for insert
   with check (
     bucket_id = 'viaggio-attachments'
-    and public.viaggio_can_edit_entry(((storage.foldername(name))[1])::uuid)
+    and public.viaggio_can_edit_attachment_path(name)
   );
 
 create policy "viaggio_attachments storage update"
   on storage.objects for update
   using (
     bucket_id = 'viaggio-attachments'
-    and public.viaggio_can_edit_entry(((storage.foldername(name))[1])::uuid)
+    and public.viaggio_can_edit_attachment_path(name)
   )
   with check (
     bucket_id = 'viaggio-attachments'
-    and public.viaggio_can_edit_entry(((storage.foldername(name))[1])::uuid)
+    and public.viaggio_can_edit_attachment_path(name)
   );
 
 create policy "viaggio_attachments storage delete"
   on storage.objects for delete
   using (
     bucket_id = 'viaggio-attachments'
-    and public.viaggio_can_edit_entry(((storage.foldername(name))[1])::uuid)
+    and public.viaggio_can_edit_attachment_path(name)
   );
 
 -- ---------------------------------------------------------------------------
 -- RPCs
 -- ---------------------------------------------------------------------------
-
-create or replace function public.viaggio_ensure_self_person(p_uid uuid)
-returns public.viaggio_people
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  v_row public.viaggio_people;
-  v_name text;
-  v_email text;
-begin
-  select * into v_row
-  from public.viaggio_people
-  where owner_id = p_uid and linked_user_id = p_uid
-  limit 1;
-  if v_row.id is not null then return v_row; end if;
-
-  select nullif(trim(display_name), ''), email
-    into v_name, v_email
-  from public.profiles where id = p_uid;
-
-  insert into public.viaggio_people (owner_id, display_name, email, linked_user_id)
-  values (
-    p_uid,
-    coalesce(v_name, nullif(trim(v_email), ''), left(p_uid::text, 8)),
-    v_email,
-    p_uid
-  )
-  returning * into v_row;
-  return v_row;
-end;
-$$;
 
 create or replace function public.viaggio_ensure_journey_person_for_user(
   p_journey_id uuid,
@@ -861,8 +996,9 @@ security definer
 set search_path = public
 as $$
 declare
-  v_person public.viaggio_people;
   v_row public.viaggio_journey_people;
+  v_name text;
+  v_email text;
 begin
   select * into v_row
   from public.viaggio_journey_people
@@ -870,13 +1006,18 @@ begin
   limit 1;
   if v_row.id is not null then return v_row; end if;
 
-  v_person := public.viaggio_ensure_self_person(p_uid);
+  select nullif(trim(display_name), ''), email
+    into v_name, v_email
+  from public.profiles where id = p_uid;
 
   insert into public.viaggio_journey_people (
-    journey_id, person_id, display_name, email, phone_e164, linked_user_id, created_by
+    journey_id, display_name, email, linked_user_id, created_by
   ) values (
-    p_journey_id, v_person.id, v_person.display_name, v_person.email,
-    v_person.phone_e164, p_uid, p_uid
+    p_journey_id,
+    coalesce(v_name, nullif(trim(v_email), ''), left(p_uid::text, 8)),
+    v_email,
+    p_uid,
+    p_uid
   )
   returning * into v_row;
   return v_row;
@@ -1075,8 +1216,16 @@ grant execute on function public.upsert_entry(
   text, uuid, jsonb, uuid[]
 ) to authenticated;
 
+drop function if exists public.upsert_expense_with_splits(
+  uuid, uuid, text, bigint, text, uuid, text, text, jsonb
+);
+drop function if exists public.upsert_expense_with_splits(
+  uuid, uuid, text, bigint, text, uuid, text, text, jsonb, uuid[]
+);
+
 create or replace function public.upsert_expense_with_splits(
   p_id uuid,
+  p_journey_id uuid,
   p_entry_id uuid,
   p_title text,
   p_amount_cents bigint,
@@ -1084,7 +1233,8 @@ create or replace function public.upsert_expense_with_splits(
   p_paid_by uuid,
   p_split_mode text,
   p_category text,
-  p_splits jsonb
+  p_splits jsonb,
+  p_entry_ids uuid[] default null
 )
 returns public.viaggio_expenses
 language plpgsql
@@ -1093,15 +1243,19 @@ set search_path = public
 as $$
 declare
   v_uid uuid := auth.uid();
-  v_journey_id uuid;
   v_row public.viaggio_expenses;
   v_sum bigint;
   v_split record;
+  v_entry_ids uuid[];
+  v_link uuid;
+  v_primary uuid;
 begin
   if v_uid is null then raise exception 'not authenticated'; end if;
-  v_journey_id := public.viaggio_entry_journey_id(p_entry_id);
-  if v_journey_id is null then raise exception 'entry not found'; end if;
-  if not public.viaggio_is_editor(v_journey_id) then
+  if p_journey_id is null then raise exception 'journey not found'; end if;
+  if not exists (select 1 from public.viaggio_journeys j where j.id = p_journey_id) then
+    raise exception 'journey not found';
+  end if;
+  if not public.viaggio_is_editor(p_journey_id) then
     raise exception 'forbidden';
   end if;
   if p_amount_cents is null or p_amount_cents < 0 then
@@ -1115,10 +1269,38 @@ begin
   end if;
   if not exists (
     select 1 from public.viaggio_journey_people jp
-    where jp.journey_id = v_journey_id and jp.id = p_paid_by
+    where jp.journey_id = p_journey_id and jp.id = p_paid_by
   ) then
     raise exception 'paid_by must be on the journey roster';
   end if;
+
+  if p_entry_ids is null then
+    v_entry_ids := '{}'::uuid[];
+  else
+    select coalesce(array_agg(distinct u), '{}'::uuid[])
+    into v_entry_ids
+    from unnest(p_entry_ids) as u
+    where u is not null;
+  end if;
+
+  if cardinality(v_entry_ids) = 0 then
+    v_primary := null;
+  else
+    v_primary := coalesce(p_entry_id, v_entry_ids[1]);
+    if v_primary is null or not (v_primary = any (v_entry_ids)) then
+      raise exception 'primary entry_id must be in entry_ids';
+    end if;
+    select array_agg(u order by case when u = v_primary then 0 else 1 end, u)
+    into v_entry_ids
+    from unnest(v_entry_ids) as u;
+  end if;
+
+  foreach v_link in array v_entry_ids
+  loop
+    if public.viaggio_entry_journey_id(v_link) is distinct from p_journey_id then
+      raise exception 'entry not found';
+    end if;
+  end loop;
 
   select coalesce(sum((s->>'amount_cents')::bigint), 0) into v_sum
   from jsonb_array_elements(coalesce(p_splits, '[]'::jsonb)) s;
@@ -1137,7 +1319,7 @@ begin
   loop
     if not exists (
       select 1 from public.viaggio_journey_people jp
-      where jp.journey_id = v_journey_id and jp.id = v_split.journey_person_id
+      where jp.journey_id = p_journey_id and jp.id = v_split.journey_person_id
     ) then
       raise exception 'split participant must be on the journey roster';
     end if;
@@ -1145,14 +1327,23 @@ begin
 
   if p_id is null then
     insert into public.viaggio_expenses (
-      entry_id, title, amount_cents, currency, paid_by, split_mode, category, created_by
+      journey_id, entry_id, title, amount_cents, currency, paid_by, split_mode, category, created_by
     ) values (
-      p_entry_id, coalesce(p_title, ''), p_amount_cents, p_currency,
+      p_journey_id, v_primary, coalesce(p_title, ''), p_amount_cents, p_currency,
       p_paid_by, p_split_mode, p_category, v_uid
     )
     returning * into v_row;
   else
+    select * into v_row
+    from public.viaggio_expenses x
+    where x.id = p_id;
+    if v_row.id is null then raise exception 'expense not found'; end if;
+    if v_row.journey_id is distinct from p_journey_id then
+      raise exception 'expense not found';
+    end if;
+
     update public.viaggio_expenses x set
+      entry_id = v_primary,
       title = coalesce(p_title, ''),
       amount_cents = p_amount_cents,
       currency = p_currency,
@@ -1160,7 +1351,7 @@ begin
       split_mode = p_split_mode,
       category = p_category,
       updated_at = now()
-    where x.id = p_id and x.entry_id = p_entry_id
+    where x.id = p_id
     returning * into v_row;
     if v_row.id is null then raise exception 'expense not found'; end if;
     delete from public.viaggio_expense_splits where expense_id = v_row.id;
@@ -1173,16 +1364,106 @@ begin
     (s->>'amount_cents')::bigint
   from jsonb_array_elements(coalesce(p_splits, '[]'::jsonb)) s;
 
+  delete from public.viaggio_expense_entries where expense_id = v_row.id;
+  if cardinality(v_entry_ids) > 0 then
+    insert into public.viaggio_expense_entries (expense_id, entry_id)
+    select v_row.id, u
+    from unnest(v_entry_ids) as u
+    on conflict do nothing;
+  end if;
+
   return v_row;
 end;
 $$;
 
 revoke all on function public.upsert_expense_with_splits(
-  uuid, uuid, text, bigint, text, uuid, text, text, jsonb
+  uuid, uuid, uuid, text, bigint, text, uuid, text, text, jsonb, uuid[]
 ) from public;
 grant execute on function public.upsert_expense_with_splits(
-  uuid, uuid, text, bigint, text, uuid, text, text, jsonb
+  uuid, uuid, uuid, text, bigint, text, uuid, text, text, jsonb, uuid[]
 ) to authenticated;
+
+create or replace function public.set_attachment_links(
+  p_attachment_id uuid,
+  p_entry_ids uuid[] default '{}',
+  p_expense_ids uuid[] default '{}'
+)
+returns public.viaggio_attachments
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_row public.viaggio_attachments;
+  v_entry_ids uuid[];
+  v_expense_ids uuid[];
+  v_link uuid;
+begin
+  if v_uid is null then raise exception 'not authenticated'; end if;
+
+  select * into v_row
+  from public.viaggio_attachments a
+  where a.id = p_attachment_id;
+  if v_row.id is null then raise exception 'attachment not found'; end if;
+  if not public.viaggio_is_editor(v_row.journey_id) then
+    raise exception 'forbidden';
+  end if;
+
+  select coalesce(array_agg(u order by u), '{}'::uuid[])
+  into v_entry_ids
+  from (select distinct unnest(coalesce(p_entry_ids, '{}'::uuid[])) as u) d
+  where u is not null;
+
+  select coalesce(array_agg(u order by u), '{}'::uuid[])
+  into v_expense_ids
+  from (select distinct unnest(coalesce(p_expense_ids, '{}'::uuid[])) as u) d
+  where u is not null;
+
+  foreach v_link in array v_entry_ids
+  loop
+    if public.viaggio_entry_journey_id(v_link) is distinct from v_row.journey_id then
+      raise exception 'entry not on journey';
+    end if;
+  end loop;
+
+  foreach v_link in array v_expense_ids
+  loop
+    if not exists (
+      select 1 from public.viaggio_expenses x
+      where x.id = v_link and x.journey_id = v_row.journey_id
+    ) then
+      raise exception 'expense not on journey';
+    end if;
+  end loop;
+
+  delete from public.viaggio_attachment_entries where attachment_id = v_row.id;
+  if cardinality(v_entry_ids) > 0 then
+    insert into public.viaggio_attachment_entries (attachment_id, entry_id)
+    select v_row.id, u from unnest(v_entry_ids) as u
+    on conflict do nothing;
+  end if;
+
+  delete from public.viaggio_attachment_expenses where attachment_id = v_row.id;
+  if cardinality(v_expense_ids) > 0 then
+    insert into public.viaggio_attachment_expenses (attachment_id, expense_id)
+    select v_row.id, u from unnest(v_expense_ids) as u
+    on conflict do nothing;
+  end if;
+
+  update public.viaggio_attachments a set
+    entry_id = null,
+    expense_id = null,
+    updated_at = now()
+  where a.id = v_row.id
+  returning * into v_row;
+
+  return v_row;
+end;
+$$;
+
+revoke all on function public.set_attachment_links(uuid, uuid[], uuid[]) from public;
+grant execute on function public.set_attachment_links(uuid, uuid[], uuid[]) to authenticated;
 
 drop function if exists public.create_invite(uuid, text, timestamptz);
 
@@ -1314,28 +1595,22 @@ begin
     returning * into v_mem;
   end if;
 
+  select nullif(trim(display_name), ''), email
+    into v_name, v_email
+  from public.profiles where id = v_uid;
+
+  -- First bind: claim seat (seed name from profile when present) or create seat.
   if v_inv.journey_person_id is not null then
     update public.viaggio_journey_people
     set linked_user_id = v_uid,
+        display_name = coalesce(v_name, display_name),
+        email = coalesce(email, v_email),
         updated_at = now()
     where id = v_inv.journey_person_id
       and journey_id = v_inv.journey_id
       and (linked_user_id is null or linked_user_id = v_uid);
   else
     perform public.viaggio_ensure_journey_person_for_user(v_inv.journey_id, v_uid);
-  end if;
-
-  perform public.viaggio_ensure_self_person(v_uid);
-
-  select nullif(trim(display_name), ''), email
-    into v_name, v_email
-  from public.profiles where id = v_uid;
-
-  if v_inv.journey_person_id is not null and coalesce(v_name, '') <> '' then
-    update public.viaggio_journey_people
-    set display_name = coalesce(nullif(trim(display_name), ''), v_name),
-        email = coalesce(email, v_email)
-    where id = v_inv.journey_person_id;
   end if;
 
   return v_mem;
@@ -1570,75 +1845,18 @@ $$;
 revoke all on function public.peek_invite(text) from public;
 grant execute on function public.peek_invite(text) to authenticated;
 
--- People library + roster RPCs (also in patches/journey_people.sql)
+-- Journey roster RPCs (also in patches/drop_viaggio_people.sql)
 
-create or replace function public.upsert_person(
-  p_id uuid,
-  p_display_name text,
-  p_email text default null,
-  p_phone_e164 text default null
-)
-returns public.viaggio_people
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  v_uid uuid := auth.uid();
-  v_row public.viaggio_people;
-begin
-  if v_uid is null then raise exception 'not authenticated'; end if;
-  if coalesce(trim(p_display_name), '') = '' then
-    raise exception 'display_name required';
-  end if;
-
-  if p_id is null then
-    insert into public.viaggio_people (owner_id, display_name, email, phone_e164)
-    values (
-      v_uid,
-      trim(p_display_name),
-      nullif(trim(p_email), ''),
-      nullif(trim(p_phone_e164), '')
-    )
-    returning * into v_row;
-  else
-    update public.viaggio_people
-    set display_name = trim(p_display_name),
-        email = nullif(trim(p_email), ''),
-        phone_e164 = nullif(trim(p_phone_e164), ''),
-        updated_at = now()
-    where id = p_id and owner_id = v_uid
-    returning * into v_row;
-    if v_row.id is null then raise exception 'person not found'; end if;
-  end if;
-  return v_row;
-end;
-$$;
-
-revoke all on function public.upsert_person(uuid, text, text, text) from public;
-grant execute on function public.upsert_person(uuid, text, text, text) to authenticated;
-
-create or replace function public.delete_person(p_id uuid)
-returns void
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  if auth.uid() is null then raise exception 'not authenticated'; end if;
-  delete from public.viaggio_people
-  where id = p_id and owner_id = auth.uid()
-    and (linked_user_id is null or linked_user_id <> auth.uid());
-end;
-$$;
-
-revoke all on function public.delete_person(uuid) from public;
-grant execute on function public.delete_person(uuid) to authenticated;
+drop function if exists public.sync_my_display_name(text);
+drop function if exists public.upsert_person(uuid, text, text, text);
+drop function if exists public.delete_person(uuid);
+drop function if exists public.viaggio_ensure_self_person(uuid);
+drop function if exists public.add_journey_person(uuid, uuid, text, text, text);
+drop table if exists public.viaggio_people;
 
 create or replace function public.add_journey_person(
   p_journey_id uuid,
-  p_person_id uuid default null,
-  p_display_name text default null,
+  p_display_name text,
   p_email text default null,
   p_phone_e164 text default null
 )
@@ -1649,7 +1867,6 @@ set search_path = public
 as $$
 declare
   v_uid uuid := auth.uid();
-  v_person public.viaggio_people;
   v_row public.viaggio_journey_people;
   v_name text;
   v_email text;
@@ -1660,46 +1877,23 @@ begin
     raise exception 'forbidden';
   end if;
 
-  if p_person_id is not null then
-    select * into v_person
-    from public.viaggio_people
-    where id = p_person_id and owner_id = v_uid;
-    if v_person.id is null then raise exception 'person not found'; end if;
-
-    select * into v_row
-    from public.viaggio_journey_people
-    where journey_id = p_journey_id and person_id = p_person_id;
-    if v_row.id is not null then return v_row; end if;
-
-    v_name := v_person.display_name;
-    v_email := v_person.email;
-    v_phone := v_person.phone_e164;
-  else
-    v_name := trim(coalesce(p_display_name, ''));
-    if v_name = '' then raise exception 'display_name required'; end if;
-    v_email := nullif(trim(p_email), '');
-    v_phone := nullif(trim(p_phone_e164), '');
-
-    insert into public.viaggio_people (owner_id, display_name, email, phone_e164)
-    values (v_uid, v_name, v_email, v_phone)
-    returning * into v_person;
-    p_person_id := v_person.id;
-  end if;
+  v_name := trim(coalesce(p_display_name, ''));
+  if v_name = '' then raise exception 'display_name required'; end if;
+  v_email := nullif(trim(p_email), '');
+  v_phone := nullif(trim(p_phone_e164), '');
 
   insert into public.viaggio_journey_people (
-    journey_id, person_id, display_name, email, phone_e164,
-    linked_user_id, created_by
+    journey_id, display_name, email, phone_e164, created_by
   ) values (
-    p_journey_id, p_person_id, v_name, v_email, v_phone,
-    v_person.linked_user_id, v_uid
+    p_journey_id, v_name, v_email, v_phone, v_uid
   )
   returning * into v_row;
   return v_row;
 end;
 $$;
 
-revoke all on function public.add_journey_person(uuid, uuid, text, text, text) from public;
-grant execute on function public.add_journey_person(uuid, uuid, text, text, text) to authenticated;
+revoke all on function public.add_journey_person(uuid, text, text, text) from public;
+grant execute on function public.add_journey_person(uuid, text, text, text) to authenticated;
 
 create or replace function public.update_journey_person(
   p_id uuid,

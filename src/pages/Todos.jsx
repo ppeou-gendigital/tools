@@ -8,6 +8,7 @@ import {
   ListMusic,
   MapPin,
   Minus,
+  Paperclip,
   Plus,
   RefreshCw,
   Settings,
@@ -171,6 +172,7 @@ export function Todos() {
     previousRouteLabel,
     goMembers,
     goSpending,
+    goAttachments,
     goPlaylist,
     goMap,
     goJourneySettings,
@@ -599,6 +601,12 @@ export function Todos() {
                 label: 'Spending',
                 icon: CircleDollarSign,
                 pick: () => () => goSpending(journeyId),
+              },
+              {
+                id: 'attachments',
+                label: 'Attachments',
+                icon: Paperclip,
+                pick: () => () => goAttachments(journeyId),
               },
               {
                 id: 'playlist',

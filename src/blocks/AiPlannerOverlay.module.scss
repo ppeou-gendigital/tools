@@ -267,11 +267,19 @@
   background: transparent;
 }
 
+.receiptAttachRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
 .receiptAttach {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  margin-bottom: 0.35rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .receiptThumb {

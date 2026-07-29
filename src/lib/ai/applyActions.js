@@ -8,6 +8,8 @@ import {
   deletePlaylistItem,
   deleteTodo,
   getEntry,
+  getExpense,
+  listExpensesForJourney,
   listJourneyPeople,
   listParticipantsForEntry,
   updateJourney,
@@ -200,6 +202,28 @@ async function resolveExpenseSplits(journeyId, expense, userId) {
   return { paidBy, amountCents, splits }
 }
 
+/** Prefer exact id; if missing/stale, uniquely match title+amount+currency on the journey. */
+async function resolveExpenseIdForUpdate(journeyId, expense) {
+  const id = expense?.id
+  if (id) {
+    try {
+      const existing = await getExpense(id)
+      if (existing?.id) return existing.id
+    } catch {
+      /* fall through to title match */
+    }
+  }
+  const list = await listExpensesForJourney(journeyId)
+  const matches = (list || []).filter(
+    (e) =>
+      e.title === expense.title &&
+      e.amountCents === expense.amount_cents &&
+      e.currency === expense.currency,
+  )
+  if (matches.length === 1) return matches[0].id
+  return id || null
+}
+
 async function applyExpenseAction(journeyId, action, userId, { update = false } = {}) {
   const applied = emptyApplied()
   const errors = []
@@ -212,14 +236,33 @@ async function applyExpenseAction(journeyId, action, userId, { update = false } 
   }
 
   try {
+    const expenseId = update
+      ? await resolveExpenseIdForUpdate(journeyId, expense)
+      : null
+    if (update && !expenseId) {
+      return {
+        applied,
+        errors: [
+          `Expense “${expense.title}”: expense not found (use an id from current expenses)`,
+        ],
+      }
+    }
     const { paidBy, amountCents, splits } = await resolveExpenseSplits(
       journeyId,
       expense,
       userId,
     )
+    const entryIds =
+      Array.isArray(expense.entry_ids) && expense.entry_ids.length
+        ? expense.entry_ids
+        : expense.entry_id
+          ? [expense.entry_id]
+          : []
     const row = await upsertExpenseWithSplits({
-      id: update ? expense.id : null,
-      entryId: expense.entry_id,
+      id: expenseId,
+      journeyId,
+      entryId: expense.entry_id || entryIds[0] || null,
+      entryIds,
       title: expense.title,
       amountCents,
       currency: expense.currency,
@@ -257,6 +300,27 @@ function pick(patch, key, existingValue) {
   return existingValue
 }
 
+/** Partial details patches merge; never wipe keys omitted by the model. */
+function mergeDetails(existingDetails, patchDetails) {
+  if (patchDetails == null) return existingDetails || {}
+  return { ...(existingDetails || {}), ...patchDetails }
+}
+
+/** Ignore null-island (0,0) so AI geo mistakes don't clear a real pin. */
+function pickLatLng(patch, existing) {
+  const hasLat = Object.prototype.hasOwnProperty.call(patch, 'lat')
+  const hasLng = Object.prototype.hasOwnProperty.call(patch, 'lng')
+  if (!hasLat && !hasLng) {
+    return { lat: existing.lat, lng: existing.lng }
+  }
+  const lat = hasLat ? patch.lat : existing.lat
+  const lng = hasLng ? patch.lng : existing.lng
+  if (lat === 0 && lng === 0) {
+    return { lat: existing.lat, lng: existing.lng }
+  }
+  return { lat, lng }
+}
+
 async function applyUpdateEntries(journeyId, action) {
   const applied = emptyApplied()
   const errors = []
@@ -287,6 +351,11 @@ async function applyUpdateEntries(journeyId, action) {
         participantIds = await listParticipantsForEntry(patch.id)
       }
 
+      const { lat, lng } = pickLatLng(patch, existing)
+      const details = Object.prototype.hasOwnProperty.call(patch, 'details')
+        ? mergeDetails(existing.details, patch.details)
+        : existing.details || {}
+
       const row = await upsertEntry({
         id: patch.id,
         journeyId,
@@ -302,9 +371,9 @@ async function applyUpdateEntries(journeyId, action) {
         endTimezone: pick(patch, 'end_timezone', existing.endTimezone),
         placeName: pick(patch, 'place_name', existing.placeName),
         address: pick(patch, 'address', existing.address),
-        lat: pick(patch, 'lat', existing.lat),
-        lng: pick(patch, 'lng', existing.lng),
-        details: pick(patch, 'details', existing.details || {}),
+        lat,
+        lng,
+        details,
         participantIds,
       })
       applied.entries.push(row)

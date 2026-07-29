@@ -1,7 +1,7 @@
 import { catalogPromptBlock } from '@/lib/ai/catalogContext'
 import { generateJsonFromPrompt } from '@/lib/ai/client'
 import { planningClockContext } from '@/lib/ai/planningClock'
-import { normalizeJourneySnapshot } from '@/lib/ai/normalize'
+import { assertNormalizedSnapshot } from '@/lib/ai/normalize'
 import { JOURNEY_SNAPSHOT_PROMPT_SCHEMA } from '@/lib/ai/promptSchema'
 
 /**
@@ -56,15 +56,17 @@ export async function generateJourneyPlan(input) {
     systemInstruction: system,
     prompt: `User request:\n${JSON.stringify(userPayload, null, 2)}`,
     validate: (parsed) => {
-      normalizeJourneySnapshot(parsed, {
+      assertNormalizedSnapshot(parsed, {
         importerName: input.importerName,
         overrides,
       })
     },
+    repairHint:
+      'Return valid viaggio.journey_snapshot JSON only. Fix catalog activity_ids, YYYY-MM-DD dates, IANA timezones, lodging ends_at_local checkout, and remove Scope.* mashups.',
   })
 
   return {
-    snapshot: normalizeJourneySnapshot(raw, {
+    snapshot: assertNormalizedSnapshot(raw, {
       importerName: input.importerName,
       overrides,
     }),

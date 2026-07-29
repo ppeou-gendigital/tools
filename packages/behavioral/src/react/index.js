@@ -10,3 +10,17 @@ export { AppShell } from './AppShell.jsx'
 export { AuthGate } from './AuthGate.jsx'
 export { SignInForm } from './SignInForm.jsx'
 export { useCornerDrag } from '../hooks/useCornerDrag.js'
+export {
+  FAB_GRIDS,
+  breakpointForWidth,
+  cellEdges,
+  cellToOffset,
+  formatFabCell,
+  gridForWidth,
+  localCellToStorage,
+  nearestFreeCell,
+  pointToCell,
+  readFabMetrics,
+  reservedCells,
+  storageCellToLocal,
+} from '../lib/fabGrid.js'

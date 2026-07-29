@@ -60,6 +60,29 @@ with AI, or Archives → Import JSON.
 - journey.starts_on / ends_on: YYYY-MM-DD only (never concatenated schema paths)
 - entries[].activity_id must be a known catalog activity (flight, hotel, meal,
   sightseeing, ferry, train, …); unknown activities fail import.
+- entries[].details is an object whose keys depend on activity_id (catalog
+  detailHints). Fill when visible on bookings or user text — do not leave
+  airports / confirmation numbers only in title.
+  - flight: airline, flight_number, confirmation, from, to (IATA preferred)
+  - train | ferry | boat | drive_leg: from, to (+ confirmation / vessel / provider as listed)
+  - hotel | lodging: confirmation; also place_name + ends_at_local for checkout
+  - car_rental: provider, confirmation, pickup_location, dropoff_location
+  - restaurant: reservation
+  - rideshare | appointment | doctor_visit | dentist | contractor: provider (+ confirmation where applicable)
+  - fuel | car_service | car_repair: shop / odometer / gallons_or_liters as applicable
+  - chore: assignee; bill: due_date; game: opponent, home_away
+- Prefer occurs_at_local / ends_at_local as "YYYY-MM-DDTHH:mm" plus IANA
+  timezone(s). App converts to UTC. Do not encode local wall clock as …Z.
+- Lodging/hotel: check-in + check-out on the same entry (ends_at_local required).
+  Never invent a separate “checkout” activity.
+- Transit/rental across zones: set start_timezone and end_timezone.
+- Participants: entry_participants[{entry_id, person_id}] and/or
+  entries[].participant_ids referencing people[].id.
+- expenses: 0–N activities via entry_ids (empty = journey-level expense).
+  Optional entry_id is primary when linked. Legacy files with only entry_id
+  still import.
+- place_ideas need name + approximate lat/lng when suggesting map pins.
+- Playlist: prefer { title, search_query? } without inventing stream URLs.
 - Never emit values like `Scope.ends_on:…` or mashed timezone/address strings.
 - Signed-in importer becomes the new journey owner on create-via-import.
 

@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react'
 import { AuthProvider } from '@/providers/AuthProvider'
 import { DisplayPrefsProvider, useDisplayPrefs } from '@/providers/DisplayPrefsProvider'
 import { FabCornerProvider } from '@/providers/FabCornerProvider'
+import { FilePreviewProvider } from '@/providers/FilePreviewProvider'
 import { FontSizeProvider } from '@/providers/FontSizeProvider'
 import { AiPlannerProvider } from '@/providers/AiPlannerProvider'
 import { NavigationProvider, useNavigation } from '@/providers/NavigationProvider'
@@ -16,6 +17,8 @@ import { AuthGate } from '@/blocks/AuthGate'
 import gateStyles from '@/blocks/AuthGate.module.scss'
 import { AcceptInvite } from '@/pages/AcceptInvite'
 import { Archives } from '@/pages/Archives'
+import { AttachmentEdit } from '@/pages/AttachmentEdit'
+import { Attachments } from '@/pages/Attachments'
 import { EntryEdit } from '@/pages/EntryEdit'
 import { ExpenseEdit } from '@/pages/ExpenseEdit'
 import { Home } from '@/pages/Home'
@@ -24,7 +27,6 @@ import { JourneyCreate } from '@/pages/JourneyCreate'
 import { JourneySettings } from '@/pages/JourneySettings'
 import { Members } from '@/pages/Members'
 import { OnboardingPrefs } from '@/pages/OnboardingPrefs'
-import { People } from '@/pages/People'
 import { Map } from '@/pages/Map'
 import { Playlist } from '@/pages/Playlist'
 import { Todos } from '@/pages/Todos'
@@ -67,16 +69,17 @@ function OnlineRouter() {
   if (route === 'journey') return <Journey />
   if (route === 'entry-edit') return <EntryEdit />
   if (route === 'expense-edit') return <ExpenseEdit />
+  if (route === 'attachment-edit') return <AttachmentEdit />
   if (route === 'members') return <Members />
   if (route === 'accept-invite') return <AcceptInvite />
   if (route === 'spending') return <Spending />
+  if (route === 'attachments') return <Attachments />
   if (route === 'playlist') return <Playlist />
   if (route === 'todos') return <Todos />
   if (route === 'map') return <Map />
   if (route === 'journey-settings') return <JourneySettings />
   if (route === 'profile') return <Profile />
   if (route === 'settings') return <Settings />
-  if (route === 'people') return <People />
   if (route === 'archives') return <Archives />
   return <Home />
 }
@@ -112,7 +115,8 @@ export function App() {
       persistOptions={{
         persister: queryPersister,
         maxAge: 24 * 60 * 60 * 1000,
-        buster: APP_VERSION,
+        // Suffix busts persisted caches when label/source logic changes without a git SHA bump.
+        buster: `${APP_VERSION}:journey-local-names-v1`,
       }}
     >
       <OfflineProvider>
@@ -123,13 +127,15 @@ export function App() {
                 <DisplayPrefsProvider>
                   <PrefsSync />
                   <NavigationProvider>
-                    <AiPlannerProvider>
-                      <PlaylistPlaybackProvider>
-                        <AppShell>
-                          <ModeSwitch />
-                        </AppShell>
-                      </PlaylistPlaybackProvider>
-                    </AiPlannerProvider>
+                    <FilePreviewProvider>
+                      <AiPlannerProvider>
+                        <PlaylistPlaybackProvider>
+                          <AppShell>
+                            <ModeSwitch />
+                          </AppShell>
+                        </PlaylistPlaybackProvider>
+                      </AiPlannerProvider>
+                    </FilePreviewProvider>
                   </NavigationProvider>
                 </DisplayPrefsProvider>
               </FabCornerProvider>

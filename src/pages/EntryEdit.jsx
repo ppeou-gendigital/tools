@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Loader2, Plus, Save, Trash2 } from 'lucide-react'
+import { ArrowLeft, Info, Loader2, Plus, Save, Trash2, X } from 'lucide-react'
+import { AnchoredPopover } from '@/molecules/AnchoredPopover'
+import popoverStyles from '@/molecules/AnchoredPopover.module.scss'
+import { AttachmentCard } from '@/molecules/AttachmentCard'
 import { Button } from '@/molecules/Button'
 import { Input } from '@/molecules/Input'
 import { Label } from '@/molecules/Label'
@@ -31,8 +34,14 @@ import {
 } from '@/lib/journeyGeo'
 import { parseRichBody, serializeRichBody } from '@/lib/richBody'
 import {
+  formatByteSize,
+  listAttachments,
+} from '@/lib/attachmentsApi'
+import {
   formatMoney,
   formatWhen,
+  labelForJourneyPerson,
+  labelForSplitMode,
   labelForUserId,
 } from '@/lib/format'
 import { utcIsoToWallTime, wallTimeToUtcIso } from '@/lib/timezone'
@@ -46,6 +55,7 @@ import {
   listJourneyPeople,
   listParticipantsForEntry,
   listPlaceIdeas,
+  listSplits,
   myMembership,
   upsertEntry,
 } from '@/lib/viaggioApi'
@@ -61,6 +71,7 @@ export function EntryEdit() {
     goBack,
     previousRouteLabel,
     goExpenseEdit,
+    goAttachmentEdit,
     goHome,
     replace,
   } = useNavigation()
@@ -89,6 +100,12 @@ export function EntryEdit() {
   const { data: expenses = [] } = useQuery({
     queryKey: ['viaggio', 'entry-expenses', entryId],
     queryFn: () => listExpensesForEntry(entryId),
+    enabled: !!entryId,
+  })
+
+  const { data: entryAttachments = [] } = useQuery({
+    queryKey: ['viaggio', 'entry-attachments', entryId],
+    queryFn: () => listAttachments(entryId),
     enabled: !!entryId,
   })
 
@@ -182,6 +199,7 @@ export function EntryEdit() {
       entryId={entryId || null}
       activityId={activityId}
       expenses={expenses}
+      entryAttachments={entryAttachments}
       roster={roster}
       participantIds={participantIds}
       membership={membership}
@@ -190,6 +208,7 @@ export function EntryEdit() {
       goBack={goBack}
       previousRouteLabel={previousRouteLabel}
       goExpenseEdit={goExpenseEdit}
+      goAttachmentEdit={goAttachmentEdit}
       replace={replace}
     />
   )
@@ -201,6 +220,7 @@ function EntryEditForm({
   entryId,
   activityId,
   expenses,
+  entryAttachments,
   roster,
   participantIds,
   membership,
@@ -209,6 +229,7 @@ function EntryEditForm({
   goBack,
   previousRouteLabel,
   goExpenseEdit,
+  goAttachmentEdit,
   replace,
 }) {
   const qc = useQueryClient()
@@ -274,6 +295,36 @@ function EntryEditForm({
   const [body, setBody] = useState(() =>
     serializeRichBody(parseRichBody(existing?.body).doc),
   )
+  /** Keep form in sync when AI / another tab updates the same entry. */
+  const syncedUpdatedAtRef = useRef(existing?.updatedAt ?? null)
+  useEffect(() => {
+    if (!existing?.id) return
+    const stamp = existing.updatedAt ?? existing.id
+    if (syncedUpdatedAtRef.current === stamp) return
+    syncedUpdatedAtRef.current = stamp
+    setTitle(existing.title || '')
+    setPlaceName(existing.placeName || '')
+    setAddress(existing.address || '')
+    setLat(Number.isFinite(existing.lat) ? existing.lat : null)
+    setLng(Number.isFinite(existing.lng) ? existing.lng : null)
+    setOccursOn(existing.occursOn || '')
+    setTimezone(existing.timezone || defaultTz)
+    setStartTimezone(
+      existing.startTimezone || existing.timezone || defaultTz,
+    )
+    setEndTimezone(existing.endTimezone || existing.timezone || defaultTz)
+    const startTz =
+      existing.startTimezone || existing.timezone || defaultTz
+    const endTz = existing.endTimezone || existing.timezone || defaultTz
+    const tz = existing.timezone || defaultTz
+    setOccursAtLocal(
+      utcIsoToWallTime(existing.occursAt, dualZone ? startTz : tz),
+    )
+    setEndsAtLocal(utcIsoToWallTime(existing.endsAt, dualZone ? endTz : tz))
+    setDetails(existing.details || {})
+    setBody(serializeRichBody(parseRichBody(existing.body).doc))
+  }, [existing, defaultTz, dualZone])
+
   const cityClusters = useMemo(() => {
     if (!hasGeoFields) return []
     const points = collectJourneyGeoPoints(journeyEntries, placeIdeas)
@@ -458,6 +509,7 @@ function EntryEditForm({
               ? activity?.label || 'Edit activity'
               : 'New activity'
         }
+        subtitleInline
         leading={
           <Button variant="ghost" size="sm" onClick={goBack}>
             <ArrowLeft size={14} />
@@ -857,32 +909,18 @@ function EntryEditForm({
               )}
               <ul className={styles.list}>
                 {expenses.map((ex) => (
-                  <li key={ex.id}>
-                    <button
-                      type="button"
-                      className={styles.rowBtn}
-                      onClick={() =>
-                        goExpenseEdit({
-                          journeyId: journey.id,
-                          entryId,
-                          expenseId: ex.id,
-                        })
-                      }
-                    >
-                      <span className={styles.rowBody}>
-                        <span className={styles.rowTitle}>
-                          {ex.title || 'Expense'}
-                        </span>
-                        <span className={styles.rowMeta}>
-                          {formatMoney(
-                            ex.amountCents,
-                            ex.currency,
-                            displayLocale,
-                          )}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
+                  <ExpenseInfoCard
+                    key={ex.id}
+                    expense={ex}
+                    journeyId={journey.id}
+                    entryId={entryId}
+                    roster={roster}
+                    user={user}
+                    displayLocale={displayLocale}
+                    canEdit={canEdit}
+                    goExpenseEdit={goExpenseEdit}
+                    goAttachmentEdit={goAttachmentEdit}
+                  />
                 ))}
               </ul>
               {canEdit && (
@@ -899,8 +937,246 @@ function EntryEditForm({
             </section>
           )}
 
+          {entryId && (
+            <section className={styles.formSpan2}>
+              <p className={styles.sectionTitle}>Attachments</p>
+              {entryAttachments.length === 0 && (
+                <p className={styles.hint}>No files linked to this activity.</p>
+              )}
+              <ul className={styles.list}>
+                {entryAttachments.map((att) => (
+                  <li key={att.id}>
+                    <AttachmentCard
+                      attachment={att}
+                      meta={formatByteSize(att.byteSize)}
+                      onOpen={() =>
+                        goAttachmentEdit({
+                          journeyId: journey.id,
+                          attachmentId: att.id,
+                          entryId,
+                        })
+                      }
+                    />
+                  </li>
+                ))}
+              </ul>
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    goAttachmentEdit({ journeyId: journey.id, entryId })
+                  }
+                >
+                  <Plus size={14} />
+                  Add attachment
+                </Button>
+              )}
+            </section>
+          )}
+
         </div>
       </div>
     </div>
+  )
+}
+
+function ExpenseInfoCard({
+  expense,
+  journeyId,
+  entryId,
+  roster,
+  user,
+  displayLocale,
+  canEdit,
+  goExpenseEdit,
+  goAttachmentEdit,
+}) {
+  const [open, setOpen] = useState(false)
+  const infoBtnRef = useRef(null)
+
+  const { data: splits = [], isLoading: splitsLoading } = useQuery({
+    queryKey: ['viaggio', 'splits', expense.id],
+    queryFn: () => listSplits(expense.id),
+    enabled: open,
+  })
+
+  const { data: receipts = [], isLoading: receiptsLoading } = useQuery({
+    queryKey: ['viaggio', 'expense-receipts', journeyId, expense.id],
+    queryFn: () => listAttachments(null, { expenseId: expense.id }),
+    enabled: open,
+  })
+
+  const paidByPerson = roster.find((p) => p.id === expense.paidBy)
+  const detailLoading = splitsLoading || receiptsLoading
+
+  return (
+    <li className={styles.expenseCard}>
+      <button
+        type="button"
+        className={styles.expenseCardBody}
+        onClick={() =>
+          goExpenseEdit({
+            journeyId,
+            entryId,
+            expenseId: expense.id,
+          })
+        }
+      >
+        <span className={styles.rowTitle}>
+          {expense.title || 'Expense'}
+        </span>
+        <span className={styles.rowMeta}>
+          {formatMoney(expense.amountCents, expense.currency, displayLocale)}
+        </span>
+      </button>
+      <button
+        ref={infoBtnRef}
+        type="button"
+        className={styles.expenseCardAction}
+        aria-label={`Details for ${expense.title || 'expense'}`}
+        title="Details"
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        onClick={(e) => {
+          e.stopPropagation()
+          setOpen((v) => !v)
+        }}
+      >
+        <Info size={16} aria-hidden="true" />
+      </button>
+
+      <AnchoredPopover
+        open={open}
+        onClose={() => setOpen(false)}
+        anchorRef={infoBtnRef}
+        align="end"
+        fluid
+        aria-label={expense.title || 'Expense'}
+      >
+        <div className={styles.expenseInfoPopup}>
+          <div className={styles.expenseInfoHeader}>
+            <p className={styles.expenseInfoLabel}>Expense</p>
+            <button
+              type="button"
+              className={styles.expenseInfoClose}
+              aria-label="Close expense details"
+              title="Close"
+              onClick={() => setOpen(false)}
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          </div>
+          <p className={styles.expenseInfoTitle}>
+            {expense.title || 'Expense'}
+          </p>
+          <p className={styles.expenseInfoAmount}>
+            {formatMoney(
+              expense.amountCents,
+              expense.currency,
+              displayLocale,
+            )}
+          </p>
+
+          <dl className={styles.expenseInfoMeta}>
+            {expense.category ? (
+              <div>
+                <dt>Category</dt>
+                <dd>{expense.category}</dd>
+              </div>
+            ) : null}
+            <div>
+              <dt>Paid by</dt>
+              <dd>
+                {labelForJourneyPerson(paidByPerson, user?.id) || '—'}
+              </dd>
+            </div>
+            <div>
+              <dt>Split</dt>
+              <dd>{labelForSplitMode(expense.splitMode)}</dd>
+            </div>
+          </dl>
+
+          {detailLoading ? (
+            <p className={popoverStyles.hint}>Loading…</p>
+          ) : (
+            <>
+              {splits.length > 0 && (
+                <div className={styles.expenseInfoSection}>
+                  <p className={styles.sectionTitle}>Participants</p>
+                  <ul className={styles.expenseInfoSplitList}>
+                    {splits.map((s) => {
+                      const person = roster.find(
+                        (p) => p.id === s.journeyPersonId,
+                      )
+                      return (
+                        <li key={s.journeyPersonId}>
+                          <span>
+                            {labelForJourneyPerson(person, user?.id) ||
+                              'Traveler'}
+                          </span>
+                          <span>
+                            {formatMoney(
+                              s.amountCents,
+                              expense.currency,
+                              displayLocale,
+                            )}
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+              )}
+
+              <div className={styles.expenseInfoSection}>
+                <p className={styles.sectionTitle}>Attachments</p>
+                {receipts.length === 0 ? (
+                  <p className={popoverStyles.hint}>No files linked.</p>
+                ) : (
+                  <ul className={styles.list}>
+                    {receipts.map((att) => (
+                      <li key={att.id}>
+                        <AttachmentCard
+                          attachment={att}
+                          meta={formatByteSize(att.byteSize)}
+                          onOpen={() => {
+                            setOpen(false)
+                            goAttachmentEdit({
+                              journeyId,
+                              attachmentId: att.id,
+                              expenseId: expense.id,
+                            })
+                          }}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </>
+          )}
+
+          {canEdit && (
+            <div className={popoverStyles.actions}>
+              <Button
+                size="sm"
+                variant="outline"
+                fullWidth
+                onClick={() => {
+                  setOpen(false)
+                  goExpenseEdit({
+                    journeyId,
+                    entryId,
+                    expenseId: expense.id,
+                  })
+                }}
+              >
+                Edit expense
+              </Button>
+            </div>
+          )}
+        </div>
+      </AnchoredPopover>
+    </li>
   )
 }
