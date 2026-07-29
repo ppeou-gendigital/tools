@@ -112,7 +112,7 @@ TOOLNAME/
 │   ├── blocks/                 # AuthGate, Deck, FloatingMenu, SignInForm
 │   ├── templates/AppShell.jsx  # scrollable main + FloatingMenu FAB
 │   ├── pages/                  # Home, Profile, Settings, DeckDemo, RichTextDemo
-│   ├── hooks/useCornerDrag.js  # FAB corner-drag + snap
+│   ├── hooks/useCornerDrag.js  # FAB grid-drag + snap (re-export)
 │   └── tokens/
 │       ├── main.scss           # loads reset + tokens + base + layout
 │       ├── _tokens.scss        # CSS vars for [data-theme="light"] and "dark"
@@ -151,7 +151,7 @@ Pages own their own reading inset via `.is-fluid-width` / `.is-static-width` wra
 ## Layout primitives
 
 - **`AppShell`** ([src/templates/AppShell.jsx](src/templates/AppShell.jsx)) — grid header/main/footer that fills its parent.
-- **`FloatingMenu`** ([src/blocks/FloatingMenu.jsx](src/blocks/FloatingMenu.jsx)) — draggable FAB that snaps to the nearest corner. Position is persisted via `FabCornerProvider` and synced across devices via `PrefsSync`. Uses the [`useCornerDrag`](src/hooks/useCornerDrag.js) hook, which is reusable on any element.
+- **`FloatingMenu`** ([src/blocks/FloatingMenu.jsx](src/blocks/FloatingMenu.jsx)) — draggable FAB that snaps to a responsive grid cell (`col:row` in XL space). Position is persisted via `FabCornerProvider` and synced across devices via `PrefsSync`. Uses the [`useCornerDrag`](src/hooks/useCornerDrag.js) hook, which is reusable on any element.
 - **`MenuPanel`** ([src/patterns/MenuPanel.jsx](src/patterns/MenuPanel.jsx)) — the popover the FAB opens. Composes `AppearanceRow` (theme + font size), `AccountRow` (profile + settings + sign out), `AppNavItems` (FAB “App” section + page-header icon toolbar via `PageShortcuts`), `DevBadgeItem`, `AboutRow`. Extend destinations in [AppNavItems](src/patterns/AppNavItems.jsx).
 - **`Deck`** + **`Slide`** ([src/blocks/Deck.jsx](src/blocks/Deck.jsx)) — horizontal, snap-scrolling deck container with responsive column spans. See [`DeckDemo`](src/pages/DeckDemo.jsx) for a live example.
 - **`RichNoteEditor`** ([src/molecules/RichNoteEditor.jsx](src/molecules/RichNoteEditor.jsx)) — TipTap text RTE; files via `onFiles` + [`attachmentsApi`](src/lib/attachmentsApi.js). Demo: [`RichTextDemo`](src/pages/RichTextDemo.jsx).
@@ -221,7 +221,7 @@ create trigger on_auth_user_created
 
 ### 4. User preferences table (`user_data`)
 
-Backs the auto-sync layer in [PrefsSync.jsx](src/providers/PrefsSync.jsx). One row per user, with a single JSONB `data` column carrying the small prefs blob (`theme`, `fontSize`, `fabCorner`, `updatedAt`).
+Backs the auto-sync layer in [PrefsSync.jsx](src/providers/PrefsSync.jsx). One row per user, with a single JSONB `data` column carrying the small prefs blob (`theme`, `fontSize`, `fabCorner`, `aiFabCorner`, `updatedAt`).
 
 This row is **shared** with sibling tools on the same Supabase project. Prefs CAS preserves unknown keys via `extractForeignPrefs` — never rewrite `data` with only owned fields.
 

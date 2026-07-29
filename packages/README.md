@@ -49,6 +49,16 @@ Override FAB / logo color in the app:
 }
 ```
 
+## FAB grid placement
+
+Menu (and optional AI) FABs snap to a responsive lattice, not four corners:
+
+- Grids: SM 6×12 · MD 8×12 · LG 10×14 · XL 12×16
+- Prefs store XL `"col:row"` tokens (`fabCorner`, optional `aiFabCorner`) via `@tools/service/fabCell`
+- Drag/snap + panel edge anchoring live in `@tools/behavioral` (`fabGrid`, `useCornerDrag`)
+
+Legacy corner strings (`bottom-right`, …) migrate on read. Same-cell collisions swap or stack; there is no reserved-cell soft-avoid overlay.
+
 ## AppShell FAB clearance
 
 Default: no bottom padding under main. Only Viaggio should pass `fabClearance` on `<AppShell>` (see `@tools/behavioral` README).

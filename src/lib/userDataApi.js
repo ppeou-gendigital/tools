@@ -2,7 +2,7 @@
 // Prefer applySyncOp / pullSync directly from new code.
 //
 // The user_data row has one JSONB column in the template:
-//   data — the prefs blob: { theme, fontSize, fabCorner, updatedAt, …siblings }
+//   data — the prefs blob: { theme, fontSize, fabCorner, aiFabCorner, updatedAt, …siblings }
 //
 // Sibling-tool keys on `data` must be preserved (see extractForeignPrefs).
 // Crypto salt/verifier belongs in public.vault_meta — never in this blob.
@@ -27,6 +27,7 @@ export async function saveUserData(userId, { data }) {
         theme: data.theme,
         fontSize: data.fontSize,
         fabCorner: data.fabCorner,
+        aiFabCorner: data.aiFabCorner,
       },
     }),
   })

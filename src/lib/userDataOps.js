@@ -11,6 +11,7 @@
 // examples (aemDomains, pinnedSites, …).
 
 import {
+  normalizeAiFabCorner,
   normalizeFabCorner,
   normalizeFontSize,
   normalizeRemotePrefs,
@@ -19,7 +20,12 @@ import {
 
 function emptyRow() {
   return {
-    data: { theme: 'system', fontSize: 16, fabCorner: 'bottom-right' },
+    data: {
+      theme: 'system',
+      fontSize: 16,
+      fabCorner: '11:15',
+      aiFabCorner: '0:15',
+    },
   }
 }
 
@@ -60,6 +66,16 @@ export function opSetFabCorner(corner) {
   return (row) => {
     const cur = cloneRow(row)
     if (cur.data.fabCorner === next) return row ?? cur
-    return withData(cur, { fabCorner: next })
+    const aiFabCorner = normalizeAiFabCorner(cur.data.aiFabCorner, next)
+    return withData(cur, { fabCorner: next, aiFabCorner })
+  }
+}
+
+export function opSetAiFabCorner(corner) {
+  return (row) => {
+    const cur = cloneRow(row)
+    const next = normalizeAiFabCorner(corner, cur.data.fabCorner)
+    if (cur.data.aiFabCorner === next) return row ?? cur
+    return withData(cur, { aiFabCorner: next })
   }
 }

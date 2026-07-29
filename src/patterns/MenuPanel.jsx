@@ -13,7 +13,14 @@ import { AppNavItems } from '@/patterns/AppNavItems'
 
 const TOOL_NAME = 'TOOLNAME'
 
-export function MenuPanel({ corner, onClose }) {
+export function MenuPanel({
+  corner,
+  edgeX,
+  edgeY,
+  fabLeft,
+  fabTop,
+  onClose,
+}) {
   const { user } = useAuth()
   const signedIn = !!user
   const dev = devAutoLoginConfig()
@@ -21,6 +28,10 @@ export function MenuPanel({ corner, onClose }) {
   return (
     <ToolsMenuPanel
       corner={corner}
+      edgeX={edgeX}
+      edgeY={edgeY}
+      fabLeft={fabLeft}
+      fabTop={fabTop}
       onClose={onClose}
       brandConfig={{ name: TOOL_NAME, icon: Wrench, logoAlt: TOOL_NAME }}
       version={APP_VERSION}

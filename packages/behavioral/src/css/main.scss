@@ -52,6 +52,7 @@
   pointer-events: auto;
   width: var(--fab-size);
   height: var(--fab-size);
+  // left/top come from the grid placement hook (inline style).
   border-radius: 50%;
   border: none;
   background: var(--fab-bg);
@@ -72,10 +73,15 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     transition: none;
   }
-  &[data-corner='top-left'] { top: var(--fab-corner-offset); left: var(--fab-corner-offset); }
-  &[data-corner='top-right'] { top: var(--fab-corner-offset); right: var(--fab-corner-offset); }
-  &[data-corner='bottom-left'] { bottom: var(--fab-corner-offset); left: var(--fab-corner-offset); }
-  &[data-corner='bottom-right'] { bottom: var(--fab-corner-offset); right: var(--fab-corner-offset); }
+
+  // AI FAB: rose accent (apps may override via --ai-fab-bg).
+  &[data-fab='ai'] {
+    z-index: 1001;
+    background: var(--ai-fab-bg, #f43f5e);
+    &:hover:not([data-dragging='true']) {
+      background: var(--ai-fab-bg-hover, #e11d48);
+    }
+  }
 }
 
 .bh-menu-panel {
@@ -92,22 +98,25 @@
   padding: var(--space-2);
   display: grid;
   gap: 2px;
+  // Anchored via --fab-x / --fab-y (FAB top-left) + edge attrs toward center.
+  --fab-x: var(--fab-corner-offset);
+  --fab-y: var(--fab-corner-offset);
 
-  &[data-corner='top-left'] {
-    top: calc(var(--fab-size) + var(--fab-corner-offset) + var(--fab-gap));
-    left: var(--fab-corner-offset);
+  &[data-edge-x='left'] {
+    left: var(--fab-x);
+    right: auto;
   }
-  &[data-corner='top-right'] {
-    top: calc(var(--fab-size) + var(--fab-corner-offset) + var(--fab-gap));
-    right: var(--fab-corner-offset);
+  &[data-edge-x='right'] {
+    left: auto;
+    right: calc(100% - var(--fab-x) - var(--fab-size));
   }
-  &[data-corner='bottom-left'] {
-    bottom: calc(var(--fab-size) + var(--fab-corner-offset) + var(--fab-gap));
-    left: var(--fab-corner-offset);
+  &[data-edge-y='top'] {
+    top: calc(var(--fab-y) + var(--fab-size) + var(--fab-gap));
+    bottom: auto;
   }
-  &[data-corner='bottom-right'] {
-    bottom: calc(var(--fab-size) + var(--fab-corner-offset) + var(--fab-gap));
-    right: var(--fab-corner-offset);
+  &[data-edge-y='bottom'] {
+    top: auto;
+    bottom: calc(100% - var(--fab-y) + var(--fab-gap));
   }
 }
 

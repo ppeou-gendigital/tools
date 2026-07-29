@@ -5,7 +5,11 @@ import { AboutRow, Divider, Logo } from '@tools/ui'
  * Slot-based FAB menu shell (viaggio a11y: role=dialog + focus trap).
  *
  * @param {object} props
- * @param {string} props.corner
+ * @param {string} [props.corner] — legacy XL cell token (unused for layout)
+ * @param {'left' | 'right'} [props.edgeX]
+ * @param {'top' | 'bottom'} [props.edgeY]
+ * @param {number} [props.fabLeft] — FAB left (px) within the fab wrap
+ * @param {number} [props.fabTop] — FAB top (px) within the fab wrap
  * @param {() => void} [props.onClose]
  * @param {import('react').ReactNode} [props.brand] — custom brand block
  * @param {{ name: string, icon?: any, logoAlt?: string }} [props.brandConfig]
@@ -14,7 +18,11 @@ import { AboutRow, Divider, Logo } from '@tools/ui'
  * @param {string} [props.version]
  */
 export function MenuPanel({
-  corner,
+  corner: _corner,
+  edgeX = 'right',
+  edgeY = 'bottom',
+  fabLeft,
+  fabTop,
   onClose,
   brand,
   brandConfig,
@@ -68,13 +76,19 @@ export function MenuPanel({
       </div>
     ) : null)
 
+  const style = {}
+  if (Number.isFinite(fabLeft)) style['--fab-x'] = `${fabLeft}px`
+  if (Number.isFinite(fabTop)) style['--fab-y'] = `${fabTop}px`
+
   return (
     <div
       ref={panelRef}
       role="dialog"
       aria-label={brandConfig?.name ? `${brandConfig.name} menu` : 'Menu'}
       className="bh-menu-panel"
-      data-corner={corner}
+      data-edge-x={edgeX}
+      data-edge-y={edgeY}
+      style={style}
     >
       {brandNode}
       {brandNode && <Divider />}

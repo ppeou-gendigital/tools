@@ -74,7 +74,8 @@ function prefsRowsEqual(a, b) {
   return (
     a.data.theme === b.data.theme &&
     a.data.fontSize === b.data.fontSize &&
-    a.data.fabCorner === b.data.fabCorner
+    a.data.fabCorner === b.data.fabCorner &&
+    a.data.aiFabCorner === b.data.aiFabCorner
   )
 }
 
@@ -84,6 +85,7 @@ function toDbPrefsPayload(userId, row) {
     theme: row.data.theme,
     fontSize: row.data.fontSize,
     fabCorner: row.data.fabCorner,
+    aiFabCorner: row.data.aiFabCorner,
     updatedAt: new Date().toISOString(),
   }
   return {
@@ -257,6 +259,9 @@ export async function pullSync({ stream, userId, local, dirtyKeys } = {}) {
     if (!dirty.has('fabCorner') && !dirty.has('data')) {
       next.data.fabCorner = remote.data.fabCorner
     }
+    if (!dirty.has('aiFabCorner') && !dirty.has('data')) {
+      next.data.aiFabCorner = remote.data.aiFabCorner
+    }
     // Never dirty sibling keys — always take them from remote.
     if (!dirty.has('data')) {
       applyRemoteForeignPrefs(next.data, remote.data)
@@ -273,4 +278,9 @@ export async function pullSync({ stream, userId, local, dirtyKeys } = {}) {
 }
 
 // Re-export op factories so callers can import everything from one place.
-export { opSetTheme, opSetFontSize, opSetFabCorner } from '@/lib/userDataOps'
+export {
+  opSetTheme,
+  opSetFontSize,
+  opSetFabCorner,
+  opSetAiFabCorner,
+} from '@/lib/userDataOps'

@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./fabCell": "./src/lib/fabCell.js"
   },
   "peerDependencies": {
     "react": "^19.0.0",

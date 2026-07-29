@@ -7,8 +7,15 @@
 // opaquely so prefs CAS never wipes sibling fields. Crypto salt/verifier
 // must NOT live here — use public.vault_meta (see vaultMetaApi.js).
 
+import {
+  DEFAULT_AI_CELL,
+  DEFAULT_MENU_CELL,
+  normalizeAiFabCell,
+  normalizeFabCell,
+  oppositeFabCell,
+} from '@tools/service/fabCell'
+
 const THEMES = ['light', 'dark', 'system']
-const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
 
 const FONT_MIN = 12
 const FONT_MAX = 24
@@ -18,7 +25,8 @@ const FONT_DEFAULT = 16
 const DEFAULTS = {
   theme: 'system',
   fontSize: FONT_DEFAULT,
-  fabCorner: 'bottom-right',
+  fabCorner: DEFAULT_MENU_CELL,
+  aiFabCorner: DEFAULT_AI_CELL,
 }
 
 /** Keys this tool normalizes and may rewrite on the shared prefs blob. */
@@ -26,6 +34,7 @@ export const PREFS_OWNED_KEYS = new Set([
   'theme',
   'fontSize',
   'fabCorner',
+  'aiFabCorner',
   'updatedAt',
 ])
 
@@ -47,8 +56,19 @@ export function normalizeTheme(v) {
   return THEMES.includes(v) ? v : DEFAULTS.theme
 }
 
+/** FAB cell token ("col:row" in XL space) or legacy corner → XL cell. */
 export function normalizeFabCorner(v) {
-  return CORNERS.includes(v) ? v : DEFAULTS.fabCorner
+  return normalizeFabCell(v)
+}
+
+/** Horizontal opposite in XL space — keeps FABs from stacking on migrate. */
+export function oppositeFabCorner(corner) {
+  return oppositeFabCell(normalizeFabCell(corner))
+}
+
+/** AI FAB cell; missing/invalid → opposite of menu; never equal to menu. */
+export function normalizeAiFabCorner(v, menuCorner) {
+  return normalizeAiFabCell(v, menuCorner)
 }
 
 // Snap to the FONT_STEP grid inside [MIN, MAX] and rescue any stale
@@ -66,10 +86,12 @@ export function normalizeFontSize(v) {
 // applying it via the provider setters. Clamps owned keys; preserves
 // sibling-tool keys opaquely.
 export function normalizeRemotePrefs(remote) {
+  const fabCorner = normalizeFabCell(remote?.fabCorner)
   return {
     ...extractForeignPrefs(remote),
     theme: normalizeTheme(remote?.theme),
     fontSize: normalizeFontSize(remote?.fontSize),
-    fabCorner: normalizeFabCorner(remote?.fabCorner),
+    fabCorner,
+    aiFabCorner: normalizeAiFabCell(remote?.aiFabCorner, fabCorner),
   }
 }
