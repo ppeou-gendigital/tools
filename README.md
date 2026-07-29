@@ -21,6 +21,17 @@ Every project branch is named `<category>/<name>`.
 
 Feel free to invent more categories — the only constraint enforced by `scripts/new-project.sh` is `^[a-z]+/[A-Za-z0-9._-]+$`.
 
+### Web tools from `template/base` → GitHub Pages
+
+For Chrome-extension + web app tools scaffolded from [`template/base`](../../tree/template/base), the live Pages path uses the **repo name** + the **branch name suffix** (not the category):
+
+| Branch | Vite `base` (after init) | Live URL |
+| ------ | ------------------------ | -------- |
+| `tool/loopy` | `/tools/loopy/` | `https://ppeou-gendigital.github.io/tools/loopy/` |
+| `tool/foo` | `/tools/foo/` | `https://ppeou-gendigital.github.io/tools/foo/` |
+
+Workflow: branch off `template/base` → `npm run init -- --name <suffix>` → push to `tool/<suffix>`. That sets `base` / `outDir`, the Pages workflow trigger, and PWA metadata. Full checklist: [`TEMPLATE.md` on `template/base`](../../blob/template/base/TEMPLATE.md).
+
 ---
 
 ## Quick start

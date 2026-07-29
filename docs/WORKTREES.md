@@ -36,6 +36,8 @@ git worktree add ../xyz -b tool/xyz main
 
 Both create `../xyz/` with a fresh branch `tool/xyz` based on `main`.
 
+For a full Chrome-extension + web app scaffold (Vite, Supabase, PWA, Pages at `/tools/xyz/`), branch from `template/base` instead of `main` and follow `TEMPLATE.md` on that branch. The Pages URL uses the branch **suffix** only: `tool/xyz` → `https://<user>.github.io/tools/xyz/` (not `/tool/xyz/`).
+
 ---
 
 ## Create a worktree for an existing project branch
