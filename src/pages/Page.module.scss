@@ -2077,7 +2077,8 @@
   align-items: flex-start;
   gap: var(--space-2);
   // Never pin to the bottom — keep pan/zoom/POI clicks on the map.
-  max-height: min(35vh, 18rem);
+  // Tall enough for Ideas / results sheets; sheets set their own max-height.
+  max-height: min(70vh, 36rem);
   padding: 0;
   border: none;
   background: transparent;
@@ -2085,7 +2086,7 @@
   pointer-events: none;
 
   @include m.md {
-    max-height: min(48vh, 22rem);
+    max-height: min(78vh, 40rem);
   }
 }
 
@@ -2172,7 +2173,8 @@
 }
 
 .mapChipMenuBtn,
-.mapLocateBtn {
+.mapLocateBtn,
+.mapIdeasDockBtn {
   @include m.interactive-control;
   @include m.focus-ring;
 
@@ -2198,6 +2200,48 @@
 
   &[aria-expanded='true'] {
     background: var(--muted);
+  }
+}
+
+.mapIdeasDockBtn {
+  position: relative;
+}
+
+.mapIdeasDockBadge {
+  position: absolute;
+  top: -0.2rem;
+  right: -0.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-fg, #fff);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 0 0 1.5px var(--card);
+}
+
+.mapIdeasDockSheet {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0;
+  width: min(22.5rem, 100%);
+  max-height: min(42vh, 22rem);
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--map-control-shadow);
+  overflow: hidden;
+  pointer-events: auto;
+
+  @include m.md {
+    max-height: min(52vh, 28rem);
   }
 }
 
@@ -2996,123 +3040,6 @@
   color: var(--error-text);
 }
 
-// Shell-level layer (portaled to [data-app-shell]) — same lattice as menu/AI FABs.
-.mapIdeasLayer {
-  position: absolute;
-  inset: 0;
-  z-index: 100;
-  pointer-events: none;
-  overflow: visible;
-}
-
-// Free-float Ideas: sun FAB at a grid cell; panel opens inward from that corner.
-.mapIdeasFloat {
-  position: absolute;
-  width: var(--fab-size);
-  height: var(--fab-size);
-  pointer-events: none;
-  overflow: visible;
-}
-
-.mapIdeasFab {
-  position: absolute;
-  z-index: 2;
-  inset: 0;
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--fab-size);
-  height: var(--fab-size);
-  margin: 0;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: var(--card);
-  color: var(--fg);
-  box-shadow: var(--shadow);
-  cursor: grab;
-  touch-action: none;
-
-  &:hover {
-    background: var(--muted);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-  }
-
-  .mapIdeasFloat[data-dragging='true'] & {
-    cursor: grabbing;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  }
-}
-
-.mapIdeasFabBadge {
-  position: absolute;
-  top: -0.15rem;
-  right: -0.15rem;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  padding: 0 0.3rem;
-  border-radius: 999px;
-  background: var(--primary);
-  color: var(--primary-fg, #fff);
-  font-size: 0.65rem;
-  font-weight: 700;
-  line-height: 1.25rem;
-  text-align: center;
-  box-shadow: 0 0 0 2px var(--bg);
-}
-
-.mapIdeasPanel {
-  --map-control-h: 2.5rem;
-
-  position: absolute;
-  z-index: 1;
-  pointer-events: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  width: min(20rem, calc(100vw - 2 * var(--space-3)));
-  max-height: min(55dvh, 28rem);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--card);
-  box-shadow: var(--shadow-popover);
-  overflow: hidden;
-
-  // Anchor to the sun FAB corner; panel grows toward viewport center.
-  .mapIdeasFloat[data-edge-x='left'][data-edge-y='top'] & {
-    left: 0;
-    top: 0;
-    padding-top: calc(var(--fab-size) + var(--fab-gap));
-  }
-
-  .mapIdeasFloat[data-edge-x='right'][data-edge-y='top'] & {
-    right: 0;
-    top: 0;
-    padding-top: calc(var(--fab-size) + var(--fab-gap));
-  }
-
-  .mapIdeasFloat[data-edge-x='left'][data-edge-y='bottom'] & {
-    left: 0;
-    bottom: 0;
-    padding-bottom: calc(var(--fab-size) + var(--fab-gap));
-  }
-
-  .mapIdeasFloat[data-edge-x='right'][data-edge-y='bottom'] & {
-    right: 0;
-    bottom: 0;
-    padding-bottom: calc(var(--fab-size) + var(--fab-gap));
-  }
-
-  @include m.md {
-    max-height: min(70dvh, 32rem);
-  }
-}
-
 .mapIdeasHeader {
   display: flex;
   flex: 0 0 auto;
@@ -3238,6 +3165,13 @@
   font: inherit;
   text-align: start;
   cursor: pointer;
+}
+
+.mapIdeaTitleRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  min-width: 0;
 }
 
 .mapBadge {

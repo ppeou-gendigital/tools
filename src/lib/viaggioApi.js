@@ -1056,6 +1056,9 @@ export async function updatePlaceIdea(ideaId, patch) {
   const updates = { updated_at: new Date().toISOString() }
   if (patch.note != null) updates.note = String(patch.note)
   if (patch.entryId !== undefined) updates.entry_id = patch.entryId
+  if (patch.googlePlaceId !== undefined) {
+    updates.google_place_id = patch.googlePlaceId || null
+  }
   if (patch.name != null) updates.name = String(patch.name).trim()
   if (patch.address !== undefined) {
     updates.address = patch.address ? String(patch.address).trim() : null

@@ -20,6 +20,7 @@ import {
   CircleParking,
   Clapperboard,
   Coffee,
+  Component,
   ExternalLink,
   Fuel,
   Grip,
@@ -28,6 +29,7 @@ import {
   LocateFixed,
   MapPin,
   Pill,
+  Sun,
   Plus,
   RefreshCw,
   Shield,
@@ -42,7 +44,6 @@ import {
   X,
 } from 'lucide-react'
 import { setFabBottomRightReserved } from '@tools/behavioral'
-import { FloatingIdeasButton } from '@/blocks/FloatingIdeasButton'
 import { AnchoredPopover } from '@/molecules/AnchoredPopover'
 import { AiPlannerButton } from '@/molecules/AiPlannerButton'
 import { Button } from '@/molecules/Button'
@@ -62,7 +63,11 @@ import {
   proximitySegments,
   segmentForIdea,
 } from '@/lib/mapProximity'
-import { googleMapsPlaceUrl, openMapsRouteUrl } from '@/lib/mapsLinks'
+import {
+  googleMapsPlaceUrl,
+  haversineMeters,
+  openMapsRouteUrl,
+} from '@/lib/mapsLinks'
 import {
   addPlaceIdea,
   deletePlaceIdea,
@@ -80,7 +85,23 @@ import styles from './Page.module.scss'
 const DEFAULT_CENTER = { lat: 48.8566, lng: 2.3522 }
 const DEFAULT_ZOOM = 11
 const SEARCH_RESULT_LIMIT = 12
+/** Max distance when resolving an Idea without googlePlaceId to a Places match. */
+const IDEA_RESOLVE_MAX_M = 2500
 const MAP_VIEWPORT_KEY_PREFIX = 'viaggio:map-viewport:'
+
+function ideaToDetailsSeed(idea) {
+  if (!idea) return null
+  return {
+    key: `idea-${idea.id}`,
+    ideaId: idea.id,
+    name: idea.name,
+    address: idea.address || null,
+    lat: idea.lat,
+    lng: idea.lng,
+    note: idea.note || '',
+    googlePlaceId: idea.googlePlaceId || null,
+  }
+}
 
 function mapViewportStorageKey(journeyId) {
   return `${MAP_VIEWPORT_KEY_PREFIX}${journeyId}`
@@ -471,6 +492,7 @@ function MapCamera({
   fallbackCenter,
   searchFocus,
   restoredViewport,
+  preserveSelectZoom = false,
 }) {
   const map = useMap()
   const appliedFallbackKey = useRef('')
@@ -519,8 +541,11 @@ function MapCamera({
         Number.isFinite(selected.lng)
       ) {
         map.panTo({ lat: selected.lat, lng: selected.lng })
-        const zoom = map.getZoom()
-        if (zoom != null && zoom < 14) map.setZoom(14)
+        // Idea browse / place card: keep the user's zoom (search-parity).
+        if (!preserveSelectZoom) {
+          const zoom = map.getZoom()
+          if (zoom != null && zoom < 14) map.setZoom(14)
+        }
       }
       return
     }
@@ -566,6 +591,7 @@ function MapCamera({
     fallbackCenter,
     searchFocus,
     restoredViewport,
+    preserveSelectZoom,
   ])
 
   return null
@@ -836,16 +862,30 @@ function PlacesExplorePanel({
   bounds,
   detailsPlaceId,
   onDetailsPlaceId,
+  detailsSeed = null,
+  onClearDetailsSeed,
+  onResolvedIdeaPlace,
+  detailsPreserveZoom = false,
   onResultPins,
   onInspectPin,
   onFocusMap,
   canEdit,
   alreadySaved,
+  savedGooglePlaceIds,
   onAddIdea,
   adding,
   onShowSaved,
+  onBackToIdeas,
   onLocate,
   locating = false,
+  ideas = [],
+  ideasOpen = false,
+  onIdeasOpenChange,
+  ideasCount = 0,
+  ideasPanel = null,
+  showFitAllIdeas = false,
+  onFitAllIdeas,
+  onBrowseIdea,
 }) {
   const placesLib = useMapsLibrary('places')
   const boundsRef = useRef(bounds)
@@ -854,9 +894,15 @@ function PlacesExplorePanel({
   const onFocusMapRef = useRef(onFocusMap)
   const onInspectPinRef = useRef(onInspectPin)
   const onResultPinsRef = useRef(onResultPins)
+  const savedGooglePlaceIdsRef = useRef(savedGooglePlaceIds)
+  const onDetailsPlaceIdRef = useRef(onDetailsPlaceId)
+  const onClearDetailsSeedRef = useRef(onClearDetailsSeed)
+  const onResolvedIdeaPlaceRef = useRef(onResolvedIdeaPlace)
+  const detailsPreserveZoomRef = useRef(detailsPreserveZoom)
   /** When true, next details focus pans without changing zoom. */
   const preserveZoomOnDetailsRef = useRef(false)
   const chipMenuBtnRef = useRef(null)
+  const ideasBtnRef = useRef(null)
   const searchHostRef = useRef(null)
 
   const [searchError, setSearchError] = useState('')
@@ -888,6 +934,124 @@ function PlacesExplorePanel({
     onResultPinsRef.current = onResultPins
   }, [onResultPins])
 
+  useEffect(() => {
+    savedGooglePlaceIdsRef.current = savedGooglePlaceIds
+  }, [savedGooglePlaceIds])
+
+  useEffect(() => {
+    onDetailsPlaceIdRef.current = onDetailsPlaceId
+  }, [onDetailsPlaceId])
+
+  useEffect(() => {
+    onClearDetailsSeedRef.current = onClearDetailsSeed
+  }, [onClearDetailsSeed])
+
+  useEffect(() => {
+    onResolvedIdeaPlaceRef.current = onResolvedIdeaPlace
+  }, [onResolvedIdeaPlace])
+
+  useEffect(() => {
+    detailsPreserveZoomRef.current = detailsPreserveZoom
+  }, [detailsPreserveZoom])
+
+  // Ideas without googlePlaceId: show seed immediately, then try Places match.
+  useEffect(() => {
+    if (detailsPlaceId || !detailsSeed?.name || !placesLib?.Place?.searchByText) {
+      return undefined
+    }
+
+    let cancelled = false
+    const gen = ++detailsGenRef.current
+    queueMicrotask(() => {
+      if (cancelled || gen !== detailsGenRef.current) return
+      setDetailsLoading(true)
+      setSearchError('')
+      setDetailsFallback(null)
+      setRichDetailsLoaded(false)
+      setDetailsExpanded(false)
+      setListCollapsed(true)
+      setChipMenuOpen(false)
+    })
+
+    ;(async () => {
+      try {
+        const request = {
+          textQuery: String(detailsSeed.name).trim(),
+          fields: PLACE_SEARCH_FIELDS,
+          maxResultCount: 5,
+        }
+        if (
+          Number.isFinite(detailsSeed.lat) &&
+          Number.isFinite(detailsSeed.lng)
+        ) {
+          request.locationBias = {
+            lat: detailsSeed.lat,
+            lng: detailsSeed.lng,
+          }
+        }
+        const { places: found = [] } = await placesLib.Place.searchByText(
+          request,
+        )
+        if (cancelled || gen !== detailsGenRef.current) return
+
+        let match = null
+        for (const place of found) {
+          const card = placeToResultCard(place, 0)
+          if (!card?.googlePlaceId) continue
+          if (
+            Number.isFinite(detailsSeed.lat) &&
+            Number.isFinite(detailsSeed.lng) &&
+            Number.isFinite(card.lat) &&
+            Number.isFinite(card.lng)
+          ) {
+            const dist = haversineMeters(detailsSeed, card)
+            if (dist > IDEA_RESOLVE_MAX_M) continue
+          }
+          match = card
+          break
+        }
+
+        if (match?.googlePlaceId) {
+          if (detailsSeed.ideaId) {
+            onResolvedIdeaPlaceRef.current?.(
+              detailsSeed.ideaId,
+              match.googlePlaceId,
+            )
+          }
+          preserveZoomOnDetailsRef.current = true
+          onClearDetailsSeedRef.current?.()
+          onDetailsPlaceIdRef.current?.(match.googlePlaceId)
+          return
+        }
+
+        // Keep seed card visible with saved Idea fields.
+        setDetailsFallback(null)
+        if (
+          Number.isFinite(detailsSeed.lat) &&
+          Number.isFinite(detailsSeed.lng)
+        ) {
+          onFocusMapRef.current?.({
+            key: detailsSeed.key,
+            lat: detailsSeed.lat,
+            lng: detailsSeed.lng,
+            preserveZoom: true,
+          })
+        }
+      } catch (err) {
+        if (cancelled || gen !== detailsGenRef.current) return
+        console.warn('Idea place resolve failed', err)
+      } finally {
+        if (!cancelled && gen === detailsGenRef.current) {
+          setDetailsLoading(false)
+        }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [detailsSeed, detailsPlaceId, placesLib])
+
   // Compact place card — Place API fields only.
   useEffect(() => {
     if (!detailsPlaceId || !placesLib) return undefined
@@ -911,33 +1075,42 @@ function PlacesExplorePanel({
         setDetailsFallback(card)
         if (card) {
           const pin = placeToMapPin(card, '•')
+          const isSavedIdea =
+            Boolean(pin?.googlePlaceId) &&
+            savedGooglePlaceIdsRef.current?.has?.(pin.googlePlaceId)
           if (pin) {
-            onInspectPinRef.current?.(pin)
-            // Keep a numbered result pin so the place stays marked after close.
-            onResultPinsRef.current?.((prev) => {
-              const list = Array.isArray(prev) ? prev : []
-              if (
-                list.some(
-                  (p) =>
-                    p.googlePlaceId === pin.googlePlaceId ||
-                    p.key === pin.key,
-                )
-              ) {
-                return list
-              }
-              return [
-                ...list,
-                { ...pin, label: String(list.length + 1) },
-              ]
-            })
+            // Saved Ideas already have numbered pins — skip inspect + result pins.
+            if (!isSavedIdea) {
+              onInspectPinRef.current?.(pin)
+              // Keep a numbered result pin so the place stays marked after close.
+              onResultPinsRef.current?.((prev) => {
+                const list = Array.isArray(prev) ? prev : []
+                if (
+                  list.some(
+                    (p) =>
+                      p.googlePlaceId === pin.googlePlaceId ||
+                      p.key === pin.key,
+                  )
+                ) {
+                  return list
+                }
+                return [
+                  ...list,
+                  { ...pin, label: String(list.length + 1) },
+                ]
+              })
+            } else {
+              onInspectPinRef.current?.(null)
+            }
           }
-          const keepZoom = preserveZoomOnDetailsRef.current
+          const keepZoom =
+            preserveZoomOnDetailsRef.current || detailsPreserveZoomRef.current
           preserveZoomOnDetailsRef.current = false
           onFocusMapRef.current?.({
             key: `detail-${card.googlePlaceId || card.key}`,
             lat: card.lat,
             lng: card.lng,
-            // fitBounds on viewport resets zoom — skip when browsing results.
+            // fitBounds on viewport resets zoom — skip when browsing Ideas/results.
             viewport: keepZoom ? null : card.viewport,
             zoom: card.isArea ? 11 : 16,
             preserveZoom: keepZoom,
@@ -1190,6 +1363,7 @@ function PlacesExplorePanel({
     setDetailsExpanded(false)
     setRichDetailsLoaded(false)
     onDetailsPlaceId?.(null)
+    onClearDetailsSeed?.()
     onResultPins?.([])
     onInspectPin?.(null)
   }
@@ -1201,6 +1375,7 @@ function PlacesExplorePanel({
     setDetailsExpanded(false)
     setRichDetailsLoaded(false)
     onDetailsPlaceId?.(null)
+    onClearDetailsSeed?.()
     onInspectPin?.(null)
   }
 
@@ -1218,6 +1393,20 @@ function PlacesExplorePanel({
     })
   }
 
+  function goAdjacentIdea(delta) {
+    const index = ideas.findIndex(
+      (idea) =>
+        (detailsSeed?.ideaId && idea.id === detailsSeed.ideaId) ||
+        (idea.googlePlaceId &&
+          detailsPlaceId &&
+          idea.googlePlaceId === detailsPlaceId),
+    )
+    if (index < 0) return
+    const next = ideas[index + delta]
+    if (!next) return
+    onBrowseIdea?.(next)
+  }
+
   function handleAddFromDetails() {
     const place = detailsFallback
     if (!place || place.isArea || !canEdit || adding) return
@@ -1230,14 +1419,43 @@ function PlacesExplorePanel({
     })
   }
 
-  const showingDetails = Boolean(detailsPlaceId)
-  const activeDetails = showingDetails ? detailsFallback : null
+  function closeDetailsToIdeas() {
+    closePlaceCard()
+    onBackToIdeas?.()
+  }
+
+  const showingDetails = Boolean(detailsPlaceId) || Boolean(detailsSeed)
+  const activeDetails = showingDetails
+    ? detailsFallback || detailsSeed
+    : null
+  const showIdeasSheet = ideasOpen && !showingDetails
   const showResultsChip =
-    !showingDetails && !searching && results.length > 0 && listCollapsed
+    !showingDetails &&
+    !searching &&
+    results.length > 0 &&
+    (listCollapsed || ideasOpen)
   const showResultsList =
-    !showingDetails && !searching && results.length > 0 && !listCollapsed
+    !showingDetails &&
+    !searching &&
+    results.length > 0 &&
+    !listCollapsed &&
+    !ideasOpen
   const libReady = Boolean(placesLib?.Place?.searchByText)
   const detailsMapsUrl = googleMapsPlaceUrl(activeDetails)
+  const canExpandDetails = Boolean(
+    detailsPlaceId || activeDetails?.googlePlaceId,
+  )
+  const ideaBrowseIndex = ideas.findIndex(
+    (idea) =>
+      (detailsSeed?.ideaId && idea.id === detailsSeed.ideaId) ||
+      (idea.googlePlaceId &&
+        detailsPlaceId &&
+        idea.googlePlaceId === detailsPlaceId),
+  )
+  const browsingIdeas = ideaBrowseIndex >= 0
+  const canBrowseIdeas = browsingIdeas && ideas.length > 1
+  const canPrevIdea = canBrowseIdeas && ideaBrowseIndex > 0
+  const canNextIdea = canBrowseIdeas && ideaBrowseIndex < ideas.length - 1
   const resultIndex =
     !detailsPlaceId || results.length === 0
       ? -1
@@ -1245,9 +1463,10 @@ function PlacesExplorePanel({
           (r) =>
             r.googlePlaceId === detailsPlaceId || r.key === detailsPlaceId,
         )
-  const canBrowseResults = resultIndex >= 0 && results.length > 1
+  const canBrowseResults = !browsingIdeas && resultIndex >= 0 && results.length > 1
   const canPrevResult = canBrowseResults && resultIndex > 0
   const canNextResult = canBrowseResults && resultIndex < results.length - 1
+  const ideasCountLabel = ideasCount > 99 ? '99+' : String(ideasCount)
 
   return (
     <>
@@ -1322,6 +1541,26 @@ function PlacesExplorePanel({
               ))}
             </div>
           </AnchoredPopover>
+
+          <button
+            ref={ideasBtnRef}
+            type="button"
+            className={styles.mapIdeasDockBtn}
+            onClick={() => {
+              setChipMenuOpen(false)
+              setListCollapsed(true)
+              onIdeasOpenChange?.(!ideasOpen)
+            }}
+            aria-label={ideasOpen ? 'Collapse Ideas' : 'Ideas'}
+            aria-expanded={ideasOpen}
+            aria-controls="map-ideas-panel"
+            title="Ideas"
+          >
+            <Sun size={16} aria-hidden="true" />
+            <span className={styles.mapIdeasDockBadge} aria-hidden="true">
+              {ideasCountLabel}
+            </span>
+          </button>
         </div>
 
         {searching ? (
@@ -1367,6 +1606,42 @@ function PlacesExplorePanel({
             >
               <X size={14} aria-hidden="true" />
             </button>
+          </div>
+        ) : null}
+
+        {showIdeasSheet ? (
+          <div
+            className={styles.mapIdeasDockSheet}
+            id="map-ideas-panel"
+            role="region"
+            aria-label="Ideas"
+          >
+            <div className={styles.mapIdeasHeader}>
+              <span className={styles.mapIdeasTitle}>Ideas</span>
+              <span className={styles.mapIdeasCount}>{ideasCount}</span>
+              <span className={styles.mapIdeasHeaderSpacer} />
+              {showFitAllIdeas ? (
+                <button
+                  type="button"
+                  className={styles.mapIdeasFitBtn}
+                  onClick={onFitAllIdeas}
+                  title="Show all Ideas on the map"
+                  aria-label="Show all Ideas on the map"
+                >
+                  <Component size={14} aria-hidden="true" />
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className={styles.mapExploreListCollapse}
+                onClick={() => onIdeasOpenChange?.(false)}
+                aria-label="Close Ideas"
+                title="Close"
+              >
+                <X size={14} aria-hidden="true" />
+              </button>
+            </div>
+            <div className={styles.mapIdeasBody}>{ideasPanel}</div>
           </div>
         ) : null}
 
@@ -1457,7 +1732,17 @@ function PlacesExplorePanel({
           aria-label={activeDetails?.name || 'Place details'}
         >
           <div className={styles.mapPlaceCardBar}>
-            {results.length > 0 ? (
+            {browsingIdeas ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={closeDetailsToIdeas}
+              >
+                <ArrowLeft size={14} aria-hidden="true" />
+                Ideas
+              </Button>
+            ) : results.length > 0 ? (
               <Button
                 type="button"
                 variant="ghost"
@@ -1513,7 +1798,31 @@ function PlacesExplorePanel({
             </div>
           </div>
 
-          {canBrowseResults ? (
+          {canBrowseIdeas ? (
+            <div className={styles.mapPlaceCardPager}>
+              <button
+                type="button"
+                className={styles.mapPlacePagerBtn}
+                disabled={!canPrevIdea}
+                onClick={() => goAdjacentIdea(-1)}
+                aria-label="Previous idea"
+              >
+                <ChevronLeft size={16} aria-hidden="true" />
+              </button>
+              <span className={styles.mapPlacePagerLabel}>
+                {ideaBrowseIndex + 1} of {ideas.length}
+              </span>
+              <button
+                type="button"
+                className={styles.mapPlacePagerBtn}
+                disabled={!canNextIdea}
+                onClick={() => goAdjacentIdea(1)}
+                aria-label="Next idea"
+              >
+                <ChevronRight size={16} aria-hidden="true" />
+              </button>
+            </div>
+          ) : canBrowseResults ? (
             <div className={styles.mapPlaceCardPager}>
               <button
                 type="button"
@@ -1539,7 +1848,7 @@ function PlacesExplorePanel({
             </div>
           ) : null}
 
-          {detailsLoading ? (
+          {detailsLoading && !activeDetails ? (
             <p className={styles.mapExploreHint}>Loading place…</p>
           ) : null}
 
@@ -1549,7 +1858,7 @@ function PlacesExplorePanel({
             </p>
           ) : null}
 
-          {!detailsLoading && activeDetails ? (
+          {activeDetails ? (
             <div className={styles.mapPlaceCardBody}>
               <div className={styles.mapDetailsFallbackTop}>
                 <div className={styles.mapDetailsFallbackCopy}>
@@ -1570,6 +1879,9 @@ function PlacesExplorePanel({
                       {activeDetails.address}
                     </p>
                   ) : null}
+                  {activeDetails.note ? (
+                    <p className={styles.mapResultMeta}>{activeDetails.note}</p>
+                  ) : null}
                 </div>
                 {activeDetails.photoUrl ? (
                   <img
@@ -1580,16 +1892,18 @@ function PlacesExplorePanel({
                 ) : null}
               </div>
               <div className={styles.mapPlaceCardActions}>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => {
-                    setRichDetailsLoaded(false)
-                    setDetailsExpanded(true)
-                  }}
-                >
-                  See more details
-                </Button>
+                {canExpandDetails ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      setRichDetailsLoaded(false)
+                      setDetailsExpanded(true)
+                    }}
+                  >
+                    See more details
+                  </Button>
+                ) : null}
                 {detailsMapsUrl ? (
                   <Button
                     type="button"
@@ -1637,7 +1951,31 @@ function PlacesExplorePanel({
                 <ArrowLeft size={14} aria-hidden="true" />
                 Summary
               </Button>
-              {canBrowseResults ? (
+              {canBrowseIdeas ? (
+                <div className={styles.mapPlaceCardPager}>
+                  <button
+                    type="button"
+                    className={styles.mapPlacePagerBtn}
+                    disabled={!canPrevIdea}
+                    onClick={() => goAdjacentIdea(-1)}
+                    aria-label="Previous idea"
+                  >
+                    <ChevronLeft size={16} aria-hidden="true" />
+                  </button>
+                  <span className={styles.mapPlacePagerLabel}>
+                    {ideaBrowseIndex + 1} of {ideas.length}
+                  </span>
+                  <button
+                    type="button"
+                    className={styles.mapPlacePagerBtn}
+                    disabled={!canNextIdea}
+                    onClick={() => goAdjacentIdea(1)}
+                    aria-label="Next idea"
+                  >
+                    <ChevronRight size={16} aria-hidden="true" />
+                  </button>
+                </div>
+              ) : canBrowseResults ? (
                 <div className={styles.mapPlaceCardPager}>
                   <button
                     type="button"
@@ -1783,6 +2121,10 @@ export function Map() {
   const [searchFocus, setSearchFocus] = useState(null)
   const searchFocusKeyRef = useRef(0)
   const [detailsPlaceId, setDetailsPlaceId] = useState(null)
+  /** Idea fields shown when opening details without a googlePlaceId yet. */
+  const [detailsSeed, setDetailsSeed] = useState(null)
+  /** Keep zoom when opening / browsing Idea place cards. */
+  const [detailsPreserveZoom, setDetailsPreserveZoom] = useState(false)
   const [selectedId, setSelectedId] = useState(null)
   const [noteDrafts, setNoteDrafts] = useState({})
   const [actionError, setActionError] = useState('')
@@ -1994,6 +2336,8 @@ export function Map() {
     ignoreEmptyMapClickRef.current = true
     setSelectedId(null)
     setIdeasOpen(false)
+    setDetailsPreserveZoom(false)
+    setDetailsSeed(null)
     setDetailsPlaceId(placeId)
   }
 
@@ -2003,24 +2347,69 @@ export function Map() {
       return
     }
     setDetailsPlaceId(null)
+    setDetailsSeed(null)
+    setDetailsPreserveZoom(false)
     setInspectPin(null)
   }
 
-  function selectIdeaFromMap(ideaId) {
+  function openIdeaDetails(idea) {
+    if (!idea) return
     ignoreEmptyMapClickRef.current = true
-    setDetailsPlaceId(null)
-    setInspectPin(null)
-    setSelectedId(ideaId)
-    setIdeasOpen(true)
+    setSelectedId(idea.id)
     setSearchFocus(null)
+    setIdeasOpen(false)
+    setInspectPin(null)
+    setDetailsPreserveZoom(true)
+    if (
+      Number.isFinite(idea.lat) &&
+      Number.isFinite(idea.lng)
+    ) {
+      focusMapOn({
+        key: `idea-${idea.id}`,
+        lat: idea.lat,
+        lng: idea.lng,
+        preserveZoom: true,
+      })
+    }
+    if (idea.googlePlaceId) {
+      setDetailsSeed(null)
+      setDetailsPlaceId(idea.googlePlaceId)
+      return
+    }
+    setDetailsPlaceId(null)
+    setDetailsSeed(ideaToDetailsSeed(idea))
   }
+
+  function backToIdeasList() {
+    setDetailsPlaceId(null)
+    setDetailsSeed(null)
+    setDetailsPreserveZoom(false)
+    setInspectPin(null)
+    setIdeasOpen(true)
+  }
+
+  const savedGooglePlaceIds = useMemo(() => {
+    const ids = new Set()
+    for (const idea of ideas) {
+      if (idea.googlePlaceId) ids.add(idea.googlePlaceId)
+    }
+    return ids
+  }, [ideas])
 
   const detailsAlreadySaved = detailsPlaceId
-    ? ideas.some((idea) => idea.googlePlaceId === detailsPlaceId)
-    : false
-  const detailsSavedIdea = detailsAlreadySaved
-    ? ideas.find((idea) => idea.googlePlaceId === detailsPlaceId)
-    : null
+    ? savedGooglePlaceIds.has(detailsPlaceId)
+    : Boolean(detailsSeed)
+  const detailsSavedIdea = detailsSeed?.ideaId
+    ? ideas.find((idea) => idea.id === detailsSeed.ideaId) || null
+    : detailsAlreadySaved
+      ? ideas.find((idea) => idea.googlePlaceId === detailsPlaceId)
+      : null
+
+  const showingIdeaOrPlaceDetails = Boolean(detailsPlaceId || detailsSeed)
+
+  const inspectMatchesIdea =
+    Boolean(inspectPin?.googlePlaceId) &&
+    savedGooglePlaceIds.has(inspectPin.googlePlaceId)
 
   async function confirmDeleteIdea() {
     if (!confirmDelete) return
@@ -2146,6 +2535,7 @@ export function Map() {
                     fallbackCenter={center}
                     searchFocus={searchFocus}
                     restoredViewport={restoredViewport}
+                    preserveSelectZoom={showingIdeaOrPlaceDetails}
                   />
                   <MapFocus target={searchFocus} />
                   <MapBoundsBridge onBounds={setMapBounds} />
@@ -2185,7 +2575,7 @@ export function Map() {
                       />
                     )
                   })}
-                  {inspectPin ? (
+                  {inspectPin && !inspectMatchesIdea ? (
                     <Marker
                       key={`inspect-${inspectPin.key}`}
                       position={{ lat: inspectPin.lat, lng: inspectPin.lng }}
@@ -2211,7 +2601,7 @@ export function Map() {
                         title={idea.name}
                         icon={pinIcon}
                         zIndex={isSelected ? 1000 : index + 1}
-                        onClick={() => selectIdeaFromMap(idea.id)}
+                        onClick={() => openIdeaDetails(idea)}
                       />
                     )
                   })}
@@ -2237,21 +2627,216 @@ export function Map() {
               <PlacesExplorePanel
                 bounds={mapBounds}
                 detailsPlaceId={detailsPlaceId}
-                onDetailsPlaceId={setDetailsPlaceId}
+                onDetailsPlaceId={(id) => {
+                  setDetailsPlaceId(id)
+                  if (id == null) setDetailsPreserveZoom(false)
+                }}
+                detailsSeed={detailsSeed}
+                onClearDetailsSeed={() => setDetailsSeed(null)}
+                detailsPreserveZoom={detailsPreserveZoom}
+                onResolvedIdeaPlace={(ideaId, googlePlaceId) => {
+                  if (!ideaId || !googlePlaceId) return
+                  void updatePlaceIdea(ideaId, { googlePlaceId })
+                    .then(() => invalidate())
+                    .catch((err) =>
+                      console.warn('Could not save resolved place id', err),
+                    )
+                }}
                 onResultPins={setResultPins}
                 onInspectPin={setInspectPin}
                 onFocusMap={focusMapOn}
                 canEdit={canEdit}
                 alreadySaved={detailsAlreadySaved}
+                savedGooglePlaceIds={savedGooglePlaceIds}
                 onAddIdea={(place) => addMut.mutate(place)}
                 adding={addMut.isPending}
                 onShowSaved={() => {
                   if (!detailsSavedIdea) return
                   setSelectedId(detailsSavedIdea.id)
-                  setIdeasOpen(true)
+                  backToIdeasList()
                 }}
+                onBackToIdeas={backToIdeasList}
                 onLocate={goToMyLocation}
                 locating={locating}
+                ideas={ideas}
+                ideasOpen={ideasOpen}
+                onIdeasOpenChange={setIdeasOpen}
+                ideasCount={ideas.length}
+                showFitAllIdeas={ideas.length > 0}
+                onFitAllIdeas={fitAllIdeas}
+                onBrowseIdea={openIdeaDetails}
+                ideasPanel={
+                  <>
+                    <p className={styles.mapIdeasBlurb}>
+                      Tap a pin or list item for place details. The selected
+                      Idea is the distance reference for the blue lines.
+                      Promote to the journey timeline when you decide to go.
+                    </p>
+                    {ideas.length >= 2 && ideasProximityUrl ? (
+                      <div
+                        className={styles.mapIdeasProximity}
+                        aria-label="Open Ideas in Maps"
+                      >
+                        <a
+                          className={styles.mapRouteLink}
+                          href={ideasProximityUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          title={`Open all Ideas in ${mapsProvider === 'apple' ? 'Apple' : 'Google'} Maps`}
+                        >
+                          Open all in Maps
+                          <ExternalLink size={11} aria-hidden="true" />
+                        </a>
+                      </div>
+                    ) : null}
+
+                    {ideas.length === 0 ? (
+                      <p className={styles.mapIdeasEmpty}>
+                        {canEdit
+                          ? 'Browse search results, read reviews, then tap Add to Ideas.'
+                          : 'No ideas yet.'}
+                      </p>
+                    ) : (
+                      <ul className={styles.mapIdeaList}>
+                        {ideas.map((idea, index) => {
+                          const noteValue =
+                            noteDrafts[idea.id] !== undefined
+                              ? noteDrafts[idea.id]
+                              : idea.note || ''
+                          const isSelected = selectedId === idea.id
+                          const promoted = Boolean(idea.entryId)
+                          const fromSelected = segmentForIdea(
+                            proximity,
+                            idea.id,
+                          )
+                          const pinNumber = index + 1
+                          return (
+                            <li
+                              key={idea.id}
+                              className={cx(
+                                styles.mapIdeaRow,
+                                isSelected && styles.mapIdeaRowSelected,
+                              )}
+                            >
+                              <button
+                                type="button"
+                                className={styles.mapIdeaSelect}
+                                onClick={() => openIdeaDetails(idea)}
+                              >
+                                <span className={styles.mapIdeaTitleRow}>
+                                  <span
+                                    className={styles.mapResultIndex}
+                                    aria-hidden="true"
+                                  >
+                                    {pinNumber}
+                                  </span>
+                                  <span className={styles.rowTitle}>
+                                    {idea.name}
+                                  </span>
+                                </span>
+                                {idea.address ? (
+                                  <span className={styles.rowMeta}>
+                                    {idea.address}
+                                  </span>
+                                ) : null}
+                                {isSelected ? (
+                                  <span className={styles.mapIdeaDistance}>
+                                    Distance reference
+                                  </span>
+                                ) : fromSelected ? (
+                                  <span className={styles.mapIdeaDistance}>
+                                    {fromSelected.label}
+                                    {selectedIdea?.name
+                                      ? ` from ${selectedIdea.name}`
+                                      : ' from selected'}
+                                  </span>
+                                ) : null}
+                                {promoted ? (
+                                  <span className={styles.mapBadge}>
+                                    <Check size={12} aria-hidden="true" />
+                                    Added to journey
+                                  </span>
+                                ) : null}
+                              </button>
+
+                              {canEdit && (
+                                <div className={styles.mapIdeaNote}>
+                                  <Label htmlFor={`place-note-${idea.id}`}>
+                                    Note
+                                  </Label>
+                                  <Input
+                                    id={`place-note-${idea.id}`}
+                                    value={noteValue}
+                                    placeholder="Why this place?"
+                                    onChange={(e) =>
+                                      setNoteDrafts((prev) => ({
+                                        ...prev,
+                                        [idea.id]: e.target.value,
+                                      }))
+                                    }
+                                    onBlur={() => {
+                                      const next = String(noteValue || '')
+                                      if (next === (idea.note || '')) return
+                                      noteMut.mutate({
+                                        id: idea.id,
+                                        note: next,
+                                      })
+                                    }}
+                                  />
+                                </div>
+                              )}
+
+                              <div className={styles.mapIdeaActions}>
+                                {promoted ? (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() =>
+                                      goEntryEdit({
+                                        journeyId,
+                                        entryId: idea.entryId,
+                                        activityId: 'place',
+                                      })
+                                    }
+                                  >
+                                    <ExternalLink
+                                      size={14}
+                                      aria-hidden="true"
+                                    />
+                                    Open
+                                  </Button>
+                                ) : canEdit ? (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => promoteMut.mutate(idea)}
+                                    disabled={promotingId === idea.id}
+                                  >
+                                    <Plus size={14} aria-hidden="true" />
+                                    {promotingId === idea.id
+                                      ? 'Adding…'
+                                      : 'Add to journey'}
+                                  </Button>
+                                ) : null}
+                                {canEdit && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className={styles.iconBtnDanger}
+                                    aria-label={`Remove ${idea.name}`}
+                                    title="Remove"
+                                    onClick={() => setConfirmDelete(idea)}
+                                  >
+                                    <Trash2 size={14} aria-hidden="true" />
+                                  </Button>
+                                )}
+                              </div>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    )}
+                  </>
+                }
               />
 
               {actionError && (
@@ -2266,165 +2851,6 @@ export function Map() {
               )}
             </APIProvider>
           )}
-
-          <FloatingIdeasButton
-            open={ideasOpen}
-            onOpenChange={setIdeasOpen}
-            count={ideas.length}
-            hidden={Boolean(detailsPlaceId)}
-            showFitAll={ideas.length > 0}
-            onFitAll={fitAllIdeas}
-          >
-            <p className={styles.mapIdeasBlurb}>
-              Pin places, then tap one to measure straight-line distances to the
-              others. Promote a pin to the journey timeline when you decide to
-              go.
-            </p>
-            {ideas.length >= 2 && ideasProximityUrl ? (
-              <div
-                className={styles.mapIdeasProximity}
-                aria-label="Open Ideas in Maps"
-              >
-                <a
-                  className={styles.mapRouteLink}
-                  href={ideasProximityUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  title={`Open all Ideas in ${mapsProvider === 'apple' ? 'Apple' : 'Google'} Maps`}
-                >
-                  Open all in Maps
-                  <ExternalLink size={11} aria-hidden="true" />
-                </a>
-              </div>
-            ) : null}
-
-            {ideas.length === 0 ? (
-              <p className={styles.mapIdeasEmpty}>
-                {canEdit
-                  ? 'Browse search results, read reviews, then tap Add to Ideas.'
-                  : 'No ideas yet.'}
-              </p>
-            ) : (
-              <ul className={styles.mapIdeaList}>
-                {ideas.map((idea) => {
-                  const noteValue =
-                    noteDrafts[idea.id] !== undefined
-                      ? noteDrafts[idea.id]
-                      : idea.note || ''
-                  const isSelected = selectedId === idea.id
-                  const promoted = Boolean(idea.entryId)
-                  const fromSelected = segmentForIdea(proximity, idea.id)
-                  return (
-                    <li
-                      key={idea.id}
-                      className={cx(
-                        styles.mapIdeaRow,
-                        isSelected && styles.mapIdeaRowSelected,
-                      )}
-                    >
-                      <button
-                        type="button"
-                        className={styles.mapIdeaSelect}
-                        onClick={() => setSelectedId(idea.id)}
-                      >
-                        <span className={styles.rowTitle}>{idea.name}</span>
-                        {idea.address ? (
-                          <span className={styles.rowMeta}>{idea.address}</span>
-                        ) : null}
-                        {isSelected ? (
-                          <span
-                            className={cx(
-                              styles.mapBadge,
-                              styles.mapBadgeReference,
-                            )}
-                          >
-                            Reference
-                          </span>
-                        ) : fromSelected ? (
-                          <span className={styles.mapIdeaDistance}>
-                            {fromSelected.label}
-                            {selectedIdea?.name
-                              ? ` from ${selectedIdea.name}`
-                              : ' from selected'}
-                          </span>
-                        ) : null}
-                        {promoted ? (
-                          <span className={styles.mapBadge}>
-                            <Check size={12} aria-hidden="true" />
-                            Added to journey
-                          </span>
-                        ) : null}
-                      </button>
-
-                      {canEdit && (
-                        <div className={styles.mapIdeaNote}>
-                          <Label htmlFor={`place-note-${idea.id}`}>Note</Label>
-                          <Input
-                            id={`place-note-${idea.id}`}
-                            value={noteValue}
-                            placeholder="Why this place?"
-                            onChange={(e) =>
-                              setNoteDrafts((prev) => ({
-                                ...prev,
-                                [idea.id]: e.target.value,
-                              }))
-                            }
-                            onBlur={() => {
-                              const next = String(noteValue || '')
-                              if (next === (idea.note || '')) return
-                              noteMut.mutate({ id: idea.id, note: next })
-                            }}
-                          />
-                        </div>
-                      )}
-
-                      <div className={styles.mapIdeaActions}>
-                        {promoted ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              goEntryEdit({
-                                journeyId,
-                                entryId: idea.entryId,
-                                activityId: 'place',
-                              })
-                            }
-                          >
-                            <ExternalLink size={14} aria-hidden="true" />
-                            Open
-                          </Button>
-                        ) : canEdit ? (
-                          <Button
-                            size="sm"
-                            onClick={() => promoteMut.mutate(idea)}
-                            disabled={promotingId === idea.id}
-                          >
-                            <Plus size={14} aria-hidden="true" />
-                            {promotingId === idea.id
-                              ? 'Adding…'
-                              : 'Add to journey'}
-                          </Button>
-                        ) : null}
-                        {canEdit && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className={styles.iconBtnDanger}
-                            aria-label={`Remove ${idea.name}`}
-                            title="Remove"
-                            onClick={() => setConfirmDelete(idea)}
-                          >
-                            <Trash2 size={14} aria-hidden="true" />
-                          </Button>
-                        )}
-                      </div>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-          </FloatingIdeasButton>
         </div>
       )}
 
