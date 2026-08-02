@@ -1,0 +1,56 @@
+{{!--
+  Molecules/Button — single BEM root (.btn). Figma master `2434:14483`.
+
+  Axes: style | size | iconButton. Interaction via CSS pseudo-classes.
+  loading → .is-loading + spinner. Icons via {{> icon}} + buttonIconSize.
+--}}
+<button
+  type="{{#if type}}{{type}}{{else}}button{{/if}}"
+  class="btn btn--{{#if style}}{{lower style}}{{else}}primary{{/if}} btn--{{#if size}}{{lower size}}{{else}}l{{/if}}{{#if iconButton}} btn--icon-button{{/if}}{{#if loading}} is-loading{{/if}}"
+  {{#if disabled}}disabled aria-disabled="true"{{/if}}
+  {{#if loading}}aria-busy="true"{{/if}}
+  {{#if accessibleLabel}}aria-label="{{accessibleLabel}}"{{/if}}
+>
+  {{#if loading}}
+    <span class="btn__spinner" aria-hidden="true"></span>
+  {{else}}
+    {{#if iconButton}}
+      <span class="btn__icon btn__icon--leading">
+        {{> icon
+          name=leadingIcon
+          size=(buttonIconSize size)
+          color="current"
+          decorative=true
+        }}
+      </span>
+    {{else}}
+      {{#if showLeadingIcon}}
+        <span class="btn__icon btn__icon--leading">
+          {{> icon
+            name=leadingIcon
+            size=(buttonIconSize size)
+            color="current"
+            decorative=true
+          }}
+        </span>
+      {{/if}}
+    {{/if}}
+  {{/if}}
+
+  {{#unless iconButton}}
+    <span class="btn__label">{{#if label}}{{label}}{{else}}Button{{/if}}</span>
+  {{/unless}}
+
+  {{#unless iconButton}}
+    {{#if showTrailingIcon}}
+      <span class="btn__icon btn__icon--trailing">
+        {{> icon
+          name=trailingIcon
+          size=(buttonIconSize size)
+          color="current"
+          decorative=true
+        }}
+      </span>
+    {{/if}}
+  {{/unless}}
+</button>

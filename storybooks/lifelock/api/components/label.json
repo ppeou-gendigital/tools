@@ -1,0 +1,117 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "label",
+  "status": "draft",
+  "summary": "Compact pill component for tagging, categorisation, and lightweight metadata. Mirrors the LifeLock-themed master variant set on [Web-ODS Shared Library / 1408:443](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1408-443&m=dev) — the master component set containing 44 published variants (11 `Background` × 4 `Variant` transparency stops) plus the dedicated Spec Frame at [`2331:287`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=2331-287&m=dev) that documents the full design intent. The 11-colour ladder folds across four emp",
+  "specUrl": "/api/components/label/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/label/spec.md",
+    "hbs": "/api/components/label/source/label.hbs",
+    "scss": "/api/components/label/source/label.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "1408:443",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1408-443&m=dev"
+  },
+  "rootClass": "c-label",
+  "bemClasses": [
+    "c-label"
+  ],
+  "properties": [
+    {
+      "name": "background",
+      "fixtureKey": "background",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"primary\"",
+      "description": "One of `primary` / `secondary` / `brand` / `brand-soft` / `accent` / `alpha` / `beta` / `gamma` / `delta` / `inverse-primary` / `inverse-secondary`. Drives the `.c-label--background-<background>` BEM modifier and selects the surface paint + matching content paint from the per-background paint table.",
+      "figmaLabel": "Background"
+    },
+    {
+      "name": "variant",
+      "fixtureKey": "variant",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"solid\"",
+      "description": "One of `solid` / `transparent-30` / `transparent-50` / `transparent-80`. Drives the `.c-label--variant-<variant>` BEM modifier. Surface paint dims via `color-mix` to 100 / 30 / 50 / 80 %; content paint always stays opaque.",
+      "figmaLabel": "Variant"
+    },
+    {
+      "name": "text",
+      "fixtureKey": "text",
+      "type": "TEXT",
+      "required": true,
+      "default": "\"label\"",
+      "description": "The visible pill content rendered inside `.c-label__text`. Authors should keep this short (1–3 words / ≤ 20 chars) — long values still render but the pill will not wrap, instead growing horizontally. Bound to `--font-family-primary` + `--font-weight-regular` + `--font-size-body-xs` (12 px) + `--lineheight-body-xs` (18 px in LifeLock-mode; see § \"Notes & open questions\" re. the 16-vs-18 px line-height mismatch).",
+      "figmaLabel": "Text"
+    },
+    {
+      "name": "showIcon",
+      "fixtureKey": "showIcon",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "false",
+      "description": "When `true`, renders a leading 16 × 16 px icon via the registered `icon` partial. When `false`, the icon slot is omitted entirely (no empty `<span>`, no padding). Equivalent to Figma's optional `Icon` slot toggle.",
+      "figmaLabel": "Show icon"
+    },
+    {
+      "name": "icon",
+      "fixtureKey": "icon",
+      "type": "INSTANCE_SWAP",
+      "required": false,
+      "default": "\"actions/simple-add\"",
+      "description": "Catalog key passed to `iconUrl()` (e.g. `\"info/simple-info\"`, `\"device/simple-vehicle\"`). The icon partial paints in `currentColor` so it inherits the label's content paint — no per-Background icon-color overrides. Ignored when `showIcon = false`.",
+      "figmaLabel": "Icon"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "background",
+      "values": "`primary` / `secondary` / `brand` / `brand-soft` / `accent` / `alpha` / `beta` / `gamma` / `delta` / `inverse-primary` / `inverse-secondary`. Drives the `.c-label--background-<background>` BEM modifier. Mirrors Figma's `Background` axis on `1408:443`. The 11 values map 1:1 onto LifeLock's surface-role tokens (`--color-bg-*` Layer 2 aliases)."
+    },
+    {
+      "axis": "variant",
+      "values": "`solid` (default — 100 % opaque surface) / `transparent-30` / `transparent-50` / `transparent-80`. Drives the `.c-label--variant-<variant>` BEM modifier. Mirrors Figma's `Variant` axis on `1408:443`. Implemented as `color-mix(in srgb, <bg> <stop>%, transparent)` so the surface dims while content paint stays at full opacity."
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-default",
+    "--color-bg-subtle",
+    "--color-bg-brand",
+    "--color-bg-brand-soft",
+    "--color-bg-accent",
+    "--color-bg-alpha",
+    "--color-bg-beta",
+    "--color-bg-gamma",
+    "--color-bg-delta",
+    "--color-bg-inverse",
+    "--color-bg-inverse-strong",
+    "--color-text-primary",
+    "--color-text-inverse",
+    "--border-radius-pill",
+    "--space-1",
+    "--space-3",
+    "--font-family-primary",
+    "--font-weight-regular",
+    "--font-size-body-xs",
+    "--lineheight-body-xs",
+    "--letterspacing-body-xs"
+  ],
+  "composes": [
+    "icon"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "**Visible text is the accessible name.** The `text` prop's value",
+    "**Icon is decorative.** When `showIcon = true`, the leading icon",
+    "**Contrast.** Every `(background, variant=solid)` paint pair must",
+    "**No focus ring.** Label is non-interactive (no `:hover` /",
+    "**Reduced motion.** No transitions or animations ship on this"
+  ],
+  "storybookId": "molecules-label",
+  "generatedAt": "2026-08-02T02:14:49.789Z"
+}

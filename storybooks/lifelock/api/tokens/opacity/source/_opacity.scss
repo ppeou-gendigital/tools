@@ -1,0 +1,9 @@
+/**
+ * Opacity tokens — LifeLock.
+ *
+ * Canonical values live in `themes/default/_opacity.scss` (contract +
+ * multi-brand). This partial re-exports that theme so
+ * `.storybook/preview.scss` `@use` continues to resolve.
+ */
+
+@use '../../../themes/default/opacity';

@@ -1,0 +1,260 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "button",
+  "status": "published",
+  "summary": "Canonical call-to-action — single BEM root (`.btn`) covering eight `Type` styles × four `Size` values × `iconButton`. Mirrors [Web-ODS Shared Library → Button `2434:14483`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=2434-14483&m=dev). Layer-4 `--button-*` aliases live in `themes/default/_button.scss` (default theme / brand themes); other brand keeps Figma-true paints in `storybook-other brand/src/tokens/button/`.",
+  "specUrl": "/api/components/button/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/button/spec.md",
+    "hbs": "/api/components/button/source/button.hbs",
+    "scss": "/api/components/button/source/button.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "2434:14483",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=2434-14483&m=dev"
+  },
+  "rootClass": "btn",
+  "bemClasses": [
+    "btn"
+  ],
+  "properties": [
+    {
+      "name": "label",
+      "fixtureKey": "label",
+      "type": "Text",
+      "required": false,
+      "default": "Button",
+      "description": "",
+      "figmaLabel": "Label"
+    },
+    {
+      "name": "style",
+      "fixtureKey": "style",
+      "type": "Enum",
+      "required": false,
+      "default": "primary",
+      "description": "Figma Type axis",
+      "figmaLabel": "Type"
+    },
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "Enum",
+      "required": false,
+      "default": "l",
+      "description": "",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "iconButton",
+      "fixtureKey": "iconButton",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Requires `accessibleLabel`",
+      "figmaLabel": "Icon button"
+    },
+    {
+      "name": "loading",
+      "fixtureKey": "loading",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Code-only",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "disabled",
+      "fixtureKey": "disabled",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "showLeadingIcon",
+      "fixtureKey": "showLeadingIcon",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "leadingIcon",
+      "fixtureKey": "leadingIcon",
+      "type": "String",
+      "required": false,
+      "default": "—",
+      "description": "Catalog key",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "showTrailingIcon",
+      "fixtureKey": "showTrailingIcon",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "trailingIcon",
+      "fixtureKey": "trailingIcon",
+      "type": "String",
+      "required": false,
+      "default": "—",
+      "description": "Catalog key",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "accessibleLabel",
+      "fixtureKey": "accessibleLabel",
+      "type": "String",
+      "required": false,
+      "default": "null",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "type",
+      "fixtureKey": "type",
+      "type": "Enum",
+      "required": false,
+      "default": "button",
+      "description": "HTML type",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "style",
+      "values": "primary` / `secondary` / `tertiary` / `inverse` / `text` / `primary-ghost` / `secondary-ghost` / `gradient"
+    },
+    {
+      "axis": "size",
+      "values": "s` / `m` / `l` (default) / `xl"
+    },
+    {
+      "axis": "iconButton",
+      "values": "false` (default) / `true"
+    },
+    {
+      "axis": "state",
+      "values": "`default` / `hover` / `focus` / `pressed` / `disabled` (CSS only)"
+    },
+    {
+      "axis": "loading",
+      "values": "`false` (default) / `true` (code-only)"
+    }
+  ],
+  "tokensConsumed": [
+    "--button-primary-bg-default",
+    "--button-primary-bg-hover",
+    "--button-primary-bg-pressed",
+    "--button-primary-content-default",
+    "--button-primary-content-hover",
+    "--button-primary-content-pressed",
+    "--button-primary-border",
+    "--button-secondary-bg-default",
+    "--button-secondary-bg-hover",
+    "--button-secondary-bg-pressed",
+    "--button-secondary-content-default",
+    "--button-secondary-content-hover",
+    "--button-secondary-content-pressed",
+    "--button-secondary-border",
+    "--button-tertiary-bg-default",
+    "--button-tertiary-bg-hover",
+    "--button-tertiary-bg-pressed",
+    "--button-tertiary-content-default",
+    "--button-tertiary-content-hover",
+    "--button-tertiary-content-pressed",
+    "--button-tertiary-border",
+    "--button-inverse-bg-default",
+    "--button-inverse-bg-hover",
+    "--button-inverse-bg-pressed",
+    "--button-inverse-content-default",
+    "--button-inverse-content-hover",
+    "--button-inverse-content-pressed",
+    "--button-inverse-border",
+    "--button-text-bg-default",
+    "--button-text-bg-hover",
+    "--button-text-bg-pressed",
+    "--button-text-content-default",
+    "--button-text-content-hover",
+    "--button-text-content-pressed",
+    "--button-primary-ghost-bg-default",
+    "--button-primary-ghost-bg-hover",
+    "--button-primary-ghost-bg-pressed",
+    "--button-primary-ghost-content-default",
+    "--button-primary-ghost-content-hover",
+    "--button-primary-ghost-content-pressed",
+    "--button-primary-ghost-border",
+    "--button-secondary-ghost-bg-default",
+    "--button-secondary-ghost-bg-hover",
+    "--button-secondary-ghost-bg-pressed",
+    "--button-secondary-ghost-content-default",
+    "--button-secondary-ghost-content-hover",
+    "--button-secondary-ghost-content-pressed",
+    "--button-secondary-ghost-border",
+    "--button-gradient-bg-default",
+    "--button-gradient-bg-hover",
+    "--button-gradient-bg-pressed",
+    "--button-gradient-content-default",
+    "--button-gradient-content-hover",
+    "--button-gradient-content-pressed",
+    "--button-gradient-border",
+    "--button-disabled-bg",
+    "--button-disabled-content",
+    "--button-disabled-border",
+    "--button-focus-ring",
+    "--button-spinner-track",
+    "--button-spinner-fill",
+    "--button-radius",
+    "--button-radius-focus",
+    "--button-border-width-primary",
+    "--button-border-width-secondary",
+    "--button-border-width-ghost",
+    "--button-border-width-focus",
+    "--button-block-size-s",
+    "--button-block-size-m",
+    "--button-block-size-l",
+    "--button-block-size-xl",
+    "--button-min-inline-size",
+    "--button-padding-block-s",
+    "--button-padding-block-m",
+    "--button-padding-block-l",
+    "--button-padding-block-xl",
+    "--button-padding-inline-s",
+    "--button-padding-inline-m",
+    "--button-padding-inline-l",
+    "--button-padding-inline-xl",
+    "--button-gap",
+    "--button-icon-size-s",
+    "--button-icon-size-m",
+    "--button-icon-size-l",
+    "--button-icon-size-xl",
+    "--font-family-primary",
+    "--font-size-body-base",
+    "--font-size-body-sm",
+    "--font-weight-semibold",
+    "--lineheight-body-base",
+    "--lineheight-body-sm"
+  ],
+  "composes": [
+    "icon"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "Native `<button>`; `aria-label` required for icon-only",
+    "Focus ring via `:focus-visible` + `--button-focus-ring`",
+    "`aria-busy` when loading; honour `prefers-reduced-motion`"
+  ],
+  "storybookId": "molecules-button",
+  "generatedAt": "2026-08-02T02:14:45.024Z"
+}

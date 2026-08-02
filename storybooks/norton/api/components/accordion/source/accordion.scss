@@ -1,0 +1,260 @@
+/**
+ * Patterns/Accordion — vertical progressive-disclosure pattern.
+ *
+ * Figma: Web-ODS Shared Library board `2499:2626` (page `539:28425`).
+ * Masters: `accordion / group` `2499:2627`, `accordion / item`,
+ * `accordion / card` `2499:3764`.
+ */
+
+.c-accordion {
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-family-primary);
+}
+
+.c-accordion__group-title {
+  margin: 0 0 var(--space-5) 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body-lg);
+  line-height: var(--lineheight-body-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.c-accordion--top-divider {
+  border-block-start: var(--border-width-xs) solid var(--color-border-strong);
+  padding-block-start: var(--space-3);
+}
+
+.c-accordion__item {
+  --c-accordion-item-pad-block: var(--space-5);
+  --c-accordion-item-pad-inline-start: var(--space-2);
+  --c-accordion-item-pad-inline-end: var(--space-0, 0);
+  --c-accordion-content-pad-block-end: var(--space-6);
+
+  display: block;
+  inline-size: 100%;
+  box-sizing: border-box;
+  color: var(--color-text-primary);
+}
+
+.c-accordion__item--with-divider {
+  border-block-end: var(--border-width-xs) solid var(--color-border-subtle);
+}
+
+.c-accordion__item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding-block: var(--c-accordion-item-pad-block);
+  padding-inline-start: var(--c-accordion-item-pad-inline-start);
+  padding-inline-end: var(--c-accordion-item-pad-inline-end);
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition: background-color 150ms ease;
+}
+
+.c-accordion__item-header::-webkit-details-marker {
+  display: none;
+}
+
+.c-accordion__item-header::marker {
+  display: none;
+  content: '';
+}
+
+.c-accordion__item-header:hover,
+.c-accordion__item[data-state='hover'] > .c-accordion__item-header {
+  background-color: var(--color-canvas-subtle);
+}
+
+.c-accordion__item-header:active,
+.c-accordion__item[data-state='pressed'] > .c-accordion__item-header {
+  background-color: var(--color-canvas-contrast);
+}
+
+.c-accordion__item-header:focus-visible,
+.c-accordion__item[data-state='focus'] > .c-accordion__item-header {
+  outline: var(--border-width-s, 2px) solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+.c-accordion__item-leading {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+}
+
+.c-accordion__item-title {
+  flex: 1 1 auto;
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body-lg);
+  line-height: var(--lineheight-body-lg);
+  font-weight: var(--font-weight-semibold);
+  text-align: start;
+}
+
+.c-accordion__item-chevron {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  border-radius: var(--border-radius-s);
+  color: var(--color-text-primary);
+  transition: transform 200ms ease;
+}
+
+.c-accordion__item[open] > .c-accordion__item-header .c-accordion__item-chevron {
+  transform: rotate(180deg);
+}
+
+.c-accordion__item-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-block: 0 var(--c-accordion-content-pad-block-end);
+  padding-inline-start: var(--c-accordion-item-pad-inline-start);
+  padding-inline-end: var(--c-accordion-item-pad-inline-end);
+  overflow: visible;
+}
+
+.c-accordion__item[data-animating] > .c-accordion__item-content {
+  overflow: clip;
+}
+
+.c-accordion__item-body,
+.c-accordion__item-list {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+  font-weight: var(--font-weight-regular);
+}
+
+.c-accordion__item-list {
+  padding-inline-start: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.c-accordion__item-list > li {
+  margin: 0;
+}
+
+.c-accordion__item-link {
+  display: inline-block;
+  color: var(--color-text-accent);
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  font-weight: var(--font-weight-regular);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.c-accordion__item-link:hover,
+.c-accordion__item-link:focus-visible {
+  text-decoration-thickness: var(--border-width-s, 2px);
+}
+
+.c-accordion__item-link:focus-visible {
+  outline: var(--border-width-s, 2px) solid var(--color-border-focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.c-accordion__item-image,
+.c-accordion__item-video {
+  display: block;
+  max-inline-size: 100%;
+  border-radius: var(--border-radius-l);
+  overflow: hidden;
+}
+
+.c-accordion__item-image > img,
+.c-accordion__item-video > video {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+
+/* Card appearance — Figma `accordion / card` */
+.c-accordion--card {
+  gap: var(--space-3);
+}
+
+.c-accordion--card .c-accordion__item {
+  --c-accordion-item-pad-block: var(--space-5);
+  --c-accordion-item-pad-inline-start: var(--space-5);
+  --c-accordion-item-pad-inline-end: var(--space-5);
+  border: 0;
+}
+
+.c-accordion--card .c-accordion__item--with-divider {
+  border-block-end: 0;
+}
+
+.c-accordion--card .c-accordion__item-header {
+  gap: var(--space-4);
+  background-color: var(--color-bg-subtle);
+  border-radius: var(--border-radius-l);
+}
+
+.c-accordion--card .c-accordion__item[open] > .c-accordion__item-header {
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.c-accordion--card .c-accordion__item-content {
+  background-color: var(--color-bg-subtle);
+  border-end-start-radius: var(--border-radius-l);
+  border-end-end-radius: var(--border-radius-l);
+  padding-block-start: 0;
+}
+
+.c-accordion--card .c-accordion__item-title {
+  font-size: var(--font-size-h7);
+  line-height: var(--lineheight-h7, var(--lineheight-body-lg));
+  font-weight: var(--font-weight-medium);
+}
+
+.c-accordion--card .c-accordion__item-header:hover,
+.c-accordion--card .c-accordion__item[data-state='hover'] > .c-accordion__item-header {
+  background-color: var(--color-canvas-subtle);
+}
+
+.c-accordion__item[data-disabled='true'] {
+  color: var(--color-disabled-text);
+}
+
+.c-accordion__item[data-disabled='true'] > .c-accordion__item-header {
+  cursor: not-allowed;
+  pointer-events: none;
+  background-color: transparent;
+}
+
+.c-accordion--card .c-accordion__item[data-disabled='true'] > .c-accordion__item-header {
+  background-color: var(--color-disabled-bg, var(--color-bg-subtle));
+}
+
+.c-accordion__item[data-disabled='true'] .c-accordion__item-title,
+.c-accordion__item[data-disabled='true'] .c-accordion__item-chevron,
+.c-accordion__item[data-disabled='true'] .c-accordion__item-leading {
+  color: var(--color-disabled-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c-accordion__item-header,
+  .c-accordion__item-chevron,
+  .c-accordion__item-content {
+    transition: none;
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/token.v1.json",
+  "type": "token",
+  "name": "opacity",
+  "status": "published",
+  "summary": "- Canonical Foundations table (Web-ODS-Theme — Opacity): https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/Web-ODS-Theme?node-id=18014-753&m=dev",
+  "specUrl": "/api/tokens/opacity/spec.md",
+  "sourceFiles": {
+    "spec": "/api/tokens/opacity/spec.md",
+    "scss": "/api/tokens/opacity/source/_opacity.scss"
+  },
+  "figma": {
+    "fileKey": "Nshd9ukxIzpeUnzOXiWxUP",
+    "nodeId": "18014:753",
+    "url": "https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/?node-id=18014-753&m=dev"
+  },
+  "tokens": [
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-0",
+      "path": [
+        "0"
+      ],
+      "$type": "number",
+      "$value": "`0` (= 0%)"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-5",
+      "path": [
+        "5"
+      ],
+      "$type": "number",
+      "$value": "`0.05` (= 5%)"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-10",
+      "path": [
+        "10"
+      ],
+      "$type": "number",
+      "$value": "`0.1` (= 10%)",
+      "$description": "consumed by shadow inline rgba (`rgba(0, 0, 0, var(--opacity-10))`)"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-20",
+      "path": [
+        "20"
+      ],
+      "$type": "number",
+      "$value": "`0.2` (= 20%)"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-25",
+      "path": [
+        "25"
+      ],
+      "$type": "number",
+      "$value": "`0.25` (= 25%)",
+      "$description": "quartile mixed into decadal scale"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-30",
+      "path": [
+        "30"
+      ],
+      "$type": "number",
+      "$value": "`0.3` (= 30%)"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-40",
+      "path": [
+        "40"
+      ],
+      "$type": "number",
+      "$value": "`0.4` (= 40%)"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-50",
+      "path": [
+        "50"
+      ],
+      "$type": "number",
+      "$value": "`0.5` (= 50%)"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-60",
+      "path": [
+        "60"
+      ],
+      "$type": "number",
+      "$value": "`0.6` (= 60%)"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-70",
+      "path": [
+        "70"
+      ],
+      "$type": "number",
+      "$value": "`0.7` (= 70%)"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-75",
+      "path": [
+        "75"
+      ],
+      "$type": "number",
+      "$value": "`0.75` (= 75%)",
+      "$description": "quartile mixed into decadal scale"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-80",
+      "path": [
+        "80"
+      ],
+      "$type": "number",
+      "$value": "`0.8` (= 80%)"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-90",
+      "path": [
+        "90"
+      ],
+      "$type": "number",
+      "$value": "`0.9` (= 90%)"
+    }
+  ],
+  "generatedAt": "2026-08-02T02:14:49.789Z"
+}

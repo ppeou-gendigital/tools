@@ -1,0 +1,78 @@
+<div
+  class="c-accordion{{#if topDivider}} c-accordion--top-divider{{/if}}{{#if singleOpen}} c-accordion--single-open{{/if}}{{#if (eq appearance "card")}} c-accordion--card{{/if}}"
+  data-component="accordion"
+  data-accordion-group="{{accordionGroupKey name}}"
+  {{#if singleOpen}}data-single-open="true"{{/if}}
+>
+  {{#if groupTitle}}
+    <h2 class="c-accordion__group-title">{{groupTitle}}</h2>
+  {{/if}}
+
+  {{#each items}}
+    <details
+      class="c-accordion__item{{#unless (eq showDivider false)}} c-accordion__item--with-divider{{/unless}}"
+      id="{{#if id}}{{id}}{{else}}{{accordionItemId @index}}{{/if}}"
+      {{#if expanded}}open{{/if}}
+      {{#if disabled}}data-disabled="true"{{/if}}
+      {{#if state}}{{#unless (eq state "default")}}data-state="{{state}}"{{/unless}}{{/if}}
+    >
+      <summary class="c-accordion__item-header"{{#if disabled}} aria-disabled="true" tabindex="-1"{{/if}}>
+        {{#if showLeadingIcon}}
+          <span class="c-accordion__item-leading" aria-hidden="true">
+            {{#if leadingIconName}}
+              {{> icon name=leadingIconName size="24" color="current" decorative=true}}
+            {{else}}
+              {{> icon name="status/simple-status-info" size="24" color="current" decorative=true}}
+            {{/if}}
+          </span>
+        {{/if}}
+        <span class="c-accordion__item-title">{{title}}</span>
+        {{#unless (eq showIcon false)}}
+          <span class="c-accordion__item-chevron" aria-hidden="true">
+            {{> icon name="arrows-navigation/simple-expand-more" size="24" color="current" decorative=true}}
+          </span>
+        {{/unless}}
+      </summary>
+
+      <div class="c-accordion__item-content">
+        {{#unless (eq showBody false)}}
+          {{#if body}}
+            <p class="c-accordion__item-body">{{body}}</p>
+          {{/if}}
+        {{/unless}}
+
+        {{#if showList}}
+          {{#if listItems.length}}
+            <ul class="c-accordion__item-list">
+              {{#each listItems}}
+                <li>{{this}}</li>
+              {{/each}}
+            </ul>
+          {{/if}}
+        {{/if}}
+
+        {{#if showImage}}
+          {{#if imageSrc}}
+            <figure class="c-accordion__item-image">
+              <img src="{{imageSrc}}" alt="{{imageAlt}}" />
+            </figure>
+          {{/if}}
+        {{/if}}
+
+        {{#if showVideo}}
+          {{#if videoSrc}}
+            <div class="c-accordion__item-video">
+              <video src="{{videoSrc}}" controls></video>
+            </div>
+          {{/if}}
+        {{/if}}
+
+        {{#if showLink}}
+          <a class="c-accordion__item-link" href="{{#if linkHref}}{{linkHref}}{{else}}#{{/if}}">
+            {{#if linkLabel}}{{linkLabel}}{{else}}Learn more{{/if}}
+          </a>
+        {{/if}}
+      </div>
+    </details>
+  {{/each}}
+</div>

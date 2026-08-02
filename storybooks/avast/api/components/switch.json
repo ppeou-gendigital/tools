@@ -1,0 +1,156 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "switch",
+  "status": "published",
+  "summary": "Binary on/off toggle for committing a setting immediately when the control changes. Mirrors the canonical [Web-ODS Shared Library → Switch master](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=717-48394&m=dev) (`717:48394`) and its text-label compositions (`732:49743`, `732:49642`, `732:49755`, `732:49666`). Every visual binds to other brand `THEME = other brand` + `PLATFORM = other brand / Desktop|Tablet|Mobile` Variable resolutions — the multi-brand master is consumed under the other brand mode pick per the contract in [`storybook-other brand-figma-modes.",
+  "specUrl": "/api/components/switch/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/switch/spec.md",
+    "hbs": "/api/components/switch/source/switch.hbs",
+    "scss": "/api/components/switch/source/switch.scss",
+    "js": "/api/components/switch/source/switch.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "717:48394",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=717-48394&m=dev"
+  },
+  "rootClass": "c-icon",
+  "bemClasses": [
+    "c-icon",
+    "c-switch"
+  ],
+  "properties": [
+    {
+      "name": "tone",
+      "fixtureKey": "tone",
+      "type": "Enum (`default` / `success` / `critical`)",
+      "required": true,
+      "default": "\"default\"",
+      "description": "Drives the ON-state track paint. Mirrors the Figma `Tone` property.",
+      "figmaLabel": "Tone"
+    },
+    {
+      "name": "checked",
+      "fixtureKey": "checked",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Persistent state. Sets the native `<input>` `checked` attribute and `aria-checked=\"true\"` on the input; the knob slides right via the `is-checked` class on the root.",
+      "figmaLabel": "Checked"
+    },
+    {
+      "name": "disabled",
+      "fixtureKey": "disabled",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Persistent state. Paints the `--color-disabled-*` token trio, adds `aria-disabled=\"true\"` on the root, and sets the native `disabled` attribute on the input (removes it from the tab order).",
+      "figmaLabel": "Disabled"
+    },
+    {
+      "name": "loading",
+      "fixtureKey": "loading",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Persistent state. Replaces the knob's icon slot with a spinner and locks the input via `aria-busy=\"true\"` on the root. Click commits are ignored while loading.",
+      "figmaLabel": "Loading"
+    },
+    {
+      "name": "showIcon",
+      "fixtureKey": "showIcon",
+      "type": "Boolean",
+      "required": false,
+      "default": "true",
+      "description": "Renders the checkmark glyph inside the knob when checked. When `false`, the knob paints as a solid circle.",
+      "figmaLabel": "Show icon"
+    },
+    {
+      "name": "label",
+      "fixtureKey": "label",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Optional visible label rendered after the track (BEM element `c-switch__label`). When omitted, the switch is icon-only — consumers MUST supply an `aria-label` via the `accessibleLabel` prop.",
+      "figmaLabel": "Label"
+    },
+    {
+      "name": "accessibleLabel",
+      "fixtureKey": "accessibleLabel",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Bound to the native input's `aria-label`. Required when no visible label is present so the switch's purpose is announced.",
+      "figmaLabel": "Accessible label"
+    },
+    {
+      "name": "name",
+      "fixtureKey": "name",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Bound to the native `<input>` `name` attribute for form submission.",
+      "figmaLabel": "Name"
+    },
+    {
+      "name": "value",
+      "fixtureKey": "value",
+      "type": "Text",
+      "required": false,
+      "default": "\"on\"",
+      "description": "Bound to the native `<input>` `value` attribute (the value posted when checked).",
+      "figmaLabel": "Value"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "tone",
+      "values": "`default` (track paints `--color-signal-info` on ON) / `success` (track paints `--color-signal-success`) / `critical` (track paints `--color-signal-critical`). Tone only affects the ON paint; the OFF track is the neutral border-subtle fill in every tone."
+    },
+    {
+      "axis": "`state` (transient)",
+      "values": "`default` / `hover` / `focused` / `pressed`. Pseudo-class driven (`:hover` / `:focus-visible` / `:active` on the native input). The `[data-state]` hook on the root lets the AllStyles gallery freeze each paint for visual regression."
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-default",
+    "--color-border-subtle",
+    "--color-border-focus",
+    "--color-signal-info",
+    "--color-signal-success",
+    "--color-signal-critical",
+    "--color-text-primary",
+    "--color-text-secondary",
+    "--color-text-inverse",
+    "--color-disabled-bg",
+    "--color-disabled-border",
+    "--color-disabled-text",
+    "--space-1",
+    "--space-2",
+    "--space-3",
+    "--border-radius-pill",
+    "--border-width-default",
+    "--font-family-primary",
+    "--font-size-body-base",
+    "--lineheight-body-base",
+    "--font-weight-regular"
+  ],
+  "composes": [
+    "icon"
+  ],
+  "hasBehavior": true,
+  "accessibility": [
+    "Uses native `<input type=\"checkbox\">` with `role=\"switch\"` + `aria-checked` for the binary state — screen readers announce \"On\" / \"Off\" directly.",
+    "Always carries either a visible `<label>` (text after the track) or an `aria-label` via `accessibleLabel`. The label is wrapped in the root `<label>` element so clicking the text toggles the switch.",
+    "Focus ring uses `:focus-visible` so it only appears on keyboard navigation; pointer focus stays quiet.",
+    "Keyboard: `Space` toggles. `Tab` / `Shift+Tab` move focus.",
+    "WCAG: track surfaces meet AA non-text contrast against `--color-bg-default` in every tone × state combination. Disabled paint meets WCAG 2.2 § 1.4.11 by retaining a visible outline.",
+    "Reduced motion: the knob's slide transition is removed when `prefers-reduced-motion: reduce` is set."
+  ],
+  "storybookId": "molecules-switch",
+  "generatedAt": "2026-08-02T02:14:40.012Z"
+}

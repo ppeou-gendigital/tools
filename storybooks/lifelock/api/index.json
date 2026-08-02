@@ -1,0 +1,499 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/index.v2.json",
+  "generatedAt": "2026-08-02T02:14:49.789Z",
+  "package": {
+    "name": "@aics/storybook-lifelock",
+    "version": "0.1.0",
+    "brand": "lifelock",
+    "storybookUrl": "http://localhost:4173/lifelock/"
+  },
+  "counts": {
+    "tokens": 10,
+    "components": 20,
+    "layouts": 0,
+    "pages": 0,
+    "assetInventories": 1
+  },
+  "units": [
+    {
+      "type": "component",
+      "subtype": "pattern",
+      "librarySource": "brand",
+      "name": "accordion",
+      "status": "published",
+      "manifestUrl": "/api/components/accordion.json",
+      "specUrl": "/api/components/accordion/spec.md",
+      "storybookId": "patterns-accordion",
+      "hasBehavior": true,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "2499:2626",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=2499-2626&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "pattern",
+      "librarySource": "brand",
+      "name": "alert",
+      "status": "draft",
+      "manifestUrl": "/api/components/alert.json",
+      "specUrl": "/api/components/alert/spec.md",
+      "storybookId": "patterns-alert",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "1284:11542",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1284-11542&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "award-wrapper",
+      "status": "published",
+      "manifestUrl": "/api/components/award-wrapper.json",
+      "specUrl": "/api/components/award-wrapper/spec.md",
+      "storybookId": "molecules-award-wrapper",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "3762:246",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=3762-246&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "badge",
+      "status": "published",
+      "manifestUrl": "/api/components/badge.json",
+      "specUrl": "/api/components/badge/spec.md",
+      "storybookId": "molecules-badge",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "1284:14251",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1284-14251&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "pattern",
+      "librarySource": "brand",
+      "name": "breadcrumb",
+      "status": "draft",
+      "manifestUrl": "/api/components/breadcrumb.json",
+      "specUrl": "/api/components/breadcrumb/spec.md",
+      "storybookId": "patterns-breadcrumb",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "1260:8373",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1260-8373&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "button",
+      "status": "published",
+      "manifestUrl": "/api/components/button.json",
+      "specUrl": "/api/components/button/spec.md",
+      "storybookId": "molecules-button",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "2434:14483",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=2434-14483&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "checkbox",
+      "status": "published",
+      "manifestUrl": "/api/components/checkbox.json",
+      "specUrl": "/api/components/checkbox/spec.md",
+      "storybookId": "molecules-checkbox",
+      "hasBehavior": true,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "665:36315",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=665-36315&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "pattern",
+      "librarySource": "brand",
+      "name": "code-entry",
+      "status": "draft",
+      "manifestUrl": "/api/components/code-entry.json",
+      "specUrl": "/api/components/code-entry/spec.md",
+      "storybookId": "patterns-code-entry",
+      "hasBehavior": true,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "698:47604",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=698-47604&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "divider",
+      "status": "draft",
+      "manifestUrl": "/api/components/divider.json",
+      "specUrl": "/api/components/divider/spec.md",
+      "storybookId": "molecules-divider",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "539:28432",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=539-28432&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "icon",
+      "status": "published",
+      "manifestUrl": "/api/components/icon.json",
+      "specUrl": "/api/components/icon/spec.md",
+      "storybookId": "molecules-icon",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "990:1808",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=990-1808&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "label",
+      "status": "draft",
+      "manifestUrl": "/api/components/label.json",
+      "specUrl": "/api/components/label/spec.md",
+      "storybookId": "molecules-label",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "1408:443",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1408-443&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "pagination-dots",
+      "status": "published",
+      "manifestUrl": "/api/components/pagination-dots.json",
+      "specUrl": "/api/components/pagination-dots/spec.md",
+      "storybookId": "molecules-pagination-dots",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "1278:1668",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1278-1668&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "progress-indicator",
+      "status": "draft",
+      "manifestUrl": "/api/components/progress-indicator.json",
+      "specUrl": "/api/components/progress-indicator/spec.md",
+      "storybookId": "molecules-progress-indicator",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "1380:1255",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1380-1255&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "radio",
+      "status": "published",
+      "manifestUrl": "/api/components/radio.json",
+      "specUrl": "/api/components/radio/spec.md",
+      "storybookId": "molecules-radio",
+      "hasBehavior": true,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "666:36462",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=666-36462&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "pattern",
+      "librarySource": "brand",
+      "name": "search-box",
+      "status": "draft",
+      "manifestUrl": "/api/components/search-box.json",
+      "specUrl": "/api/components/search-box/spec.md",
+      "storybookId": "patterns-search-box",
+      "hasBehavior": true,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "698:47669",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=698-47669&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "slider",
+      "status": "published",
+      "manifestUrl": "/api/components/slider.json",
+      "specUrl": "/api/components/slider/spec.md",
+      "storybookId": "molecules-slider",
+      "hasBehavior": true,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "539:28421",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=539-28421&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "stepper",
+      "status": "draft",
+      "manifestUrl": "/api/components/stepper.json",
+      "specUrl": "/api/components/stepper/spec.md",
+      "storybookId": "molecules-stepper",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "1386:867",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1386-867&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "switch",
+      "status": "published",
+      "manifestUrl": "/api/components/switch.json",
+      "specUrl": "/api/components/switch/spec.md",
+      "storybookId": "molecules-switch",
+      "hasBehavior": true,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "717:48394",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=717-48394&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "pattern",
+      "librarySource": "brand",
+      "name": "text-field",
+      "status": "draft",
+      "manifestUrl": "/api/components/text-field.json",
+      "specUrl": "/api/components/text-field/spec.md",
+      "storybookId": "patterns-text-field",
+      "hasBehavior": true,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "698:47055",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=698-47055&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "text-link",
+      "status": "draft",
+      "manifestUrl": "/api/components/text-link.json",
+      "specUrl": "/api/components/text-link/spec.md",
+      "storybookId": "molecules-text-link",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "1332:54878",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1332-54878&m=dev"
+      }
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "borders",
+      "status": "published",
+      "manifestUrl": "/api/tokens/borders.json",
+      "specUrl": "/api/tokens/borders/spec.md",
+      "storybookId": "design-system-borders",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "Nshd9ukxIzpeUnzOXiWxUP",
+        "nodeId": "18014:752",
+        "url": "https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/?node-id=18014-752&m=dev"
+      }
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "breakpoints",
+      "status": "published",
+      "manifestUrl": "/api/tokens/breakpoints.json",
+      "specUrl": "/api/tokens/breakpoints/spec.md",
+      "storybookId": "design-system-breakpoints",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "Nshd9ukxIzpeUnzOXiWxUP",
+        "nodeId": "0:31",
+        "url": "https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/?node-id=0-31&m=dev"
+      }
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "button",
+      "status": "draft",
+      "manifestUrl": "/api/tokens/button.json",
+      "specUrl": "/api/tokens/button/spec.md",
+      "storybookId": "design-system-button",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "Nshd9ukxIzpeUnzOXiWxUP",
+        "nodeId": "18014:48",
+        "url": "https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/?node-id=18014-48&m=dev"
+      }
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "colors",
+      "status": "published",
+      "manifestUrl": "/api/tokens/colors.json",
+      "specUrl": "/api/tokens/colors/spec.md",
+      "storybookId": "design-system-colors",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "Nshd9ukxIzpeUnzOXiWxUP",
+        "nodeId": "18014:48",
+        "url": "https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/?node-id=18014-48&m=dev"
+      }
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "grid",
+      "status": "published",
+      "manifestUrl": "/api/tokens/grid.json",
+      "specUrl": "/api/tokens/grid/spec.md",
+      "storybookId": "design-system-grid",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "Nshd9ukxIzpeUnzOXiWxUP",
+        "nodeId": "18086:2008",
+        "url": "https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/?node-id=18086-2008&m=dev"
+      }
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "iconography",
+      "status": "published",
+      "manifestUrl": "/api/tokens/iconography.json",
+      "specUrl": "/api/tokens/iconography/spec.md",
+      "storybookId": "design-system-iconography",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "7NjgRv0ac9SNpgwEO7wmfe",
+        "nodeId": "2:2583",
+        "url": "https://www.figma.com/design/7NjgRv0ac9SNpgwEO7wmfe/?node-id=2-2583&m=dev"
+      }
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "opacity",
+      "status": "published",
+      "manifestUrl": "/api/tokens/opacity.json",
+      "specUrl": "/api/tokens/opacity/spec.md",
+      "storybookId": "design-system-opacity",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "Nshd9ukxIzpeUnzOXiWxUP",
+        "nodeId": "18014:753",
+        "url": "https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/?node-id=18014-753&m=dev"
+      }
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "shadow",
+      "status": "published",
+      "manifestUrl": "/api/tokens/shadow.json",
+      "specUrl": "/api/tokens/shadow/spec.md",
+      "storybookId": "design-system-shadow",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "Nshd9ukxIzpeUnzOXiWxUP",
+        "nodeId": "18014:754",
+        "url": "https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/?node-id=18014-754&m=dev"
+      }
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "spacing",
+      "status": "published",
+      "manifestUrl": "/api/tokens/spacing.json",
+      "specUrl": "/api/tokens/spacing/spec.md",
+      "storybookId": "design-system-spacing",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "Nshd9ukxIzpeUnzOXiWxUP",
+        "nodeId": "18014:755",
+        "url": "https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/?node-id=18014-755&m=dev"
+      }
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "typography",
+      "status": "published",
+      "manifestUrl": "/api/tokens/typography.json",
+      "specUrl": "/api/tokens/typography/spec.md",
+      "storybookId": "design-system-typography",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "Nshd9ukxIzpeUnzOXiWxUP",
+        "nodeId": "18014:751",
+        "url": "https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/?node-id=18014-751&m=dev"
+      }
+    }
+  ]
+}

@@ -1,0 +1,248 @@
+/**
+ * Components/Divider — single BEM root (.c-divider) covering the
+ * three Figma sibling variant sets on Web-ODS-Shared-Library —
+ * `Divider / Horizontal` (1344:2031), `Divider / Vertical`
+ * (1344:2052), and `Divider / Label` (1344:2073) — folded onto one
+ * orthogonal four-axis collapse per spec.md § "Variant axes".
+ *
+ * Variant axes → BEM modifiers:
+ *   layout     → .c-divider--horizontal | --vertical | --label
+ *   size       → .c-divider--xs | --s | --m | --l
+ *   inverse    → .c-divider--inverse  (boolean — no value suffix)
+ *   typography → .c-divider--body-sm-regular |
+ *                --body-sm-semibold |
+ *                --body-base-regular |
+ *                --body-base-semibold |
+ *                --body-lg-regular |
+ *                --body-lg-bold |
+ *                --h6-medium |
+ *                --h5-bold
+ *
+ * Divider is stateless — no `:hover` / `:focus-visible` / `:active`
+ * paints, no `is-*` runtime classes, no JavaScript. It is a
+ * presentation-only molecule that separates surrounding content.
+ *
+ * Layout paint mechanics:
+ *   - horizontal → block-level root, paints `border-block-start`
+ *     spanning the full inline size of its container.
+ *   - vertical   → inline-block root, paints `border-inline-start`,
+ *     sizes `block-size: 100%` to its parent's cross axis.
+ *   - label      → block-level root, paints inline-flex row of
+ *     `__rule--start` + `__label` + `__rule--end`; the two
+ *     `__rule` spans paint `border-block-start` and `flex: 1 1 0`
+ *     so they share remaining inline space symmetrically.
+ *
+ * The `size` axis selects rule weight via
+ * `--border-width-{hairline,default,emphasis}` for xs / s / l.
+ * `m` (3 px) ships a literal pixel value — LifeLock's
+ * `--border-width-*` ladder skips 3 px (see spec.md
+ * § "Notes & open questions" for the gap discussion).
+ *
+ * The `inverse` axis flips the rule paint from
+ * `--color-border-strong` to `--color-border-inverse`.
+ *
+ * The `typography` axis paints `.c-divider__label` typography on
+ * `layout = label` only; the modifier renders on every variant for
+ * shape consistency but is inert when no `.c-divider__label`
+ * element exists.
+ *
+ * Logical properties (`border-block-start` / `border-inline-start`
+ * / `padding-inline`) keep every layout RTL-safe; the inline-flex
+ * centring on `label` survives direction flips with no overrides.
+ *
+ * Tokens consumed are documented in `./spec.md` § "Tokens consumed".
+ */
+
+// ============================================================================
+// BLOCK — .c-divider
+// ============================================================================
+
+.c-divider {
+  // Default paint — overridden per layout below. Kept here so a bare
+  // `.c-divider` element still renders a visible rule during dev /
+  // authoring even when modifiers are missing.
+  --c-divider-rule-color: var(--color-border-strong);
+  --c-divider-rule-width: var(--border-width-default);
+
+  box-sizing: border-box;
+  border: 0 solid var(--c-divider-rule-color);
+}
+
+// ============================================================================
+// INVERSE — applies across all three layouts
+// ============================================================================
+
+.c-divider--inverse {
+  --c-divider-rule-color: var(--color-border-inverse);
+}
+
+// ============================================================================
+// SIZE — rule weight ladder
+// ============================================================================
+
+.c-divider--xs {
+  --c-divider-rule-width: var(--border-width-hairline);
+}
+
+.c-divider--s {
+  --c-divider-rule-width: var(--border-width-default);
+}
+
+// 3 px rule weight is a token gap — LifeLock's `--border-width-*` ladder
+// skips 3 px (declared values: hairline = 1, default = 2,
+// emphasis = 4). Ships a literal pixel value here rather than
+// triggering the formal token-gap AskQuestion round because spec.md
+// never references an undeclared custom property. See
+// `./spec.md` § "Notes & open questions" for the designer follow-up.
+.c-divider--m {
+  --c-divider-rule-width: 3px;
+}
+
+.c-divider--l {
+  --c-divider-rule-width: var(--border-width-emphasis);
+}
+
+// ============================================================================
+// LAYOUT — horizontal (block-level, full-width horizontal rule)
+// ============================================================================
+
+.c-divider--horizontal {
+  display: block;
+  inline-size: 100%;
+  block-size: var(--c-divider-rule-width);
+  border-block-start: var(--c-divider-rule-width) solid var(--c-divider-rule-color);
+}
+
+// ============================================================================
+// LAYOUT — vertical (inline-block, parent-cross-axis vertical rule)
+// ============================================================================
+
+.c-divider--vertical {
+  display: inline-block;
+  inline-size: var(--c-divider-rule-width);
+  block-size: 100%;
+  border-inline-start: var(--c-divider-rule-width) solid var(--c-divider-rule-color);
+}
+
+// ============================================================================
+// LAYOUT — label (inline-flex row, rule + centred label + rule)
+// ============================================================================
+
+.c-divider--label {
+  display: flex;
+  align-items: center;
+  inline-size: 100%;
+  gap: var(--space-3);
+
+  // The label paint inherits its surrounding content paint by default
+  // (`currentColor`). Consumers wanting a custom label color set a
+  // `color` on the parent context rather than the divider itself.
+  color: inherit;
+
+  // The label kicker font-family is always Inter Tight — only size /
+  // line-height / letter-spacing / weight vary per the `typography`
+  // axis below.
+  font-family: var(--font-family-primary);
+}
+
+// ============================================================================
+// ELEMENTS — rule (label variant) + label (label variant)
+// ============================================================================
+
+.c-divider__rule {
+  // Flex children share remaining inline space symmetrically so the
+  // centred label is always optically centred regardless of the
+  // label's intrinsic text width.
+  flex: 1 1 0;
+
+  // The rule paint sits on `border-block-start` so the span carries
+  // no visible block-size of its own — the rule paints as a 1-pixel-
+  // tall line at the block-start edge of the span and the surrounding
+  // flex centring aligns it vertically with the label's optical
+  // centre line.
+  block-size: var(--c-divider-rule-width);
+  border-block-start: var(--c-divider-rule-width) solid var(--c-divider-rule-color);
+}
+
+.c-divider__label {
+  flex: 0 0 auto;
+
+  // Label paint inherits all four typography properties from the
+  // `.c-divider--*` modifier on the root.
+  font-family: var(--font-family-primary);
+
+  // Padding-inline matches the `gap` declared on the flex parent —
+  // when a future use case needs a closer label-rule spacing,
+  // override the `gap` rather than the padding here.
+  padding-inline: 0;
+
+  // Center text horizontally — defensive in case a parent context
+  // sets `text-align: start` on inline children.
+  text-align: center;
+  white-space: nowrap;
+}
+
+// ============================================================================
+// TYPOGRAPHY — label variant only (modifier is inert on other layouts)
+// ============================================================================
+
+// body/sm — 14 px in both bands
+.c-divider--body-sm-regular .c-divider__label {
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  letter-spacing: var(--letterspacing-body-sm);
+  font-weight: var(--font-weight-regular);
+}
+
+.c-divider--body-sm-semibold .c-divider__label {
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  letter-spacing: var(--letterspacing-body-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+// body/base — 14 px (SM band) / 16 px (LG band)
+.c-divider--body-base-regular .c-divider__label {
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+  letter-spacing: var(--letterspacing-body-base);
+  font-weight: var(--font-weight-regular);
+}
+
+.c-divider--body-base-semibold .c-divider__label {
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+  letter-spacing: var(--letterspacing-body-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+// body/lg — 16 px (SM band) / 18 px (LG band)
+.c-divider--body-lg-regular .c-divider__label {
+  font-size: var(--font-size-body-lg);
+  line-height: var(--lineheight-body-lg);
+  letter-spacing: var(--letterspacing-body-lg);
+  font-weight: var(--font-weight-regular);
+}
+
+.c-divider--body-lg-bold .c-divider__label {
+  font-size: var(--font-size-body-lg);
+  line-height: var(--lineheight-body-lg);
+  letter-spacing: var(--letterspacing-body-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+// h6 — 24 / 24 px (SM-collision; identical in both bands)
+.c-divider--h6-medium .c-divider__label {
+  font-size: var(--font-size-h6);
+  line-height: var(--lineheight-h6);
+  letter-spacing: var(--letterspacing-h6);
+  font-weight: var(--font-weight-medium);
+}
+
+// h5 — 24 px (SM band) / 28 px (LG band)
+.c-divider--h5-bold .c-divider__label {
+  font-size: var(--font-size-h5);
+  line-height: var(--lineheight-h5);
+  letter-spacing: var(--letterspacing-h5);
+  font-weight: var(--font-weight-bold);
+}

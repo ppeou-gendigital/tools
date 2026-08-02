@@ -1,0 +1,138 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "checkbox",
+  "status": "published",
+  "summary": "Boolean / tri-state checkbox for multi-select forms. Mirrors the canonical [Web-ODS Shared Library → Checkbox master](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=665-36315&m=dev) (`665:36315`) and the per-tone hover / pressed background mapping at [`665:36267`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=665-36267&m=dev). Core default theme unit; brand packages supply theme token values.",
+  "specUrl": "/api/components/checkbox/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/checkbox/spec.md",
+    "hbs": "/api/components/checkbox/source/checkbox.hbs",
+    "scss": "/api/components/checkbox/source/checkbox.scss",
+    "js": "/api/components/checkbox/source/checkbox.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "665:36315",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=665-36315&m=dev"
+  },
+  "rootClass": "c-icon",
+  "bemClasses": [
+    "c-icon",
+    "c-checkbox"
+  ],
+  "properties": [
+    {
+      "name": "tone",
+      "fixtureKey": "tone",
+      "type": "Enum (`default` / `accent` / `critical`)",
+      "required": true,
+      "default": "\"default\"",
+      "description": "Drives the checked + indeterminate fill.",
+      "figmaLabel": "Tone"
+    },
+    {
+      "name": "selection",
+      "fixtureKey": "selection",
+      "type": "Enum (`unchecked` / `checked` / `indeterminate`)",
+      "required": false,
+      "default": "\"unchecked\"",
+      "description": "Persistent state. `checked` sets the native `checked` attribute; `indeterminate` sets the native `indeterminate` JS property (the `c-checkbox--indeterminate` modifier paints the dash).",
+      "figmaLabel": "Selection"
+    },
+    {
+      "name": "disabled",
+      "fixtureKey": "disabled",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Persistent. Paints the `--color-disabled-*` token trio, sets `aria-disabled=\"true\"` on the root, sets `disabled` on the input.",
+      "figmaLabel": "Disabled"
+    },
+    {
+      "name": "label",
+      "fixtureKey": "label",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Visible label rendered after the box (BEM element `c-checkbox__label`). Wrapped inside the root `<label>`.",
+      "figmaLabel": "Label"
+    },
+    {
+      "name": "accessibleLabel",
+      "fixtureKey": "accessibleLabel",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Bound to the input's `aria-label`. Required when no visible label is present.",
+      "figmaLabel": "Accessible label"
+    },
+    {
+      "name": "name",
+      "fixtureKey": "name",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Bound to the native `<input>` `name` attribute.",
+      "figmaLabel": "Name"
+    },
+    {
+      "name": "value",
+      "fixtureKey": "value",
+      "type": "Text",
+      "required": false,
+      "default": "\"on\"",
+      "description": "Bound to the native `<input>` `value` attribute.",
+      "figmaLabel": "Value"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "tone",
+      "values": "`default` (info indigo on checked fill) / `accent` (success green) / `critical` (critical red). Tone affects the box fill in the `checked` and `indeterminate` states; in `unchecked` the box paints with the same neutral outline regardless of tone."
+    },
+    {
+      "axis": "`state` (transient)",
+      "values": "`default` / `hover` / `focused` / `pressed`. Pseudo-class driven on the native input. The state circle paints behind the box for all three transient paints."
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-default",
+    "--color-border-strong",
+    "--color-border-focus",
+    "--color-signal-info",
+    "--color-signal-success",
+    "--color-signal-critical",
+    "--color-text-primary",
+    "--color-text-secondary",
+    "--color-text-inverse",
+    "--color-disabled-bg",
+    "--color-disabled-border",
+    "--color-disabled-text",
+    "--space-1",
+    "--space-2",
+    "--space-3",
+    "--border-radius-control",
+    "--border-width-default",
+    "--border-width-emphasis",
+    "--font-family-primary",
+    "--font-size-body-base",
+    "--lineheight-body-base",
+    "--font-weight-regular"
+  ],
+  "composes": [
+    "icon"
+  ],
+  "hasBehavior": true,
+  "accessibility": [
+    "Uses native `<input type=\"checkbox\">`; screen readers announce \"Checked\" / \"Not checked\" / \"Mixed\" (the last for `indeterminate`) directly.",
+    "Always carries either a visible `<label>` (text after the box) or `aria-label` via `accessibleLabel`. Label is wrapped in the root `<label>` so clicking the text toggles the checkbox.",
+    "Focus ring uses `:focus-visible` so it only appears on keyboard navigation.",
+    "Keyboard: `Space` toggles. `Tab` / `Shift+Tab` move focus. The indeterminate visual is **input-only** — pressing `Space` while in indeterminate state transitions to either checked or unchecked (consumer's responsibility via JS).",
+    "WCAG: every (tone × state) combination meets AA non-text contrast against `--color-bg-default`. Disabled paint retains a visible outline per WCAG 2.2 § 1.4.11."
+  ],
+  "storybookId": "molecules-checkbox",
+  "generatedAt": "2026-08-02T02:14:45.024Z"
+}

@@ -1,0 +1,243 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/index.v2.json",
+  "generatedAt": "2026-08-02T02:14:55.657Z",
+  "package": {
+    "name": "@aics/storybook-norton",
+    "version": "0.1.0",
+    "brand": "norton",
+    "storybookUrl": "http://localhost:4173/norton/"
+  },
+  "counts": {
+    "tokens": 8,
+    "components": 8,
+    "layouts": 0,
+    "pages": 0,
+    "assetInventories": 1
+  },
+  "units": [
+    {
+      "type": "component",
+      "subtype": "pattern",
+      "librarySource": "brand",
+      "name": "accordion",
+      "status": "published",
+      "manifestUrl": "/api/components/accordion.json",
+      "specUrl": "/api/components/accordion/spec.md",
+      "storybookId": "patterns-accordion",
+      "hasBehavior": true,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "2499:2626",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=2499-2626&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "award-wrapper",
+      "status": "published",
+      "manifestUrl": "/api/components/award-wrapper.json",
+      "specUrl": "/api/components/award-wrapper/spec.md",
+      "storybookId": "molecules-award-wrapper",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "3762:246",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=3762-246&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "badge",
+      "status": "published",
+      "manifestUrl": "/api/components/badge.json",
+      "specUrl": "/api/components/badge/spec.md",
+      "storybookId": "molecules-badge",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "1284:14251",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1284-14251&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "button",
+      "status": "published",
+      "manifestUrl": "/api/components/button.json",
+      "specUrl": "/api/components/button/spec.md",
+      "storybookId": "molecules-button",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "2434:14483",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=2434-14483&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "checkbox",
+      "status": "published",
+      "manifestUrl": "/api/components/checkbox.json",
+      "specUrl": "/api/components/checkbox/spec.md",
+      "storybookId": "molecules-checkbox",
+      "hasBehavior": true,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "665:36315",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=665-36315&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "pagination-dots",
+      "status": "published",
+      "manifestUrl": "/api/components/pagination-dots.json",
+      "specUrl": "/api/components/pagination-dots/spec.md",
+      "storybookId": "molecules-pagination-dots",
+      "hasBehavior": false,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "1278:1668",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1278-1668&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "radio",
+      "status": "published",
+      "manifestUrl": "/api/components/radio.json",
+      "specUrl": "/api/components/radio/spec.md",
+      "storybookId": "molecules-radio",
+      "hasBehavior": true,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "666:36462",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=666-36462&m=dev"
+      }
+    },
+    {
+      "type": "component",
+      "subtype": "molecule",
+      "librarySource": "brand",
+      "name": "switch",
+      "status": "published",
+      "manifestUrl": "/api/components/switch.json",
+      "specUrl": "/api/components/switch/spec.md",
+      "storybookId": "molecules-switch",
+      "hasBehavior": true,
+      "figma": {
+        "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+        "nodeId": "717:48394",
+        "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=717-48394&m=dev"
+      }
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "borders",
+      "status": "published",
+      "manifestUrl": "/api/tokens/borders.json",
+      "specUrl": "/api/tokens/borders/spec.md",
+      "storybookId": "design-system-borders",
+      "hasBehavior": false,
+      "figma": null
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "button",
+      "status": "published",
+      "manifestUrl": "/api/tokens/button.json",
+      "specUrl": "/api/tokens/button/spec.md",
+      "storybookId": "design-system-button",
+      "hasBehavior": false,
+      "figma": null
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "colors",
+      "status": "published",
+      "manifestUrl": "/api/tokens/colors.json",
+      "specUrl": "/api/tokens/colors/spec.md",
+      "storybookId": "design-system-colors",
+      "hasBehavior": false,
+      "figma": null
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "grid",
+      "status": "published",
+      "manifestUrl": "/api/tokens/grid.json",
+      "specUrl": "/api/tokens/grid/spec.md",
+      "storybookId": "design-system-grid",
+      "hasBehavior": false,
+      "figma": null
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "opacity",
+      "status": "published",
+      "manifestUrl": "/api/tokens/opacity.json",
+      "specUrl": "/api/tokens/opacity/spec.md",
+      "storybookId": "design-system-opacity",
+      "hasBehavior": false,
+      "figma": null
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "shadow",
+      "status": "published",
+      "manifestUrl": "/api/tokens/shadow.json",
+      "specUrl": "/api/tokens/shadow/spec.md",
+      "storybookId": "design-system-shadow",
+      "hasBehavior": false,
+      "figma": null
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "spacing",
+      "status": "published",
+      "manifestUrl": "/api/tokens/spacing.json",
+      "specUrl": "/api/tokens/spacing/spec.md",
+      "storybookId": "design-system-spacing",
+      "hasBehavior": false,
+      "figma": null
+    },
+    {
+      "type": "token",
+      "subtype": null,
+      "librarySource": null,
+      "name": "tokens",
+      "status": "published",
+      "manifestUrl": "/api/tokens/tokens.json",
+      "specUrl": "/api/tokens/tokens/spec.md",
+      "storybookId": "design-system-tokens",
+      "hasBehavior": false,
+      "figma": null
+    }
+  ]
+}

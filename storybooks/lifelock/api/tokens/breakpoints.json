@@ -1,0 +1,60 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/token.v1.json",
+  "type": "token",
+  "name": "breakpoints",
+  "status": "published",
+  "summary": "Four mutually-exclusive viewport bands — SM, MD, LG, XL — each owning a closed media-query range. The canonical viewport per band is the single representative width used by the Storybook viewport addon and Figma canvas frames. Encoded as primitive Figma `Number` Variables (`breakpoint/<bp>`) and CSS custom properties (`--breakpoint-<bp>`).",
+  "specUrl": "/api/tokens/breakpoints/spec.md",
+  "sourceFiles": {
+    "spec": "/api/tokens/breakpoints/spec.md",
+    "scss": "/api/tokens/breakpoints/source/_breakpoints.scss"
+  },
+  "figma": {
+    "fileKey": "Nshd9ukxIzpeUnzOXiWxUP",
+    "nodeId": "0:31",
+    "url": "https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/?node-id=0-31&m=dev"
+  },
+  "tokens": [
+    {
+      "family": "breakpoints",
+      "cssVar": "--breakpoint-sm",
+      "path": [
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "360",
+      "$description": "dual-purpose: SM canonical viewport; SM band has no CSS lower bound (uses `max-width: 767px`)"
+    },
+    {
+      "family": "breakpoints",
+      "cssVar": "--breakpoint-md",
+      "path": [
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": "768",
+      "$description": "dual-purpose: MD media-query lower threshold AND canonical viewport"
+    },
+    {
+      "family": "breakpoints",
+      "cssVar": "--breakpoint-lg",
+      "path": [
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": "1024",
+      "$description": "dual-purpose: LG media-query lower threshold AND canonical viewport"
+    },
+    {
+      "family": "breakpoints",
+      "cssVar": "--breakpoint-xl",
+      "path": [
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "1440",
+      "$description": "dual-purpose: XL media-query lower threshold AND canonical viewport"
+    }
+  ],
+  "generatedAt": "2026-08-02T02:14:49.789Z"
+}

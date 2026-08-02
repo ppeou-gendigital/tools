@@ -1,0 +1,46 @@
+{{!--
+  Patterns/Inputs/Search box template — one bordered :focus-within
+  control around a native <input type="search">. A search glyph + a
+  vertical separator lead the input (or trail it when iconFirst=false),
+  and a clear (×) button shows at the inline-end once the field is
+  filled. The native UA search-cancel button is suppressed in SCSS; the
+  clear button is a real <button> so it is reachable + styleable
+  cross-browser.
+
+  Defaults: size → m, iconFirst → true, accessibleLabel → "Search".
+--}}
+<div
+  class="c-search-box c-search-box--{{#if size}}{{lower size}}{{else}}m{{/if}}{{#unless iconFirst}} c-search-box--icon-last{{/unless}}{{#if value}} is-filled{{/if}}{{#if disabled}} is-disabled{{/if}}"
+  data-component="search-box"
+  data-size="{{#if size}}{{lower size}}{{else}}m{{/if}}"
+>
+  {{#if iconFirst}}
+    <span class="c-search-box__icon" aria-hidden="true">{{> icon name="actions/simple-search" size="20" color="current" decorative=true}}</span>
+    <span class="c-search-box__separator" aria-hidden="true"></span>
+  {{/if}}
+
+  <input
+    class="c-search-box__input"
+    type="search"
+    {{#if name}}name="{{name}}"{{/if}}
+    {{#if value}}value="{{value}}"{{/if}}
+    placeholder="{{#if placeholder}}{{placeholder}}{{else}}Search{{/if}}"
+    aria-label="{{#if accessibleLabel}}{{accessibleLabel}}{{else}}Search{{/if}}"
+    autocomplete="off"
+    {{#if disabled}}disabled{{/if}}
+  >
+
+  <button
+    type="button"
+    class="c-search-box__clear"
+    aria-label="{{#if clearLabel}}{{clearLabel}}{{else}}Clear search{{/if}}"
+    {{#if disabled}}disabled{{/if}}
+  >
+    {{> icon name="actions/simple-close" size="20" color="current" decorative=true}}
+  </button>
+
+  {{#unless iconFirst}}
+    <span class="c-search-box__separator" aria-hidden="true"></span>
+    <span class="c-search-box__icon" aria-hidden="true">{{> icon name="actions/simple-search" size="20" color="current" decorative=true}}</span>
+  {{/unless}}
+</div>

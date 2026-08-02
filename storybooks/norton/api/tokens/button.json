@@ -1,0 +1,946 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/token.v1.json",
+  "type": "token",
+  "name": "button",
+  "status": "published",
+  "summary": "Resolved norton theme values from themes/default/.",
+  "specUrl": "/api/tokens/button/spec.md",
+  "sourceFiles": {
+    "spec": "/api/tokens/button/spec.md"
+  },
+  "figma": null,
+  "tokens": [
+    {
+      "family": "button",
+      "cssVar": "--button-primary-bg-default",
+      "path": [
+        "primary",
+        "bg",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-bg-brand)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-primary-bg-hover",
+      "path": [
+        "primary",
+        "bg",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-yellow-03)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-primary-bg-pressed",
+      "path": [
+        "primary",
+        "bg",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-plum-04)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-primary-content-default",
+      "path": [
+        "primary",
+        "content",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-primary-content-hover",
+      "path": [
+        "primary",
+        "content",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-primary-content-pressed",
+      "path": [
+        "primary",
+        "content",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-primary-border",
+      "path": [
+        "primary",
+        "border"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-secondary-bg-default",
+      "path": [
+        "secondary",
+        "bg",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-bg-default)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-secondary-bg-hover",
+      "path": [
+        "secondary",
+        "bg",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-bg-inverse-strong)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-secondary-bg-pressed",
+      "path": [
+        "secondary",
+        "bg",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-bg-subtle)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-secondary-content-default",
+      "path": [
+        "secondary",
+        "content",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-secondary-content-hover",
+      "path": [
+        "secondary",
+        "content",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-inverse)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-secondary-content-pressed",
+      "path": [
+        "secondary",
+        "content",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-secondary-border",
+      "path": [
+        "secondary",
+        "border"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-tertiary-bg-default",
+      "path": [
+        "tertiary",
+        "bg",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-yellow-02)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-tertiary-bg-hover",
+      "path": [
+        "tertiary",
+        "bg",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-yellow-03)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-tertiary-bg-pressed",
+      "path": [
+        "tertiary",
+        "bg",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-blue-04)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-tertiary-content-default",
+      "path": [
+        "tertiary",
+        "content",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-tertiary-content-hover",
+      "path": [
+        "tertiary",
+        "content",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-tertiary-content-pressed",
+      "path": [
+        "tertiary",
+        "content",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-tertiary-border",
+      "path": [
+        "tertiary",
+        "border"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-border-subtle)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-inverse-bg-default",
+      "path": [
+        "inverse",
+        "bg",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-bg-inverse-strong)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-inverse-bg-hover",
+      "path": [
+        "inverse",
+        "bg",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-neutral-80)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-inverse-bg-pressed",
+      "path": [
+        "inverse",
+        "bg",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-accent)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-inverse-content-default",
+      "path": [
+        "inverse",
+        "content",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-inverse)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-inverse-content-hover",
+      "path": [
+        "inverse",
+        "content",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-inverse)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-inverse-content-pressed",
+      "path": [
+        "inverse",
+        "content",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-inverse)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-inverse-border",
+      "path": [
+        "inverse",
+        "border"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-border-strong-alt)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-text-bg-default",
+      "path": [
+        "text",
+        "bg",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-bg-default)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-text-bg-hover",
+      "path": [
+        "text",
+        "bg",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-bg-subtle)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-text-bg-pressed",
+      "path": [
+        "text",
+        "bg",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-bg-muted)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-text-content-default",
+      "path": [
+        "text",
+        "content",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-text-content-hover",
+      "path": [
+        "text",
+        "content",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-text-content-pressed",
+      "path": [
+        "text",
+        "content",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-primary-ghost-bg-default",
+      "path": [
+        "primary",
+        "ghost",
+        "bg",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "transparent"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-primary-ghost-bg-hover",
+      "path": [
+        "primary",
+        "ghost",
+        "bg",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-bg-inverse-strong)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-primary-ghost-bg-pressed",
+      "path": [
+        "primary",
+        "ghost",
+        "bg",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-bg-subtle)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-primary-ghost-content-default",
+      "path": [
+        "primary",
+        "ghost",
+        "content",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-primary-ghost-content-hover",
+      "path": [
+        "primary",
+        "ghost",
+        "content",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-inverse)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-primary-ghost-content-pressed",
+      "path": [
+        "primary",
+        "ghost",
+        "content",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-primary-ghost-border",
+      "path": [
+        "primary",
+        "ghost",
+        "border"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-secondary-ghost-bg-default",
+      "path": [
+        "secondary",
+        "ghost",
+        "bg",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "transparent"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-secondary-ghost-bg-hover",
+      "path": [
+        "secondary",
+        "ghost",
+        "bg",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "color-mix(\n    in srgb,\n    var(--color-text-inverse) 20%,\n    transparent\n  )"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-secondary-ghost-bg-pressed",
+      "path": [
+        "secondary",
+        "ghost",
+        "bg",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "color-mix(\n    in srgb,\n    var(--color-text-inverse) 10%,\n    transparent\n  )"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-secondary-ghost-content-default",
+      "path": [
+        "secondary",
+        "ghost",
+        "content",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-inverse)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-secondary-ghost-content-hover",
+      "path": [
+        "secondary",
+        "ghost",
+        "content",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-inverse)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-secondary-ghost-content-pressed",
+      "path": [
+        "secondary",
+        "ghost",
+        "content",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-inverse)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-secondary-ghost-border",
+      "path": [
+        "secondary",
+        "ghost",
+        "border"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-inverse)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-gradient-bg-default",
+      "path": [
+        "gradient",
+        "bg",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "linear-gradient(\n    172deg,\n    var(--color-yellow-02) 19%,\n    var(--color-bg-brand) 120%\n  )"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-gradient-bg-hover",
+      "path": [
+        "gradient",
+        "bg",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "linear-gradient(\n    167deg,\n    var(--color-yellow-03) 26%,\n    var(--color-bg-brand) 105%\n  )"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-gradient-bg-pressed",
+      "path": [
+        "gradient",
+        "bg",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "linear-gradient(\n    164deg,\n    var(--color-plum-04) 28%,\n    var(--color-bg-brand) 101%\n  )"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-gradient-content-default",
+      "path": [
+        "gradient",
+        "content",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-gradient-content-hover",
+      "path": [
+        "gradient",
+        "content",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-gradient-content-pressed",
+      "path": [
+        "gradient",
+        "content",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-gradient-border",
+      "path": [
+        "gradient",
+        "border"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-disabled-bg",
+      "path": [
+        "disabled",
+        "bg"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-bg-muted)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-disabled-content",
+      "path": [
+        "disabled",
+        "content"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-disabled-text)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-disabled-border",
+      "path": [
+        "disabled",
+        "border"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-disabled-border)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-focus-ring",
+      "path": [
+        "focus",
+        "ring"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-accent)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-spinner-track",
+      "path": [
+        "spinner",
+        "track"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-neutral-30)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-spinner-fill",
+      "path": [
+        "spinner",
+        "fill"
+      ],
+      "$type": "dimension",
+      "$value": "var(--color-text-accent)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-radius",
+      "path": [
+        "radius"
+      ],
+      "$type": "dimension",
+      "$value": "var(--border-radius-pill)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-radius-focus",
+      "path": [
+        "radius",
+        "focus"
+      ],
+      "$type": "dimension",
+      "$value": "var(--border-radius-pill)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-border-width-primary",
+      "path": [
+        "border",
+        "width",
+        "primary"
+      ],
+      "$type": "dimension",
+      "$value": "var(--border-width-default)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-border-width-secondary",
+      "path": [
+        "border",
+        "width",
+        "secondary"
+      ],
+      "$type": "dimension",
+      "$value": "var(--border-width-default)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-border-width-ghost",
+      "path": [
+        "border",
+        "width",
+        "ghost"
+      ],
+      "$type": "dimension",
+      "$value": "var(--border-width-default)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-border-width-focus",
+      "path": [
+        "border",
+        "width",
+        "focus"
+      ],
+      "$type": "dimension",
+      "$value": "var(--border-width-default)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-block-size-s",
+      "path": [
+        "block",
+        "size",
+        "s"
+      ],
+      "$type": "dimension",
+      "$value": "24px"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-block-size-m",
+      "path": [
+        "block",
+        "size",
+        "m"
+      ],
+      "$type": "dimension",
+      "$value": "36px"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-block-size-l",
+      "path": [
+        "block",
+        "size",
+        "l"
+      ],
+      "$type": "dimension",
+      "$value": "40px"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-block-size-xl",
+      "path": [
+        "block",
+        "size",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "48px"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-min-inline-size",
+      "path": [
+        "min",
+        "inline",
+        "size"
+      ],
+      "$type": "dimension",
+      "$value": "48px"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-padding-block-s",
+      "path": [
+        "padding",
+        "block",
+        "s"
+      ],
+      "$type": "dimension",
+      "$value": "var(--space-3)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-padding-block-m",
+      "path": [
+        "padding",
+        "block",
+        "m"
+      ],
+      "$type": "dimension",
+      "$value": "var(--space-3)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-padding-block-l",
+      "path": [
+        "padding",
+        "block",
+        "l"
+      ],
+      "$type": "dimension",
+      "$value": "var(--space-3)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-padding-block-xl",
+      "path": [
+        "padding",
+        "block",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "var(--space-4)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-padding-inline-s",
+      "path": [
+        "padding",
+        "inline",
+        "s"
+      ],
+      "$type": "dimension",
+      "$value": "var(--space-3)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-padding-inline-m",
+      "path": [
+        "padding",
+        "inline",
+        "m"
+      ],
+      "$type": "dimension",
+      "$value": "var(--space-4)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-padding-inline-l",
+      "path": [
+        "padding",
+        "inline",
+        "l"
+      ],
+      "$type": "dimension",
+      "$value": "var(--space-5)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-padding-inline-xl",
+      "path": [
+        "padding",
+        "inline",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "var(--space-7)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-gap",
+      "path": [
+        "gap"
+      ],
+      "$type": "dimension",
+      "$value": "var(--space-3)"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-icon-size-s",
+      "path": [
+        "icon",
+        "size",
+        "s"
+      ],
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-icon-size-m",
+      "path": [
+        "icon",
+        "size",
+        "m"
+      ],
+      "$type": "dimension",
+      "$value": "20px"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-icon-size-l",
+      "path": [
+        "icon",
+        "size",
+        "l"
+      ],
+      "$type": "dimension",
+      "$value": "20px"
+    },
+    {
+      "family": "button",
+      "cssVar": "--button-icon-size-xl",
+      "path": [
+        "icon",
+        "size",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "20px"
+    }
+  ],
+  "generatedAt": "2026-08-02T02:14:55.657Z"
+}

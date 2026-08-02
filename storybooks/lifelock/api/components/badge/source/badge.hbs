@@ -1,0 +1,31 @@
+{{!--
+  Molecules/Badge — BEM root .c-badge
+  Figma: Web-ODS Shared Library component set 1284:14251 (page 539:28416).
+
+  Axes:
+    variant   dot | count | text                 → .c-badge--$variant
+    color     info | success | warning | error |
+              brand | inverse                    → .c-badge--$color
+    emphasis  low | high                         → .c-badge--$emphasis
+
+  Content:
+    count → countValue in .c-badge__value
+    text  → label in .c-badge__label
+    dot   → accessibleLabel (optional) for aria
+--}}
+<span
+  class="c-badge c-badge--{{#if variant}}{{lower variant}}{{else}}dot{{/if}} c-badge--{{#if color}}{{lower color}}{{else}}info{{/if}} c-badge--{{#if emphasis}}{{lower emphasis}}{{else}}low{{/if}}"
+  {{#unless variant}}
+    {{#if accessibleLabel}}role="img" aria-label="{{accessibleLabel}}"{{else}}aria-hidden="true"{{/if}}
+  {{/unless}}
+  {{#if (eq (lower variant) "dot")}}
+    {{#if accessibleLabel}}role="img" aria-label="{{accessibleLabel}}"{{else}}aria-hidden="true"{{/if}}
+  {{/if}}
+>
+  {{#if (eq (lower variant) "count")}}
+    <span class="c-badge__value">{{#if countValue}}{{countValue}}{{else}}3{{/if}}</span>
+  {{/if}}
+  {{#if (eq (lower variant) "text")}}
+    <span class="c-badge__label">{{#if label}}{{label}}{{else}}NEW{{/if}}</span>
+  {{/if}}
+</span>

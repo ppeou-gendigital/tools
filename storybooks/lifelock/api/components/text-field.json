@@ -1,0 +1,258 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "text-field",
+  "status": "draft",
+  "summary": "A labelled text-entry pattern built on native `<input>` and `<select>` elements. Mirrors the [Web-ODS Shared Library → Text field](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=698-47055&m=dev) (`698:47055`) under the LifeLock mode pick. The native HTML intentionally diverges from the Figma div / instance tree — visual + token fidelity is the bar, not structural fidelity.",
+  "specUrl": "/api/components/text-field/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/text-field/spec.md",
+    "hbs": "/api/components/text-field/source/text-field.hbs",
+    "scss": "/api/components/text-field/source/text-field.scss",
+    "js": "/api/components/text-field/source/text-field.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "698:47055",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=698-47055&m=dev"
+  },
+  "rootClass": "c-text-field",
+  "bemClasses": [
+    "c-text-field"
+  ],
+  "properties": [
+    {
+      "name": "type",
+      "fixtureKey": "type",
+      "type": "Enum (`text` / `password` / `select` / `combined` / `split`)",
+      "required": true,
+      "default": "\"text\"",
+      "description": "Drives the control structure. Mirrors the Figma `Type` property (`Default` → `text`, `Dropdown` → `select`, `Combined`, `Splited` → `split`).",
+      "figmaLabel": "Type"
+    },
+    {
+      "name": "label",
+      "fixtureKey": "label",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Field title rendered as a `<label for>`. Omit for a label-less field (supply an `aria-label` upstream).",
+      "figmaLabel": "Label"
+    },
+    {
+      "name": "helperText",
+      "fixtureKey": "helperText",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Instructional message below the control, wired via `aria-describedby`. Recolours to `--color-text-error` when `error` is set.",
+      "figmaLabel": "Helper text"
+    },
+    {
+      "name": "placeholder",
+      "fixtureKey": "placeholder",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Native placeholder (text / password / combined / split).",
+      "figmaLabel": "Placeholder"
+    },
+    {
+      "name": "value",
+      "fixtureKey": "value",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Initial value bound to the native input.",
+      "figmaLabel": "Value"
+    },
+    {
+      "name": "required",
+      "fixtureKey": "required",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Appends a `*` marker to the field title.",
+      "figmaLabel": "Required"
+    },
+    {
+      "name": "error",
+      "fixtureKey": "error",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Adds `is-error` + `aria-invalid=\"true\"`, paints the critical border, recolours the helper.",
+      "figmaLabel": "Error"
+    },
+    {
+      "name": "disabled",
+      "fixtureKey": "disabled",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Sets the native `disabled` attribute and paints the disabled trio.",
+      "figmaLabel": "Disabled"
+    },
+    {
+      "name": "selectOptions",
+      "fixtureKey": "selectOptions",
+      "type": "Array of `{ value, label, selected }`",
+      "required": false,
+      "default": "[]",
+      "description": "Native `<option>` rows for the standalone select.",
+      "figmaLabel": "Select options"
+    },
+    {
+      "name": "prefixOptions",
+      "fixtureKey": "prefixOptions",
+      "type": "Array of `{ value, label, selected }`",
+      "required": false,
+      "default": "split`",
+      "description": "`[]`",
+      "figmaLabel": "Prefix options"
+    },
+    {
+      "name": "prefixLabel",
+      "fixtureKey": "prefixLabel",
+      "type": "Text",
+      "required": false,
+      "default": "\"Prefix\"",
+      "description": "`aria-label` for the prefix select in combined / split.",
+      "figmaLabel": "Prefix label"
+    },
+    {
+      "name": "id",
+      "fixtureKey": "id",
+      "type": "Text",
+      "required": false,
+      "default": "\"text-field\"",
+      "description": "Code-only. Wires the control `id` + `<label for>` + `aria-describedby`. No Figma component-property counterpart — an accessibility id, not a designer-set value. Pass a unique value per page.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "name",
+      "fixtureKey": "name",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Bound to the native control `name` (form submission).",
+      "figmaLabel": "Name"
+    },
+    {
+      "name": "selectOptions[].value",
+      "fixtureKey": "selectOptions[].value",
+      "type": "Text",
+      "required": true,
+      "default": "—",
+      "description": "Consumer-set. Bound to the `<option value>`.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "selectOptions[].label",
+      "fixtureKey": "selectOptions[].label",
+      "type": "Text",
+      "required": true,
+      "default": "—",
+      "description": "Consumer-set. Visible `<option>` text.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "selectOptions[].selected",
+      "fixtureKey": "selectOptions[].selected",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Consumer-set. Pre-selects the row (`<option selected>`).",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "prefixOptions[].value",
+      "fixtureKey": "prefixOptions[].value",
+      "type": "Text",
+      "required": true,
+      "default": "—",
+      "description": "Consumer-set. Bound to the prefix `<option value>`.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "prefixOptions[].label",
+      "fixtureKey": "prefixOptions[].label",
+      "type": "Text",
+      "required": true,
+      "default": "—",
+      "description": "Consumer-set. Visible prefix `<option>` text.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "prefixOptions[].selected",
+      "fixtureKey": "prefixOptions[].selected",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Consumer-set. Pre-selects the prefix row (`<option selected>`).",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "type",
+      "values": "`text` (native `<input type=\"text\">`) / `password` (native `<input type=\"password\">` + reveal button) / `select` (native `<select>`) / `combined` (prefix `<select>` + `<input>` in one bordered wrapper) / `split` (separate prefix box + input box)."
+    },
+    {
+      "axis": "`state` (transient)",
+      "values": "`default` / `hover` / `focused` — pseudo-class driven (`:hover` / `:focus-visible` on the native control). No `[data-state]` freeze hook; the AllStyles gallery shows the prop-driven states instead."
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-input",
+    "--color-bg-input-disabled",
+    "--color-border-input-default",
+    "--color-border-input-hover",
+    "--color-border-input-focus",
+    "--color-border-input-focus-glow",
+    "--color-border-input-error",
+    "--color-border-input-error-glow",
+    "--color-border-input-disabled",
+    "--color-border-input-divider",
+    "--color-text-placeholder",
+    "--color-text-default",
+    "--color-text-disabled",
+    "--color-text-error",
+    "--color-text-primary",
+    "--color-text-secondary",
+    "--space-1",
+    "--space-2",
+    "--space-3",
+    "--space-5",
+    "--space-9",
+    "--space-11",
+    "--border-radius-card",
+    "--border-radius-control",
+    "--border-width-hairline",
+    "--border-width-default",
+    "--font-family-primary",
+    "--font-size-body-base",
+    "--lineheight-body-base",
+    "--font-size-label",
+    "--lineheight-label",
+    "--font-weight-medium",
+    "--font-size-body-xs",
+    "--lineheight-body-xs"
+  ],
+  "composes": [
+    "icon"
+  ],
+  "hasBehavior": true,
+  "accessibility": [
+    "The field title is a real `<label for>` bound to the control `id`; the helper is referenced from the control via `aria-describedby`.",
+    "`error` sets `aria-invalid=\"true\"` so assistive tech announces the invalid state; the helper carries the human-readable reason.",
+    "Focus ring uses `:focus-visible` so it only paints on keyboard navigation; pointer focus stays quiet.",
+    "The password reveal is a real `<button type=\"button\">` with `aria-pressed` and a state-accurate `aria-label` (\"Show password\" / \"Hide password\").",
+    "The standalone `select` uses the **native UA arrow** in Firefox / Safari (no icon-partial child, which would require the experimental `<button>`-in-`<select>` markup that breaks the native control). Chromium 135+ styles the `::picker(select)` menu via `appearance: base-select`; every other browser keeps the fully-functional native popup.",
+    "WCAG: resting + focus borders meet AA non-text contrast against `--color-bg-input`; disabled paint retains a visible outline per WCAG 2.2 § 1.4.11. Per the Figma guidance frame (`984:2201`), inputs should sit on the primary background — avoid placing them on accent / status surfaces where the border contrast is not guaranteed."
+  ],
+  "storybookId": "patterns-text-field",
+  "generatedAt": "2026-08-02T02:14:49.789Z"
+}

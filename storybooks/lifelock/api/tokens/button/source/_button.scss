@@ -1,0 +1,223 @@
+/**
+ * Button component tokens — LifeLock single-brand storybook.
+ *
+ * Mirrors `storybook-lifelock/src/tokens/button/spec.md` (canonical
+ * source of truth — figmaFileKey: 0o8SL5BEk8wHtgud00dRyg / Web-ODS Shared
+ * Library; master variant set `2434:14483`, LifeLock sticker sheet
+ * `2443:26533`).
+ *
+ * Layer 4 component aliases — every value here points at a published
+ * LifeLock semantic / primitive token from `_colors.scss`,
+ * `_borders.scss`, or `_spacing.scss`. No new primitives are introduced.
+ * Where the canonical Figma button variables diverge from the generic
+ * Layer 3b CTA color extension, these aliases point at the underlying
+ * LifeLock primitive directly so the button mirrors Figma exactly.
+ *
+ * Variant axes (mirrors Figma master variant set `2434:14483`):
+ *   Type        primary | secondary | tertiary | inverse | text
+ *               | primary-ghost | secondary-ghost | gradient
+ *   Size        s | m | l | xl
+ *   State       default | hover | focus | pressed | disabled
+ *               (interaction states paint via CSS pseudo-classes)
+ *   Icon button no | yes  (boolean prop in code)
+ *   Loading     no | yes  (boolean prop in code, NOT a Figma state)
+ */
+
+:root {
+  // ============================================================================
+  // PER-TYPE SURFACE PAINTS
+  // ============================================================================
+  // Each per-type triplet maps to the Layer 3b CTA color extension already
+  // declared in `_colors.scss`. The button-namespaced names exist so a
+  // future re-target of one type's surface (e.g. Primary Hover migrates
+  // off `--color-off-black`) only requires changing this file.
+
+  // ---------- Primary ----------
+  // Figma master `2434:14483` (LifeLock sticker sheet `2443:26533`):
+  // default lifelock-green, hover ocean-teal, pressed off-black, ocean-teal keyline.
+  --button-primary-bg-default:      var(--color-lifelock-green);
+  --button-primary-bg-hover:        var(--color-ocean-teal);
+  --button-primary-bg-pressed:      var(--color-off-black);
+  --button-primary-content-default: var(--color-white);
+  --button-primary-content-hover:   var(--color-white);
+  --button-primary-content-pressed: var(--color-white);
+  --button-primary-border:          var(--color-ocean-teal);
+
+  // ---------- Secondary ----------
+  --button-secondary-bg-default:      var(--color-bg-cta-secondary-default);
+  --button-secondary-bg-hover:        var(--color-bg-cta-secondary-hover);
+  --button-secondary-bg-pressed:      var(--color-bg-cta-secondary-pressed);
+  --button-secondary-content-default: var(--color-text-on-cta-secondary);
+  --button-secondary-content-hover:   var(--color-text-on-cta-secondary);
+  --button-secondary-content-pressed: var(--color-text-on-cta-secondary);
+  --button-secondary-border:          var(--color-border-cta-secondary);
+
+  // ---------- Tertiary ----------
+  --button-tertiary-bg-default:      var(--color-bg-cta-tertiary-default);
+  --button-tertiary-bg-hover:        var(--color-bg-cta-tertiary-hover);
+  --button-tertiary-bg-pressed:      var(--color-bg-cta-tertiary-pressed);
+  --button-tertiary-content-default: var(--color-text-on-cta-tertiary);
+  --button-tertiary-content-hover:   var(--color-text-on-cta-tertiary);
+  --button-tertiary-content-pressed: var(--color-text-on-cta-tertiary);
+  --button-tertiary-border:          var(--color-neutral-10);
+
+  // ---------- Inverse ----------
+  // Figma: dark CTA (off-black surface, white label, ocean-teal keyline)
+  // for light / photographic surfaces. default off-black, hover lifelock-green,
+  // pressed ocean-teal.
+  --button-inverse-bg-default:      var(--color-off-black);
+  --button-inverse-bg-hover:        var(--color-lifelock-green);
+  --button-inverse-bg-pressed:      var(--color-ocean-teal);
+  --button-inverse-content-default: var(--color-white);
+  --button-inverse-content-hover:   var(--color-white);
+  --button-inverse-content-pressed: var(--color-white);
+  --button-inverse-border:          var(--color-ocean-teal);
+
+  // ---------- Text (transparent default surface; tonal hover/pressed) ----------
+  --button-text-bg-default:      transparent;
+  --button-text-bg-hover:        var(--color-bg-cta-text-hover);
+  --button-text-bg-pressed:      var(--color-bg-cta-text-pressed);
+  --button-text-content-default: var(--color-text-on-cta-text);
+  --button-text-content-hover:   var(--color-text-on-cta-text);
+  --button-text-content-pressed: var(--color-text-on-cta-text);
+
+  // ---------- Primary Ghost (transparent surface; lifelock-green label + 1px keyline) ----------
+  // Per Figma: text, icon and 1px keyline share lifelock-green; hover / pressed
+  // apply the tonal overlays Button/secondary/bg-hover (mist-blue) and
+  // Button/secondary/bg-pressed (cool-gray) on top of the transparent surface.
+  --button-primary-ghost-bg-default:      transparent;
+  --button-primary-ghost-bg-hover:        var(--color-bg-cta-secondary-hover);
+  --button-primary-ghost-bg-pressed:      var(--color-bg-cta-secondary-pressed);
+  --button-primary-ghost-content-default: var(--color-bg-cta-primary-default);
+  --button-primary-ghost-content-hover:   var(--color-bg-cta-primary-default);
+  --button-primary-ghost-content-pressed: var(--color-bg-cta-primary-default);
+  --button-primary-ghost-border:          var(--color-bg-cta-primary-default);
+
+  // ---------- Secondary Ghost (transparent surface; white label + 1px keyline) ----------
+  // Figma: white label + white 1px keyline for dark / photographic surfaces.
+  // Hover / pressed paint translucent-white overlays (20% / 10%) on top of the
+  // transparent surface.
+  --button-secondary-ghost-bg-default:      transparent;
+  --button-secondary-ghost-bg-hover:        color-mix(in srgb, var(--color-white) 20%, transparent);
+  --button-secondary-ghost-bg-pressed:      color-mix(in srgb, var(--color-white) 10%, transparent);
+  --button-secondary-ghost-content-default: var(--color-white);
+  --button-secondary-ghost-content-hover:   var(--color-white);
+  --button-secondary-ghost-content-pressed: var(--color-white);
+  --button-secondary-ghost-border:          var(--color-white);
+
+  // ---------- Gradient (premium-emphasis CTA; light surfaces only) ----------
+  // Figma `Type=Gradient` (master `2434:14483`, LifeLock sticker sheet
+  // `2443:26533`). The surface is a `background-image` linear gradient
+  // (NOT a flat fill); the per-state stops bind to existing LifeLock
+  // primitives — default ocean-teal → lifelock-green, hover ocean-teal →
+  // off-black, pressed lifelock-green → off-black. White label + `0px`
+  // keyline + focus overlay all match Type=Primary. Disabled inherits the
+  // universal flat disabled surface (no gradient affordance) — see
+  // button.scss `.btn--gradient:disabled`. Figma authors these gradient
+  // stops as button-local variables proposed for promotion into Web-ODS
+  // Theme; the angles / stop positions mirror the Figma fill exactly.
+  --button-gradient-bg-default:
+    linear-gradient(
+      172deg,
+      var(--color-ocean-teal) 19%,
+      var(--color-lifelock-green) 120%
+    );
+  --button-gradient-bg-hover:
+    linear-gradient(
+      167deg,
+      var(--color-ocean-teal) 26%,
+      var(--color-off-black) 105%
+    );
+  --button-gradient-bg-pressed:
+    linear-gradient(
+      164deg,
+      var(--color-lifelock-green) 28%,
+      var(--color-off-black) 101%
+    );
+  --button-gradient-content-default: var(--color-white);
+  --button-gradient-content-hover:   var(--color-white);
+  --button-gradient-content-pressed: var(--color-white);
+  --button-gradient-border:          var(--color-ocean-teal);
+
+  // ============================================================================
+  // UNIVERSAL STATE PAINTS
+  // ============================================================================
+
+  // ---------- Disabled (universal across every Type) ----------
+  // Per Figma description: "Disabled uses Button/disabled/border and
+  // Button/disabled/content with no hover or pressed affordance."
+  --button-disabled-bg:      var(--color-bg-cta-disabled);
+  --button-disabled-content: var(--color-text-on-cta-disabled);
+  --button-disabled-border:  var(--color-border-cta-disabled);
+
+  // ---------- Focus ring ----------
+  // Figma `Button/button/focus-ring` = #0f71f0 (functional-info blue).
+  --button-focus-ring: var(--color-functional-info);
+
+  // ---------- Spinner (loading state) ----------
+  --button-spinner-track: var(--color-fg-progress-track);
+  --button-spinner-fill:  var(--color-fg-progress-fill);
+
+  // ============================================================================
+  // GEOMETRY
+  // ============================================================================
+
+  // ---------- Corner radii ----------
+  // The LifeLock-themed master variant set ships a pill radius (`9999px`)
+  // on every size. Stored as a single button-namespaced alias so a future
+  // per-size reshape only requires editing here.
+  --button-radius:       var(--border-radius-pill);
+  --button-radius-focus: var(--border-radius-pill);
+
+  // ---------- Border weights ----------
+  // Per Figma `Button/border weight/*`: every filled type (Primary / Secondary
+  // / Tertiary / Inverse / Text) paints a 0px keyline — Secondary is a filled
+  // neutral surface with NO keyline. Both Ghost types paint a 1px keyline.
+  // Focus outline is kept at 2px for WCAG 2.4.7 visibility (Figma authors 1px;
+  // a thicker ring is a deliberate accessibility hardening).
+  --button-border-width-primary:   var(--border-width-none);
+  --button-border-width-secondary: var(--border-width-none);
+  --button-border-width-ghost:     var(--border-width-hairline);
+  --button-border-width-focus:     var(--border-width-default);
+
+  // ---------- Per-size geometry ----------
+  // Sizes mirror the Figma Size axis on `2434:14483` (S=24 / M=36 / L=40
+  // / XL=48 outer height). Padding values resolve against the canonical
+  // `--space-*` ladder.
+
+  // Outer block-size (FIXED, mirrors Figma auto-layout's fixed height —
+  // Figma clips/centers content inside this height regardless of the
+  // natural `padding-block + line-height` total, so the code mirror
+  // pins `block-size` rather than relying on padding-block to compute
+  // the outer height).
+  --button-block-size-s:  24px;
+  --button-block-size-m:  36px;
+  --button-block-size-l:  40px;
+  --button-block-size-xl: 48px;
+
+  // Minimum inline-size — mirrors Figma's `min-w-[48px]` on every cell.
+  // Suppressed on `.btn--icon-only` (the icon-only square pins
+  // `inline-size = --button-block-size-<size>` instead).
+  --button-min-inline-size: 48px;
+
+  // Block (vertical) padding
+  --button-padding-block-s:  var(--space-3);  // 8px
+  --button-padding-block-m:  var(--space-3);  // 8px
+  --button-padding-block-l:  var(--space-3);  // 8px
+  --button-padding-block-xl: var(--space-4);  // 12px
+
+  // Inline (horizontal) padding
+  --button-padding-inline-s:  var(--space-3);  // 8px
+  --button-padding-inline-m:  var(--space-4);  // 12px
+  --button-padding-inline-l:  var(--space-5);  // 16px
+  --button-padding-inline-xl: var(--space-7);  // 24px
+
+  // Gap between leading-icon / label / trailing-icon
+  --button-gap: var(--space-3);  // 8px on every size
+
+  // Icon slot inline-size / block-size (per size)
+  --button-icon-size-s:  16px;
+  --button-icon-size-m:  20px;
+  --button-icon-size-l:  20px;
+  --button-icon-size-xl: 20px;
+}

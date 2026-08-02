@@ -1,0 +1,44 @@
+# Per-branch GitHub Pages review deploys (prebuilt static Storybooks).
+#
+# URL: https://<owner>.github.io/<repo>/<branch>/
+#   e.g. …/tools/aics/  …/tools/aics/norton/  …/tools/aics/lifelock/
+#
+# Publishes committed `storybooks/` into gh-pages/<branch>/ with keep_files
+# so sibling branch folders are not wiped. Repo Settings → Pages → Deploy
+# from a branch → gh-pages / (root). Do not use force_orphan on the publish step.
+#
+# Refresh content: rebuild in aics-spike with
+#   STORYBOOK_SITE_BASE=/tools/aics/ npm run build:storybooks
+# then copy dist/storybooks → this branch’s storybooks/ and push.
+
+name: Deploy Storybooks to GitHub Pages
+
+on:
+  push:
+    branches-ignore:
+      - gh-pages
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Serialize publishes so two branches do not race on gh-pages.
+concurrency:
+  group: github-pages-gh-pages-write
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish branch folder to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: storybooks
+          destination_dir: ${{ github.ref_name }}
+          keep_files: true
+          # Do NOT set force_orphan — that wipes sibling branch folders.
+          commit_message: Deploy Storybooks (${{ github.ref_name }})

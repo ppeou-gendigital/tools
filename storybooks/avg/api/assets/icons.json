@@ -1,0 +1,2043 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/asset-inventory.v1.json",
+  "family": "icons",
+  "count": 407,
+  "assets": [
+    {
+      "key": "actions/detailed-delete",
+      "url": "/assets/icons/actions/detailed-delete.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/detailed-reload",
+      "url": "/assets/icons/actions/detailed-reload.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/simple-add",
+      "url": "/assets/icons/actions/simple-add.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/simple-clear",
+      "url": "/assets/icons/actions/simple-clear.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/simple-close",
+      "url": "/assets/icons/actions/simple-close.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/simple-copy",
+      "url": "/assets/icons/actions/simple-copy.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/simple-delete",
+      "url": "/assets/icons/actions/simple-delete.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/simple-edit",
+      "url": "/assets/icons/actions/simple-edit.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/simple-minus",
+      "url": "/assets/icons/actions/simple-minus.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/simple-plus",
+      "url": "/assets/icons/actions/simple-plus.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/simple-power",
+      "url": "/assets/icons/actions/simple-power.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/simple-reload",
+      "url": "/assets/icons/actions/simple-reload.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/simple-right-panel-close",
+      "url": "/assets/icons/actions/simple-right-panel-close.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/simple-right-panel-open",
+      "url": "/assets/icons/actions/simple-right-panel-open.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/simple-search",
+      "url": "/assets/icons/actions/simple-search.svg",
+      "category": "actions"
+    },
+    {
+      "key": "actions/simple-sign-in",
+      "url": "/assets/icons/actions/simple-sign-in.svg",
+      "category": "actions"
+    },
+    {
+      "key": "arrows-navigation/detailed-cloud-transfers",
+      "url": "/assets/icons/arrows-navigation/detailed-cloud-transfers.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/detailed-download-filled",
+      "url": "/assets/icons/arrows-navigation/detailed-download-filled.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/detailed-download",
+      "url": "/assets/icons/arrows-navigation/detailed-download.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-arrow-back",
+      "url": "/assets/icons/arrows-navigation/simple-arrow-back.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-arrow-forward",
+      "url": "/assets/icons/arrows-navigation/simple-arrow-forward.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-chevron-left",
+      "url": "/assets/icons/arrows-navigation/simple-chevron-left.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-chevron-right",
+      "url": "/assets/icons/arrows-navigation/simple-chevron-right.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-cloud-transfers",
+      "url": "/assets/icons/arrows-navigation/simple-cloud-transfers.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-collapse",
+      "url": "/assets/icons/arrows-navigation/simple-collapse.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-down",
+      "url": "/assets/icons/arrows-navigation/simple-down.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-download-filled",
+      "url": "/assets/icons/arrows-navigation/simple-download-filled.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-download",
+      "url": "/assets/icons/arrows-navigation/simple-download.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-exchange",
+      "url": "/assets/icons/arrows-navigation/simple-exchange.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-expand-less",
+      "url": "/assets/icons/arrows-navigation/simple-expand-less.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-expand-more",
+      "url": "/assets/icons/arrows-navigation/simple-expand-more.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-expand",
+      "url": "/assets/icons/arrows-navigation/simple-expand.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-export",
+      "url": "/assets/icons/arrows-navigation/simple-export.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-link-external",
+      "url": "/assets/icons/arrows-navigation/simple-link-external.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-menu",
+      "url": "/assets/icons/arrows-navigation/simple-menu.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-more-horiz",
+      "url": "/assets/icons/arrows-navigation/simple-more-horiz.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-more",
+      "url": "/assets/icons/arrows-navigation/simple-more.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-next",
+      "url": "/assets/icons/arrows-navigation/simple-next.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-previous",
+      "url": "/assets/icons/arrows-navigation/simple-previous.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-share",
+      "url": "/assets/icons/arrows-navigation/simple-share.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-sign-out",
+      "url": "/assets/icons/arrows-navigation/simple-sign-out.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-sort-ascend",
+      "url": "/assets/icons/arrows-navigation/simple-sort-ascend.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-sort-descend",
+      "url": "/assets/icons/arrows-navigation/simple-sort-descend.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-split",
+      "url": "/assets/icons/arrows-navigation/simple-split.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-up",
+      "url": "/assets/icons/arrows-navigation/simple-up.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "arrows-navigation/simple-upload",
+      "url": "/assets/icons/arrows-navigation/simple-upload.svg",
+      "category": "arrows-navigation"
+    },
+    {
+      "key": "brand/detailed-brand-icon",
+      "url": "/assets/icons/brand/detailed-brand-icon.svg",
+      "category": "brand"
+    },
+    {
+      "key": "brand/simple-brand-icon",
+      "url": "/assets/icons/brand/simple-brand-icon.svg",
+      "category": "brand"
+    },
+    {
+      "key": "communication/detailed-fake-calls",
+      "url": "/assets/icons/communication/detailed-fake-calls.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-call-incoming",
+      "url": "/assets/icons/communication/simple-call-incoming.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-call-missed",
+      "url": "/assets/icons/communication/simple-call-missed.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-call",
+      "url": "/assets/icons/communication/simple-call.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-emoji-annoyed",
+      "url": "/assets/icons/communication/simple-emoji-annoyed.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-emoji-happy",
+      "url": "/assets/icons/communication/simple-emoji-happy.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-emoji-neutral",
+      "url": "/assets/icons/communication/simple-emoji-neutral.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-emoji-pleased",
+      "url": "/assets/icons/communication/simple-emoji-pleased.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-emoji-sad",
+      "url": "/assets/icons/communication/simple-emoji-sad.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-fake-calls",
+      "url": "/assets/icons/communication/simple-fake-calls.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-mail",
+      "url": "/assets/icons/communication/simple-mail.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-message",
+      "url": "/assets/icons/communication/simple-message.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-messaging",
+      "url": "/assets/icons/communication/simple-messaging.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-microphone",
+      "url": "/assets/icons/communication/simple-microphone.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-send-instructions",
+      "url": "/assets/icons/communication/simple-send-instructions.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-send",
+      "url": "/assets/icons/communication/simple-send.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-thumb-down-filled",
+      "url": "/assets/icons/communication/simple-thumb-down-filled.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-thumb-down",
+      "url": "/assets/icons/communication/simple-thumb-down.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-thumb-up-filled",
+      "url": "/assets/icons/communication/simple-thumb-up-filled.svg",
+      "category": "communication"
+    },
+    {
+      "key": "communication/simple-thumb-up",
+      "url": "/assets/icons/communication/simple-thumb-up.svg",
+      "category": "communication"
+    },
+    {
+      "key": "devices-hardware/detailed-device-desktop",
+      "url": "/assets/icons/devices-hardware/detailed-device-desktop.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/detailed-device-drive",
+      "url": "/assets/icons/devices-hardware/detailed-device-drive.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/detailed-device-laptop",
+      "url": "/assets/icons/devices-hardware/detailed-device-laptop.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/detailed-device-phone",
+      "url": "/assets/icons/devices-hardware/detailed-device-phone.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/detailed-mobile-scams",
+      "url": "/assets/icons/devices-hardware/detailed-mobile-scams.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/detailed-permission-mobile",
+      "url": "/assets/icons/devices-hardware/detailed-permission-mobile.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-add-device",
+      "url": "/assets/icons/devices-hardware/simple-add-device.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-browser",
+      "url": "/assets/icons/devices-hardware/simple-browser.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-device-computer",
+      "url": "/assets/icons/devices-hardware/simple-device-computer.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-device-desktop",
+      "url": "/assets/icons/devices-hardware/simple-device-desktop.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-device-drive",
+      "url": "/assets/icons/devices-hardware/simple-device-drive.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-device-health",
+      "url": "/assets/icons/devices-hardware/simple-device-health.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-device-love",
+      "url": "/assets/icons/devices-hardware/simple-device-love.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-device-multiple",
+      "url": "/assets/icons/devices-hardware/simple-device-multiple.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-device-phone",
+      "url": "/assets/icons/devices-hardware/simple-device-phone.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-device-power",
+      "url": "/assets/icons/devices-hardware/simple-device-power.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-device-processor",
+      "url": "/assets/icons/devices-hardware/simple-device-processor.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-device-remote-control",
+      "url": "/assets/icons/devices-hardware/simple-device-remote-control.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-device-security",
+      "url": "/assets/icons/devices-hardware/simple-device-security.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-device-storage",
+      "url": "/assets/icons/devices-hardware/simple-device-storage.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-device-system-device",
+      "url": "/assets/icons/devices-hardware/simple-device-system-device.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-device-usb",
+      "url": "/assets/icons/devices-hardware/simple-device-usb.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-disc",
+      "url": "/assets/icons/devices-hardware/simple-disc.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-disk-analyzer",
+      "url": "/assets/icons/devices-hardware/simple-disk-analyzer.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-mobile-scams",
+      "url": "/assets/icons/devices-hardware/simple-mobile-scams.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-permission-mobile",
+      "url": "/assets/icons/devices-hardware/simple-permission-mobile.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-wifi-alert",
+      "url": "/assets/icons/devices-hardware/simple-wifi-alert.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-wifi-home",
+      "url": "/assets/icons/devices-hardware/simple-wifi-home.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-wifi-off",
+      "url": "/assets/icons/devices-hardware/simple-wifi-off.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-wifi-scan",
+      "url": "/assets/icons/devices-hardware/simple-wifi-scan.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-wifi-secured",
+      "url": "/assets/icons/devices-hardware/simple-wifi-secured.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-wifi-speed",
+      "url": "/assets/icons/devices-hardware/simple-wifi-speed.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "devices-hardware/simple-wifi",
+      "url": "/assets/icons/devices-hardware/simple-wifi.svg",
+      "category": "devices-hardware"
+    },
+    {
+      "key": "documents-media/detailed-certificate",
+      "url": "/assets/icons/documents-media/detailed-certificate.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/detailed-download-folder",
+      "url": "/assets/icons/documents-media/detailed-download-folder.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/detailed-filetype-picture",
+      "url": "/assets/icons/documents-media/detailed-filetype-picture.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/detailed-inquiry",
+      "url": "/assets/icons/documents-media/detailed-inquiry.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-certificate",
+      "url": "/assets/icons/documents-media/simple-certificate.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-document-cleanup",
+      "url": "/assets/icons/documents-media/simple-document-cleanup.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-download-folder",
+      "url": "/assets/icons/documents-media/simple-download-folder.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-duplicates",
+      "url": "/assets/icons/documents-media/simple-duplicates.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-filetype-archive",
+      "url": "/assets/icons/documents-media/simple-filetype-archive.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-filetype-document",
+      "url": "/assets/icons/documents-media/simple-filetype-document.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-filetype-music",
+      "url": "/assets/icons/documents-media/simple-filetype-music.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-filetype-picture",
+      "url": "/assets/icons/documents-media/simple-filetype-picture.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-folder",
+      "url": "/assets/icons/documents-media/simple-folder.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-inquiry",
+      "url": "/assets/icons/documents-media/simple-inquiry.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-media-overview",
+      "url": "/assets/icons/documents-media/simple-media-overview.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-no-ads",
+      "url": "/assets/icons/documents-media/simple-no-ads.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-picture-locked",
+      "url": "/assets/icons/documents-media/simple-picture-locked.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-play",
+      "url": "/assets/icons/documents-media/simple-play.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-stop",
+      "url": "/assets/icons/documents-media/simple-stop.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "documents-media/simple-video",
+      "url": "/assets/icons/documents-media/simple-video.svg",
+      "category": "documents-media"
+    },
+    {
+      "key": "external-brands/detailed-dropbox",
+      "url": "/assets/icons/external-brands/detailed-dropbox.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-facebook",
+      "url": "/assets/icons/external-brands/detailed-facebook.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-gmail",
+      "url": "/assets/icons/external-brands/detailed-gmail.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-google-chrome",
+      "url": "/assets/icons/external-brands/detailed-google-chrome.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-google-drive",
+      "url": "/assets/icons/external-brands/detailed-google-drive.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-instagram",
+      "url": "/assets/icons/external-brands/detailed-instagram.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-linkedin",
+      "url": "/assets/icons/external-brands/detailed-linkedin.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-neo",
+      "url": "/assets/icons/external-brands/detailed-neo.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-one-drive",
+      "url": "/assets/icons/external-brands/detailed-one-drive.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-platform-android",
+      "url": "/assets/icons/external-brands/detailed-platform-android.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-platform-apple",
+      "url": "/assets/icons/external-brands/detailed-platform-apple.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-platform-ios",
+      "url": "/assets/icons/external-brands/detailed-platform-ios.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-platform-linux",
+      "url": "/assets/icons/external-brands/detailed-platform-linux.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-platform-windows",
+      "url": "/assets/icons/external-brands/detailed-platform-windows.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-x-twitter",
+      "url": "/assets/icons/external-brands/detailed-x-twitter.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/detailed-youtube",
+      "url": "/assets/icons/external-brands/detailed-youtube.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-dropbox",
+      "url": "/assets/icons/external-brands/simple-dropbox.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-facebook",
+      "url": "/assets/icons/external-brands/simple-facebook.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-gmail",
+      "url": "/assets/icons/external-brands/simple-gmail.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-google-chrome",
+      "url": "/assets/icons/external-brands/simple-google-chrome.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-google-drive",
+      "url": "/assets/icons/external-brands/simple-google-drive.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-instagram",
+      "url": "/assets/icons/external-brands/simple-instagram.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-linkedin",
+      "url": "/assets/icons/external-brands/simple-linkedin.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-neo",
+      "url": "/assets/icons/external-brands/simple-neo.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-one-drive",
+      "url": "/assets/icons/external-brands/simple-one-drive.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-platform-android",
+      "url": "/assets/icons/external-brands/simple-platform-android.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-platform-apple",
+      "url": "/assets/icons/external-brands/simple-platform-apple.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-platform-ios",
+      "url": "/assets/icons/external-brands/simple-platform-ios.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-platform-linux",
+      "url": "/assets/icons/external-brands/simple-platform-linux.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-platform-windows",
+      "url": "/assets/icons/external-brands/simple-platform-windows.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-x-twitter",
+      "url": "/assets/icons/external-brands/simple-x-twitter.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "external-brands/simple-youtube",
+      "url": "/assets/icons/external-brands/simple-youtube.svg",
+      "category": "external-brands"
+    },
+    {
+      "key": "finance/detailed-atm-card",
+      "url": "/assets/icons/finance/detailed-atm-card.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/detailed-cash-protection",
+      "url": "/assets/icons/finance/detailed-cash-protection.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/detailed-cashback",
+      "url": "/assets/icons/finance/detailed-cashback.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/detailed-cost-effective",
+      "url": "/assets/icons/finance/detailed-cost-effective.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/detailed-credit-card",
+      "url": "/assets/icons/finance/detailed-credit-card.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/detailed-debt",
+      "url": "/assets/icons/finance/detailed-debt.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/detailed-insurance",
+      "url": "/assets/icons/finance/detailed-insurance.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/detailed-late-fees",
+      "url": "/assets/icons/finance/detailed-late-fees.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/detailed-loan",
+      "url": "/assets/icons/finance/detailed-loan.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/detailed-money-opportunity",
+      "url": "/assets/icons/finance/detailed-money-opportunity.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/detailed-stolen-funds",
+      "url": "/assets/icons/finance/detailed-stolen-funds.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/detailed-store",
+      "url": "/assets/icons/finance/detailed-store.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-atm-card",
+      "url": "/assets/icons/finance/simple-atm-card.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-bank-transfer",
+      "url": "/assets/icons/finance/simple-bank-transfer.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-cash-protection",
+      "url": "/assets/icons/finance/simple-cash-protection.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-cashback",
+      "url": "/assets/icons/finance/simple-cashback.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-cost-effective",
+      "url": "/assets/icons/finance/simple-cost-effective.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-credit-card-front",
+      "url": "/assets/icons/finance/simple-credit-card-front.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-credit-card",
+      "url": "/assets/icons/finance/simple-credit-card.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-debt",
+      "url": "/assets/icons/finance/simple-debt.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-graph",
+      "url": "/assets/icons/finance/simple-graph.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-insurance",
+      "url": "/assets/icons/finance/simple-insurance.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-late-fees",
+      "url": "/assets/icons/finance/simple-late-fees.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-loan",
+      "url": "/assets/icons/finance/simple-loan.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-money-opportunity",
+      "url": "/assets/icons/finance/simple-money-opportunity.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-stolen-funds",
+      "url": "/assets/icons/finance/simple-stolen-funds.svg",
+      "category": "finance"
+    },
+    {
+      "key": "finance/simple-store",
+      "url": "/assets/icons/finance/simple-store.svg",
+      "category": "finance"
+    },
+    {
+      "key": "generic/detailed-apps-overview",
+      "url": "/assets/icons/generic/detailed-apps-overview.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/detailed-apps",
+      "url": "/assets/icons/generic/detailed-apps.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/detailed-auto-renew",
+      "url": "/assets/icons/generic/detailed-auto-renew.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/detailed-language",
+      "url": "/assets/icons/generic/detailed-language.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/detailed-web",
+      "url": "/assets/icons/generic/detailed-web.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-adjustments",
+      "url": "/assets/icons/generic/simple-adjustments.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-app-windows",
+      "url": "/assets/icons/generic/simple-app-windows.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-apps-overview",
+      "url": "/assets/icons/generic/simple-apps-overview.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-apps",
+      "url": "/assets/icons/generic/simple-apps.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-auto-renew",
+      "url": "/assets/icons/generic/simple-auto-renew.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-block-tracking",
+      "url": "/assets/icons/generic/simple-block-tracking.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-calendar",
+      "url": "/assets/icons/generic/simple-calendar.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-data-limit",
+      "url": "/assets/icons/generic/simple-data-limit.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-data-recovery",
+      "url": "/assets/icons/generic/simple-data-recovery.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-deep-clean",
+      "url": "/assets/icons/generic/simple-deep-clean.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-explore",
+      "url": "/assets/icons/generic/simple-explore.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-fast",
+      "url": "/assets/icons/generic/simple-fast.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-filter",
+      "url": "/assets/icons/generic/simple-filter.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-fix-and-update",
+      "url": "/assets/icons/generic/simple-fix-and-update.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-heart-check",
+      "url": "/assets/icons/generic/simple-heart-check.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-history",
+      "url": "/assets/icons/generic/simple-history.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-invert-colors",
+      "url": "/assets/icons/generic/simple-invert-colors.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-kill-switch",
+      "url": "/assets/icons/generic/simple-kill-switch.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-language",
+      "url": "/assets/icons/generic/simple-language.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-link",
+      "url": "/assets/icons/generic/simple-link.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-notification-off",
+      "url": "/assets/icons/generic/simple-notification-off.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-notification",
+      "url": "/assets/icons/generic/simple-notification.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-pin-location",
+      "url": "/assets/icons/generic/simple-pin-location.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-privacy-sensitive",
+      "url": "/assets/icons/generic/simple-privacy-sensitive.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-settings",
+      "url": "/assets/icons/generic/simple-settings.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-star-filled",
+      "url": "/assets/icons/generic/simple-star-filled.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-star-half",
+      "url": "/assets/icons/generic/simple-star-half.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-star-upgrade",
+      "url": "/assets/icons/generic/simple-star-upgrade.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-star",
+      "url": "/assets/icons/generic/simple-star.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-time",
+      "url": "/assets/icons/generic/simple-time.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-view-grid",
+      "url": "/assets/icons/generic/simple-view-grid.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-view-list",
+      "url": "/assets/icons/generic/simple-view-list.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-visibility-off",
+      "url": "/assets/icons/generic/simple-visibility-off.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-visibility-on",
+      "url": "/assets/icons/generic/simple-visibility-on.svg",
+      "category": "generic"
+    },
+    {
+      "key": "generic/simple-web",
+      "url": "/assets/icons/generic/simple-web.svg",
+      "category": "generic"
+    },
+    {
+      "key": "help-support/detailed-help",
+      "url": "/assets/icons/help-support/detailed-help.svg",
+      "category": "help-support"
+    },
+    {
+      "key": "help-support/detailed-support",
+      "url": "/assets/icons/help-support/detailed-support.svg",
+      "category": "help-support"
+    },
+    {
+      "key": "help-support/simple-help",
+      "url": "/assets/icons/help-support/simple-help.svg",
+      "category": "help-support"
+    },
+    {
+      "key": "help-support/simple-question-mark",
+      "url": "/assets/icons/help-support/simple-question-mark.svg",
+      "category": "help-support"
+    },
+    {
+      "key": "help-support/simple-rescue",
+      "url": "/assets/icons/help-support/simple-rescue.svg",
+      "category": "help-support"
+    },
+    {
+      "key": "help-support/simple-support",
+      "url": "/assets/icons/help-support/simple-support.svg",
+      "category": "help-support"
+    },
+    {
+      "key": "objects/detailed-airplane",
+      "url": "/assets/icons/objects/detailed-airplane.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/detailed-earth",
+      "url": "/assets/icons/objects/detailed-earth.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/detailed-home",
+      "url": "/assets/icons/objects/detailed-home.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/simple-airplane",
+      "url": "/assets/icons/objects/simple-airplane.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/simple-briefcase",
+      "url": "/assets/icons/objects/simple-briefcase.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/simple-cookies",
+      "url": "/assets/icons/objects/simple-cookies.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/simple-device-vehicle",
+      "url": "/assets/icons/objects/simple-device-vehicle.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/simple-diamond",
+      "url": "/assets/icons/objects/simple-diamond.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/simple-earth",
+      "url": "/assets/icons/objects/simple-earth.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/simple-home",
+      "url": "/assets/icons/objects/simple-home.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/simple-night",
+      "url": "/assets/icons/objects/simple-night.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/simple-public",
+      "url": "/assets/icons/objects/simple-public.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/simple-rocket",
+      "url": "/assets/icons/objects/simple-rocket.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/simple-school",
+      "url": "/assets/icons/objects/simple-school.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/simple-tips",
+      "url": "/assets/icons/objects/simple-tips.svg",
+      "category": "objects"
+    },
+    {
+      "key": "objects/simple-troubleshooting",
+      "url": "/assets/icons/objects/simple-troubleshooting.svg",
+      "category": "objects"
+    },
+    {
+      "key": "product-features/detailed-browser-protection",
+      "url": "/assets/icons/product-features/detailed-browser-protection.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-computer-tune-up",
+      "url": "/assets/icons/product-features/detailed-computer-tune-up.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-core-shields",
+      "url": "/assets/icons/product-features/detailed-core-shields.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-cyber-insurance",
+      "url": "/assets/icons/product-features/detailed-cyber-insurance.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-device-security",
+      "url": "/assets/icons/product-features/detailed-device-security.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-email-guardian",
+      "url": "/assets/icons/product-features/detailed-email-guardian.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-genie-ai",
+      "url": "/assets/icons/product-features/detailed-genie-ai.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-get-prime",
+      "url": "/assets/icons/product-features/detailed-get-prime.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-identity-insurance",
+      "url": "/assets/icons/product-features/detailed-identity-insurance.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-identity-vault",
+      "url": "/assets/icons/product-features/detailed-identity-vault.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-lifelock-ai-assistant",
+      "url": "/assets/icons/product-features/detailed-lifelock-ai-assistant.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-mobile-security",
+      "url": "/assets/icons/product-features/detailed-mobile-security.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-monitoring",
+      "url": "/assets/icons/product-features/detailed-monitoring.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-plan-details",
+      "url": "/assets/icons/product-features/detailed-plan-details.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-privacy-monitor-assistant",
+      "url": "/assets/icons/product-features/detailed-privacy-monitor-assistant.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-privacy-monitor",
+      "url": "/assets/icons/product-features/detailed-privacy-monitor.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-product-antitrack",
+      "url": "/assets/icons/product-features/detailed-product-antitrack.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-product-browser-safety",
+      "url": "/assets/icons/product-features/detailed-product-browser-safety.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-product-cleanup-desktop",
+      "url": "/assets/icons/product-features/detailed-product-cleanup-desktop.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-product-cleanup-mobile",
+      "url": "/assets/icons/product-features/detailed-product-cleanup-mobile.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-product-device-care",
+      "url": "/assets/icons/product-features/detailed-product-device-care.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-product-driver-updater",
+      "url": "/assets/icons/product-features/detailed-product-driver-updater.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-product-family-space",
+      "url": "/assets/icons/product-features/detailed-product-family-space.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-product-mobile-security",
+      "url": "/assets/icons/product-features/detailed-product-mobile-security.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-product-passwords",
+      "url": "/assets/icons/product-features/detailed-product-passwords.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-product-safe-shopping",
+      "url": "/assets/icons/product-features/detailed-product-safe-shopping.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-product-secure-browser",
+      "url": "/assets/icons/product-features/detailed-product-secure-browser.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-product-secure-identity",
+      "url": "/assets/icons/product-features/detailed-product-secure-identity.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-product-system-speedup",
+      "url": "/assets/icons/product-features/detailed-product-system-speedup.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-product-vpn",
+      "url": "/assets/icons/product-features/detailed-product-vpn.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-protection-score",
+      "url": "/assets/icons/product-features/detailed-protection-score.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-scam-protection",
+      "url": "/assets/icons/product-features/detailed-scam-protection.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-scam-verification-specialist",
+      "url": "/assets/icons/product-features/detailed-scam-verification-specialist.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-school",
+      "url": "/assets/icons/product-features/detailed-school.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-sms-security",
+      "url": "/assets/icons/product-features/detailed-sms-security.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-social-media",
+      "url": "/assets/icons/product-features/detailed-social-media.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-software-update",
+      "url": "/assets/icons/product-features/detailed-software-update.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-speedometer-single",
+      "url": "/assets/icons/product-features/detailed-speedometer-single.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-speedometer-triple",
+      "url": "/assets/icons/product-features/detailed-speedometer-triple.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-transaction-monitoring",
+      "url": "/assets/icons/product-features/detailed-transaction-monitoring.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/detailed-virus-protection",
+      "url": "/assets/icons/product-features/detailed-virus-protection.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-active-programs",
+      "url": "/assets/icons/product-features/simple-active-programs.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-android-security",
+      "url": "/assets/icons/product-features/simple-android-security.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-anti-phishing",
+      "url": "/assets/icons/product-features/simple-anti-phishing.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-automatic-care",
+      "url": "/assets/icons/product-features/simple-automatic-care.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-automatic-cleaning",
+      "url": "/assets/icons/product-features/simple-automatic-cleaning.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-behavior",
+      "url": "/assets/icons/product-features/simple-behavior.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-boost",
+      "url": "/assets/icons/product-features/simple-boost.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-browser-cleanup",
+      "url": "/assets/icons/product-features/simple-browser-cleanup.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-browser-extensions",
+      "url": "/assets/icons/product-features/simple-browser-extensions.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-browser-protection",
+      "url": "/assets/icons/product-features/simple-browser-protection.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-calendar-shield",
+      "url": "/assets/icons/product-features/simple-calendar-shield.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-cloud-cleaner",
+      "url": "/assets/icons/product-features/simple-cloud-cleaner.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-core-shields",
+      "url": "/assets/icons/product-features/simple-core-shields.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-customers",
+      "url": "/assets/icons/product-features/simple-customers.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-device-home-automation",
+      "url": "/assets/icons/product-features/simple-device-home-automation.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-email-guardian",
+      "url": "/assets/icons/product-features/simple-email-guardian.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-file-shield",
+      "url": "/assets/icons/product-features/simple-file-shield.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-firewall",
+      "url": "/assets/icons/product-features/simple-firewall.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-genie-ai",
+      "url": "/assets/icons/product-features/simple-genie-ai.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-get-prime",
+      "url": "/assets/icons/product-features/simple-get-prime.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-insurance",
+      "url": "/assets/icons/product-features/simple-insurance.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-lifelock-ai-assistant",
+      "url": "/assets/icons/product-features/simple-lifelock-ai-assistant.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-malware",
+      "url": "/assets/icons/product-features/simple-malware.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-mobile-security",
+      "url": "/assets/icons/product-features/simple-mobile-security.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-monitor-wifi",
+      "url": "/assets/icons/product-features/simple-monitor-wifi.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-monitoring",
+      "url": "/assets/icons/product-features/simple-monitoring.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-performance-optimizer",
+      "url": "/assets/icons/product-features/simple-performance-optimizer.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-phone-call-protection",
+      "url": "/assets/icons/product-features/simple-phone-call-protection.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-photo-optimizer",
+      "url": "/assets/icons/product-features/simple-photo-optimizer.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-pin-ip-address",
+      "url": "/assets/icons/product-features/simple-pin-ip-address.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-plan-details",
+      "url": "/assets/icons/product-features/simple-plan-details.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-privacy-audit",
+      "url": "/assets/icons/product-features/simple-privacy-audit.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-privacy-monitor-assistant",
+      "url": "/assets/icons/product-features/simple-privacy-monitor-assistant.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-privacy-monitor",
+      "url": "/assets/icons/product-features/simple-privacy-monitor.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-private-mode",
+      "url": "/assets/icons/product-features/simple-private-mode.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-antitrack",
+      "url": "/assets/icons/product-features/simple-product-antitrack.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-av-free",
+      "url": "/assets/icons/product-features/simple-product-av-free.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-breach-guard",
+      "url": "/assets/icons/product-features/simple-product-breach-guard.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-browser-safety",
+      "url": "/assets/icons/product-features/simple-product-browser-safety.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-cleanup-mobile",
+      "url": "/assets/icons/product-features/simple-product-cleanup-mobile.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-driver-updater",
+      "url": "/assets/icons/product-features/simple-product-driver-updater.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-family-space",
+      "url": "/assets/icons/product-features/simple-product-family-space.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-mobile-security",
+      "url": "/assets/icons/product-features/simple-product-mobile-security.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-passwords",
+      "url": "/assets/icons/product-features/simple-product-passwords.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-safe-search",
+      "url": "/assets/icons/product-features/simple-product-safe-search.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-safe-shopping",
+      "url": "/assets/icons/product-features/simple-product-safe-shopping.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-secure-browser",
+      "url": "/assets/icons/product-features/simple-product-secure-browser.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-secure-identity",
+      "url": "/assets/icons/product-features/simple-product-secure-identity.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-system-speedup",
+      "url": "/assets/icons/product-features/simple-product-system-speedup.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-product-vpn",
+      "url": "/assets/icons/product-features/simple-product-vpn.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-protection-score",
+      "url": "/assets/icons/product-features/simple-protection-score.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-quarantine",
+      "url": "/assets/icons/product-features/simple-quarantine.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-quick-clean",
+      "url": "/assets/icons/product-features/simple-quick-clean.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-ransomware",
+      "url": "/assets/icons/product-features/simple-ransomware.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-real-site",
+      "url": "/assets/icons/product-features/simple-real-site.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-remote-desktop-control",
+      "url": "/assets/icons/product-features/simple-remote-desktop-control.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-safe-web",
+      "url": "/assets/icons/product-features/simple-safe-web.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-sandbox",
+      "url": "/assets/icons/product-features/simple-sandbox.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-scam-protection",
+      "url": "/assets/icons/product-features/simple-scam-protection.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-scan-deep",
+      "url": "/assets/icons/product-features/simple-scan-deep.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-scan-device",
+      "url": "/assets/icons/product-features/simple-scan-device.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-scan-quick",
+      "url": "/assets/icons/product-features/simple-scan-quick.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-scan-smart",
+      "url": "/assets/icons/product-features/simple-scan-smart.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-scan-usb",
+      "url": "/assets/icons/product-features/simple-scan-usb.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-scan",
+      "url": "/assets/icons/product-features/simple-scan.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-smart-care",
+      "url": "/assets/icons/product-features/simple-smart-care.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-sms-security",
+      "url": "/assets/icons/product-features/simple-sms-security.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-software-uninstaller",
+      "url": "/assets/icons/product-features/simple-software-uninstaller.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-software-update",
+      "url": "/assets/icons/product-features/simple-software-update.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-subscription",
+      "url": "/assets/icons/product-features/simple-subscription.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-support24",
+      "url": "/assets/icons/product-features/simple-support24.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-suspicious",
+      "url": "/assets/icons/product-features/simple-suspicious.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-tracer",
+      "url": "/assets/icons/product-features/simple-tracer.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-vpn-protection",
+      "url": "/assets/icons/product-features/simple-vpn-protection.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-web-shield",
+      "url": "/assets/icons/product-features/simple-web-shield.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "product-features/simple-webcam-shield",
+      "url": "/assets/icons/product-features/simple-webcam-shield.svg",
+      "category": "product-features"
+    },
+    {
+      "key": "security/detailed-fingerprint-lock",
+      "url": "/assets/icons/security/detailed-fingerprint-lock.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/detailed-fingerprint",
+      "url": "/assets/icons/security/detailed-fingerprint.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/detailed-identity-assistant",
+      "url": "/assets/icons/security/detailed-identity-assistant.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/detailed-password",
+      "url": "/assets/icons/security/detailed-password.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/detailed-shield-check",
+      "url": "/assets/icons/security/detailed-shield-check.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/detailed-shield-lock",
+      "url": "/assets/icons/security/detailed-shield-lock.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/detailed-shield",
+      "url": "/assets/icons/security/detailed-shield.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/simple-fingerprint",
+      "url": "/assets/icons/security/simple-fingerprint.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/simple-flag-empty",
+      "url": "/assets/icons/security/simple-flag-empty.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/simple-flag",
+      "url": "/assets/icons/security/simple-flag.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/simple-lock-filled",
+      "url": "/assets/icons/security/simple-lock-filled.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/simple-lock",
+      "url": "/assets/icons/security/simple-lock.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/simple-network-detection",
+      "url": "/assets/icons/security/simple-network-detection.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/simple-password",
+      "url": "/assets/icons/security/simple-password.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/simple-shield-alert",
+      "url": "/assets/icons/security/simple-shield-alert.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/simple-shield",
+      "url": "/assets/icons/security/simple-shield.svg",
+      "category": "security"
+    },
+    {
+      "key": "security/simple-unlock",
+      "url": "/assets/icons/security/simple-unlock.svg",
+      "category": "security"
+    },
+    {
+      "key": "status/detailed-access-allowed",
+      "url": "/assets/icons/status/detailed-access-allowed.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-access-allowed",
+      "url": "/assets/icons/status/simple-access-allowed.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-block",
+      "url": "/assets/icons/status/simple-block.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-checkmark-small",
+      "url": "/assets/icons/status/simple-checkmark-small.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-checkmark",
+      "url": "/assets/icons/status/simple-checkmark.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-exclamation",
+      "url": "/assets/icons/status/simple-exclamation.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-info",
+      "url": "/assets/icons/status/simple-info.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-attention-filled",
+      "url": "/assets/icons/status/simple-status-attention-filled.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-attention",
+      "url": "/assets/icons/status/simple-status-attention.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-critical-filled",
+      "url": "/assets/icons/status/simple-status-critical-filled.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-critical",
+      "url": "/assets/icons/status/simple-status-critical.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-failed-filled",
+      "url": "/assets/icons/status/simple-status-failed-filled.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-failed",
+      "url": "/assets/icons/status/simple-status-failed.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-info-filled",
+      "url": "/assets/icons/status/simple-status-info-filled.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-info",
+      "url": "/assets/icons/status/simple-status-info.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-missing-filled",
+      "url": "/assets/icons/status/simple-status-missing-filled.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-missing",
+      "url": "/assets/icons/status/simple-status-missing.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-ok-filled",
+      "url": "/assets/icons/status/simple-status-ok-filled.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-ok",
+      "url": "/assets/icons/status/simple-status-ok.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-shield-attention",
+      "url": "/assets/icons/status/simple-status-shield-attention.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-shield-critical",
+      "url": "/assets/icons/status/simple-status-shield-critical.svg",
+      "category": "status"
+    },
+    {
+      "key": "status/simple-status-shield-ok",
+      "url": "/assets/icons/status/simple-status-shield-ok.svg",
+      "category": "status"
+    },
+    {
+      "key": "users/detailed-account",
+      "url": "/assets/icons/users/detailed-account.svg",
+      "category": "users"
+    },
+    {
+      "key": "users/detailed-profile-delete",
+      "url": "/assets/icons/users/detailed-profile-delete.svg",
+      "category": "users"
+    },
+    {
+      "key": "users/simple-account",
+      "url": "/assets/icons/users/simple-account.svg",
+      "category": "users"
+    },
+    {
+      "key": "users/simple-profile-delete",
+      "url": "/assets/icons/users/simple-profile-delete.svg",
+      "category": "users"
+    },
+    {
+      "key": "users/simple-profile-details",
+      "url": "/assets/icons/users/simple-profile-details.svg",
+      "category": "users"
+    },
+    {
+      "key": "users/simple-profile-people",
+      "url": "/assets/icons/users/simple-profile-people.svg",
+      "category": "users"
+    },
+    {
+      "key": "users/simple-profile-settings",
+      "url": "/assets/icons/users/simple-profile-settings.svg",
+      "category": "users"
+    },
+    {
+      "key": "users/simple-profile-unknown",
+      "url": "/assets/icons/users/simple-profile-unknown.svg",
+      "category": "users"
+    },
+    {
+      "key": "users/simple-profile",
+      "url": "/assets/icons/users/simple-profile.svg",
+      "category": "users"
+    }
+  ],
+  "generatedAt": "2026-08-02T02:14:45.024Z"
+}

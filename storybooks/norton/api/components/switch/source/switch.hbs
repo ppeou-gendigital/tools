@@ -1,0 +1,55 @@
+{{!--
+  Components/Switch template — single BEM root (.c-switch) covering
+  the Figma master variant set on Web-ODS Shared Library `717:48394`
+  (LifeLock theme mode).
+
+  Variant axes (mirror Figma master + spec.md `## Variant axes`):
+    tone     default | success | critical   [.c-switch--$tone]
+
+  Persistent state:
+    is-checked    [.is-checked]
+    is-disabled   [.is-disabled]
+    is-loading    [.is-loading]
+
+  Interaction state (hover / focus / pressed) paints via CSS
+  pseudo-classes on the underlying <input type="checkbox">. A
+  data-state hook on the root lets the AllStyles gallery freeze
+  each transient paint for visual regression.
+--}}
+{{#with this as |s|}}
+<label
+  class="c-switch c-switch--{{#if s.tone}}{{s.tone}}{{else}}default{{/if}}{{#if s.checked}} is-checked{{/if}}{{#if s.disabled}} is-disabled{{/if}}{{#if s.loading}} is-loading{{/if}}"
+  data-component="switch"
+  data-tone="{{#if s.tone}}{{s.tone}}{{else}}default{{/if}}"
+  {{#if s.state}}data-state="{{s.state}}"{{/if}}
+  {{#if s.disabled}}aria-disabled="true"{{/if}}
+  {{#if s.loading}}aria-busy="true"{{/if}}
+>
+  <input
+    type="checkbox"
+    class="c-switch__input"
+    role="switch"
+    aria-checked="{{#if s.checked}}true{{else}}false{{/if}}"
+    {{#if s.checked}}checked{{/if}}
+    {{#if s.disabled}}disabled{{/if}}
+    {{#if s.name}}name="{{s.name}}"{{/if}}
+    value="{{#if s.value}}{{s.value}}{{else}}on{{/if}}"
+    {{#if s.accessibleLabel}}aria-label="{{s.accessibleLabel}}"{{else}}{{#unless s.label}}aria-label="Toggle"{{/unless}}{{/if}}
+  >
+  <span class="c-switch__track" aria-hidden="true">
+    <span class="c-switch__state-circle" aria-hidden="true"></span>
+    <span class="c-switch__knob">
+      {{#if s.loading}}
+        <span class="c-switch__spinner" aria-hidden="true"></span>
+      {{else}}
+        {{#unless (eq s.showIcon false)}}
+          <span class="c-switch__glyph">
+            {{> icon name="status/simple-checkmark-small" size="24" color="current" decorative=true}}
+          </span>
+        {{/unless}}
+      {{/if}}
+    </span>
+  </span>
+  {{#if s.label}}<span class="c-switch__label">{{s.label}}</span>{{/if}}
+</label>
+{{/with}}

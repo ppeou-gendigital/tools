@@ -1,0 +1,128 @@
+{{!--
+  Patterns/Inputs/Text field template — one BEM root, five `type`
+  structures branched with `{{#if (eq type …)}}`:
+
+    text | password → native <input>
+    select          → native <select> (UA arrow in fallback; the
+                      ::picker(select) menu is styled only under
+                      `appearance: base-select` in Chromium 135+)
+    combined        → <select> + <input> inside one focus-within border
+    split           → separate <select> box + <input> box
+
+  The field title is a real <label for> and the helper message is wired
+  via aria-describedby. `error` adds `is-error` + `aria-invalid` and
+  recolours the helper. Password reveal renders BOTH eye glyphs (icon
+  partial) and toggles them with the `is-revealed` class so the JS layer
+  never injects icon markup.
+
+  `id` defaults to "text-field" so a bare partial render still wires the
+  label; consumers SHOULD pass a unique id when more than one field is on
+  a page.
+--}}
+<div
+  class="c-text-field c-text-field--type-{{#if type}}{{lower type}}{{else}}text{{/if}}{{#if error}} is-error{{/if}}{{#if disabled}} is-disabled{{/if}}"
+  data-component="text-field"
+  data-type="{{#if type}}{{lower type}}{{else}}text{{/if}}"
+>
+  {{#if label}}
+    <label class="c-text-field__title" for="{{#if id}}{{id}}{{else}}text-field{{/if}}">
+      <span class="c-text-field__title-text">{{label}}</span>
+      {{#if required}}<span class="c-text-field__required" aria-hidden="true">*</span>{{/if}}
+    </label>
+  {{/if}}
+
+  {{#if (eq type "select")}}
+    <div class="c-text-field__control">
+      <select
+        class="c-text-field__field c-text-field__select"
+        id="{{#if id}}{{id}}{{else}}text-field{{/if}}"
+        {{#if name}}name="{{name}}"{{/if}}
+        {{#if disabled}}disabled{{/if}}
+        {{#if error}}aria-invalid="true"{{/if}}
+        {{#if helperText}}aria-describedby="{{#if id}}{{id}}{{else}}text-field{{/if}}-helper"{{/if}}
+      >
+        {{#each selectOptions}}
+          <option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>
+        {{/each}}
+      </select>
+    </div>
+  {{else if (eq type "combined")}}
+    <div class="c-text-field__control c-text-field__control--combined">
+      <select
+        class="c-text-field__select c-text-field__prefix"
+        aria-label="{{#if prefixLabel}}{{prefixLabel}}{{else}}Prefix{{/if}}"
+        {{#if disabled}}disabled{{/if}}
+      >
+        {{#each prefixOptions}}<option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>{{/each}}
+      </select>
+      <span class="c-text-field__seam" aria-hidden="true"></span>
+      <input
+        class="c-text-field__field"
+        id="{{#if id}}{{id}}{{else}}text-field{{/if}}"
+        type="text"
+        {{#if name}}name="{{name}}"{{/if}}
+        {{#if value}}value="{{value}}"{{/if}}
+        placeholder="{{placeholder}}"
+        {{#if disabled}}disabled{{/if}}
+        {{#if error}}aria-invalid="true"{{/if}}
+        {{#if helperText}}aria-describedby="{{#if id}}{{id}}{{else}}text-field{{/if}}-helper"{{/if}}
+      >
+    </div>
+  {{else if (eq type "split")}}
+    <div class="c-text-field__control c-text-field__control--split">
+      <div class="c-text-field__box c-text-field__box--prefix">
+        <select
+          class="c-text-field__select"
+          aria-label="{{#if prefixLabel}}{{prefixLabel}}{{else}}Prefix{{/if}}"
+          {{#if disabled}}disabled{{/if}}
+        >
+          {{#each prefixOptions}}<option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>{{/each}}
+        </select>
+      </div>
+      <div class="c-text-field__box">
+        <input
+          class="c-text-field__field"
+          id="{{#if id}}{{id}}{{else}}text-field{{/if}}"
+          type="text"
+          {{#if name}}name="{{name}}"{{/if}}
+          {{#if value}}value="{{value}}"{{/if}}
+          placeholder="{{placeholder}}"
+          {{#if disabled}}disabled{{/if}}
+          {{#if error}}aria-invalid="true"{{/if}}
+          {{#if helperText}}aria-describedby="{{#if id}}{{id}}{{else}}text-field{{/if}}-helper"{{/if}}
+        >
+      </div>
+    </div>
+  {{else}}
+    <div class="c-text-field__control{{#if (eq type "password")}} c-text-field__control--password{{/if}}">
+      <input
+        class="c-text-field__field"
+        id="{{#if id}}{{id}}{{else}}text-field{{/if}}"
+        type="{{#if (eq type "password")}}password{{else}}text{{/if}}"
+        {{#if name}}name="{{name}}"{{/if}}
+        {{#if value}}value="{{value}}"{{/if}}
+        placeholder="{{placeholder}}"
+        {{#if (eq type "password")}}autocomplete="current-password"{{/if}}
+        {{#if disabled}}disabled{{/if}}
+        {{#if error}}aria-invalid="true"{{/if}}
+        {{#if helperText}}aria-describedby="{{#if id}}{{id}}{{else}}text-field{{/if}}-helper"{{/if}}
+      >
+      {{#if (eq type "password")}}
+        <button
+          type="button"
+          class="c-text-field__reveal"
+          aria-label="Show password"
+          aria-pressed="false"
+          {{#if disabled}}disabled{{/if}}
+        >
+          <span class="c-text-field__reveal-icon c-text-field__reveal-icon--show">{{> icon name="generic/simple-visibility-on" size="20" color="current" decorative=true}}</span>
+          <span class="c-text-field__reveal-icon c-text-field__reveal-icon--hide">{{> icon name="generic/simple-visibility-off" size="20" color="current" decorative=true}}</span>
+        </button>
+      {{/if}}
+    </div>
+  {{/if}}
+
+  {{#if helperText}}
+    <p class="c-text-field__helper" id="{{#if id}}{{id}}{{else}}text-field{{/if}}-helper">{{helperText}}</p>
+  {{/if}}
+</div>

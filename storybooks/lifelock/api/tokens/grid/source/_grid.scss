@@ -1,0 +1,221 @@
+/**
+ * Grid tokens — LifeLock.
+ *
+ * Canonical CSS custom properties live in `themes/default/_grid.scss`
+ * (contract + multi-brand, Figma Web-ODS-Theme 18086:2008). This partial
+ * re-exports that theme, then keeps LifeLock page-layout helpers
+ * (`.l-fluid-width`, `.l-row`, …) that consume those vars.
+ *
+ * Breakpoint Sass mixins live in `../breakpoints/_breakpoints.scss`.
+ */
+
+@use '../../../themes/default/grid';
+@use '../breakpoints/breakpoints' as bp;
+
+/**
+ * Page-layout helpers
+ * ============================================================================
+ *
+ * Five classes establish the LifeLock page-layout model. Authoring
+ * contract lives in `./spec.md` § "Page-layout helpers"; usage and
+ * snap rules live in `.cursor/rules/grid-as-default-context.mdc`.
+ *
+ * Body is full-bleed by default — `body { margin: 0; padding: 0; }`
+ * in `.storybook/preview.scss`. There is no `.l-page` wrapper. The
+ * five helpers below opt the page into content-width framing or
+ * compose the grid, and `.l-full-bleed` is the rare escape-hatch.
+ *
+ *   .l-fluid-width   — fluid content-width section. Per-band
+ *                      `padding-inline: var(--grid-margin-<bp>)` caps
+ *                      content to the band's reference inner width;
+ *                      at XL adds `max-inline-size: var(--breakpoint-xl)`
+ *                      so inner content = --grid-content-xl (1312px)
+ *                      with auto-margins absorbing excess viewport.
+ *                      The canonical LifeLock posture.
+ *   .l-static-width  — static content-width section. Per-band
+ *                      `max-inline-size: var(--grid-content-<bp>)` and
+ *                      auto-margins; outer spacing is fluid (stair-step).
+ *                      Available for portability; no LifeLock consumer
+ *                      uses this today.
+ *   .l-full-bleed    — escape-hatch back to viewport edge-to-edge from
+ *                      inside a `.l-fluid-width` section. Negates the
+ *                      parent's per-band padding via the inverse
+ *                      negative margin. Top-level full-bleed sections
+ *                      do NOT need this class — they sit as direct
+ *                      children of body and inherit the full-bleed
+ *                      default. Use only when a child of a content-
+ *                      width section needs to break out (e.g. a hero
+ *                      image inside an article body).
+ *   .l-row           — `display: grid` row; per-band tracks
+ *                      (4 / 12 / 12 / 12) + column-gap = the band's
+ *                      `--grid-gutter-<bp>`. May live at body level,
+ *                      inside a `.l-fluid-width`, or co-declared on
+ *                      the same element as `.l-fluid-width` for the
+ *                      compact `<div class="l-fluid-width l-row">`
+ *                      single-element form.
+ *   .l-col           — grid item; defaults to spanning the entire row.
+ *                      Per-band span modifiers `.l-col--<bp>--<N>`
+ *                      set `grid-column: span <N>` inside the band's
+ *                      media query. Per-band start modifiers
+ *                      `.l-col--<bp>--start--<N>` set
+ *                      `grid-column-start: <N>`. Bands are mutually
+ *                      exclusive (no cascade), so layers that span
+ *                      differently per band declare a modifier per
+ *                      band.
+ *
+ * LifeLock's `bp.{sm,md,lg,xl}` mixins are mutually exclusive (one
+ * `(min-width: a) and (max-width: b)` query each). That contract is
+ * the reason the helpers below repeat per-band properties verbatim
+ * rather than relying on cascade.
+ */
+
+.l-fluid-width {
+  width: 100%;
+  margin-inline: auto;
+  box-sizing: border-box;
+
+  @include bp.sm {
+    padding-inline: var(--grid-margin-sm);
+  }
+
+  @include bp.md {
+    padding-inline: var(--grid-margin-md);
+  }
+
+  @include bp.lg {
+    padding-inline: var(--grid-margin-lg);
+  }
+
+  @include bp.xl {
+    padding-inline: var(--grid-margin-xl);
+    max-inline-size: var(--breakpoint-xl);
+  }
+}
+
+// Static content-width posture: no padding-inline; inner content caps
+// at the band's reference width and auto-margins absorb the rest.
+// Outer spacing therefore stair-steps between bands rather than
+// growing fluidly. No LifeLock consumer uses this today — defined for
+// portability across the multi-brand rollout.
+.l-static-width {
+  margin-inline: auto;
+  box-sizing: border-box;
+
+  @include bp.sm {
+    max-inline-size: var(--grid-content-sm);
+  }
+
+  @include bp.md {
+    max-inline-size: var(--grid-content-md);
+  }
+
+  @include bp.lg {
+    max-inline-size: var(--grid-content-lg);
+  }
+
+  @include bp.xl {
+    max-inline-size: var(--grid-content-xl);
+  }
+}
+
+/**
+ * Escape-hatch back to viewport edge-to-edge from inside a
+ * `.l-fluid-width` section. Two shapes:
+ *   SM/MD/LG — parent .l-fluid-width contributes
+ *     padding-inline: var(--grid-margin-<bp>). The only offset to
+ *     negate is that padding, so margin-inline = -1 × grid-margin.
+ *   XL       — parent .l-fluid-width caps at var(--breakpoint-xl).
+ *     The legacy formula (grid-content-xl − 100dvw) / 2 absorbs
+ *     both the auto-margins and the parent's padding in one
+ *     expression.
+ *
+ * Top-level full-bleed sections do NOT need this class — body is
+ * already full-bleed (`body { margin: 0; padding: 0; }`), so a
+ * direct child of body spans the viewport without any helper.
+ *
+ * Dynamic viewport units (dvw / dvh) are used throughout so the
+ * break-out edges follow the visible viewport rather than the
+ * "large" viewport that includes the mobile address bar; this avoids
+ * a horizontal scroll flash on iOS Safari when the URL chrome
+ * collapses. dvw is supported across every browser in the support
+ * matrix (Safari 15.4+, Chrome 108+, Firefox 101+).
+ */
+.l-full-bleed {
+  width: 100dvw;
+
+  @include bp.sm {
+    margin-inline: calc(-1 * var(--grid-margin-sm));
+  }
+
+  @include bp.md {
+    margin-inline: calc(-1 * var(--grid-margin-md));
+  }
+
+  @include bp.lg {
+    margin-inline: calc(-1 * var(--grid-margin-lg));
+  }
+
+  @include bp.xl {
+    margin-inline: calc((var(--grid-content-xl) - 100dvw) / 2);
+  }
+}
+
+.l-row {
+  display: grid;
+
+  @include bp.sm {
+    grid-template-columns: repeat(var(--grid-columns-sm), 1fr);
+    column-gap: var(--grid-gutter-sm);
+  }
+
+  @include bp.md {
+    grid-template-columns: repeat(var(--grid-columns-md), 1fr);
+    column-gap: var(--grid-gutter-md);
+  }
+
+  @include bp.lg {
+    grid-template-columns: repeat(var(--grid-columns-lg), 1fr);
+    column-gap: var(--grid-gutter-lg);
+  }
+
+  @include bp.xl {
+    grid-template-columns: repeat(var(--grid-columns-xl), 1fr);
+    column-gap: var(--grid-gutter-xl);
+  }
+}
+
+.l-col {
+  grid-column: 1 / -1;
+}
+
+// Per-band span + start-line modifiers. Generated programmatically so
+// every (band × span) pair lands. Sass `@for` compiles to the same
+// bytes as hand-written rules but keeps the source compact and the
+// generated CSS predictable.
+@include bp.sm {
+  @for $n from 1 through 4 {
+    .l-col--sm--#{$n}        { grid-column: span #{$n}; }
+    .l-col--sm--start--#{$n} { grid-column-start: #{$n}; }
+  }
+}
+
+@include bp.md {
+  @for $n from 1 through 12 {
+    .l-col--md--#{$n}        { grid-column: span #{$n}; }
+    .l-col--md--start--#{$n} { grid-column-start: #{$n}; }
+  }
+}
+
+@include bp.lg {
+  @for $n from 1 through 12 {
+    .l-col--lg--#{$n}        { grid-column: span #{$n}; }
+    .l-col--lg--start--#{$n} { grid-column-start: #{$n}; }
+  }
+}
+
+@include bp.xl {
+  @for $n from 1 through 12 {
+    .l-col--xl--#{$n}        { grid-column: span #{$n}; }
+    .l-col--xl--start--#{$n} { grid-column-start: #{$n}; }
+  }
+}

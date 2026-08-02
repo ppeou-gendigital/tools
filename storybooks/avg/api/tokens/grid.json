@@ -1,0 +1,269 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/token.v1.json",
+  "type": "token",
+  "name": "grid",
+  "status": "published",
+  "summary": "Resolved avg theme values from themes/default/.",
+  "specUrl": "/api/tokens/grid/spec.md",
+  "sourceFiles": {
+    "spec": "/api/tokens/grid/spec.md"
+  },
+  "figma": null,
+  "tokens": [
+    {
+      "family": "grid",
+      "cssVar": "--breakpoint-sm",
+      "path": [
+        "breakpoint",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "360px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--breakpoint-md",
+      "path": [
+        "breakpoint",
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": "768px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--breakpoint-lg",
+      "path": [
+        "breakpoint",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": "1024px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--breakpoint-xl",
+      "path": [
+        "breakpoint",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "1440px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-content-sm",
+      "path": [
+        "content",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "328px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-content-md",
+      "path": [
+        "content",
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": "704px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-content-lg",
+      "path": [
+        "content",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": "936px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-content-xl",
+      "path": [
+        "content",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "1312px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-max-width",
+      "path": [
+        "max",
+        "width"
+      ],
+      "$type": "dimension",
+      "$value": "var(--grid-content-xl)"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-columns-sm",
+      "path": [
+        "columns",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "4"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-columns-md",
+      "path": [
+        "columns",
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": "12"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-columns-lg",
+      "path": [
+        "columns",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": "12"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-columns-xl",
+      "path": [
+        "columns",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "12"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-gutter-sm",
+      "path": [
+        "gutter",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "12px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-gutter-md",
+      "path": [
+        "gutter",
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-gutter-lg",
+      "path": [
+        "gutter",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": "24px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-gutter-xl",
+      "path": [
+        "gutter",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "32px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-margin-sm",
+      "path": [
+        "margin",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-margin-md",
+      "path": [
+        "margin",
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": "32px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-margin-lg",
+      "path": [
+        "margin",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": "44px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-margin-xl",
+      "path": [
+        "margin",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "64px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-column-width-sm",
+      "path": [
+        "column",
+        "width",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "73px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-column-width-md",
+      "path": [
+        "column",
+        "width",
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": "44px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-column-width-lg",
+      "path": [
+        "column",
+        "width",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": "56px"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-column-width-xl",
+      "path": [
+        "column",
+        "width",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "80px"
+    }
+  ],
+  "generatedAt": "2026-08-02T02:14:45.024Z"
+}

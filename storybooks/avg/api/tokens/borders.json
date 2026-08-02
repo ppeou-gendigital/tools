@@ -1,0 +1,245 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/token.v1.json",
+  "type": "token",
+  "name": "borders",
+  "status": "published",
+  "summary": "Resolved avg theme values from themes/default/.",
+  "specUrl": "/api/tokens/borders/spec.md",
+  "sourceFiles": {
+    "spec": "/api/tokens/borders/spec.md"
+  },
+  "figma": null,
+  "tokens": [
+    {
+      "family": "borders",
+      "cssVar": "--border-radius-0",
+      "path": [
+        "radius",
+        "0"
+      ],
+      "$type": "dimension",
+      "$value": "0"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-radius-xs",
+      "path": [
+        "radius",
+        "xs"
+      ],
+      "$type": "dimension",
+      "$value": "2px"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-radius-s",
+      "path": [
+        "radius",
+        "s"
+      ],
+      "$type": "dimension",
+      "$value": "4px"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-radius-m",
+      "path": [
+        "radius",
+        "m"
+      ],
+      "$type": "dimension",
+      "$value": "6px"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-radius-l",
+      "path": [
+        "radius",
+        "l"
+      ],
+      "$type": "dimension",
+      "$value": "8px"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-radius-xl",
+      "path": [
+        "radius",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-radius-xxl",
+      "path": [
+        "radius",
+        "xxl"
+      ],
+      "$type": "dimension",
+      "$value": "24px"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-radius-xxxl",
+      "path": [
+        "radius",
+        "xxxl"
+      ],
+      "$type": "dimension",
+      "$value": "30px"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-width-0",
+      "path": [
+        "width",
+        "0"
+      ],
+      "$type": "dimension",
+      "$value": "0"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-width-xs",
+      "path": [
+        "width",
+        "xs"
+      ],
+      "$type": "dimension",
+      "$value": "1px"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-width-s",
+      "path": [
+        "width",
+        "s"
+      ],
+      "$type": "dimension",
+      "$value": "2px"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-width-m",
+      "path": [
+        "width",
+        "m"
+      ],
+      "$type": "dimension",
+      "$value": "4px"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-width-l",
+      "path": [
+        "width",
+        "l"
+      ],
+      "$type": "dimension",
+      "$value": "6px"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-width-xl",
+      "path": [
+        "width",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "8px"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-radius-control",
+      "path": [
+        "radius",
+        "control"
+      ],
+      "$type": "dimension",
+      "$value": "var(--border-radius-s)"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-radius-card",
+      "path": [
+        "radius",
+        "card"
+      ],
+      "$type": "dimension",
+      "$value": "var(--border-radius-l)"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-radius-dialog",
+      "path": [
+        "radius",
+        "dialog"
+      ],
+      "$type": "dimension",
+      "$value": "var(--border-radius-xl)"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-radius-pill",
+      "path": [
+        "radius",
+        "pill"
+      ],
+      "$type": "dimension",
+      "$value": "9999px"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-width-none",
+      "path": [
+        "width",
+        "none"
+      ],
+      "$type": "dimension",
+      "$value": "var(--border-width-0)"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-width-hairline",
+      "path": [
+        "width",
+        "hairline"
+      ],
+      "$type": "dimension",
+      "$value": "var(--border-width-xs)"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-width-default",
+      "path": [
+        "width",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "var(--border-width-s)"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-width-emphasis",
+      "path": [
+        "width",
+        "emphasis"
+      ],
+      "$type": "dimension",
+      "$value": "var(--border-width-m)"
+    },
+    {
+      "family": "borders",
+      "cssVar": "--border-width-focus",
+      "path": [
+        "width",
+        "focus"
+      ],
+      "$type": "dimension",
+      "$value": "var(--border-width-m)"
+    }
+  ],
+  "generatedAt": "2026-08-02T02:14:45.024Z"
+}

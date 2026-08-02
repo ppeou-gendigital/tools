@@ -1,0 +1,66 @@
+{{!--
+  Components/Stepper template — single BEM root (.c-stepper) covering the
+  Figma master variant set on Web-ODS Shared Library `1386:867` (LifeLock
+  theme mode) composed of up to six Step instances (`1386:803`).
+
+  Variant axes (mirror Figma's master + spec.md § "Variant axes"):
+    direction   horizontal | vertical          [.c-stepper--direction-$direction]
+
+  Each list item carries a persistent state modifier:
+    state       default | active | complete     [.c-stepper__step--state-$state]
+
+  The stories layer passes a pre-built `steps` array. Each step object:
+    number, state, showLabel, label, showConnector, isActive
+
+  Composes (per spec.md § "Composes"):
+    icon partial — Complete state renders `status/simple-checkmark` at 24 px
+    via the registered icon partial (`currentColor` → inverse on the dark fill).
+
+  Semantic structure:
+    <ol> / <li> with aria-current="step" on the active item; connector lines
+    are aria-hidden decorative spans.
+--}}
+<ol
+  class="c-stepper c-stepper--direction-{{#if direction}}{{lower direction}}{{else}}horizontal{{/if}}"
+  {{#if ariaLabel}}aria-label="{{ariaLabel}}"{{/if}}
+>
+  {{#each steps}}
+  <li
+    class="c-stepper__step c-stepper__step--state-{{#if state}}{{lower state}}{{else}}default{{/if}}{{#if isActive}} c-stepper__step--current{{/if}}"
+    {{#if isActive}}aria-current="step"{{/if}}
+  >
+    {{#if (eq (lower ../direction) "vertical")}}
+    <div class="c-stepper__indicator-row">
+      <div class="c-stepper__indicator">
+        {{#if (eq (lower state) "complete")}}
+          {{> icon name="status/simple-checkmark" size="24" color="inverse" decorative=true}}
+        {{else}}
+          <span class="c-stepper__number">{{number}}</span>
+        {{/if}}
+      </div>
+      {{#if showLabel}}
+        <span class="c-stepper__label">{{#if label}}{{label}}{{else}}Label{{/if}}</span>
+      {{/if}}
+    </div>
+    {{else}}
+    <div class="c-stepper__indicator-column">
+      <div class="c-stepper__indicator">
+        {{#if (eq (lower state) "complete")}}
+          {{> icon name="status/simple-checkmark" size="24" color="inverse" decorative=true}}
+        {{else}}
+          <span class="c-stepper__number">{{number}}</span>
+        {{/if}}
+      </div>
+      {{#if showLabel}}
+        <span class="c-stepper__label">{{#if label}}{{label}}{{else}}Label{{/if}}</span>
+      {{/if}}
+    </div>
+    {{/if}}
+    {{#if showConnector}}
+    <div class="c-stepper__connector" aria-hidden="true">
+      <span class="c-stepper__connector-line"></span>
+    </div>
+    {{/if}}
+  </li>
+  {{/each}}
+</ol>

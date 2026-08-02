@@ -1,0 +1,58 @@
+{{!--
+  Components/Divider template — single BEM root (.c-divider) covering
+  the three Figma sibling variant sets on Web-ODS-Shared-Library —
+  `Divider / Horizontal` (1344:2031), `Divider / Vertical`
+  (1344:2052), and `Divider / Label` (1344:2073) — folded onto one
+  orthogonal four-axis collapse per spec.md § "Variant axes".
+
+  Variant axes (mirror Figma's masters + spec.md § "Variant axes"):
+    layout     horizontal | vertical | label        [.c-divider--$layout]
+    size       xs | s | m | l                       [.c-divider--$size]
+    inverse    true | false                         [.c-divider--inverse when true]
+    typography body-sm-regular | body-sm-semibold |
+               body-base-regular | body-base-semibold |
+               body-lg-regular | body-lg-bold |
+               h6-medium | h5-bold                  [.c-divider--$typography]
+
+  Divider is stateless — no `:hover` / `:focus-visible` / `:active`
+  paints and no JavaScript. The root element is a `<div>` carrying
+  `role="separator"` so screen readers announce the rule as a
+  semantic divider.
+
+  Content slots:
+    - layout=horizontal → no content slot. Root paints as a
+      block-level rule via `border-block-start`.
+    - layout=vertical   → no content slot. Root paints as an
+      inline-block rule via `border-inline-start`; consumers size
+      the parent's cross axis (typically a flex row with
+      `align-items: stretch`).
+    - layout=label      → nested three-span flex row:
+        <span class="c-divider__rule c-divider__rule--start"></span>
+        <span class="c-divider__label">{{label}}</span>
+        <span class="c-divider__rule c-divider__rule--end"></span>
+      Default label text = "Or".
+
+  Defaults:
+    layout     → "horizontal"
+    size       → "s"
+    inverse    → false
+    typography → "body-sm-regular"
+    label      → "Or" (only renders when layout=label)
+--}}
+{{!--
+  Resolve every axis once so the rendered BEM modifiers and the
+  `aria-orientation` attribute always agree — when a prop is unset
+  the class fallback and the aria attribute fallback never drift.
+--}}
+<div
+  class="c-divider c-divider--{{#if layout}}{{lower layout}}{{else}}horizontal{{/if}} c-divider--{{#if size}}{{lower size}}{{else}}s{{/if}}{{#if inverse}} c-divider--inverse{{/if}} c-divider--{{#if typography}}{{lower typography}}{{else}}body-sm-regular{{/if}}"
+  role="separator"
+  aria-orientation="{{#if (eq (lower layout) "vertical")}}vertical{{else}}horizontal{{/if}}"
+  {{#if accessibleLabel}}aria-label="{{accessibleLabel}}"{{/if}}
+>
+  {{#if (eq (lower layout) "label")}}
+    <span class="c-divider__rule c-divider__rule--start" aria-hidden="true"></span>
+    <span class="c-divider__label">{{#if label}}{{label}}{{else}}Or{{/if}}</span>
+    <span class="c-divider__rule c-divider__rule--end" aria-hidden="true"></span>
+  {{/if}}
+</div>

@@ -1,0 +1,6 @@
+import{n as e}from"./rolldown-runtime-DkW27tQK.js";import{b as t,l as n,n as r,t as i,u as a,y as o}from"./pretty-source-ByiL5DrJ.js";import{i as s,n as c}from"./_icon-catalog-CXVEZSzC.js";function l(e){return u({name:e.name,size:e.size||`24`,color:e.color||`current`,decorative:e.decorative!==!1,frame:`none`,accessibleLabel:``})}var u,d,f,p,m;function h(){return(h=e((()=>{a(),r(),t(),s(),u=n.default.compile(o),d={name:`status/simple-checkmark-small`,size:`24`,color:`default`,decorative:!0},f={title:`Molecules/Icon`,tags:[`autodocs`],argTypes:{name:{control:`select`,options:c},size:{control:`inline-radio`,options:[`16`,`20`,`24`,`32`]},color:{control:`inline-radio`,options:[`current`,`default`,`brand`,`inverse`,`success`,`critical`]}},args:d},p={render:e=>l(e),parameters:i(l(d),{unit:`icon`})},p.parameters={...p.parameters,docs:{...p.parameters?.docs,source:{originalSource:`{
+  render: args => renderIcon(args),
+  parameters: htmlStoryParameters(renderIcon(defaultArgs), {
+    unit: 'icon'
+  })
+}`,...p.parameters?.docs?.source}}},m=[`Demo`]})))()}h();export{p as Demo,m as __namedExportsOrder,f as default};

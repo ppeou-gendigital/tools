@@ -1,0 +1,1729 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/token.v1.json",
+  "type": "token",
+  "name": "colors",
+  "status": "published",
+  "summary": "- Canonical design-system Figma (Web-ODS-Theme — Design System & tokens): https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/Web-ODS-Theme",
+  "specUrl": "/api/tokens/colors/spec.md",
+  "sourceFiles": {
+    "spec": "/api/tokens/colors/spec.md",
+    "scss": "/api/tokens/colors/source/_colors.scss"
+  },
+  "figma": {
+    "fileKey": "Nshd9ukxIzpeUnzOXiWxUP",
+    "nodeId": "18014:48",
+    "url": "https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/?node-id=18014-48&m=dev"
+  },
+  "tokens": [
+    {
+      "family": "colors",
+      "cssVar": "--color-lifelock-slate-blue",
+      "path": [
+        "lifelock",
+        "slate",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#00445a",
+      "$description": "brand core (Figma Primary; replaces `lifelock-green`)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-harbor-blue",
+      "path": [
+        "harbor",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#017a96",
+      "$description": "brand accent (Figma Primary; replaces `ocean-teal`)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-ice-blue",
+      "path": [
+        "ice",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#d9e9ee",
+      "$description": "brand light (Figma Primary; replaces `mist-blue`)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-lifelock-green",
+      "path": [
+        "lifelock",
+        "green"
+      ],
+      "$type": "color",
+      "$value": "var(--color-lifelock-slate-blue)",
+      "$description": "CSS-only alias — keep consumers compiling"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-ocean-teal",
+      "path": [
+        "ocean",
+        "teal"
+      ],
+      "$type": "color",
+      "$value": "var(--color-harbor-blue)",
+      "$description": "CSS-only alias"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-mist-blue",
+      "path": [
+        "mist",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "var(--color-ice-blue)",
+      "$description": "CSS-only alias"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-sand",
+      "path": [
+        "sand"
+      ],
+      "$type": "color",
+      "$value": "#e8e1cf"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-ivory",
+      "path": [
+        "ivory"
+      ],
+      "$type": "color",
+      "$value": "#fef9ee",
+      "$description": "warm off-white"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-warm-stone",
+      "path": [
+        "warm",
+        "stone"
+      ],
+      "$type": "color",
+      "$value": "#c6ae94"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-white",
+      "path": [
+        "white"
+      ],
+      "$type": "color",
+      "$value": "#ffffff"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-coral",
+      "path": [
+        "coral"
+      ],
+      "$type": "color",
+      "$value": "#cf4e57"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-off-black",
+      "path": [
+        "off",
+        "black"
+      ],
+      "$type": "color",
+      "$value": "#161616"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-cool-gray",
+      "path": [
+        "cool",
+        "gray"
+      ],
+      "$type": "color",
+      "$value": "#e2e2e2",
+      "$description": "distinct from `neutral/10`"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-soft-gray",
+      "path": [
+        "soft",
+        "gray"
+      ],
+      "$type": "color",
+      "$value": "#fafafa",
+      "$description": "distinct from `neutral/5`"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-entension-indigo",
+      "path": [
+        "entension",
+        "indigo"
+      ],
+      "$type": "color",
+      "$value": "#4a5d73"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-entension-dusty-violet",
+      "path": [
+        "entension",
+        "dusty",
+        "violet"
+      ],
+      "$type": "color",
+      "$value": "#8a6fa8"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-entension-plum",
+      "path": [
+        "entension",
+        "plum"
+      ],
+      "$type": "color",
+      "$value": "#6c4a5a"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-entension-moss-green",
+      "path": [
+        "entension",
+        "moss",
+        "green"
+      ],
+      "$type": "color",
+      "$value": "#6f8a63"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-entension-burnt-orange",
+      "path": [
+        "entension",
+        "burnt",
+        "orange"
+      ],
+      "$type": "color",
+      "$value": "#c36b3a"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-entension-rose",
+      "path": [
+        "entension",
+        "rose"
+      ],
+      "$type": "color",
+      "$value": "#c96f7c"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-entension-slate-blue",
+      "path": [
+        "entension",
+        "slate",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#607e95"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-entension-extension-gray",
+      "path": [
+        "entension",
+        "extension",
+        "gray"
+      ],
+      "$type": "color",
+      "$value": "#8c9a9a",
+      "$description": "renamed from bare `gray` to disambiguate from `neutral/*` ramp"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-critical",
+      "path": [
+        "functional",
+        "critical"
+      ],
+      "$type": "color",
+      "$value": "#d40404",
+      "$description": "error / destructive"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-critical-muted",
+      "path": [
+        "functional",
+        "critical",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "#e77f7e",
+      "$description": "tint for muted critical states"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-critical-subtle",
+      "path": [
+        "functional",
+        "critical",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "#f6e1e0",
+      "$description": "tint for subtle critical backgrounds"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-attention",
+      "path": [
+        "functional",
+        "attention"
+      ],
+      "$type": "color",
+      "$value": "#e07100",
+      "$description": "warning"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-attention-muted",
+      "path": [
+        "functional",
+        "attention",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "#edb57c"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-attention-subtle",
+      "path": [
+        "functional",
+        "attention",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "#f7ece0"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-success",
+      "path": [
+        "functional",
+        "success"
+      ],
+      "$type": "color",
+      "$value": "#16a761"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-success-muted",
+      "path": [
+        "functional",
+        "success",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "#88d1ad"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-success-subtle",
+      "path": [
+        "functional",
+        "success",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "#e3f2ea"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-info",
+      "path": [
+        "functional",
+        "info"
+      ],
+      "$type": "color",
+      "$value": "#0f71f0"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-info-muted",
+      "path": [
+        "functional",
+        "info",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "#85b6f4"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-info-subtle",
+      "path": [
+        "functional",
+        "info",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "#e3ecf8"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-5",
+      "path": [
+        "neutral",
+        "5"
+      ],
+      "$type": "color",
+      "$value": "#f8f8f7",
+      "$description": "distinct from `soft-gray`"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-10",
+      "path": [
+        "neutral",
+        "10"
+      ],
+      "$type": "color",
+      "$value": "#e3e3e2",
+      "$description": "distinct from `cool-gray`"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-20",
+      "path": [
+        "neutral",
+        "20"
+      ],
+      "$type": "color",
+      "$value": "#cdcccb"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-30",
+      "path": [
+        "neutral",
+        "30"
+      ],
+      "$type": "color",
+      "$value": "#b6b6b5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-40",
+      "path": [
+        "neutral",
+        "40"
+      ],
+      "$type": "color",
+      "$value": "#a09f9e"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-50",
+      "path": [
+        "neutral",
+        "50"
+      ],
+      "$type": "color",
+      "$value": "#888887"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-60",
+      "path": [
+        "neutral",
+        "60"
+      ],
+      "$type": "color",
+      "$value": "#717171"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-70",
+      "path": [
+        "neutral",
+        "70"
+      ],
+      "$type": "color",
+      "$value": "#5b5a5a"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-80",
+      "path": [
+        "neutral",
+        "80"
+      ],
+      "$type": "color",
+      "$value": "#444444"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-90",
+      "path": [
+        "neutral",
+        "90"
+      ],
+      "$type": "color",
+      "$value": "#2e2d2d"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-default",
+      "path": [
+        "bg",
+        "default"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-subtle",
+      "path": [
+        "bg",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "shares hex with `canvas/subtle` (different role)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-muted",
+      "path": [
+        "bg",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-brand",
+      "path": [
+        "bg",
+        "brand"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Figma `#00445a`"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-brand-soft",
+      "path": [
+        "bg",
+        "brand",
+        "soft"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "not actually brand-tinted; preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-accent",
+      "path": [
+        "bg",
+        "accent"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-alpha",
+      "path": [
+        "bg",
+        "alpha"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Greek pass-through; preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-beta",
+      "path": [
+        "bg",
+        "beta"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Greek pass-through; preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-gamma",
+      "path": [
+        "bg",
+        "gamma"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Greek pass-through; preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-delta",
+      "path": [
+        "bg",
+        "delta"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Greek pass-through; preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-inverse",
+      "path": [
+        "bg",
+        "inverse"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Figma `Background/inverse-primary` `#161616`"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-inverse-strong",
+      "path": [
+        "bg",
+        "inverse",
+        "strong"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-primary",
+      "path": [
+        "text",
+        "primary"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Figma Content/primary"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-secondary",
+      "path": [
+        "text",
+        "secondary"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-brand",
+      "path": [
+        "text",
+        "brand"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Figma Content/brand"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-accent",
+      "path": [
+        "text",
+        "accent"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Figma Content/accent `#607e95`"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-inverse",
+      "path": [
+        "text",
+        "inverse"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-strong",
+      "path": [
+        "border",
+        "strong"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Figma Border/primary"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-strong-alt",
+      "path": [
+        "border",
+        "strong",
+        "alt"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-subtle",
+      "path": [
+        "border",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "shares hex with `shadow/default` (different role)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-inverse",
+      "path": [
+        "border",
+        "inverse"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-brand",
+      "path": [
+        "border",
+        "brand"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Figma Border/brand"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-accent",
+      "path": [
+        "border",
+        "accent"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-focus",
+      "path": [
+        "border",
+        "focus"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "focus-indicator trio"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-brand",
+      "path": [
+        "highlight",
+        "brand"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Figma Highlight/brand"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-brand-light",
+      "path": [
+        "highlight",
+        "brand",
+        "light"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Figma `#d9e9ee`"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-accent",
+      "path": [
+        "highlight",
+        "accent"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Figma Highlight/accent-base"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-alpha-base",
+      "path": [
+        "highlight",
+        "alpha",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Greek pass-through; preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-beta-base",
+      "path": [
+        "highlight",
+        "beta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Greek pass-through; preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-gamma-base",
+      "path": [
+        "highlight",
+        "gamma",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Greek pass-through; preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-delta-base",
+      "path": [
+        "highlight",
+        "delta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Greek pass-through; preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-epsilon-base",
+      "path": [
+        "highlight",
+        "epsilon",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Greek pass-through; preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-zeta-base",
+      "path": [
+        "highlight",
+        "zeta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Greek pass-through; preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-eta-base",
+      "path": [
+        "highlight",
+        "eta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Greek pass-through; preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-theta-base",
+      "path": [
+        "highlight",
+        "theta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Greek pass-through; preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-iota-base",
+      "path": [
+        "highlight",
+        "iota",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Greek pass-through; preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-critical",
+      "path": [
+        "signal",
+        "critical"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-critical-muted",
+      "path": [
+        "signal",
+        "critical",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-critical-subtle",
+      "path": [
+        "signal",
+        "critical",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-warning",
+      "path": [
+        "signal",
+        "warning"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "`warning` ↔ `attention` name mismatch preserved verbatim"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-warning-muted",
+      "path": [
+        "signal",
+        "warning",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-warning-subtle",
+      "path": [
+        "signal",
+        "warning",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-success",
+      "path": [
+        "signal",
+        "success"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-success-muted",
+      "path": [
+        "signal",
+        "success",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-success-subtle",
+      "path": [
+        "signal",
+        "success",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-info",
+      "path": [
+        "signal",
+        "info"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-info-muted",
+      "path": [
+        "signal",
+        "info",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-info-subtle",
+      "path": [
+        "signal",
+        "info",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-disabled-text",
+      "path": [
+        "disabled",
+        "text"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "shared across base / CTA / Input — text-on-disabled is consistent"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-disabled-border",
+      "path": [
+        "disabled",
+        "border"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "shared across base / CTA / Input — border-on-disabled is consistent"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-disabled-bg",
+      "path": [
+        "disabled",
+        "bg"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "system default; CTA and Input extensions intentionally re-target to lighter primitives (`--color-bg-cta-disabled → neutral-10`, `--color-bg-input-disabled → soft-gray`) for per-component visual weight — see design decision 13 below and the CTA / Input extension tables"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-canvas-default",
+      "path": [
+        "canvas",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "hex shared with `bg/default` (different role)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-canvas-subtle",
+      "path": [
+        "canvas",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "hex shared with `bg/subtle` (different role)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-canvas-contrast",
+      "path": [
+        "canvas",
+        "contrast"
+      ],
+      "$type": "color",
+      "$value": ""
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-shadow-default",
+      "path": [
+        "shadow",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "retained for legacy compat; new shadow consumers compose `rgba(0, 0, 0, var(--opacity-N))` inline"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-content-primary",
+      "path": [
+        "content",
+        "primary"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Web-ODS gallery-chrome compat"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-content-secondary",
+      "path": [
+        "content",
+        "secondary"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Web-ODS gallery-chrome compat"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-content-brand",
+      "path": [
+        "content",
+        "brand"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Web-ODS gallery-chrome compat"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-content-accent",
+      "path": [
+        "content",
+        "accent"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Web-ODS gallery-chrome compat"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-content-inverse-primary",
+      "path": [
+        "content",
+        "inverse",
+        "primary"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Web-ODS gallery-chrome compat"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-background-primary",
+      "path": [
+        "background",
+        "primary"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Web-ODS gallery-chrome compat; also consumed by `slider.scss` (existing component)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-background-secondary",
+      "path": [
+        "background",
+        "secondary"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Web-ODS gallery-chrome compat"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-background-tertiary",
+      "path": [
+        "background",
+        "tertiary"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Web-ODS gallery-chrome compat"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-background-brand",
+      "path": [
+        "background",
+        "brand"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Web-ODS gallery-chrome compat"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-background-brand-lighter",
+      "path": [
+        "background",
+        "brand",
+        "lighter"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Web-ODS gallery-chrome compat"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-background-accent",
+      "path": [
+        "background",
+        "accent"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Web-ODS gallery-chrome compat"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-primary",
+      "path": [
+        "border",
+        "primary"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Web-ODS gallery-chrome compat"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-secondary",
+      "path": [
+        "border",
+        "secondary"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Web-ODS gallery-chrome compat"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-tertiary",
+      "path": [
+        "border",
+        "tertiary"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "Web-ODS gallery-chrome compat; also consumed by `slider.scss` (existing component)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--gradient-horizontal",
+      "path": [
+        "gradient",
+        "horizontal"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "each stop binds to a Color primitive where one matches"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--gradient-vertical",
+      "path": [
+        "gradient",
+        "vertical"
+      ],
+      "$type": "color",
+      "$value": "",
+      "$description": "same approach"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-primary-default",
+      "path": [
+        "bg",
+        "cta",
+        "primary",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "`#00445a` (via slate-blue alias)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-primary-hover",
+      "path": [
+        "bg",
+        "cta",
+        "primary",
+        "hover"
+      ],
+      "$type": "color",
+      "$value": "#161616"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-primary-pressed",
+      "path": [
+        "bg",
+        "cta",
+        "primary",
+        "pressed"
+      ],
+      "$type": "color",
+      "$value": "`#017a96` (via harbor-blue alias)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-secondary-default",
+      "path": [
+        "bg",
+        "cta",
+        "secondary",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "#f8f8f7"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-secondary-hover",
+      "path": [
+        "bg",
+        "cta",
+        "secondary",
+        "hover"
+      ],
+      "$type": "color",
+      "$value": "#cce5e7"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-secondary-pressed",
+      "path": [
+        "bg",
+        "cta",
+        "secondary",
+        "pressed"
+      ],
+      "$type": "color",
+      "$value": "#e2e2e2"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-tertiary-default",
+      "path": [
+        "bg",
+        "cta",
+        "tertiary",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "#e8e1cf"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-tertiary-hover",
+      "path": [
+        "bg",
+        "cta",
+        "tertiary",
+        "hover"
+      ],
+      "$type": "color",
+      "$value": "#c6ae94"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-tertiary-pressed",
+      "path": [
+        "bg",
+        "cta",
+        "tertiary",
+        "pressed"
+      ],
+      "$type": "color",
+      "$value": "#fef9ee"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-inverse-default",
+      "path": [
+        "bg",
+        "cta",
+        "inverse",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "`#017a96` (via harbor-blue alias)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-inverse-hover",
+      "path": [
+        "bg",
+        "cta",
+        "inverse",
+        "hover"
+      ],
+      "$type": "color",
+      "$value": "`#00445a` (via slate-blue alias)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-inverse-pressed",
+      "path": [
+        "bg",
+        "cta",
+        "inverse",
+        "pressed"
+      ],
+      "$type": "color",
+      "$value": "#161616"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-text-hover",
+      "path": [
+        "bg",
+        "cta",
+        "text",
+        "hover"
+      ],
+      "$type": "color",
+      "$value": "#f8f8f7"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-text-pressed",
+      "path": [
+        "bg",
+        "cta",
+        "text",
+        "pressed"
+      ],
+      "$type": "color",
+      "$value": "#e3e3e2"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-cta-disabled",
+      "path": [
+        "bg",
+        "cta",
+        "disabled"
+      ],
+      "$type": "color",
+      "$value": "#e3e3e2"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-on-cta-primary",
+      "path": [
+        "text",
+        "on",
+        "cta",
+        "primary"
+      ],
+      "$type": "color",
+      "$value": "#ffffff"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-on-cta-secondary",
+      "path": [
+        "text",
+        "on",
+        "cta",
+        "secondary"
+      ],
+      "$type": "color",
+      "$value": "#00445a"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-on-cta-tertiary",
+      "path": [
+        "text",
+        "on",
+        "cta",
+        "tertiary"
+      ],
+      "$type": "color",
+      "$value": "#00445a"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-on-cta-inverse",
+      "path": [
+        "text",
+        "on",
+        "cta",
+        "inverse"
+      ],
+      "$type": "color",
+      "$value": "#ffffff"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-on-cta-text",
+      "path": [
+        "text",
+        "on",
+        "cta",
+        "text"
+      ],
+      "$type": "color",
+      "$value": "#00445a"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-on-cta-disabled",
+      "path": [
+        "text",
+        "on",
+        "cta",
+        "disabled"
+      ],
+      "$type": "color",
+      "$value": "#888887"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-cta-secondary",
+      "path": [
+        "border",
+        "cta",
+        "secondary"
+      ],
+      "$type": "color",
+      "$value": "#00445a"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-cta-disabled",
+      "path": [
+        "border",
+        "cta",
+        "disabled"
+      ],
+      "$type": "color",
+      "$value": "#b6b6b5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-fg-progress-track",
+      "path": [
+        "fg",
+        "progress",
+        "track"
+      ],
+      "$type": "color",
+      "$value": "#b6b6b5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-fg-progress-fill",
+      "path": [
+        "fg",
+        "progress",
+        "fill"
+      ],
+      "$type": "color",
+      "$value": "#00445a"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-input",
+      "path": [
+        "bg",
+        "input"
+      ],
+      "$type": "color",
+      "$value": "#ffffff",
+      "$description": "Same primitive as `--color-bg-default`; named separately so a future input-only re-target doesn't ripple into surfaces."
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-input-disabled",
+      "path": [
+        "bg",
+        "input",
+        "disabled"
+      ],
+      "$type": "color",
+      "$value": "#fafafa",
+      "$description": "Subtle gray. Distinct from `--color-disabled-bg` because input disabled is a softer treatment."
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-default",
+      "path": [
+        "border",
+        "input",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "#b6b6b5",
+      "$description": "Mid-neutral border — visible at rest, recedes against page chrome."
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-hover",
+      "path": [
+        "border",
+        "input",
+        "hover"
+      ],
+      "$type": "color",
+      "$value": "#888887",
+      "$description": "One step darker than default."
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-focus",
+      "path": [
+        "border",
+        "input",
+        "focus"
+      ],
+      "$type": "color",
+      "$value": "#017a96",
+      "$description": "Alias chain → `color/harbor-blue`. Reuses the system-wide focus border."
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-focus-glow",
+      "path": [
+        "border",
+        "input",
+        "focus",
+        "glow"
+      ],
+      "$type": "color",
+      "$value": "rgba(16, 131, 137, 0.24)",
+      "$description": "Composes the 24% alpha glow inline via `color-mix` so the glow auto-tracks any re-target of `--color-border-focus`. No new primitive needed."
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-error",
+      "path": [
+        "border",
+        "input",
+        "error"
+      ],
+      "$type": "color",
+      "$value": "#d40404",
+      "$description": "Alias chain → `color/functional/critical`."
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-error-glow",
+      "path": [
+        "border",
+        "input",
+        "error",
+        "glow"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-critical-subtle)",
+      "$description": "Softer red-tint for the error focus-glow."
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-disabled",
+      "path": [
+        "border",
+        "input",
+        "disabled"
+      ],
+      "$type": "color",
+      "$value": "#b6b6b5",
+      "$description": "Alias chain → `color/neutral/30`."
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-divider",
+      "path": [
+        "border",
+        "input",
+        "divider"
+      ],
+      "$type": "color",
+      "$value": "#cdcccb",
+      "$description": "Used by `base-input`'s optional `--leading-divider` / `--trailing-divider` modifiers."
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-placeholder",
+      "path": [
+        "text",
+        "placeholder"
+      ],
+      "$type": "color",
+      "$value": "#888887",
+      "$description": "Alias chain → `color/neutral/50`."
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-default",
+      "path": [
+        "text",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "#161616",
+      "$description": "Alias chain → `color/off-black`. Generic-purpose default body / input-value / label text."
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-disabled",
+      "path": [
+        "text",
+        "disabled"
+      ],
+      "$type": "color",
+      "$value": "#888887",
+      "$description": "Re-named alias of the existing `disabled/text`."
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-error",
+      "path": [
+        "text",
+        "error"
+      ],
+      "$type": "color",
+      "$value": "#d40404",
+      "$description": "Same red as `signal/critical` so error-text reads consistently."
+    }
+  ],
+  "generatedAt": "2026-08-02T02:14:49.789Z"
+}

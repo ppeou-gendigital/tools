@@ -1,0 +1,176 @@
+/**
+ * Components/Label — single BEM root (.c-label) covering the Figma
+ * master variant set on Web-ODS Shared Library `1408:443` (LifeLock
+ * theme mode).
+ *
+ * Variant axes → BEM modifiers:
+ *   background → .c-label--{primary | secondary | brand |
+ *                brand-soft | accent | alpha | beta | gamma | delta |
+ *                inverse-primary | inverse-secondary}
+ *   variant    → .c-label--{solid | transparent-30 |
+ *                transparent-50 | transparent-80}
+ *
+ * Label is stateless — no `:hover` / `:focus-visible` / `:active`
+ * paints, no `is-*` runtime classes, no JavaScript. It is a
+ * presentation-only molecule that decorates surrounding content
+ * (cards, list rows, metadata strips).
+ *
+ * The paint matrix collapses the 11 × 4 Figma variant set onto two
+ * orthogonal per-instance custom properties:
+ *   --c-label-bg          surface base colour (picked per `background`)
+ *   --c-label-bg-opacity  surface opacity 100 / 30 / 50 / 80%
+ *                         (picked per `variant`)
+ *   --c-label-content     content paint colour (picked per `background`)
+ *
+ * The block-level rule composes the surface as
+ * `color-mix(in srgb, var(--c-label-bg) var(--c-label-bg-opacity), transparent)`
+ * so dimming the surface to a transparency stop never affects the
+ * content paint — text + icon stay fully opaque at every stop, which
+ * is what the Figma master ships.
+ *
+ * Logical properties (`padding-block` / `padding-inline`) keep the
+ * pill geometry RTL-safe; the inline-flex centring + DOM-ordered
+ * icon-before-text slot survive direction flips with no extra rules.
+ *
+ * Tokens consumed are documented in `./spec.md` § "Tokens consumed".
+ */
+
+// ============================================================================
+// BLOCK — .c-label
+// ============================================================================
+
+.c-label {
+  // Per-instance knobs the modifier rules below set. Defaults paint a
+  // "primary background, solid variant" bare `.c-label` so authoring
+  // without modifiers still renders a sensible white-pill default.
+  --c-label-bg: var(--color-bg-default);
+  --c-label-bg-opacity: 100%;
+  --c-label-content: var(--color-text-primary);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  inline-size: fit-content;
+  box-sizing: border-box;
+  padding-block: var(--space-1);
+  padding-inline: var(--space-3);
+  border-radius: var(--border-radius-pill);
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-body-xs);
+  line-height: var(--lineheight-body-xs);
+  letter-spacing: var(--letterspacing-body-xs);
+
+  // color-mix dims the surface to the per-variant opacity stop while
+  // leaving the content paint at full opacity — text + icon stay
+  // readable across solid / transparent-30 / transparent-50 / -80.
+  background-color: color-mix(
+    in srgb,
+    var(--c-label-bg) var(--c-label-bg-opacity),
+    transparent
+  );
+  color: var(--c-label-content);
+}
+
+// ============================================================================
+// ELEMENT — text
+// ============================================================================
+
+.c-label__text {
+  display: inline-block;
+}
+
+// ============================================================================
+// VARIANT — surface opacity stops
+// ============================================================================
+
+.c-label--solid {
+  --c-label-bg-opacity: 100%;
+}
+
+.c-label--transparent-30 {
+  --c-label-bg-opacity: 30%;
+}
+
+.c-label--transparent-50 {
+  --c-label-bg-opacity: 50%;
+}
+
+.c-label--transparent-80 {
+  --c-label-bg-opacity: 80%;
+}
+
+// ============================================================================
+// BACKGROUND — per-Background paint pairs
+// Each background sets BOTH the surface base colour (--c-label-bg)
+// and the content paint (--c-label-content). The variant modifiers
+// above only flip the opacity of the surface composite — never the
+// content paint.
+// ============================================================================
+
+// --- primary (white) --------------------------------------------------------
+.c-label--primary {
+  --c-label-bg: var(--color-bg-default);
+  --c-label-content: var(--color-text-primary);
+}
+
+// --- secondary (near-white subtle) ------------------------------------------
+.c-label--secondary {
+  --c-label-bg: var(--color-bg-subtle);
+  --c-label-content: var(--color-text-primary);
+}
+
+// --- brand (LifeLock dark green) --------------------------------------------
+.c-label--brand {
+  --c-label-bg: var(--color-bg-brand);
+  --c-label-content: var(--color-text-inverse);
+}
+
+// --- brand-soft (sand) ------------------------------------------------------
+.c-label--brand-soft {
+  --c-label-bg: var(--color-bg-brand-soft);
+  --c-label-content: var(--color-text-primary);
+}
+
+// --- accent (ivory) ---------------------------------------------------------
+.c-label--accent {
+  --c-label-bg: var(--color-bg-accent);
+  --c-label-content: var(--color-text-primary);
+}
+
+// --- alpha (warm stone) -----------------------------------------------------
+.c-label--alpha {
+  --c-label-bg: var(--color-bg-alpha);
+  --c-label-content: var(--color-text-primary);
+}
+
+// --- beta (cool gray) -------------------------------------------------------
+.c-label--beta {
+  --c-label-bg: var(--color-bg-beta);
+  --c-label-content: var(--color-text-primary);
+}
+
+// --- gamma (soft gray) ------------------------------------------------------
+.c-label--gamma {
+  --c-label-bg: var(--color-bg-gamma);
+  --c-label-content: var(--color-text-primary);
+}
+
+// --- delta (neutral-20) -----------------------------------------------------
+.c-label--delta {
+  --c-label-bg: var(--color-bg-delta);
+  --c-label-content: var(--color-text-primary);
+}
+
+// --- inverse-primary (off-black) --------------------------------------------
+.c-label--inverse-primary {
+  --c-label-bg: var(--color-bg-inverse-strong);
+  --c-label-content: var(--color-text-inverse);
+}
+
+// --- inverse-secondary (ocean teal) -----------------------------------------
+.c-label--inverse-secondary {
+  --c-label-bg: var(--color-bg-inverse);
+  --c-label-content: var(--color-text-inverse);
+}

@@ -1,0 +1,1081 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/token.v1.json",
+  "type": "token",
+  "name": "typography",
+  "status": "published",
+  "summary": "- Canonical design-system Figma (Web-ODS-Theme — Design System & tokens): https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/Web-ODS-Theme - Primary scale frame: https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/Web-ODS-Theme?node-id=21009-762&m=dev (1704 × 8582 px; two stacked spec tables — \"Headline + Body LG\" desktop and \"Headline + Body SM\" mobile + tablet) - Secondary scale frame: https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/Web-ODS-Theme?node-id=21009-1353&m=dev (1704 × 3638 px; both spec tables visibly labeled \"Primary\" — but the bound family is Playfair Display, so they are S",
+  "specUrl": "/api/tokens/typography/spec.md",
+  "sourceFiles": {
+    "spec": "/api/tokens/typography/spec.md",
+    "scss": "/api/tokens/typography/source/_typography.scss"
+  },
+  "figma": {
+    "fileKey": "Nshd9ukxIzpeUnzOXiWxUP",
+    "nodeId": "18014:751",
+    "url": "https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/?node-id=18014-751&m=dev"
+  },
+  "tokens": [
+    {
+      "family": "typography",
+      "cssVar": "--font-family-primary",
+      "path": [
+        "family",
+        "primary"
+      ],
+      "$type": "fontFamily",
+      "$value": "Inter Tight",
+      "$description": "sans-serif; bound by all 23 Primary TextStyles"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-family-secondary",
+      "path": [
+        "family",
+        "secondary"
+      ],
+      "$type": "fontFamily",
+      "$value": "Playfair Display",
+      "$description": "serif; bound by all 8 Secondary heading TextStyles"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-weight-light",
+      "path": [
+        "weight",
+        "light"
+      ],
+      "$type": "fontWeight",
+      "$value": "300",
+      "$description": "available across all roles (heading, body, button, label, tagline, secondary-heading)"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-weight-regular",
+      "path": [
+        "weight",
+        "regular"
+      ],
+      "$type": "fontWeight",
+      "$value": "400",
+      "$description": "default weight for `body/*` TextStyles"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-weight-medium",
+      "path": [
+        "weight",
+        "medium"
+      ],
+      "$type": "fontWeight",
+      "$value": "500",
+      "$description": "default weight for `heading/*`, `button/*`, `label`, `tagline/*`, and `secondary-heading/*` TextStyles"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-weight-semibold",
+      "path": [
+        "weight",
+        "semibold"
+      ],
+      "$type": "fontWeight",
+      "$value": "600",
+      "$description": "available across all roles"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-weight-bold",
+      "path": [
+        "weight",
+        "bold"
+      ],
+      "$type": "fontWeight",
+      "$value": "700",
+      "$description": "available across all roles"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-weight-extrabold",
+      "path": [
+        "weight",
+        "extrabold"
+      ],
+      "$type": "fontWeight",
+      "$value": "800",
+      "$description": "**button-only** for Primary; available across all 8 Secondary heading roles"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-h0",
+      "path": [
+        "size",
+        "h0"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "Figma: `display`; CSS: `h0`"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-h0",
+      "path": [
+        "lineheight/h0"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "Figma: `display`; CSS: `h0`"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-h1",
+      "path": [
+        "size",
+        "h1"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-h1",
+      "path": [
+        "lineheight/h1"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-h2",
+      "path": [
+        "size",
+        "h2"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-h2",
+      "path": [
+        "lineheight/h2"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-h3",
+      "path": [
+        "size",
+        "h3"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-h3",
+      "path": [
+        "lineheight/h3"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-h4",
+      "path": [
+        "size",
+        "h4"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-h4",
+      "path": [
+        "lineheight/h4"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-h5",
+      "path": [
+        "size",
+        "h5"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-h5",
+      "path": [
+        "lineheight/h5"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-h6",
+      "path": [
+        "size",
+        "h6"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "sm-collision (≡ h5 SM)"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-h6",
+      "path": [
+        "lineheight/h6"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "sm-collision (≡ h5 SM)"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-h7",
+      "path": [
+        "size",
+        "h7"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-h7",
+      "path": [
+        "lineheight/h7"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-body-3xl",
+      "path": [
+        "size",
+        "body",
+        "3xl"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-body-3xl",
+      "path": [
+        "lineheight/body",
+        "3xl"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-body-2xl",
+      "path": [
+        "size",
+        "body",
+        "2xl"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-body-2xl",
+      "path": [
+        "lineheight/body",
+        "2xl"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-body-xl",
+      "path": [
+        "size",
+        "body",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-body-xl",
+      "path": [
+        "lineheight/body",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-body-lg",
+      "path": [
+        "size",
+        "body",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-body-lg",
+      "path": [
+        "lineheight/body",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-body-base",
+      "path": [
+        "size",
+        "body",
+        "base"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-body-base",
+      "path": [
+        "lineheight/body",
+        "base"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-body-sm",
+      "path": [
+        "size",
+        "body",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "sm-collision (≡ body/base SM)"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-body-sm",
+      "path": [
+        "lineheight/body",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "sm-collision (≡ body/base SM)"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-body-xs",
+      "path": [
+        "size",
+        "body",
+        "xs"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "aliased by the `caption` extension below"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-body-xs",
+      "path": [
+        "lineheight/body",
+        "xs"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "aliased by the `caption` extension below"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-button-xl",
+      "path": [
+        "size",
+        "button",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-button-xl",
+      "path": [
+        "lineheight/button",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-button-lg",
+      "path": [
+        "size",
+        "button",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-button-lg",
+      "path": [
+        "lineheight/button",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-button-base",
+      "path": [
+        "size",
+        "button",
+        "base"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-button-base",
+      "path": [
+        "lineheight/button",
+        "base"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-button-sm",
+      "path": [
+        "size",
+        "button",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "sm-collision (≡ button/base SM)"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-button-sm",
+      "path": [
+        "lineheight/button",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "sm-collision (≡ button/base SM)"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-label",
+      "path": [
+        "size",
+        "label"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-label",
+      "path": [
+        "lineheight/label"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-tagline-lg",
+      "path": [
+        "size",
+        "tagline",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-tagline-lg",
+      "path": [
+        "lineheight/tagline",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-tagline-md",
+      "path": [
+        "size",
+        "tagline",
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "sm-collision (≡ tagline/lg SM)"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-tagline-md",
+      "path": [
+        "lineheight/tagline",
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "sm-collision (≡ tagline/lg SM)"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-tagline-sm",
+      "path": [
+        "size",
+        "tagline",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-tagline-sm",
+      "path": [
+        "lineheight/tagline",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-secondary-h0",
+      "path": [
+        "size",
+        "secondary",
+        "h0"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "Figma: `secondary-heading/display`; CSS: `secondary-h0`. Uses Playfair-tuned `line-height: 58px` SM."
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-secondary-h0",
+      "path": [
+        "lineheight/secondary",
+        "h0"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "Figma: `secondary-heading/display`; CSS: `secondary-h0`. Uses Playfair-tuned `line-height: 58px` SM."
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-secondary-h1",
+      "path": [
+        "size",
+        "secondary",
+        "h1"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-secondary-h1",
+      "path": [
+        "lineheight/secondary",
+        "h1"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-secondary-h2",
+      "path": [
+        "size",
+        "secondary",
+        "h2"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-secondary-h2",
+      "path": [
+        "lineheight/secondary",
+        "h2"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-secondary-h3",
+      "path": [
+        "size",
+        "secondary",
+        "h3"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "Playfair-tuned `line-height: 38px` SM"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-secondary-h3",
+      "path": [
+        "lineheight/secondary",
+        "h3"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "Playfair-tuned `line-height: 38px` SM"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-secondary-h4",
+      "path": [
+        "size",
+        "secondary",
+        "h4"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-secondary-h4",
+      "path": [
+        "lineheight/secondary",
+        "h4"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-secondary-h5",
+      "path": [
+        "size",
+        "secondary",
+        "h5"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-secondary-h5",
+      "path": [
+        "lineheight/secondary",
+        "h5"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-secondary-h6",
+      "path": [
+        "size",
+        "secondary",
+        "h6"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "sm-collision (≡ secondary h5 SM)"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-secondary-h6",
+      "path": [
+        "lineheight/secondary",
+        "h6"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "sm-collision (≡ secondary h5 SM)"
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-secondary-h7",
+      "path": [
+        "size",
+        "secondary",
+        "h7"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-secondary-h7",
+      "path": [
+        "lineheight/secondary",
+        "h7"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-h0",
+      "path": [
+        "letterspacing/h0"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-h1",
+      "path": [
+        "letterspacing/h1"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-h2",
+      "path": [
+        "letterspacing/h2"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-h3",
+      "path": [
+        "letterspacing/h3"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-h4",
+      "path": [
+        "letterspacing/h4"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-h5",
+      "path": [
+        "letterspacing/h5"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-h6",
+      "path": [
+        "letterspacing/h6"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-h7",
+      "path": [
+        "letterspacing/h7"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-body-3xl",
+      "path": [
+        "letterspacing/body",
+        "3xl"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-body-2xl",
+      "path": [
+        "letterspacing/body",
+        "2xl"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-body-xl",
+      "path": [
+        "letterspacing/body",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-body-lg",
+      "path": [
+        "letterspacing/body",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-body-base",
+      "path": [
+        "letterspacing/body",
+        "base"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-body-sm",
+      "path": [
+        "letterspacing/body",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-body-xs",
+      "path": [
+        "letterspacing/body",
+        "xs"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-button-xl",
+      "path": [
+        "letterspacing/button",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-button-lg",
+      "path": [
+        "letterspacing/button",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-button-base",
+      "path": [
+        "letterspacing/button",
+        "base"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-button-sm",
+      "path": [
+        "letterspacing/button",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-label",
+      "path": [
+        "letterspacing/label"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-tagline-lg",
+      "path": [
+        "letterspacing/tagline",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-tagline-md",
+      "path": [
+        "letterspacing/tagline",
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-tagline-sm",
+      "path": [
+        "letterspacing/tagline",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-secondary-h0",
+      "path": [
+        "letterspacing/secondary",
+        "h0"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-secondary-h1",
+      "path": [
+        "letterspacing/secondary",
+        "h1"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-secondary-h2",
+      "path": [
+        "letterspacing/secondary",
+        "h2"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-secondary-h3",
+      "path": [
+        "letterspacing/secondary",
+        "h3"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-secondary-h4",
+      "path": [
+        "letterspacing/secondary",
+        "h4"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-secondary-h5",
+      "path": [
+        "letterspacing/secondary",
+        "h5"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-secondary-h6",
+      "path": [
+        "letterspacing/secondary",
+        "h6"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--letterspacing-secondary-h7",
+      "path": [
+        "letterspacing/secondary",
+        "h7"
+      ],
+      "$type": "dimension",
+      "$value": ""
+    },
+    {
+      "family": "typography",
+      "cssVar": "--font-size-caption",
+      "path": [
+        "size",
+        "caption"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "Used by `base-input` Size=M, `password` / `text-input` / `picker` Size=M, `label` Size=Sm."
+    },
+    {
+      "family": "typography",
+      "cssVar": "--lineheight-caption",
+      "path": [
+        "lineheight/caption"
+      ],
+      "$type": "dimension",
+      "$value": "",
+      "$description": "Used by `base-input` Size=M, `password` / `text-input` / `picker` Size=M, `label` Size=Sm."
+    }
+  ],
+  "generatedAt": "2026-08-02T02:14:49.789Z"
+}

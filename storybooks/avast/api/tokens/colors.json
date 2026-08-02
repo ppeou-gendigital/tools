@@ -1,0 +1,1521 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/token.v1.json",
+  "type": "token",
+  "name": "colors",
+  "status": "published",
+  "summary": "Resolved avast theme values from themes/default/.",
+  "specUrl": "/api/tokens/colors/spec.md",
+  "sourceFiles": {
+    "spec": "/api/tokens/colors/spec.md"
+  },
+  "figma": null,
+  "tokens": [
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-dark-blue",
+      "path": [
+        "avast",
+        "dark",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#071d2b"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-white",
+      "path": [
+        "avast",
+        "white"
+      ],
+      "$type": "color",
+      "$value": "#ffffff"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-bright-orange",
+      "path": [
+        "avast",
+        "bright",
+        "orange"
+      ],
+      "$type": "color",
+      "$value": "#ff7800"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-light-orange",
+      "path": [
+        "avast",
+        "light",
+        "orange"
+      ],
+      "$type": "color",
+      "$value": "#ffb370"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-pale-orange",
+      "path": [
+        "avast",
+        "pale",
+        "orange"
+      ],
+      "$type": "color",
+      "$value": "#ffddbf"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-faint-orange",
+      "path": [
+        "avast",
+        "faint",
+        "orange"
+      ],
+      "$type": "color",
+      "$value": "#fff1e5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-off-white-orange",
+      "path": [
+        "avast",
+        "off",
+        "white",
+        "orange"
+      ],
+      "$type": "color",
+      "$value": "#fff9f5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-bright-blue",
+      "path": [
+        "avast",
+        "bright",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#0070f6"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-light-blue",
+      "path": [
+        "avast",
+        "light",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#7bb5fb"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-pale-blue",
+      "path": [
+        "avast",
+        "pale",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#d4e7ff"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-faint-blue",
+      "path": [
+        "avast",
+        "faint",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#f0f7ff"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-alt-bright-blue",
+      "path": [
+        "avast",
+        "alt",
+        "bright",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#0067ed"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-bright-green",
+      "path": [
+        "avast",
+        "bright",
+        "green"
+      ],
+      "$type": "color",
+      "$value": "#9ae437"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-light-green",
+      "path": [
+        "avast",
+        "light",
+        "green"
+      ],
+      "$type": "color",
+      "$value": "#b7eb6e"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-pale-green",
+      "path": [
+        "avast",
+        "pale",
+        "green"
+      ],
+      "$type": "color",
+      "$value": "#d5f2a5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-faint-green",
+      "path": [
+        "avast",
+        "faint",
+        "green"
+      ],
+      "$type": "color",
+      "$value": "#effbdf"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-red",
+      "path": [
+        "avast",
+        "red"
+      ],
+      "$type": "color",
+      "$value": "#d93511"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-red-inverse",
+      "path": [
+        "avast",
+        "red",
+        "inverse"
+      ],
+      "$type": "color",
+      "$value": "#ff5833"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-faint-red",
+      "path": [
+        "avast",
+        "faint",
+        "red"
+      ],
+      "$type": "color",
+      "$value": "#ffaf9d"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-yellow",
+      "path": [
+        "avast",
+        "yellow"
+      ],
+      "$type": "color",
+      "$value": "#ffbf00"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-yellow-inverse",
+      "path": [
+        "avast",
+        "yellow",
+        "inverse"
+      ],
+      "$type": "color",
+      "$value": "#ffd900"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-critical",
+      "path": [
+        "avast",
+        "critical"
+      ],
+      "$type": "color",
+      "$value": "#d93511"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-attention",
+      "path": [
+        "avast",
+        "attention"
+      ],
+      "$type": "color",
+      "$value": "#ffbf00"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-success",
+      "path": [
+        "avast",
+        "success"
+      ],
+      "$type": "color",
+      "$value": "#388700"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-info",
+      "path": [
+        "avast",
+        "info"
+      ],
+      "$type": "color",
+      "$value": "#0070f6"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-grey-1",
+      "path": [
+        "avast",
+        "grey",
+        "1"
+      ],
+      "$type": "color",
+      "$value": "#0c2636"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-grey-2",
+      "path": [
+        "avast",
+        "grey",
+        "2"
+      ],
+      "$type": "color",
+      "$value": "#143347"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-grey-3",
+      "path": [
+        "avast",
+        "grey",
+        "3"
+      ],
+      "$type": "color",
+      "$value": "#21455c"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-grey-4",
+      "path": [
+        "avast",
+        "grey",
+        "4"
+      ],
+      "$type": "color",
+      "$value": "#345970"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-grey-5",
+      "path": [
+        "avast",
+        "grey",
+        "5"
+      ],
+      "$type": "color",
+      "$value": "#5c7a8c"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-grey-6",
+      "path": [
+        "avast",
+        "grey",
+        "6"
+      ],
+      "$type": "color",
+      "$value": "#88a2b2"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-grey-7",
+      "path": [
+        "avast",
+        "grey",
+        "7"
+      ],
+      "$type": "color",
+      "$value": "#c5d6e0"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-grey-8",
+      "path": [
+        "avast",
+        "grey",
+        "8"
+      ],
+      "$type": "color",
+      "$value": "#e1eaf0"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-grey-9",
+      "path": [
+        "avast",
+        "grey",
+        "9"
+      ],
+      "$type": "color",
+      "$value": "#ebf1f5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-grey-10",
+      "path": [
+        "avast",
+        "grey",
+        "10"
+      ],
+      "$type": "color",
+      "$value": "#f7fafc"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-bright-green-80",
+      "path": [
+        "avast",
+        "bright",
+        "green",
+        "80"
+      ],
+      "$type": "color",
+      "$value": "#aee95f"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-bright-green-60",
+      "path": [
+        "avast",
+        "bright",
+        "green",
+        "60"
+      ],
+      "$type": "color",
+      "$value": "#c2ef87"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-bright-green-40",
+      "path": [
+        "avast",
+        "bright",
+        "green",
+        "40"
+      ],
+      "$type": "color",
+      "$value": "#d7f4af"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-bright-green-20",
+      "path": [
+        "avast",
+        "bright",
+        "green",
+        "20"
+      ],
+      "$type": "color",
+      "$value": "#ebfad7"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-grey-2-80",
+      "path": [
+        "avast",
+        "grey",
+        "2",
+        "80"
+      ],
+      "$type": "color",
+      "$value": "#435c6c"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-grey-2-60",
+      "path": [
+        "avast",
+        "grey",
+        "2",
+        "60"
+      ],
+      "$type": "color",
+      "$value": "#728591"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-grey-2-40",
+      "path": [
+        "avast",
+        "grey",
+        "2",
+        "40"
+      ],
+      "$type": "color",
+      "$value": "#a1adb5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-grey-2-20",
+      "path": [
+        "avast",
+        "grey",
+        "2",
+        "20"
+      ],
+      "$type": "color",
+      "$value": "#d0d6da"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-pale-green-80",
+      "path": [
+        "avast",
+        "pale",
+        "green",
+        "80"
+      ],
+      "$type": "color",
+      "$value": "#ddf5b7"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-pale-green-60",
+      "path": [
+        "avast",
+        "pale",
+        "green",
+        "60"
+      ],
+      "$type": "color",
+      "$value": "#e6f7c9"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-pale-green-40",
+      "path": [
+        "avast",
+        "pale",
+        "green",
+        "40"
+      ],
+      "$type": "color",
+      "$value": "#eefadb"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-pale-green-20",
+      "path": [
+        "avast",
+        "pale",
+        "green",
+        "20"
+      ],
+      "$type": "color",
+      "$value": "#f7fced"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-light-green-80",
+      "path": [
+        "avast",
+        "light",
+        "green",
+        "80"
+      ],
+      "$type": "color",
+      "$value": "#c5ef8b"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-light-green-60",
+      "path": [
+        "avast",
+        "light",
+        "green",
+        "60"
+      ],
+      "$type": "color",
+      "$value": "#d4f3a8"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-light-green-40",
+      "path": [
+        "avast",
+        "light",
+        "green",
+        "40"
+      ],
+      "$type": "color",
+      "$value": "#e2f7c5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-light-green-20",
+      "path": [
+        "avast",
+        "light",
+        "green",
+        "20"
+      ],
+      "$type": "color",
+      "$value": "#f1fbe2"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-faint-orange-80",
+      "path": [
+        "avast",
+        "faint",
+        "orange",
+        "80"
+      ],
+      "$type": "color",
+      "$value": "#fff4ea"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-faint-orange-60",
+      "path": [
+        "avast",
+        "faint",
+        "orange",
+        "60"
+      ],
+      "$type": "color",
+      "$value": "#fff7ef"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-faint-orange-40",
+      "path": [
+        "avast",
+        "faint",
+        "orange",
+        "40"
+      ],
+      "$type": "color",
+      "$value": "#fff9f5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-faint-orange-20",
+      "path": [
+        "avast",
+        "faint",
+        "orange",
+        "20"
+      ],
+      "$type": "color",
+      "$value": "#fffcfa"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-pale-blue-80",
+      "path": [
+        "avast",
+        "pale",
+        "blue",
+        "80"
+      ],
+      "$type": "color",
+      "$value": "#ddecff"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-pale-blue-60",
+      "path": [
+        "avast",
+        "pale",
+        "blue",
+        "60"
+      ],
+      "$type": "color",
+      "$value": "#e5f1ff"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-pale-blue-40",
+      "path": [
+        "avast",
+        "pale",
+        "blue",
+        "40"
+      ],
+      "$type": "color",
+      "$value": "#eef5ff"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avast-pale-blue-20",
+      "path": [
+        "avast",
+        "pale",
+        "blue",
+        "20"
+      ],
+      "$type": "color",
+      "$value": "#f6faff"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-white",
+      "path": [
+        "white"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-white)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-critical",
+      "path": [
+        "functional",
+        "critical"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-critical)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-critical-muted",
+      "path": [
+        "functional",
+        "critical",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "#ec9a88"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-critical-subtle",
+      "path": [
+        "functional",
+        "critical",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "#fbebe7"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-attention",
+      "path": [
+        "functional",
+        "attention"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-attention)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-attention-muted",
+      "path": [
+        "functional",
+        "attention",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "#ffdf80"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-attention-subtle",
+      "path": [
+        "functional",
+        "attention",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "#fff9e5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-success",
+      "path": [
+        "functional",
+        "success"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-success)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-success-muted",
+      "path": [
+        "functional",
+        "success",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "#9bc380"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-success-subtle",
+      "path": [
+        "functional",
+        "success",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "#ebf3e5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-info",
+      "path": [
+        "functional",
+        "info"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-info)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-info-muted",
+      "path": [
+        "functional",
+        "info",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "#80b7fb"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-info-subtle",
+      "path": [
+        "functional",
+        "info",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "#e5f1fe"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-5",
+      "path": [
+        "neutral",
+        "5"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-10)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-10",
+      "path": [
+        "neutral",
+        "10"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-9)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-20",
+      "path": [
+        "neutral",
+        "20"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-8)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-30",
+      "path": [
+        "neutral",
+        "30"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-7)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-40",
+      "path": [
+        "neutral",
+        "40"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-6)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-50",
+      "path": [
+        "neutral",
+        "50"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-5)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-60",
+      "path": [
+        "neutral",
+        "60"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-4)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-70",
+      "path": [
+        "neutral",
+        "70"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-3)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-80",
+      "path": [
+        "neutral",
+        "80"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-2)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-90",
+      "path": [
+        "neutral",
+        "90"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-1)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-default",
+      "path": [
+        "bg",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-white)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-subtle",
+      "path": [
+        "bg",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-9)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-muted",
+      "path": [
+        "bg",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-faint-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-brand",
+      "path": [
+        "bg",
+        "brand"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-bright-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-brand-soft",
+      "path": [
+        "bg",
+        "brand",
+        "soft"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-light-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-accent",
+      "path": [
+        "bg",
+        "accent"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-faint-orange)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-alpha",
+      "path": [
+        "bg",
+        "alpha"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-pale-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-beta",
+      "path": [
+        "bg",
+        "beta"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-faint-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-gamma",
+      "path": [
+        "bg",
+        "gamma"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-off-white-orange)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-delta",
+      "path": [
+        "bg",
+        "delta"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-pale-orange)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-inverse",
+      "path": [
+        "bg",
+        "inverse"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-dark-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-inverse-strong",
+      "path": [
+        "bg",
+        "inverse",
+        "strong"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-2)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-primary",
+      "path": [
+        "bg",
+        "primary"
+      ],
+      "$type": "color",
+      "$value": "var(--color-bg-default)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-primary",
+      "path": [
+        "text",
+        "primary"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-dark-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-secondary",
+      "path": [
+        "text",
+        "secondary"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-2)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-brand",
+      "path": [
+        "text",
+        "brand"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-bright-orange)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-accent",
+      "path": [
+        "text",
+        "accent"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-bright-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-inverse",
+      "path": [
+        "text",
+        "inverse"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-white)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-strong",
+      "path": [
+        "border",
+        "strong"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-dark-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-strong-alt",
+      "path": [
+        "border",
+        "strong",
+        "alt"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-4)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-subtle",
+      "path": [
+        "border",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-8)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-inverse",
+      "path": [
+        "border",
+        "inverse"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-white)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-brand",
+      "path": [
+        "border",
+        "brand"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-bright-orange)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-accent",
+      "path": [
+        "border",
+        "accent"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-bright-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-focus",
+      "path": [
+        "border",
+        "focus"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-bright-orange)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-brand",
+      "path": [
+        "highlight",
+        "brand"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-bright-orange)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-brand-light",
+      "path": [
+        "highlight",
+        "brand",
+        "light"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-pale-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-accent",
+      "path": [
+        "highlight",
+        "accent"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-bright-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-alpha-base",
+      "path": [
+        "highlight",
+        "alpha",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-bright-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-beta-base",
+      "path": [
+        "highlight",
+        "beta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-5)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-gamma-base",
+      "path": [
+        "highlight",
+        "gamma",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-yellow)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-delta-base",
+      "path": [
+        "highlight",
+        "delta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-yellow-inverse)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-epsilon-base",
+      "path": [
+        "highlight",
+        "epsilon",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-light-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-zeta-base",
+      "path": [
+        "highlight",
+        "zeta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-light-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-eta-base",
+      "path": [
+        "highlight",
+        "eta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-light-orange)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-theta-base",
+      "path": [
+        "highlight",
+        "theta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-pale-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-iota-base",
+      "path": [
+        "highlight",
+        "iota",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-7)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-critical",
+      "path": [
+        "signal",
+        "critical"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-critical)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-critical-muted",
+      "path": [
+        "signal",
+        "critical",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-critical-muted)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-critical-subtle",
+      "path": [
+        "signal",
+        "critical",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-critical-subtle)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-warning",
+      "path": [
+        "signal",
+        "warning"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-attention)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-warning-muted",
+      "path": [
+        "signal",
+        "warning",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-attention-muted)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-warning-subtle",
+      "path": [
+        "signal",
+        "warning",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-attention-subtle)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-success",
+      "path": [
+        "signal",
+        "success"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-success)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-success-muted",
+      "path": [
+        "signal",
+        "success",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-success-muted)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-success-subtle",
+      "path": [
+        "signal",
+        "success",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-success-subtle)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-info",
+      "path": [
+        "signal",
+        "info"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-info)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-info-muted",
+      "path": [
+        "signal",
+        "info",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-info-muted)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-info-subtle",
+      "path": [
+        "signal",
+        "info",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-info-subtle)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-disabled-text",
+      "path": [
+        "disabled",
+        "text"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-6)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-disabled-border",
+      "path": [
+        "disabled",
+        "border"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-7)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-disabled-bg",
+      "path": [
+        "disabled",
+        "bg"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-8)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-canvas-default",
+      "path": [
+        "canvas",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-white)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-canvas-subtle",
+      "path": [
+        "canvas",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-10)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-canvas-contrast",
+      "path": [
+        "canvas",
+        "contrast"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-9)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-shadow-default",
+      "path": [
+        "shadow",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avast-grey-5)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--gradient-horizontal",
+      "path": [
+        "gradient",
+        "horizontal"
+      ],
+      "$type": "color",
+      "$value": "linear-gradient(90deg, var(--color-avast-bright-orange) 0%, var(--color-avast-yellow) 100%)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--gradient-vertical",
+      "path": [
+        "gradient",
+        "vertical"
+      ],
+      "$type": "color",
+      "$value": "linear-gradient(180deg, var(--color-avast-bright-orange) 0%, var(--color-avast-yellow) 100%)"
+    }
+  ],
+  "generatedAt": "2026-08-02T02:14:40.012Z"
+}

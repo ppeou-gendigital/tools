@@ -1,0 +1,174 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/token.v1.json",
+  "type": "token",
+  "name": "shadow",
+  "status": "published",
+  "summary": "Resolved avast theme values from themes/default/.",
+  "specUrl": "/api/tokens/shadow/spec.md",
+  "sourceFiles": {
+    "spec": "/api/tokens/shadow/spec.md"
+  },
+  "figma": null,
+  "tokens": [
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-raw-x-default",
+      "path": [
+        "raw",
+        "x",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "0"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-raw-y-default",
+      "path": [
+        "raw",
+        "y",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "6px"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-raw-blur-default",
+      "path": [
+        "raw",
+        "blur",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "24px"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-raw-spread-default",
+      "path": [
+        "raw",
+        "spread",
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "0"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-raw-x-hover",
+      "path": [
+        "raw",
+        "x",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "0"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-raw-y-hover",
+      "path": [
+        "raw",
+        "y",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "6px"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-raw-blur-hover",
+      "path": [
+        "raw",
+        "blur",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "24px"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-raw-spread-hover",
+      "path": [
+        "raw",
+        "spread",
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "0"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-raw-x-pressed",
+      "path": [
+        "raw",
+        "x",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "0"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-raw-y-pressed",
+      "path": [
+        "raw",
+        "y",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "2px"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-raw-blur-pressed",
+      "path": [
+        "raw",
+        "blur",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "6px"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-raw-spread-pressed",
+      "path": [
+        "raw",
+        "spread",
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "0"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-default",
+      "path": [
+        "default"
+      ],
+      "$type": "dimension",
+      "$value": "0 6px 24px 0 rgb(0 0 0 / var(--opacity-10))"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-hover",
+      "path": [
+        "hover"
+      ],
+      "$type": "dimension",
+      "$value": "0 6px 24px 0 rgb(0 0 0 / var(--opacity-10))"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-pressed",
+      "path": [
+        "pressed"
+      ],
+      "$type": "dimension",
+      "$value": "0 2px 6px 0 rgb(0 0 0 / var(--opacity-10))"
+    }
+  ],
+  "generatedAt": "2026-08-02T02:14:40.012Z"
+}

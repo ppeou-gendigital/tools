@@ -1,0 +1,162 @@
+/**
+ * Patterns/Breadcrumb — single BEM root (.c-breadcrumb) covering the
+ * Figma master variant set on Web-ODS Shared Library `1260:8373`
+ * (LifeLock theme mode).
+ *
+ * Variant axes → BEM modifiers:
+ *   firstAsIcon → .c-breadcrumb--first-as-icon-{no|yes}
+ *   collapsed   → .c-breadcrumb--collapsed-{no|yes}
+ *   truncation  → .c-breadcrumb--truncation-{no|yes}
+ *
+ * Interaction state mechanics: every intermediate link inherits its
+ * own :hover / :focus-visible / :active / :visited paint from the
+ * composed `text-link` partial. Breadcrumb adds no per-link
+ * overrides — only the home-icon anchor paints its own focus ring
+ * (because it is not a composed text-link). The static ellipsis
+ * placeholder receives a subtle hover cue (tooltip surfaces via
+ * native `title`) but never accepts pointer or keyboard focus.
+ *
+ * Per `spec-driven-sync.mdc`, every paint resolves to a `var(--…)`
+ * token declared in `tokens/colors`, `tokens/typography`,
+ * `tokens/spacing`, or `tokens/borders`. No hardcoded design values.
+ *
+ * Logical properties (`padding-inline`, `padding-block`,
+ * `margin-inline-*`, `max-inline-size`) keep the unit RTL-safe out
+ * of the box.
+ */
+
+// ============================================================================
+// BLOCK — .c-breadcrumb
+// ============================================================================
+
+.c-breadcrumb {
+  // Wayfinding lives inside body content — sit inline-flex so the
+  // nav hugs its content and doesn't stretch to its container's
+  // inline-size. Wrap on narrow viewports rather than overflow.
+  display: inline-flex;
+  // Mirrors the Figma master's root box: 2px block / 4px inline.
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+
+  // Color inheritance — separators sit at low contrast; the
+  // composed text-link / current-page paints override locally.
+  color: var(--color-disabled-text);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  // Inherits into every composed text-link label and the current
+  // crumb — matches the master's +0.28px (2%) tracking on body-sm.
+  letter-spacing: var(--letterspacing-body-sm);
+}
+
+// ============================================================================
+// ELEMENT — .c-breadcrumb__list
+// ============================================================================
+
+.c-breadcrumb__list {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// ============================================================================
+// ELEMENT — .c-breadcrumb__item
+// ============================================================================
+
+.c-breadcrumb__item {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 24px;
+}
+
+.c-breadcrumb__item--separator {
+  color: var(--color-disabled-text);
+}
+
+// ============================================================================
+// ELEMENT — .c-breadcrumb__current (the leaf node — never a link)
+// ============================================================================
+
+.c-breadcrumb__current {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+}
+
+// ============================================================================
+// ELEMENT — .c-breadcrumb__home (icon-only anchor for firstAsIcon=true)
+// ============================================================================
+
+.c-breadcrumb__home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 24px;
+  min-block-size: 24px;
+  padding: 0;
+  color: var(--color-text-brand);
+  text-decoration: none;
+  border-radius: var(--border-radius-control);
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+
+  // Focus ring mirrors the text-link's outline / outline-offset so
+  // the keyboard cue stays consistent across the trail.
+  &:focus-visible {
+    outline: 2px solid var(--color-border-focus);
+    outline-offset: var(--space-1);
+  }
+}
+
+// ============================================================================
+// ELEMENT — .c-breadcrumb__ellipsis (static collapsed-state placeholder)
+// ============================================================================
+// Mirrors the Figma `PaginationControls / Style=Square` instance at
+// 20×20 with padding `space-1` and `border-radius-s`. The placeholder
+// is presentation-only: it surfaces the hidden labels via the native
+// `title` tooltip on hover and the same labels via `aria-label` for
+// screen readers. There is no click, no keyboard activation, and no
+// JS layer — every collapsed-state trail keeps the last visible
+// intermediate link reachable as the user's recovery path.
+
+.c-breadcrumb__ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 20px;
+  block-size: 20px;
+  padding: var(--space-1);
+  color: var(--color-text-primary);
+  border-radius: var(--border-radius-control);
+  cursor: help;
+}
+
+// ============================================================================
+// MODIFIER — .c-breadcrumb--truncation-yes
+// ============================================================================
+
+// Truncation is purely visual — the full label stays in the DOM via
+// the underlying text-link's `<span class="c-text-link__label">` and
+// the current-page `<span class="c-breadcrumb__current">`. The cap
+// is expressed in `ch` units so it tracks the user's preferred font
+// size; readability stays consistent across zoom levels.
+.c-breadcrumb--truncation-yes .c-breadcrumb__item--link .c-text-link__label,
+.c-breadcrumb--truncation-yes .c-breadcrumb__current {
+  display: inline-block;
+  max-inline-size: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}

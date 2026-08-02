@@ -1,0 +1,74 @@
+/**
+ * Icon — mask-image + currentColor primitive.
+ *
+ * Mirrors the canonical `.Sticker Sheet / Icon mask wrapper` on
+ * Web-ODS Shared Library (`990:1808`) — see the Source files table in
+ * `storybook-lifelock/src/figma-import-index.md`. The SVG is used as
+ * an alpha mask; the background paints the silhouette in
+ * `currentColor`, which is then overridden per `c-icon--<color>`
+ * modifier. Consumers can also wrap the icon in any text-color
+ * context and use `c-icon--current` to inherit.
+ */
+
+.c-icon {
+  display: inline-block;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: var(--icon-size, 24px);
+  height: var(--icon-size, 24px);
+  padding-block: var(--icon-frame-padding-block, 0);
+  padding-inline: var(--icon-frame-padding-inline, 0);
+  background-color: currentcolor;
+  background-clip: content-box;
+  mask-image: var(--icon-source);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-clip: content-box;
+  mask-origin: content-box;
+  vertical-align: middle;
+}
+
+.c-icon--16  { --icon-size: 16px; }
+.c-icon--20  { --icon-size: 20px; }
+.c-icon--24  { --icon-size: 24px; }
+.c-icon--32  { --icon-size: 32px; }
+.c-icon--40  { --icon-size: 40px; }
+.c-icon--48  { --icon-size: 48px; }
+.c-icon--64  { --icon-size: 64px; }
+.c-icon--72  { --icon-size: 72px; }
+.c-icon--80  { --icon-size: 80px; }
+.c-icon--96  { --icon-size: 96px; }
+.c-icon--144 { --icon-size: 144px; }
+
+.c-icon--current  { color: currentcolor; }
+.c-icon--default  { color: var(--color-text-primary); }
+.c-icon--brand    { color: var(--color-text-brand); }
+.c-icon--accent   { color: var(--color-text-accent); }
+.c-icon--inverse  { color: var(--color-text-inverse); }
+.c-icon--success  { color: var(--color-signal-success); }
+.c-icon--critical { color: var(--color-signal-critical); }
+
+/* Frame envelopes — transparent positioning shells (no border, no fill).
+ * Each shrinks the painted glyph to a smaller inner shape via
+ * `mask-clip: content-box` + computed padding. Ratios mirror Figma
+ * `Web-ODS-Icons / 2:1318` Section 2 "Shapes and Layouts" exactly. */
+.c-icon--square {
+  --icon-frame-padding-block:  calc(var(--icon-size) * 0.125);
+  --icon-frame-padding-inline: calc(var(--icon-size) * 0.125);
+}
+
+.c-icon--circle {
+  --icon-frame-padding-block:  calc(var(--icon-size) * 0.0833);
+  --icon-frame-padding-inline: calc(var(--icon-size) * 0.0833);
+}
+
+.c-icon--vertical-rectangle {
+  --icon-frame-padding-block:  calc(var(--icon-size) * 0.0833);
+  --icon-frame-padding-inline: calc(var(--icon-size) * 0.1667);
+}
+
+.c-icon--horizontal-rectangle {
+  --icon-frame-padding-block:  calc(var(--icon-size) * 0.1667);
+  --icon-frame-padding-inline: calc(var(--icon-size) * 0.0833);
+}

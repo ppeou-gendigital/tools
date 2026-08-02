@@ -1,0 +1,66 @@
+/**
+ * Components/PaginationDots — horizontal row of small dots with one
+ * expanding active pill. Presentational only.
+ *
+ * Mirrors Web-ODS Shared Library master `1278:1668` + the light/dark
+ * preview composition `1278:1877` under the LifeLock mode pick.
+ *
+ * Inline-axis sizing uses logical properties so the row reads natively
+ * under `dir="rtl"`.
+ *
+ * Tokens consumed are listed in `./spec.md` § "Tokens consumed".
+ */
+
+.c-pagination-dots {
+  --c-pagination-dots-size:        8px;
+  --c-pagination-dots-active-w:    24px;
+  --c-pagination-dots-gap:         var(--space-3);
+
+  --c-pagination-dots-inactive:    var(--color-border-subtle);
+  --c-pagination-dots-active:      var(--color-text-primary);
+
+  display: inline-flex;
+  align-items: center;
+}
+
+.c-pagination-dots__list {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--c-pagination-dots-gap);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.c-pagination-dots__dot {
+  display: inline-block;
+  inline-size: var(--c-pagination-dots-size);
+  block-size:  var(--c-pagination-dots-size);
+  background-color: var(--c-pagination-dots-inactive);
+  border-radius: var(--border-radius-pill);
+  transition: inline-size 180ms ease, background-color 180ms ease;
+}
+
+.c-pagination-dots__dot--active {
+  inline-size: var(--c-pagination-dots-active-w);
+  background-color: var(--c-pagination-dots-active);
+}
+
+/* --- Dark appearance ----------------------------------------- */
+
+/* Inactive dots paint `--color-text-inverse` at 40 % opacity; the
+   active pill paints the surface (`--color-bg-default`) so it reads
+   on a dark backdrop. See spec.md § "Notes & open questions" for the
+   token-substitution rationale. */
+.c-pagination-dots--dark {
+  --c-pagination-dots-inactive:    color-mix(in srgb, var(--color-text-inverse) 40%, transparent);
+  --c-pagination-dots-active:      var(--color-bg-default);
+}
+
+/* --- Reduced motion ------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .c-pagination-dots__dot {
+    transition: none;
+  }
+}

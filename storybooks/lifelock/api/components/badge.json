@@ -1,0 +1,134 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "badge",
+  "status": "published",
+  "summary": "Compact molecule for status, counts, and short text labels. Canonical core unit on BEM `.c-badge`, mirrored from [Web-ODS Shared Library / page 539:28416](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28416&m=dev) (component set `1284:14251`, Spec `2959:441`). Brands inherit via `onboarding` / `inherited-units.json` and supply theme tokens only.",
+  "specUrl": "/api/components/badge/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/badge/spec.md",
+    "hbs": "/api/components/badge/source/badge.hbs",
+    "scss": "/api/components/badge/source/badge.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "1284:14251",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1284-14251&m=dev"
+  },
+  "rootClass": "c-badge",
+  "bemClasses": [
+    "c-badge"
+  ],
+  "properties": [
+    {
+      "name": "variant",
+      "fixtureKey": "variant",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"dot\"",
+      "description": "`dot` / `count` / `text`.",
+      "figmaLabel": "Variant"
+    },
+    {
+      "name": "color",
+      "fixtureKey": "color",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"info\"",
+      "description": "`info` / `success` / `warning` / `error` / `brand` / `inverse`.",
+      "figmaLabel": "Color"
+    },
+    {
+      "name": "emphasis",
+      "fixtureKey": "emphasis",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"low\"",
+      "description": "`low` / `high`.",
+      "figmaLabel": "Emphasis"
+    },
+    {
+      "name": "countValue",
+      "fixtureKey": "countValue",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"3\"",
+      "description": "Inside `.c-badge__value`.",
+      "figmaLabel": "Count value"
+    },
+    {
+      "name": "label",
+      "fixtureKey": "label",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"NEW\"",
+      "description": "Inside `.c-badge__label`; SCSS uppercases.",
+      "figmaLabel": "Label"
+    },
+    {
+      "name": "accessibleLabel",
+      "fixtureKey": "accessibleLabel",
+      "type": "String",
+      "required": false,
+      "default": "\"\"",
+      "description": "`role=\"img\"` + `aria-label` when set; else `aria-hidden=\"true\"`.",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "variant",
+      "values": "`dot` (default — 8 × 8 px circle) / `count` (pill + `countValue`) / `text` (pill + uppercase `label`). BEM `.c-badge--<variant>`."
+    },
+    {
+      "axis": "color",
+      "values": "`info` / `success` / `warning` / `error` / `brand` / `inverse`. BEM `.c-badge--<color>`. Mirrors Figma Color on `1284:14251` (Inverse replaces the former LifeLock `gray` label)."
+    },
+    {
+      "axis": "emphasis",
+      "values": "`low` (default) / `high`. BEM `.c-badge--<emphasis>`."
+    }
+  ],
+  "tokensConsumed": [
+    "--color-signal-info",
+    "--color-signal-info-muted",
+    "--color-signal-info-subtle",
+    "--color-signal-success",
+    "--color-signal-success-muted",
+    "--color-signal-success-subtle",
+    "--color-signal-warning",
+    "--color-signal-warning-muted",
+    "--color-signal-warning-subtle",
+    "--color-signal-critical",
+    "--color-signal-critical-muted",
+    "--color-signal-critical-subtle",
+    "--color-text-primary",
+    "--color-text-secondary",
+    "--color-text-inverse",
+    "--color-bg-subtle",
+    "--color-bg-inverse-strong",
+    "--color-bg-brand",
+    "--color-bg-brand-soft",
+    "--color-text-brand",
+    "--color-border-brand",
+    "--border-radius-pill",
+    "--space-1",
+    "--space-3",
+    "--font-family-primary",
+    "--font-weight-semibold",
+    "--font-size-body-xs",
+    "--lineheight-body-xs"
+  ],
+  "composes": [],
+  "hasBehavior": false,
+  "accessibility": [
+    "**`dot`:** `aria-hidden=\"true\"` by default; optional `accessibleLabel` → `role=\"img\"`.",
+    "**`count` / `text`:** visible text is the accessible name.",
+    "**No focus ring** — wrap in an interactive control when needed.",
+    "**Contrast:** `warning` / `high` carve-out; verify `inverse` / `low` on tinted hosts."
+  ],
+  "storybookId": "molecules-badge",
+  "generatedAt": "2026-08-02T02:14:49.789Z"
+}

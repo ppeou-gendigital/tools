@@ -1,0 +1,19 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/token.v1.json",
+  "type": "token",
+  "name": "iconography",
+  "status": "published",
+  "summary": "Catalog-level spec for the **icon library** — naming convention, sizing ladder, color application, and how the `Design System/Iconography` gallery renders the canonical Web-ODS-Icons page (LifeLock theme variant of each icon). This unit documents the *catalog as a design token*; the consumable primitive that paints any catalog entry on a surface is `Components/Icon` (governed by `storybook-lifelock/src/components/icon/spec.md`).",
+  "specUrl": "/api/tokens/iconography/spec.md",
+  "sourceFiles": {
+    "spec": "/api/tokens/iconography/spec.md",
+    "scss": "/api/tokens/iconography/source/iconography.scss"
+  },
+  "figma": {
+    "fileKey": "7NjgRv0ac9SNpgwEO7wmfe",
+    "nodeId": "2:2583",
+    "url": "https://www.figma.com/design/7NjgRv0ac9SNpgwEO7wmfe/?node-id=2-2583&m=dev"
+  },
+  "tokens": [],
+  "generatedAt": "2026-08-02T02:14:49.789Z"
+}
