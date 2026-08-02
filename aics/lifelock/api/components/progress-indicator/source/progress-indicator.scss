@@ -1,0 +1,378 @@
+/**
+ * Components/Progress indicator — single BEM root (.c-progress-indicator)
+ * covering three layouts:
+ *   - linear `inline` + `stacked` — mirror the Figma Linear master
+ *     variant set on Web-ODS Shared Library `1380:1255` and the
+ *     `Progress indicator — Overview` Spec Frame at `1380:1478`.
+ *   - `circular` — mirrors the LifeLock-mode sticker sheet
+ *     `.Sticker Sheets/progress-indicator/LifeLock` at `615:80630`
+ *     (five discrete sizes: xs / sm / md / lg / xxl).
+ *
+ * Variant axes → BEM modifiers:
+ *   layout → .c-progress-indicator--inline | --stacked | --circular
+ *   theme  → .c-progress-indicator--light   | --dark
+ *   size   → .c-progress-indicator--xs | --sm | --md | --lg | --xxl
+ *            (circular only — linear layouts are fluid 100% wide)
+ *   value  → inline `--progress-indicator-value` custom property
+ *            (0..100; drives `.c-progress-indicator__fill` flex-basis on
+ *            linear, and the SVG `.c-progress-indicator__ring-fill`'s
+ *            `stroke-dasharray` on circular)
+ *
+ * Stateless — no `:hover` / `:focus-visible` / `:active` paints, no
+ * `is-*` runtime classes, no JavaScript. The component reflects the
+ * application's progress value to the user but does not accept input.
+ *
+ * Token surface (component-knobs only — public for consumers):
+ *   --progress-indicator-track-height        : 2px (linear; LifeLock
+ *                                               publishes no 2px primitive)
+ *   --progress-indicator-radius               : 2px (linear; LifeLock's
+ *                                               --border-radius-* ramp is
+ *                                               role-keyed, no XS primitive)
+ *   --progress-indicator-label-letter-spacing : 0.6px (linear; mirrors the
+ *                                               Figma Tagline/Small
+ *                                               letter-spacing without a
+ *                                               Tagline scale in LifeLock
+ *                                               typography)
+ *   --progress-indicator-circular-size        : per-size diameter (set by
+ *                                               .c-progress-indicator--* on
+ *                                               circular; consumers may
+ *                                               override inline for custom
+ *                                               sizes)
+ *   --progress-indicator-circular-stroke      : per-size stroke width
+ *                                               (--border-width-default 2px
+ *                                               for xs/sm/md/lg;
+ *                                               --border-width-emphasis 4px
+ *                                               for xxl)
+ *
+ * Logical properties (`padding-inline`, `gap`) keep the linear geometry
+ * RTL-safe; the circular ring is naturally direction-neutral.
+ *
+ * Tokens consumed are documented in `./spec.md` § "Tokens consumed".
+ */
+
+:root {
+  --progress-indicator-track-height: 2px;
+  --progress-indicator-radius: 2px;
+  --progress-indicator-label-letter-spacing: 0.6px;
+}
+
+// ============================================================================
+// BLOCK — .c-progress-indicator
+// ============================================================================
+
+.c-progress-indicator {
+  display: flex;
+  inline-size: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-family-primary);
+}
+
+// ============================================================================
+// LINEAR ELEMENTS — label, track, fill, spacer
+// ============================================================================
+
+.c-progress-indicator__label {
+  // Block-axis self-alignment is centred in the inline layout (label
+  // sits next to the 2 px track and reads as part of the same row) and
+  // start-aligned in the stacked layout (label sits above the track on
+  // its own row). Applied via the modifier blocks below.
+  display: inline-block;
+  margin: 0;
+
+  // Typography mirror — Figma uses Lexend Tagline/Small SemiBold
+  // (14 / 16 / 0.6 px). LifeLock's Inter Tight ramp has no Tagline
+  // scale, so the closest match is body-sm + a component-knob
+  // letter-spacing. line-height drifts from 16 px to 22 px; documented
+  // as a Designer Follow-Up in spec.md.
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--progress-indicator-label-letter-spacing);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.c-progress-indicator__track {
+  // The track is a horizontal flex row that hosts the fill (left) and
+  // the spacer (right). The two children share the inline-axis space
+  // proportionally — `__fill` claims `var(--progress-indicator-value)`
+  // units (0..100), `__spacer` claims `100 - <value>` units. This
+  // mirrors the Figma source verbatim (`flex-[50_0_0]` on both
+  // children for a 50 % progress reading).
+  display: flex;
+  align-items: stretch;
+  flex: 1 1 auto;
+  inline-size: 100%;
+  block-size: var(--progress-indicator-track-height);
+  overflow: clip;
+  border-radius: var(--progress-indicator-radius);
+  background-color: var(--color-neutral-30);
+}
+
+.c-progress-indicator__fill {
+  // Width is driven by the inline custom prop on the root —
+  // flex-basis: <value> * 1%, no flex-grow / shrink, so the fill
+  // paints its exact share of the track.
+  flex: calc(var(--progress-indicator-value, 50)) 0 0;
+  min-inline-size: 1px;
+  block-size: 100%;
+  border-radius: var(--progress-indicator-radius);
+  background-color: var(--color-off-black);
+}
+
+.c-progress-indicator__spacer {
+  // The spacer is the trailing chunk of the track that has not been
+  // filled. It paints no surface of its own (the track's neutral-30
+  // background shows through); it exists only to hold the remaining
+  // flex share so the fill width math reads as `value / 100`.
+  flex: calc(100 - var(--progress-indicator-value, 50)) 0 0;
+  min-inline-size: 1px;
+  block-size: 100%;
+}
+
+// ============================================================================
+// LAYOUT — inline (label + track on one row)
+// ============================================================================
+
+.c-progress-indicator--inline {
+  flex-flow: row wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.c-progress-indicator--inline .c-progress-indicator__label {
+  align-self: center;
+  flex: 0 0 auto;
+}
+
+// ============================================================================
+// LAYOUT — stacked (label above track)
+// ============================================================================
+
+.c-progress-indicator--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.c-progress-indicator--stacked .c-progress-indicator__label {
+  align-self: flex-start;
+}
+
+// ============================================================================
+// THEME — light (default) + dark (applies to linear __label and circular __value)
+// ============================================================================
+
+.c-progress-indicator--light .c-progress-indicator__label,
+.c-progress-indicator--light .c-progress-indicator__value {
+  color: var(--color-text-primary);
+}
+
+.c-progress-indicator--dark .c-progress-indicator__label,
+.c-progress-indicator--dark .c-progress-indicator__value {
+  color: var(--color-text-inverse);
+}
+
+// ============================================================================
+// LAYOUT — circular (SVG ring + optional inner value text)
+// ============================================================================
+
+/*
+ * The circular layout paints a fixed-size square containing two
+ * overlaid SVG circles (track + fill arc) and, when `showLabel=true`
+ * and the size is large enough, an inner value text node positioned
+ * at the centre.
+ *
+ * Geometry — driven by two component-knobs the per-size blocks set:
+ *   --progress-indicator-circular-size   : diameter in CSS px
+ *   --progress-indicator-circular-stroke : ring stroke in CSS px
+ *
+ * Sweep — the fill circle's `pathLength="100"` lets stroke-dasharray
+ * read as a percent of the circumference, so the SCSS only needs to
+ * pipe `--progress-indicator-value` straight through:
+ *   stroke-dasharray: var(--progress-indicator-value) 100
+ *
+ * Direction — the `<svg>` itself is rotated -90° so the dash starts at
+ * 12 o'clock and sweeps clockwise (matches the Figma reference).
+ */
+
+.c-progress-indicator--circular {
+  // Override the parent block's `display: flex; inline-size: 100%`
+  // because the circular layout is intrinsic-sized (the diameter
+  // knob owns inline + block size). Children stack at the centre
+  // of the square via absolute positioning, not flex.
+  display: inline-block;
+  position: relative;
+  inline-size: var(--progress-indicator-circular-size, 48px);
+  block-size: var(--progress-indicator-circular-size, 48px);
+
+  // The five canonical stamps verbatim from the Figma sticker sheet.
+  // Authors can override the two custom properties inline for custom
+  // sizes — the SVG geometry scales with them.
+  --progress-indicator-circular-size: 48px;
+
+  // Stroke-width is expressed in viewBox user units (the SVG ships
+  // viewBox="0 0 100 100"), NOT screen pixels — the per-size blocks
+  // below set this to a value that renders to the target screen px
+  // (`2px` for xs/sm/md/lg, `4px` for xxl) once the SVG is scaled to
+  // the size knob. We can't use `vector-effect: non-scaling-stroke`
+  // here because it suppresses `pathLength="100"` normalization on
+  // the fill arc's `stroke-dasharray`, which is what makes the dash
+  // sweep read as a percent of the circumference regardless of size.
+  --progress-indicator-circular-stroke: 4.167; // md default — 2px @ 48px
+}
+
+.c-progress-indicator__ring {
+  // The SVG fills the whole square. Rotating -90deg starts the dash
+  // sweep at 12 o'clock; the fill arc grows clockwise.
+  position: absolute;
+  inset: 0;
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  transform: rotate(-90deg);
+
+  // Trim the SVG bounding box to the visual ring; without `overflow:
+  // visible` the stroke would clip at high stroke widths.
+  overflow: visible;
+}
+
+.c-progress-indicator__ring-track,
+.c-progress-indicator__ring-fill {
+  fill: none;
+
+  // `--progress-indicator-circular-stroke` is a unitless number in
+  // viewBox user units (see the per-size blocks below). The SVG
+  // viewBox is 100×100 so 1 user unit = (size / 100) screen px;
+  // each per-size value is calibrated to render to 2 / 4 screen px.
+  stroke-width: var(--progress-indicator-circular-stroke, 4.167);
+}
+
+.c-progress-indicator__ring-track {
+  stroke: var(--color-neutral-30);
+}
+
+.c-progress-indicator__ring-fill {
+  stroke: var(--color-off-black);
+  stroke-linecap: butt;
+
+  // `var(--progress-indicator-value, 50)` is a unit-less 0..100. The
+  // companion `100` is the explicit pathLength so the dash array
+  // reads as a percent of the circumference.
+  stroke-dasharray: var(--progress-indicator-value, 50) 100;
+}
+
+.c-progress-indicator__value {
+  // Centre the value text inside the ring. The container is `inset:
+  // 0` so the flex centring rules apply to the full square.
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+  pointer-events: none;
+}
+
+.c-progress-indicator__value-num {
+  // Per-size override below.
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+}
+
+.c-progress-indicator__value-unit {
+  // The percent sign is a small superscript-ish unit. Per-size
+  // override below; sizes that hide the unit set `display: none` on
+  // this node.
+  font-size: var(--font-size-body-xs);
+  line-height: var(--lineheight-body-xs);
+}
+
+// ============================================================================
+// SIZE — circular layout only (xs / sm / md / lg / xxl)
+// ============================================================================
+
+.c-progress-indicator--xs {
+  --progress-indicator-circular-size: 16px;
+
+  // 2 screen px target × (100 viewBox / 16 size) = 12.5 viewBox user units.
+  --progress-indicator-circular-stroke: 12.5;
+}
+
+.c-progress-indicator--xs .c-progress-indicator__value {
+  // The 16 px ring has no room for inner text — the Figma sticker
+  // sheet only stamps the ring at this size. `showLabel=true` is
+  // still respected at the prop level; the visible text just hides.
+  display: none;
+}
+
+.c-progress-indicator--sm {
+  --progress-indicator-circular-size: 24px;
+
+  // 2 screen px target × (100 viewBox / 24 size) ≈ 8.333 viewBox user units.
+  --progress-indicator-circular-stroke: 8.333;
+}
+
+.c-progress-indicator--sm .c-progress-indicator__value-num {
+  font-size: var(--font-size-body-xs);
+  line-height: var(--lineheight-body-xs);
+}
+
+.c-progress-indicator--sm .c-progress-indicator__value-unit {
+  // Per the Figma sticker sheet — the 24 px ring only stamps the
+  // digits, no `%` unit.
+  display: none;
+}
+
+.c-progress-indicator--md {
+  --progress-indicator-circular-size: 48px;
+
+  // 2 screen px target × (100 viewBox / 48 size) ≈ 4.167 viewBox user units.
+  --progress-indicator-circular-stroke: 4.167;
+}
+
+.c-progress-indicator--md .c-progress-indicator__value-num {
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+}
+
+.c-progress-indicator--md .c-progress-indicator__value-unit {
+  font-size: var(--font-size-body-xs);
+  line-height: var(--lineheight-body-xs);
+}
+
+.c-progress-indicator--lg {
+  --progress-indicator-circular-size: 96px;
+
+  // 2 screen px target × (100 viewBox / 96 size) ≈ 2.083 viewBox user units.
+  --progress-indicator-circular-stroke: 2.083;
+}
+
+.c-progress-indicator--lg .c-progress-indicator__value-num {
+  font-size: var(--font-size-h6);
+  line-height: var(--lineheight-h6);
+}
+
+.c-progress-indicator--lg .c-progress-indicator__value-unit {
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+}
+
+.c-progress-indicator--xxl {
+  --progress-indicator-circular-size: 256px;
+
+  // 4 screen px target × (100 viewBox / 256 size) = 1.5625 viewBox user units
+  // (--border-width-emphasis is 4px in screen px).
+  --progress-indicator-circular-stroke: 1.5625;
+}
+
+.c-progress-indicator--xxl .c-progress-indicator__value-num {
+  font-size: var(--font-size-h4);
+  line-height: var(--lineheight-h4);
+}
+
+.c-progress-indicator--xxl .c-progress-indicator__value-unit {
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+}

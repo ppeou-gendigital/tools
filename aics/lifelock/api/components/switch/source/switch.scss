@@ -1,0 +1,337 @@
+/**
+ * Components/Switch — binary on/off toggle painted as a 42 × 26 px
+ * pill, progressive-enhanced over a native
+ * `<input type="checkbox" role="switch">`.
+ *
+ * Mirrors the canonical Web-ODS Shared Library master at `717:48394`.
+ * Three persistent tone variants (`default` / `success` / `critical`)
+ * repaint the ON-state track; the knob stays white. Interaction
+ * states (`hover` / `focus` / `pressed`) paint via CSS pseudo-classes
+ * on the underlying input. `disabled` and `loading` are persistent
+ * (boolean props).
+ *
+ * All inline-axis sizing uses logical properties so the knob slides
+ * to the inline-end edge under `dir="rtl"`.
+ *
+ * Tokens consumed are listed in `./spec.md` § "Tokens consumed".
+ *
+ * Composes Icon — the ON-state knob glyph is a `{{> icon}}` instance;
+ * pull in `.c-icon` mask styles so brand Storybooks that only import
+ * this partial still paint the glyph.
+ */
+
+@use '../icon/icon';
+
+.c-switch {
+  /* Per-instance dials so the body block below only rebinds parts
+     that change per variant or state. Knob is 18 × 18 px with a 4 px
+     inset on every side — mirrors the Figma master `717:48394`
+     where the knob nestles 4 px from the track edge in both axes
+     (track 42 × 26 px, knob 18 × 18 px, slide travel = 42 - 18 - 8
+     = 16 px). */
+  --c-switch-track-inline: 42px;
+  --c-switch-track-block:  26px;
+  --c-switch-knob-size:    18px;
+  --c-switch-knob-inset:   4px;
+  --c-switch-radius:       var(--border-radius-pill);
+
+  /* Hoisted distance the knob travels in the ON state — single-line
+     so stylelint's `scss/operator-no-newline-before` rule doesn't
+     misinterpret the unary minus inside calc() as a SCSS operator. */
+  --c-switch-knob-slide:   calc(var(--c-switch-track-inline) - var(--c-switch-knob-size) - (var(--c-switch-knob-inset) * 2));
+
+  /* 32 × 32 px hover / pressed state-circle wash painted BEHIND the
+     knob — Figma source is `rgba(68, 68, 68, 0.2)` on hover and
+     `rgba(68, 68, 68, 0.1)` on pressed (the white-label
+     `inverse-secondary` token at 20 % / 10 % opacity). LifeLock has
+     no dedicated state-wash alias, so the implementation reuses the
+     same `--color-text-secondary` substitution Checkbox / Radio use
+     (Designer Follow-Up logged for a `--color-state-wash` alias). */
+  --c-switch-state-circle:        32px;
+  --c-switch-state-color:         color-mix(in srgb, var(--color-text-secondary) 20%, transparent);
+  --c-switch-state-color-strong:  color-mix(in srgb, var(--color-text-secondary) 10%, transparent);
+
+  --c-switch-track-off-color: var(--color-border-subtle);
+  --c-switch-track-on-color:  var(--color-signal-info);
+  --c-switch-knob-color:      var(--color-bg-default);
+  --c-switch-knob-icon-color: var(--color-signal-info);
+  --c-switch-focus-color:     var(--color-border-focus);
+  --c-switch-label-color:     var(--color-text-primary);
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+  font-weight: var(--font-weight-regular);
+  color: var(--c-switch-label-color);
+}
+
+/* --- Tone variants -------------------------------------------- */
+
+.c-switch--success {
+  --c-switch-track-on-color: var(--color-signal-success);
+  --c-switch-knob-icon-color: var(--color-signal-success);
+}
+
+.c-switch--critical {
+  --c-switch-track-on-color: var(--color-signal-critical);
+  --c-switch-knob-icon-color: var(--color-signal-critical);
+}
+
+/* --- Native input (the source of truth) ----------------------- */
+
+/* Layered visually over the entire track so pointer + keyboard
+   activation both resolve against the native control. Opacity 0
+   keeps the input invisible while still focus-ringable + clickable.
+   `z-index: 2` lifts the input above every visible element (track,
+   state-circle, knob) so :hover / :active fire whether the cursor
+   sits over the bar or the knob. Mirrors the Checkbox pattern. */
+.c-switch__input {
+  position: absolute;
+  inline-size: var(--c-switch-track-inline);
+  block-size:  var(--c-switch-track-block);
+  margin: 0;
+  padding: 0;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: var(--c-switch-radius);
+  opacity: 0;
+  cursor: inherit;
+  z-index: 2;
+}
+
+/* --- Track + knob (visible paint) ----------------------------- */
+
+.c-switch__track {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  inline-size: var(--c-switch-track-inline);
+  block-size:  var(--c-switch-track-block);
+  flex-shrink: 0;
+  background-color: var(--c-switch-track-off-color);
+  border-radius: var(--c-switch-radius);
+  transition: background-color 160ms ease;
+}
+
+/* Pure visual element — the input above handles all pointer +
+   keyboard interaction. Without `pointer-events: none` the knob
+   would intercept the cursor and swallow :hover / :active before
+   they reach the input, so the halo never paints when the cursor
+   is over the knob. */
+.c-switch__knob {
+  position: absolute;
+  inset-inline-start: var(--c-switch-knob-inset);
+  inset-block-start: var(--c-switch-knob-inset);
+  inline-size: var(--c-switch-knob-size);
+  block-size:  var(--c-switch-knob-size);
+  background-color: var(--c-switch-knob-color);
+  border-radius: var(--border-radius-pill);
+  color: var(--c-switch-knob-icon-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 160ms ease, color 160ms ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Glyph wrapper inside the knob — always rendered (gated only by the
+   `showIcon` prop and `loading` state in the template). Visibility is
+   CSS-driven via `is-checked` so click-driven toggles don't have to
+   insert nodes. The icon element fills the 18 px knob; the `-small`
+   SVG renders its visible mark at ~9 px which matches Figma. */
+.c-switch__glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  pointer-events: none;
+}
+
+.c-switch.is-checked .c-switch__glyph {
+  opacity: 1;
+}
+
+.c-switch__knob .c-icon {
+  display: inline-flex;
+  inline-size: var(--c-switch-knob-size);
+  block-size: var(--c-switch-knob-size);
+}
+
+/* --- State circle (hover / pressed wash) --------------------- */
+
+/* 32 × 32 px wash painted BEHIND the knob, centered on it. Travels
+   with the knob via the same `translateX(--c-switch-knob-slide)` that
+   moves the knob under `.is-checked`, so the halo always sits behind
+   the knob regardless of position. Same RTL polarity flip as the
+   knob. Pointer-events disabled so it never intercepts the underlying
+   input. */
+.c-switch__state-circle {
+  position: absolute;
+  inset-inline-start: calc(var(--c-switch-knob-inset) + (var(--c-switch-knob-size) - var(--c-switch-state-circle)) / 2);
+  inset-block-start:  calc((var(--c-switch-track-block) - var(--c-switch-state-circle)) / 2);
+  inline-size: var(--c-switch-state-circle);
+  block-size:  var(--c-switch-state-circle);
+  border-radius: var(--border-radius-pill);
+  background-color: transparent;
+  pointer-events: none;
+  transition: background-color 120ms ease, transform 160ms ease;
+  z-index: 0;
+}
+
+.c-switch.is-checked .c-switch__state-circle {
+  transform: translateX(var(--c-switch-knob-slide));
+}
+
+[dir="rtl"] .c-switch.is-checked .c-switch__state-circle {
+  transform: translateX(calc(var(--c-switch-knob-slide) * -1));
+}
+
+/* --- Visible label -------------------------------------------- */
+
+.c-switch__label {
+  display: inline-block;
+  min-inline-size: 0;
+  color: var(--c-switch-label-color);
+}
+
+/* --- Checked state -------------------------------------------- */
+
+.c-switch.is-checked .c-switch__track {
+  background-color: var(--c-switch-track-on-color);
+}
+
+.c-switch.is-checked .c-switch__knob {
+  transform: translateX(var(--c-switch-knob-slide));
+}
+
+/* RTL — slide the knob to the inline-end (left in LTR-mirrored,
+   right in RTL) using the same `translateX` polarity flip the
+   browser already applies to logical properties. The math above is
+   inline-axis-positive, so a global `[dir="rtl"]` flip is enough. */
+[dir="rtl"] .c-switch.is-checked .c-switch__knob {
+  transform: translateX(calc(var(--c-switch-knob-slide) * -1));
+}
+
+/* --- Hover / pressed (interaction states) --------------------- */
+
+/* Track tints + state-circle halo paint TOGETHER on hover; pressed
+   keeps the same track tint but lowers the halo opacity to 10 %
+   (Figma `717:48394` painting). */
+.c-switch__input:hover ~ .c-switch__track {
+  background-color: color-mix(in srgb, var(--c-switch-track-off-color) 80%, var(--color-text-primary) 20%);
+}
+
+.c-switch.is-checked .c-switch__input:hover ~ .c-switch__track {
+  background-color: color-mix(in srgb, var(--c-switch-track-on-color) 85%, black 15%);
+}
+
+.c-switch__input:hover ~ .c-switch__track .c-switch__state-circle {
+  background-color: var(--c-switch-state-color);
+}
+
+.c-switch__input:active ~ .c-switch__track .c-switch__state-circle {
+  background-color: var(--c-switch-state-color-strong);
+}
+
+/* --- Focus ring ----------------------------------------------- */
+
+.c-switch__input:focus-visible ~ .c-switch__track {
+  outline: var(--border-width-default) solid var(--c-switch-focus-color);
+  outline-offset: var(--space-1);
+}
+
+/* --- [data-state] gallery freezes ----------------------------- */
+
+.c-switch[data-state="hover"] .c-switch__track {
+  background-color: color-mix(in srgb, var(--c-switch-track-off-color) 80%, var(--color-text-primary) 20%);
+}
+
+.c-switch[data-state="hover"].is-checked .c-switch__track {
+  background-color: color-mix(in srgb, var(--c-switch-track-on-color) 85%, black 15%);
+}
+
+.c-switch[data-state="hover"] .c-switch__state-circle {
+  background-color: var(--c-switch-state-color);
+}
+
+.c-switch[data-state="focused"] .c-switch__track {
+  outline: var(--border-width-default) solid var(--c-switch-focus-color);
+  outline-offset: var(--space-1);
+}
+
+.c-switch[data-state="pressed"] .c-switch__state-circle {
+  background-color: var(--c-switch-state-color-strong);
+}
+
+/* --- Disabled state ------------------------------------------- */
+
+.c-switch.is-disabled,
+.c-switch[aria-disabled="true"] {
+  --c-switch-track-off-color: var(--color-disabled-bg);
+  --c-switch-track-on-color:  var(--color-disabled-bg);
+  --c-switch-knob-color:      var(--color-disabled-text);
+  --c-switch-knob-icon-color: var(--color-disabled-text);
+  --c-switch-label-color:     var(--color-disabled-text);
+
+  cursor: not-allowed;
+}
+
+.c-switch.is-disabled .c-switch__track,
+.c-switch[aria-disabled="true"] .c-switch__track {
+  outline: var(--border-width-hairline) solid var(--color-disabled-border);
+  outline-offset: 0;
+}
+
+.c-switch.is-disabled .c-switch__input,
+.c-switch[aria-disabled="true"] .c-switch__input {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* --- Loading state -------------------------------------------- */
+
+.c-switch.is-loading {
+  cursor: progress;
+}
+
+.c-switch.is-loading .c-switch__input {
+  pointer-events: none;
+}
+
+.c-switch__spinner {
+  display: inline-block;
+  inline-size: 14px;
+  block-size: 14px;
+  border: 2px solid currentcolor;
+  border-block-end-color: transparent;
+  border-radius: var(--border-radius-pill);
+  animation: c-switch-spin 800ms linear infinite;
+}
+
+@keyframes c-switch-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Reduced motion ------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .c-switch__track,
+  .c-switch__knob,
+  .c-switch__state-circle,
+  .c-switch__glyph {
+    transition: none;
+  }
+
+  .c-switch__spinner {
+    animation: none;
+  }
+}

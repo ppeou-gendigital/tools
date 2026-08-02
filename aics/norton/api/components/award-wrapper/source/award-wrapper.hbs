@@ -1,0 +1,28 @@
+{{!--
+  Molecules/Award Wrapper — BEM root .c-award-wrapper
+  Figma: Web-ODS Shared Library 3762:246 (Image ratio axis).
+
+  Axes:
+    imageRatio  1:1 | 16:9 | 9:16  →  .c-award-wrapper--ratio-{1-1|16-9|9-16}
+
+  Slots:
+    src + alt  → native <img> filling the box
+    (no src)   → documentation placeholder (not shipped to users)
+--}}
+<div
+  class="c-award-wrapper c-award-wrapper--ratio-{{#if (eq imageRatio "16:9")}}16-9{{else}}{{#if (eq imageRatio "9:16")}}9-16{{else}}1-1{{/if}}{{/if}}{{#if className}} {{className}}{{/if}}"
+>
+  {{#if src}}
+    <img
+      class="c-award-wrapper__image"
+      src="{{src}}"
+      alt="{{#if alt}}{{alt}}{{/if}}"
+    />
+  {{else}}
+    <div class="c-award-wrapper__placeholder" aria-hidden="true">
+      <span class="c-award-wrapper__placeholder-label">
+        Placeholder award<br />logo {{#if imageRatio}}{{imageRatio}}{{else}}1:1{{/if}}
+      </span>
+    </div>
+  {{/if}}
+</div>

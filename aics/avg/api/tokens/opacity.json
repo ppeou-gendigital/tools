@@ -1,0 +1,132 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/token.v1.json",
+  "type": "token",
+  "name": "opacity",
+  "status": "published",
+  "summary": "Resolved avg theme values from themes/default/.",
+  "specUrl": "/api/tokens/opacity/spec.md",
+  "sourceFiles": {
+    "spec": "/api/tokens/opacity/spec.md"
+  },
+  "figma": null,
+  "tokens": [
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-0",
+      "path": [
+        "0"
+      ],
+      "$type": "number",
+      "$value": "0%"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-5",
+      "path": [
+        "5"
+      ],
+      "$type": "number",
+      "$value": "5%"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-10",
+      "path": [
+        "10"
+      ],
+      "$type": "number",
+      "$value": "10%"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-20",
+      "path": [
+        "20"
+      ],
+      "$type": "number",
+      "$value": "20%"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-25",
+      "path": [
+        "25"
+      ],
+      "$type": "number",
+      "$value": "25%"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-30",
+      "path": [
+        "30"
+      ],
+      "$type": "number",
+      "$value": "30%"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-40",
+      "path": [
+        "40"
+      ],
+      "$type": "number",
+      "$value": "40%"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-50",
+      "path": [
+        "50"
+      ],
+      "$type": "number",
+      "$value": "50%"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-60",
+      "path": [
+        "60"
+      ],
+      "$type": "number",
+      "$value": "60%"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-70",
+      "path": [
+        "70"
+      ],
+      "$type": "number",
+      "$value": "70%"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-75",
+      "path": [
+        "75"
+      ],
+      "$type": "number",
+      "$value": "75%"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-80",
+      "path": [
+        "80"
+      ],
+      "$type": "number",
+      "$value": "80%"
+    },
+    {
+      "family": "opacity",
+      "cssVar": "--opacity-90",
+      "path": [
+        "90"
+      ],
+      "$type": "number",
+      "$value": "90%"
+    }
+  ],
+  "generatedAt": "2026-08-02T02:14:45.024Z"
+}

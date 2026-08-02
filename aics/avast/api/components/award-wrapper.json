@@ -1,0 +1,89 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "award-wrapper",
+  "status": "published",
+  "summary": "Fixed-aspect frame for a single award logo so a row of awards lines up cleanly. Figma: [Molecule / Award Wrapper](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3721-3904&m=dev) (variant board `3762:246`).",
+  "specUrl": "/api/components/award-wrapper/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/award-wrapper/spec.md",
+    "hbs": "/api/components/award-wrapper/source/award-wrapper.hbs",
+    "scss": "/api/components/award-wrapper/source/award-wrapper.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "3762:246",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=3762-246&m=dev"
+  },
+  "rootClass": "c-award-wrapper",
+  "bemClasses": [
+    "c-award-wrapper"
+  ],
+  "properties": [
+    {
+      "name": "imageRatio",
+      "fixtureKey": "imageRatio",
+      "type": "enum",
+      "required": true,
+      "default": "1:1",
+      "description": "`1:1` \\",
+      "figmaLabel": "Image ratio"
+    },
+    {
+      "name": "src",
+      "fixtureKey": "src",
+      "type": "image-url",
+      "required": false,
+      "default": "\"\"",
+      "description": "Award logo URL; empty shows placeholder",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "alt",
+      "fixtureKey": "alt",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Descriptive alt, or `\"\"` when named nearby",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "className",
+      "fixtureKey": "className",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Outer box escape hatch only",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Image ratio",
+      "values": "1:1`, `16:9`, `9:16"
+    }
+  ],
+  "tokensConsumed": [
+    "--border-radius-0",
+    "--space-0",
+    "--color-disabled-bg",
+    "--color-text-inverse",
+    "--font-family-primary",
+    "--font-weight-regular",
+    "--font-size-label",
+    "--lineheight-label",
+    "--letterspacing-label"
+  ],
+  "composes": [],
+  "hasBehavior": false,
+  "accessibility": [
+    "Render logo as a native `img` with descriptive `alt` naming the award, or `alt=\"\"` when the award is already named in adjacent text.",
+    "No custom roles; meaning is carried by `alt`.",
+    "Non-interactive — never in the tab order. If an award links out, the wrapping link owns keyboard + focus.",
+    "Placeholder label is documentation-only and not shipped to users."
+  ],
+  "storybookId": "molecules-award-wrapper",
+  "generatedAt": "2026-08-02T02:14:40.012Z"
+}

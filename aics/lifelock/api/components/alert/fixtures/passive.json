@@ -1,0 +1,12 @@
+{
+  "layout": "passive",
+  "hierarchy": "low",
+  "tone": "info",
+  "title": "Alert title",
+  "description": "Short description.",
+  "showButton": false,
+  "ctaLabel": "Action",
+  "dismissible": false,
+  "wholeClickable": false,
+  "dismissLabel": "Dismiss"
+}

@@ -1,0 +1,132 @@
+{{!--
+  Patterns/Breadcrumb template — single BEM root (.c-breadcrumb)
+  covering the Figma master variant set on Web-ODS Shared Library
+  `1260:8373` (LifeLock theme mode; LifeLock-mode re-bake tracked as
+  a Designer Follow-Up in spec.md § "Notes & open questions").
+
+  Variant axes (mirror Figma's master + spec.md § "Variant axes"):
+    firstAsIcon  false | true   [.c-breadcrumb--first-as-icon-{no|yes}]
+    collapsed    false | true   [.c-breadcrumb--collapsed-{no|yes}]
+    truncation   false | true   [.c-breadcrumb--truncation-{no|yes}]
+
+  First-crumb rendering matrix (verified against the eight master
+  variants on `1260:8373`):
+
+    | firstAsIcon | collapsed | First crumb shape                                |
+    |-------------|-----------|--------------------------------------------------|
+    | false       | false     | plain text-link  ("Home")                        |
+    | false       | true      | text-link with LEADING home icon ("🏠 Home")     |
+    | true        | false     | icon-only home anchor (label → aria-label)       |
+    | true        | true      | icon-only home anchor (label → aria-label)       |
+
+  Collapsed=true folds every middle item into ONE static placeholder
+  (a span carrying the `c-breadcrumb__ellipsis` class) — not an
+  expand button. The placeholder carries a `title` (tooltip) AND `aria-label`
+  listing the labels of the items it stands in for, so keyboard
+  users hear "Products, Cloud solutions, Acme cloud platform" and
+  pointer users see the same in the native browser tooltip on hover.
+  There is no JS — this is a pure presentation aid.
+
+  Composes (per spec.md § "Composes"):
+    text-link — every intermediate crumb at `Size = sm, Weight = regular`.
+    icon      — chevron-right separators (16 px), home glyph for the
+                icon-only and leading-home shapes (16 px), more-horiz
+                ellipsis glyph inside the static placeholder (20 px).
+                All composed with `color="current"` so each tracks the
+                containing crumb's paint via `currentColor`.
+
+  Defaults (mirror spec.md § "Properties"):
+    items            → []
+    firstAsIcon      → false
+    collapsed        → false
+    truncation       → false
+    ariaLabel        → "Breadcrumb"
+    iconType         → "objects/simple-home"
+
+  The template iterates the enriched `items` array (pre-rendered by
+  the Storybook helper `compileBreadcrumbArgs` via
+  `buildCrumbsFromItems`) where each entry is one of:
+    { kind: "link",      label, href, homeIconOnly?, leadingHomeIcon?, ariaLabel? }
+    { kind: "current",   label }
+    { kind: "separator" }
+    { kind: "ellipsis",  hiddenLabels, hiddenPagesLabel? }
+--}}
+<nav
+  class="c-breadcrumb c-breadcrumb--first-as-icon-{{#if firstAsIcon}}yes{{else}}no{{/if}} c-breadcrumb--collapsed-{{#if collapsed}}yes{{else}}no{{/if}} c-breadcrumb--truncation-{{#if truncation}}yes{{else}}no{{/if}}"
+  aria-label="{{#if ariaLabel}}{{ariaLabel}}{{else}}Breadcrumb{{/if}}"
+>
+  <ol class="c-breadcrumb__list">
+    {{#each items}}
+      {{#if (eq kind "link")}}
+        <li class="c-breadcrumb__item c-breadcrumb__item--link">
+          {{#if homeIconOnly}}
+            <a
+              class="c-breadcrumb__home"
+              href="{{href}}"
+              aria-label="{{#if ariaLabel}}{{ariaLabel}}{{else}}{{label}}{{/if}}"
+            >
+              {{#if ../iconType}}
+                {{> icon name=../iconType size="16" color="current" decorative=true}}
+              {{else}}
+                {{> icon name="objects/simple-home" size="16" color="current" decorative=true}}
+              {{/if}}
+            </a>
+          {{else}}
+            {{#if leadingHomeIcon}}
+              {{#if ../iconType}}
+                {{> text-link
+                    href=href
+                    size="sm"
+                    weight="regular"
+                    label=label
+                    iconTreatment="inline"
+                    iconName=../iconType
+                    iconPosition="leading"}}
+              {{else}}
+                {{> text-link
+                    href=href
+                    size="sm"
+                    weight="regular"
+                    label=label
+                    iconTreatment="inline"
+                    iconName="objects/simple-home"
+                    iconPosition="leading"}}
+              {{/if}}
+            {{else}}
+              {{> text-link
+                  href=href
+                  size="sm"
+                  weight="regular"
+                  label=label}}
+            {{/if}}
+          {{/if}}
+        </li>
+      {{else}}
+        {{#if (eq kind "current")}}
+          <li class="c-breadcrumb__item c-breadcrumb__item--current">
+            <span class="c-breadcrumb__current" aria-current="page">{{label}}</span>
+          </li>
+        {{else}}
+          {{#if (eq kind "separator")}}
+            <li class="c-breadcrumb__item c-breadcrumb__item--separator" aria-hidden="true">
+              {{> icon name="arrows-navigation/simple-chevron-right" size="16" color="current" decorative=true}}
+            </li>
+          {{else}}
+            {{#if (eq kind "ellipsis")}}
+              <li class="c-breadcrumb__item c-breadcrumb__item--ellipsis">
+                <span
+                  class="c-breadcrumb__ellipsis"
+                  role="text"
+                  title="{{hiddenLabels}}"
+                  aria-label="{{#if hiddenPagesLabel}}{{hiddenPagesLabel}}: {{/if}}{{hiddenLabels}}"
+                >
+                  {{> icon name="arrows-navigation/simple-more-horiz" size="20" color="current" decorative=true}}
+                </span>
+              </li>
+            {{/if}}
+          {{/if}}
+        {{/if}}
+      {{/if}}
+    {{/each}}
+  </ol>
+</nav>

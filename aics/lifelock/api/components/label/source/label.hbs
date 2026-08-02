@@ -1,0 +1,43 @@
+{{!--
+  Components/Label template — single BEM root (.c-label) covering the
+  Figma master variant set on Web-ODS Shared Library `1408:443`
+  (LifeLock theme mode).
+
+  Variant axes (mirror Figma's master + spec.md § "Variant axes"):
+    background  primary | secondary | brand | brand-soft | accent |
+                alpha | beta | gamma | delta | inverse-primary |
+                inverse-secondary               [.c-label--$background]
+    variant     solid | transparent-30 | transparent-50 |
+                transparent-80                   [.c-label--$variant]
+
+  Label is stateless — no `:hover` / `:focus-visible` / `:active`
+  paints and no JavaScript. The root element is a `<span>` so the
+  label nests cleanly inline alongside text without spawning a new
+  block-formatting context.
+
+  Content slots:
+    - leading icon (optional, when `showIcon=true`) — composed via the
+      registered `icon` partial at 16 × 16 px with `color="current"` so
+      it inherits the label's content paint via `currentColor`. Always
+      decorative (the text carries the meaning).
+    - text — the visible pill content, rendered inside `.c-label__text`.
+
+  Defaults:
+    background → "primary"
+    variant    → "solid"
+    text       → "label"
+    showIcon   → false
+    icon       → "actions/simple-add"
+--}}
+<span
+  class="c-label c-label--{{#if background}}{{lower background}}{{else}}primary{{/if}} c-label--{{#if variant}}{{lower variant}}{{else}}solid{{/if}}"
+>
+  {{#if showIcon}}
+    {{#if icon}}
+      {{> icon name=icon size="16" color="current" decorative=true}}
+    {{else}}
+      {{> icon name="actions/simple-add" size="16" color="current" decorative=true}}
+    {{/if}}
+  {{/if}}
+  <span class="c-label__text">{{#if text}}{{text}}{{else}}label{{/if}}</span>
+</span>

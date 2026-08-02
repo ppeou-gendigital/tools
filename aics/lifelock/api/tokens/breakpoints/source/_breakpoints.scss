@@ -1,0 +1,47 @@
+/**
+ * Breakpoint tokens — LifeLock single-brand storybook.
+ *
+ * Mirrors `storybook-lifelock/src/tokens/breakpoints/spec.md` §
+ * "Breakpoint bands and media queries". Bands are mutually exclusive —
+ * exactly one band matches at any viewport width. There is no
+ * mobile-first cascade between bands; each band declares its module
+ * from scratch.
+ *
+ * Mixin → band map:
+ *   @include sm   →  vw ≤ 767px
+ *   @include md   →  768 ≤ vw ≤ 1023
+ *   @include lg   →  1024 ≤ vw ≤ 1439
+ *   @include xl   →  vw ≥ 1440
+ *
+ * CSS variables cannot be used inside `@media` conditions, so the
+ * mixins compile against literal Sass values. The `--breakpoint-*`
+ * custom properties in the sibling `../grid/_grid.scss` mirror these
+ * values 1:1 for JavaScript / gallery consumers.
+ *
+ * Components opt-in by `@use`-ing this file directly:
+ *   @use '../../tokens/breakpoints/breakpoints' as bp;
+ *   .my-component { @include bp.md { ... } }
+ * This file declares zero CSS — it's a Sass mixin module only, so
+ * importing it has no runtime cost when the mixins aren't invoked.
+ */
+
+$breakpoint-sm: 360px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1440px;
+
+@mixin sm {
+  @media (max-width: #{$breakpoint-md - 1px}) { @content; }
+}
+
+@mixin md {
+  @media (min-width: $breakpoint-md) and (max-width: #{$breakpoint-lg - 1px}) { @content; }
+}
+
+@mixin lg {
+  @media (min-width: $breakpoint-lg) and (max-width: #{$breakpoint-xl - 1px}) { @content; }
+}
+
+@mixin xl {
+  @media (min-width: $breakpoint-xl) { @content; }
+}

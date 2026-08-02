@@ -1,0 +1,35 @@
+{{!--
+  Components/PaginationDots template — single BEM root
+  (.c-pagination-dots) covering the Figma master variant set on
+  Web-ODS Shared Library `1278:1668` (LifeLock theme mode).
+
+  Variant axes (mirror Figma master + spec.md `## Variant axes`):
+    appearance   light | dark   [.c-pagination-dots--$appearance]
+
+  Numeric props:
+    count        2..8  (dot count)
+    current      1..count (1-indexed active position)
+
+  Consumers may pass the prebuilt `dots` array (a list of `{ active }`
+  objects of length `count`). When omitted, the Storybook story
+  helper computes it from `{ count, current }` before render so the
+  template only walks the array.
+--}}
+{{#with this as |s|}}
+<nav
+  class="c-pagination-dots c-pagination-dots--{{#if s.appearance}}{{s.appearance}}{{else}}light{{/if}}"
+  data-component="pagination-dots"
+  data-appearance="{{#if s.appearance}}{{s.appearance}}{{else}}light{{/if}}"
+  aria-label="{{#if s.accessibleLabel}}{{s.accessibleLabel}}{{else}}Page {{s.current}} of {{s.count}}{{/if}}"
+>
+  <ol class="c-pagination-dots__list" role="list">
+    {{#each s.dots}}
+      {{#if this.active}}
+        <li class="c-pagination-dots__dot c-pagination-dots__dot--active" aria-current="step"></li>
+      {{else}}
+        <li class="c-pagination-dots__dot"></li>
+      {{/if}}
+    {{/each}}
+  </ol>
+</nav>
+{{/with}}

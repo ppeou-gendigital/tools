@@ -1,0 +1,279 @@
+/**
+ * Color tokens — LifeLock single-brand storybook.
+ *
+ * Mirrors `storybook-lifelock/src/tokens/colors/spec.md` (canonical
+ * source of truth — figmaFileKey: Nshd9ukxIzpeUnzOXiWxUP, figmaNodeId:
+ * 18014:48).
+ *
+ * Three layers:
+ *   1. Primitive palettes (Primary / Secondary / Entension / Functional
+ *      / Neutral) — flat `--color-*` namespace per `code-conventions.mdc`
+ *      § 4. 41 primitives total (33 base + 8 functional muted/subtle).
+ *   2. Semantic aliases (Background / Content / Border / Highlight /
+ *      Signal / Disabled / Canvas / Shadow) — 55 role-keyed aliases
+ *      pointing at primitives.
+ *   3. CTA + Input extensions — 25 + 14 additional semantic aliases.
+ *
+ * No brand-mode layer — LifeLock is the only theme. The legacy spelling
+ * `Entension` is preserved verbatim per spec design decision 1.
+ */
+
+:root {
+  // ============================================================================
+  // LAYER 1 — PRIMITIVES
+  // ============================================================================
+
+  // ---------- Primary palette (brand cores) ----------
+  // Figma Core Primitive Colors/LifeLock/Primary (21001:3358) — 2026-07-31.
+  // Renamed: lifelock-green → lifelock-slate-blue, ocean-teal → harbor-blue,
+  // mist-blue → ice-blue. Old names kept as compat aliases (same hex).
+  --color-lifelock-slate-blue: #00445a;
+  --color-harbor-blue:         #017a96;
+  --color-ice-blue:            #d9e9ee;
+  --color-sand:                #e8e1cf;
+  --color-ivory:               #fef9ee;  // warm off-white
+  --color-warm-stone:          #c6ae94;
+  --color-white:               #fff;
+  --color-lifelock-green:      var(--color-lifelock-slate-blue); // compat
+  --color-ocean-teal:          var(--color-harbor-blue); // compat
+  --color-mist-blue:           var(--color-ice-blue); // compat
+
+  // ---------- Secondary palette ----------
+  --color-coral:     #cf4e57;
+  --color-off-black: #161616;
+  --color-cool-gray: #e2e2e2;  // distinct from neutral/10
+  --color-soft-gray: #fafafa;  // distinct from neutral/5
+
+  // ---------- Entension palette (legacy spelling preserved verbatim) ----------
+  --color-entension-indigo:         #4a5d73;
+  --color-entension-dusty-violet:   #8a6fa8;
+  --color-entension-plum:           #6c4a5a;
+  --color-entension-moss-green:     #6f8a63;
+  --color-entension-burnt-orange:   #c36b3a;
+  --color-entension-rose:           #c96f7c;
+  --color-entension-slate-blue:     #607e95;
+  --color-entension-extension-gray: #8c9a9a;  // disambiguated from neutral ramp
+
+  // ---------- Functional palette (4 base + 8 muted/subtle = 12) ----------
+  --color-functional-critical:         #d40404;
+  --color-functional-critical-muted:   #e77f7e;
+  --color-functional-critical-subtle:  #f6e1e0;
+  --color-functional-attention:        #e07100;
+  --color-functional-attention-muted:  #edb57c;
+  --color-functional-attention-subtle: #f7ece0;
+  --color-functional-success:          #16a761;
+  --color-functional-success-muted:    #88d1ad;
+  --color-functional-success-subtle:   #e3f2ea;
+  --color-functional-info:             #0f71f0;
+  --color-functional-info-muted:       #85b6f4;
+  --color-functional-info-subtle:      #e3ecf8;
+
+  // ---------- Neutral ----------
+  --color-neutral-5:  #f8f8f7;
+  --color-neutral-10: #e3e3e2;
+  --color-neutral-20: #cdcccb;
+  --color-neutral-30: #b6b6b5;
+  --color-neutral-40: #a09f9e;
+  --color-neutral-50: #888887;
+  --color-neutral-60: #717171;
+  --color-neutral-70: #5b5a5a;
+  --color-neutral-80: #444;
+  --color-neutral-90: #2e2d2d;
+
+  // ============================================================================
+  // LAYER 2 — SEMANTIC ALIASES (55 total)
+  // ============================================================================
+
+  // ---------- Background ----------
+  // Figma Color/Background/* (LifeLock Semantic Colours 21001:3454).
+  --color-bg-default:        var(--color-white);
+  --color-bg-subtle:         var(--color-neutral-5);   // shares hex with canvas/subtle (different role)
+  --color-bg-muted:          var(--color-neutral-10);
+  --color-bg-brand:          var(--color-lifelock-slate-blue);
+  --color-bg-brand-soft:     var(--color-sand);        // not actually brand-tinted; preserved verbatim
+  --color-bg-accent:         var(--color-ivory);
+  --color-bg-alpha:          var(--color-warm-stone);  // Greek pass-through
+  --color-bg-beta:           var(--color-cool-gray);
+  --color-bg-gamma:          var(--color-soft-gray);
+  --color-bg-delta:          var(--color-neutral-20);
+  --color-bg-inverse:        var(--color-off-black);   // Figma inverse-primary
+  --color-bg-inverse-strong: var(--color-off-black);
+
+  // ---------- Content (text / icon) ----------
+  // Figma Color/Content/* — primary=slate-blue, brand=harbor-blue, accent=slate-blue.
+  --color-text-primary:   var(--color-lifelock-slate-blue);
+  --color-text-secondary: var(--color-off-black);
+  --color-text-brand:     var(--color-harbor-blue);
+  --color-text-accent:    var(--color-entension-slate-blue);
+  --color-text-inverse:   var(--color-white);
+
+  // ---------- Border ----------
+  --color-border-strong:     var(--color-lifelock-slate-blue);
+  --color-border-strong-alt: var(--color-off-black);
+  --color-border-subtle:     var(--color-neutral-10);   // shares hex with shadow/default
+  --color-border-inverse:    var(--color-white);
+  --color-border-brand:      var(--color-harbor-blue);
+  --color-border-accent:     var(--color-coral);
+  --color-border-focus:      var(--color-harbor-blue);
+
+  // ---------- Highlight ----------
+  --color-highlight-brand:        var(--color-lifelock-slate-blue);
+  --color-highlight-brand-light:  var(--color-ice-blue);
+  --color-highlight-accent:       var(--color-harbor-blue);
+  --color-highlight-alpha-base:   var(--color-coral);
+  --color-highlight-beta-base:    var(--color-entension-indigo);
+  --color-highlight-gamma-base:   var(--color-entension-dusty-violet);
+  --color-highlight-delta-base:   var(--color-entension-plum);
+  --color-highlight-epsilon-base: var(--color-entension-moss-green);
+  --color-highlight-zeta-base:    var(--color-entension-burnt-orange);
+  --color-highlight-eta-base:     var(--color-entension-rose);
+  --color-highlight-theta-base:   var(--color-entension-slate-blue);
+  --color-highlight-iota-base:    var(--color-entension-extension-gray);
+
+  // ---------- Signal ----------
+  --color-signal-critical:        var(--color-functional-critical);
+  --color-signal-critical-muted:  var(--color-functional-critical-muted);
+  --color-signal-critical-subtle: var(--color-functional-critical-subtle);
+  --color-signal-warning:         var(--color-functional-attention);  // warning ↔ attention name mismatch preserved
+  --color-signal-warning-muted:   var(--color-functional-attention-muted);
+  --color-signal-warning-subtle:  var(--color-functional-attention-subtle);
+  --color-signal-success:         var(--color-functional-success);
+  --color-signal-success-muted:   var(--color-functional-success-muted);
+  --color-signal-success-subtle:  var(--color-functional-success-subtle);
+  --color-signal-info:            var(--color-functional-info);
+  --color-signal-info-muted:      var(--color-functional-info-muted);
+  --color-signal-info-subtle:     var(--color-functional-info-subtle);
+
+  // ---------- Disabled ----------
+  --color-disabled-text:   var(--color-neutral-50);
+  --color-disabled-border: var(--color-neutral-30);
+  --color-disabled-bg:     var(--color-neutral-20);  // system default; CTA + Input override below
+
+  // ---------- Canvas ----------
+  --color-canvas-default:  var(--color-white);
+  --color-canvas-subtle:   var(--color-neutral-5);
+  --color-canvas-contrast: var(--color-soft-gray);
+
+  // ---------- Shadow ----------
+  --color-shadow-default: var(--color-neutral-10);  // legacy compat; new shadows compose rgba inline
+
+  // ============================================================================
+  // LAYER 3a — Gradients (Figma Fill Styles, NOT Variables)
+  // ============================================================================
+  // Each stop binds to a Color primitive where one matches.
+
+  // Figma Color/Gradient/gradient-5 (brand ramp)
+  --gradient-horizontal:
+    linear-gradient(
+      90deg,
+      var(--color-lifelock-slate-blue) 0%,
+      var(--color-harbor-blue) 100%
+    );
+  --gradient-vertical:
+    linear-gradient(
+      180deg,
+      var(--color-lifelock-slate-blue) 0%,
+      var(--color-harbor-blue) 100%
+    );
+
+  // ============================================================================
+  // LAYER 3b — CTA color extension (25 aliases, no new primitives)
+  // ============================================================================
+  // 5 variants × bg defaults/hover/pressed + foregrounds + borders + spinner.
+
+  // CTA backgrounds — primary (lifelock-green ramp)
+  --color-bg-cta-primary-default: var(--color-lifelock-green);
+  --color-bg-cta-primary-hover:   var(--color-off-black);
+  --color-bg-cta-primary-pressed: var(--color-ocean-teal);
+
+  // CTA backgrounds — secondary (neutral / mist-blue)
+  --color-bg-cta-secondary-default: var(--color-neutral-5);
+  --color-bg-cta-secondary-hover:   var(--color-mist-blue);
+  --color-bg-cta-secondary-pressed: var(--color-cool-gray);
+
+  // CTA backgrounds — tertiary (sand / warm-stone / ivory)
+  --color-bg-cta-tertiary-default: var(--color-sand);
+  --color-bg-cta-tertiary-hover:   var(--color-warm-stone);
+  --color-bg-cta-tertiary-pressed: var(--color-ivory);
+
+  // CTA backgrounds — inverse (teal / green / black)
+  --color-bg-cta-inverse-default: var(--color-ocean-teal);
+  --color-bg-cta-inverse-hover:   var(--color-lifelock-green);
+  --color-bg-cta-inverse-pressed: var(--color-off-black);
+
+  // CTA backgrounds — text variant (transparent at default; only hover/pressed)
+  --color-bg-cta-text-hover:   var(--color-neutral-5);
+  --color-bg-cta-text-pressed: var(--color-neutral-10);
+
+  // Universal disabled background
+  --color-bg-cta-disabled: var(--color-neutral-10);
+
+  // CTA foreground (text-on-cta)
+  --color-text-on-cta-primary:   var(--color-white);
+  --color-text-on-cta-secondary: var(--color-lifelock-green);
+  --color-text-on-cta-tertiary:  var(--color-lifelock-green);
+  --color-text-on-cta-inverse:   var(--color-white);
+  --color-text-on-cta-text:      var(--color-lifelock-green);
+  --color-text-on-cta-disabled:  var(--color-neutral-50);
+
+  // CTA border
+  --color-border-cta-secondary: var(--color-lifelock-green);
+  --color-border-cta-disabled:  var(--color-neutral-30);
+
+  // Spinner / progress (universal)
+  --color-fg-progress-track: var(--color-neutral-30);
+  --color-fg-progress-fill:  var(--color-lifelock-green);
+
+  // ============================================================================
+  // LAYER 3c — Input color extension (14 aliases, no new primitives)
+  // ============================================================================
+
+  --color-bg-input:               var(--color-white);    // shares hex with bg/default
+  --color-bg-input-disabled:      var(--color-soft-gray);
+  --color-border-input-default:   var(--color-neutral-30);
+  --color-border-input-hover:     var(--color-neutral-50);
+  --color-border-input-focus:     var(--color-border-focus);
+  --color-border-input-focus-glow:
+    color-mix(in srgb, var(--color-border-focus) 24%, transparent);
+  --color-border-input-error:       var(--color-signal-critical);
+  --color-border-input-error-glow:  var(--color-signal-critical-subtle);
+  --color-border-input-disabled:    var(--color-disabled-border);
+  --color-border-input-divider:     var(--color-neutral-20);
+  --color-text-placeholder:         var(--color-disabled-text);
+  --color-text-default:             var(--color-text-secondary);
+  --color-text-disabled:            var(--color-disabled-text);
+  --color-text-error:               var(--color-signal-critical);
+
+  // ============================================================================
+  // GALLERY-CHROME COMPAT ALIASES
+  // ============================================================================
+  // The Design System gallery stories (colors.stories.js, typography.stories.js,
+  // borders.stories.js, etc.) reference Web-ODS semantic names
+  // (`--color-content-primary`, `--color-background-primary`,
+  // `--color-border-tertiary`, …) for gallery chrome only — page background,
+  // body text, divider lines.
+
+  // LifeLock's canonical semantic surface uses different names
+  // (`--color-text-primary`, `--color-bg-default`, `--color-border-subtle`).
+  // Rather than fork every gallery file, we publish a single compat layer
+  // here that aliases the Web-ODS names to LifeLock equivalents. Any new
+  // LifeLock component code MUST consume the canonical LifeLock names
+  // above; these aliases are gallery-chrome only.
+
+  --color-content-primary:         var(--color-text-primary);
+  --color-content-secondary:       var(--color-text-secondary);
+  --color-content-brand:           var(--color-text-brand);
+  --color-content-accent:          var(--color-text-accent);
+  --color-content-inverse-primary: var(--color-text-inverse);
+
+  --color-background-primary:       var(--color-bg-default);
+  --color-background-secondary:     var(--color-bg-subtle);
+  --color-background-tertiary:      var(--color-bg-muted);
+  --color-background-brand:         var(--color-bg-brand);
+  --color-background-brand-lighter: var(--color-bg-brand-soft);
+  --color-background-accent:        var(--color-bg-accent);
+
+  --color-border-primary:   var(--color-border-strong);
+  --color-border-secondary: var(--color-border-strong-alt);
+  --color-border-tertiary:  var(--color-border-subtle);
+}

@@ -1,0 +1,61 @@
+/**
+ * Award Wrapper — core molecule (.c-award-wrapper).
+ * Figma Web-ODS Shared Library node 3762:246.
+ * Image ratio locks a fixed box; surface is transparent; overflow clipped.
+ */
+
+.c-award-wrapper {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  overflow: clip;
+  background-color: transparent;
+  border-radius: var(--border-radius-0, 0);
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}
+
+.c-award-wrapper--ratio-1-1 {
+  inline-size: 88px;
+  block-size: 88px;
+}
+
+.c-award-wrapper--ratio-16-9 {
+  inline-size: 246px;
+  block-size: 138px;
+}
+
+.c-award-wrapper--ratio-9-16 {
+  inline-size: 90px;
+  block-size: 160px;
+}
+
+.c-award-wrapper__image {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.c-award-wrapper__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-disabled-bg, #b3b3b3);
+  padding: var(--space-0, 0);
+}
+
+.c-award-wrapper__placeholder-label {
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-regular, 400);
+  font-size: var(--font-size-label, 12px);
+  line-height: var(--lineheight-label, 16px);
+  letter-spacing: var(--letterspacing-label, 0.24px);
+  color: var(--color-text-inverse, #fff);
+  text-align: center;
+  word-break: break-word;
+}

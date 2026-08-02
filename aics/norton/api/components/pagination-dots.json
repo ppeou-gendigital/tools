@@ -1,0 +1,95 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "pagination-dots",
+  "status": "published",
+  "summary": "Presentational pagination indicator: a horizontal row of small dots where the active dot **expands** into a pill that announces the current page. Mirrors the canonical [Web-ODS Shared Library → Pagination dots master](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1278-1668&m=dev) (`1278:1668`) and the [light / dark preview composition](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1278-1877&m=dev) (`1278:1877`). Core default theme unit; brand packages supply theme token values.",
+  "specUrl": "/api/components/pagination-dots/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/pagination-dots/spec.md",
+    "hbs": "/api/components/pagination-dots/source/pagination-dots.hbs",
+    "scss": "/api/components/pagination-dots/source/pagination-dots.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "1278:1668",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1278-1668&m=dev"
+  },
+  "rootClass": "c-pagination-dots",
+  "bemClasses": [
+    "c-pagination-dots"
+  ],
+  "properties": [
+    {
+      "name": "count",
+      "fixtureKey": "count",
+      "type": "Integer (2-8)",
+      "required": true,
+      "default": "5",
+      "description": "Total number of dots rendered in the row.",
+      "figmaLabel": "Count"
+    },
+    {
+      "name": "current",
+      "fixtureKey": "current",
+      "type": "Integer (1-based)",
+      "required": true,
+      "default": "1",
+      "description": "Position of the active expanding pill (1-indexed). Must be `>= 1` and `<= count`.",
+      "figmaLabel": "Current"
+    },
+    {
+      "name": "appearance",
+      "fixtureKey": "appearance",
+      "type": "Enum (`light` / `dark`)",
+      "required": false,
+      "default": "\"light\"",
+      "description": "`light` paints inactive dots `--color-border-subtle` + active pill `--color-text-primary`; `dark` paints inactive dots `--color-text-inverse` at 40 % opacity + active pill `--color-bg-default`. Designer follow-up: publish a dedicated `--color-pagination-dot-inactive-on-dark` semantic alias so the dark-mode wash doesn't bind to a foreground-role token at runtime opacity.",
+      "figmaLabel": "Appearance"
+    },
+    {
+      "name": "accessibleLabel",
+      "fixtureKey": "accessibleLabel",
+      "type": "Text",
+      "required": false,
+      "default": "\"Page {current} of {count}\"",
+      "description": "Bound to the root `<nav>`'s `aria-label`. Tokens `{current}` and `{count}` interpolate at render time.",
+      "figmaLabel": "Accessible label"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "count",
+      "values": "`2` … `8` integer. Total dot count."
+    },
+    {
+      "axis": "current",
+      "values": "`1` … `count` integer. Position of the active pill (1-indexed)."
+    },
+    {
+      "axis": "appearance",
+      "values": "`light` (default) / `dark`. Repaints inactive vs active fills for the surface the component sits on."
+    }
+  ],
+  "tokensConsumed": [
+    "--color-text-primary",
+    "--color-text-inverse",
+    "--color-bg-default",
+    "--color-border-subtle",
+    "--space-3",
+    "--border-radius-pill",
+    "--border-width-default"
+  ],
+  "composes": [],
+  "hasBehavior": false,
+  "accessibility": [
+    "Root element is `<nav>` with `aria-label=\"Page {current} of {count}\"` (the literal interpolated label).",
+    "Active dot carries `aria-current=\"step\"`.",
+    "Inactive dots are plain `<span>` (no interactive semantics).",
+    "WCAG: every (appearance × position) combination meets AA non-text contrast on its target surface."
+  ],
+  "storybookId": "molecules-pagination-dots",
+  "generatedAt": "2026-08-02T02:14:55.657Z"
+}

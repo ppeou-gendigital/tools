@@ -1,0 +1,224 @@
+/**
+ * Components/Stepper — single BEM root (.c-stepper) covering the Figma
+ * master variant set on Web-ODS Shared Library `1386:867` (LifeLock theme
+ * mode) and the Step sub-component set `1386:803`.
+ *
+ * Variant axes → BEM modifiers:
+ *   direction → .c-stepper--direction-horizontal | --direction-vertical
+ *
+ * Step state → element modifier:
+ *   state     → .c-stepper__step--state-default | --state-active
+ *               | --state-complete
+ *
+ * Persistent runtime states:
+ *   current   → [aria-current="step"] on the active list item
+ *
+ * Stepper is stateless — no JavaScript. Progress is expressed by which
+ * step carries `state=active` or `state=complete` in the markup the
+ * consumer (or Storybook args) supplies.
+ *
+ * Per `spec-driven-sync.mdc`, every paint resolves to a `var(--…)` token
+ * declared in the LifeLock token partials. No hardcoded design values.
+ */
+
+// ============================================================================
+// BLOCK — .c-stepper
+// ============================================================================
+
+.c-stepper {
+  // Component knobs — block-scoped local custom properties (not design
+  // tokens; consumers never override these directly).
+  --c-stepper-indicator-size:    50px;
+  --c-stepper-connector-offset:  24px;
+
+  box-sizing: border-box;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+// ============================================================================
+// ELEMENT — shared step anatomy
+// ============================================================================
+
+.c-stepper__step {
+  box-sizing: border-box;
+}
+
+.c-stepper__indicator,
+.c-stepper__indicator-column,
+.c-stepper__indicator-row {
+  box-sizing: border-box;
+}
+
+.c-stepper__indicator {
+  align-items: center;
+  block-size: var(--c-stepper-indicator-size);
+  border-radius: 50%;
+  display: flex;
+  inline-size: var(--c-stepper-indicator-size);
+  justify-content: center;
+  position: relative;
+}
+
+.c-stepper__number {
+  color: var(--color-text-primary);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--letterspacing-body-lg);
+  line-height: var(--lineheight-body-lg);
+  text-align: center;
+}
+
+.c-stepper__label {
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-tagline-sm);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--letterspacing-tagline-sm);
+  line-height: var(--lineheight-tagline-sm);
+  white-space: nowrap;
+}
+
+.c-stepper__connector-line {
+  background-color: var(--c-stepper-connector-color, var(--color-border-tertiary));
+  block-size: var(--border-width-default);
+  display: block;
+}
+
+// ============================================================================
+// MODIFIERS — step state paints
+// ============================================================================
+
+.c-stepper__step--state-default {
+  --c-stepper-connector-color: var(--color-border-tertiary);
+
+  .c-stepper__indicator {
+    background-color: var(--color-bg-subtle);
+  }
+}
+
+.c-stepper__step--state-active {
+  --c-stepper-connector-color: color-mix(
+    in srgb,
+    var(--color-border-secondary) 30%,
+    transparent
+  );
+
+  .c-stepper__indicator {
+    background-color: color-mix(
+      in srgb,
+      var(--color-bg-inverse) 30%,
+      transparent
+    );
+    border: var(--border-width-hairline) solid var(--color-border-brand);
+  }
+}
+
+.c-stepper__step--state-complete {
+  --c-stepper-connector-color: color-mix(
+    in srgb,
+    var(--color-border-secondary) 30%,
+    transparent
+  );
+
+  .c-stepper__indicator {
+    background-color: var(--color-bg-inverse-strong);
+  }
+
+  .c-icon {
+    color: var(--color-text-inverse);
+  }
+}
+
+// ============================================================================
+// MODIFIERS — Direction = Horizontal
+// ============================================================================
+
+.c-stepper--direction-horizontal {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: row;
+  inline-size: 100%;
+
+  .c-stepper__step {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-0);
+
+    // Every step except the last owns a trailing connector, so it must be
+    // able to grow for that connector to fill the gap to the next step.
+    // Only the final step (no connector) hugs its content.
+    &:not(:last-child) {
+      flex: 1 1 0;
+      min-inline-size: 0;
+    }
+
+    &:last-child {
+      flex: 0 0 auto;
+    }
+  }
+
+  .c-stepper__indicator-column {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .c-stepper__label {
+    text-align: center;
+  }
+
+  .c-stepper__connector {
+    flex: 1 1 0;
+    min-inline-size: 0;
+    padding-block-start: var(--c-stepper-connector-offset);
+  }
+
+  .c-stepper__connector-line {
+    block-size: var(--border-width-default);
+    inline-size: 100%;
+  }
+}
+
+// ============================================================================
+// MODIFIERS — Direction = Vertical
+// ============================================================================
+
+.c-stepper--direction-vertical {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  inline-size: auto;
+
+  .c-stepper__step {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-0);
+
+    &:not(:last-child) {
+      block-size: var(--space-15);
+    }
+  }
+
+  .c-stepper__indicator-row {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-3);
+  }
+
+  .c-stepper__connector {
+    flex: 1 1 0;
+    min-block-size: 0;
+    padding-inline-start: var(--c-stepper-connector-offset);
+  }
+
+  .c-stepper__connector-line {
+    block-size: 100%;
+    inline-size: var(--border-width-default);
+  }
+}

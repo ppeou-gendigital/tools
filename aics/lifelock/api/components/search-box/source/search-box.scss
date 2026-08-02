@@ -1,0 +1,136 @@
+// Patterns/Inputs/Search box
+// A single bordered :focus-within control wrapping a native
+// <input type="search">. Two sizes (m = 32px, l = 40px). The search
+// glyph + vertical separator lead the input (or trail it under
+// `--icon-last`); the clear button shows once `is-filled`. All paints
+// read from the LifeLock Layer 3c input tokens; all inline-axis sizing
+// uses logical properties for RTL.
+
+.c-search-box {
+  --c-search-box-min-block: 32px;
+  --c-search-box-radius: var(--border-radius-card);
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-block-size: var(--c-search-box-min-block);
+  padding-inline: var(--space-3);
+  border: var(--border-width-hairline) solid var(--color-border-input-default);
+  border-radius: var(--c-search-box-radius);
+  background-color: var(--color-bg-input);
+  inline-size: 100%;
+  max-inline-size: 22rem;
+  font-family: var(--font-family-primary);
+}
+
+.c-search-box--l {
+  --c-search-box-min-block: 40px;
+}
+
+.c-search-box:hover {
+  border-color: var(--color-border-input-hover);
+}
+
+.c-search-box:focus-within {
+  border-color: var(--color-border-input-focus);
+  box-shadow: 0 0 0 var(--space-1) var(--color-border-input-focus-glow);
+}
+
+// ── Search glyph + separator ─────────────────────────────────────────
+.c-search-box__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  color: var(--color-text-default);
+}
+
+.c-search-box__separator {
+  flex: 0 0 auto;
+  align-self: stretch;
+  inline-size: var(--border-width-hairline);
+  margin-block: var(--space-2);
+  background-color: var(--color-border-input-divider);
+}
+
+// ── Native search input ──────────────────────────────────────────────
+.c-search-box__input {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  padding-block: var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-default);
+  font-family: inherit;
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  text-align: start;
+  appearance: none;
+}
+
+.c-search-box--l .c-search-box__input {
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+}
+
+.c-search-box__input::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+.c-search-box__input:focus-visible {
+  outline: none;
+}
+
+// Suppress the native UA search-cancel button — the styled clear button
+// replaces it (and Firefox has none, so this keeps the affordance
+// consistent cross-browser).
+.c-search-box__input::-webkit-search-cancel-button,
+.c-search-box__input::-webkit-search-decoration {
+  appearance: none;
+  display: none;
+}
+
+// ── Clear button ─────────────────────────────────────────────────────
+.c-search-box__clear {
+  display: none;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--border-radius-control);
+  background: transparent;
+  color: var(--color-text-default);
+  cursor: pointer;
+}
+
+.c-search-box.is-filled .c-search-box__clear {
+  display: inline-flex;
+}
+
+.c-search-box__clear:hover {
+  color: var(--color-text-primary);
+}
+
+.c-search-box__clear:focus-visible {
+  outline: var(--border-width-default) solid var(--color-border-input-focus);
+  outline-offset: var(--space-1);
+}
+
+// ── Disabled ─────────────────────────────────────────────────────────
+.c-search-box.is-disabled,
+.c-search-box:has(.c-search-box__input:disabled) {
+  border-color: var(--color-border-input-disabled);
+  background-color: var(--color-bg-input-disabled);
+}
+
+.c-search-box.is-disabled .c-search-box__icon,
+.c-search-box:has(.c-search-box__input:disabled) .c-search-box__input,
+.c-search-box:has(.c-search-box__input:disabled) .c-search-box__icon {
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+.c-search-box__clear:disabled {
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}

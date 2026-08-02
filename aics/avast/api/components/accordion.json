@@ -1,0 +1,163 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "accordion",
+  "status": "published",
+  "summary": "Vertical stack of expand/collapse rows. Each row pairs a title (the clickable header) with a body region that opens to reveal long-form content — paragraph, bulleted list, inline learn-more link, image, or video. Mirrors the canonical [Web-ODS Shared Library → Pattern / Accordion](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28425&m=dev) board (`2499:2626`), which publishes `accordion / group` (`2499:2627`), `accordion / item`, and `accordion / card`.",
+  "specUrl": "/api/components/accordion/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/accordion/spec.md",
+    "hbs": "/api/components/accordion/source/accordion.hbs",
+    "scss": "/api/components/accordion/source/accordion.scss",
+    "js": "/api/components/accordion/source/accordion.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "2499:2626",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=2499-2626&m=dev"
+  },
+  "rootClass": "c-accordion",
+  "bemClasses": [
+    "c-accordion"
+  ],
+  "properties": [
+    {
+      "name": "items",
+      "fixtureKey": "items",
+      "type": "Array",
+      "required": true,
+      "default": "[]",
+      "description": "`{ id?, title, body?, linkLabel?, linkHref?, listItems?, imageSrc?, imageAlt?, videoSrc?, expanded?, disabled?, showDivider?, showIcon?, showLeadingIcon?, leadingIconName?, showBody?, showList?, showLink?, showImage?, showVideo?, state? }`",
+      "figmaLabel": "Items"
+    },
+    {
+      "name": "appearance",
+      "fixtureKey": "appearance",
+      "type": "Enum",
+      "required": false,
+      "default": "default",
+      "description": "`default` \\",
+      "figmaLabel": "Appearance"
+    },
+    {
+      "name": "topDivider",
+      "fixtureKey": "topDivider",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "Top divider"
+    },
+    {
+      "name": "singleOpen",
+      "fixtureKey": "singleOpen",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "Single open"
+    },
+    {
+      "name": "groupTitle",
+      "fixtureKey": "groupTitle",
+      "type": "String",
+      "required": false,
+      "default": "null",
+      "description": "Optional `<h2>`",
+      "figmaLabel": "Group title"
+    },
+    {
+      "name": "name",
+      "fixtureKey": "name",
+      "type": "String",
+      "required": false,
+      "default": "null",
+      "description": "Group id namespace",
+      "figmaLabel": "Name"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "appearance",
+      "values": "`default` (divider rows) / `card` (rounded filled surfaces — Figma `accordion / card`)"
+    },
+    {
+      "axis": "state",
+      "values": "default` / `expanded` / `hover` / `focus` / `pressed` / `disabled"
+    },
+    {
+      "axis": "topDivider",
+      "values": "`true` / `false` (default) — group-level"
+    },
+    {
+      "axis": "singleOpen",
+      "values": "`true` / `false` (default) — JS-only"
+    },
+    {
+      "axis": "showDivider",
+      "values": "per-item bottom rule (default `true`; typically `false` under `card`)"
+    },
+    {
+      "axis": "showIcon",
+      "values": "trailing chevron (default `true`)"
+    },
+    {
+      "axis": "showLeadingIcon",
+      "values": "optional leading 24 px icon (default `false`)"
+    },
+    {
+      "axis": "showBody` / `showList` / `showLink` / `showImage` / `showVideo",
+      "values": "content slots"
+    }
+  ],
+  "tokensConsumed": [
+    "--color-text-primary",
+    "--color-text-secondary",
+    "--color-text-accent",
+    "--color-border-strong",
+    "--color-border-subtle",
+    "--color-border-focus",
+    "--color-canvas-subtle",
+    "--color-canvas-contrast",
+    "--color-bg-subtle",
+    "--color-disabled-text",
+    "--color-disabled-bg",
+    "--space-0",
+    "--space-1",
+    "--space-2",
+    "--space-3",
+    "--space-4",
+    "--space-5",
+    "--space-6",
+    "--border-radius-s",
+    "--border-radius-l",
+    "--border-width-xs",
+    "--border-width-s",
+    "--font-family-primary",
+    "--font-size-body-lg",
+    "--font-size-body-base",
+    "--font-size-body-sm",
+    "--font-size-h7",
+    "--lineheight-body-lg",
+    "--lineheight-body-base",
+    "--lineheight-body-sm",
+    "--lineheight-h7",
+    "--font-weight-regular",
+    "--font-weight-medium",
+    "--font-weight-semibold"
+  ],
+  "composes": [
+    "icon"
+  ],
+  "hasBehavior": true,
+  "accessibility": [
+    "Native `<details>` / `<summary>` for keyboard, SR, and find-in-page.",
+    "Chevron / leading icons are decorative (`aria-hidden`).",
+    "Focus-visible outline uses `--color-border-focus`.",
+    "Disabled items keep a readable label; summary uses `tabindex=\"-1\"` when disabled."
+  ],
+  "storybookId": "patterns-accordion",
+  "generatedAt": "2026-08-02T02:14:40.012Z"
+}

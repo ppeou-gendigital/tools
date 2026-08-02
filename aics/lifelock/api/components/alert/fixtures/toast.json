@@ -1,0 +1,12 @@
+{
+  "layout": "toast",
+  "hierarchy": "low",
+  "tone": "success",
+  "title": "Alert title",
+  "description": "Short description.",
+  "showButton": true,
+  "ctaLabel": "Action",
+  "dismissible": true,
+  "wholeClickable": false,
+  "dismissLabel": "Dismiss"
+}

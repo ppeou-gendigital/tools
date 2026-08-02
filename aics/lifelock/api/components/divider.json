@@ -1,0 +1,139 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "divider",
+  "status": "draft",
+  "summary": "Visual rule molecule for separating sections of content. Mirrors the LifeLock-themed master variant sets on [Web-ODS-Shared-Library / 539:28432](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28432&m=dev) — the `Dividers 🟢` page hosts three sibling published variant sets (`Divider / Horizontal`, `Divider / Vertical`, `Divider / Label`) totalling 80 buildable variants. The three Figma sibling sets fold onto **one** `.c-divider` BEM block by collapsing Figma's \"Divider treatment\" into a single orthogonal `layout` axis.",
+  "specUrl": "/api/components/divider/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/divider/spec.md",
+    "hbs": "/api/components/divider/source/divider.hbs",
+    "scss": "/api/components/divider/source/divider.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "539:28432",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=539-28432&m=dev"
+  },
+  "rootClass": "c-divider",
+  "bemClasses": [
+    "c-divider"
+  ],
+  "properties": [
+    {
+      "name": "layout",
+      "fixtureKey": "layout",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"horizontal\"",
+      "description": "One of `horizontal` / `vertical` / `label`. Drives the `.c-divider--<layout>` BEM modifier; selects which inner DOM the template renders (no element for horizontal / vertical, three-span flex row for label).",
+      "figmaLabel": "Layout"
+    },
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"s\"",
+      "description": "One of `xs` / `s` / `m` / `l`. Drives the `.c-divider--size-<size>` BEM modifier. Maps Figma's rule-weight scale onto LifeLock's `--border-width-*` tokens (xs → `hairline`, s → `default`, l → `emphasis`); `m` falls back to the literal `3px` value because LifeLock's border-width ladder jumps `2 → 4` with no 3 px token — see § \"Notes & open questions\" for the gap discussion.",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "inverse",
+      "fixtureKey": "inverse",
+      "type": "VARIANT",
+      "required": false,
+      "default": "false",
+      "description": "Boolean. When `true`, drives the `.c-divider--inverse` BEM modifier and the rule paint binds to `--color-border-inverse` (white) for use on dark surfaces. When `false` (default), the rule paint binds to `--color-border-strong` (lifelock-green).",
+      "figmaLabel": "Inverse"
+    },
+    {
+      "name": "typography",
+      "fixtureKey": "typography",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"body-sm-regular\"",
+      "description": "One of `body-sm-regular` / `body-sm-semibold` / `body-base-regular` / `body-base-semibold` / `body-lg-regular` / `body-lg-bold` / `h6-medium` / `h5-bold`. Drives the `.c-divider--typography-<typography>` BEM modifier. Combinatorial **only when `layout = label`** — the modifier renders on every variant but only `.c-divider--label` consumes a `.c-divider__label` element where the typography paint applies. Ignored when `layout ∈ {horizontal, vertical}`.",
+      "figmaLabel": "Typography"
+    },
+    {
+      "name": "label",
+      "fixtureKey": "label",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"Or\"",
+      "description": "Text content rendered inside `.c-divider__label`. Default `\"Or\"` mirrors the most common Figma authoring (between two stacked input groups on a sign-in form). Authors keep this to a short word or short phrase (≤ 24 characters) — longer labels reflow inside the flex centre and the two flanking rules shrink accordingly. Ignored when `layout ∈ {horizontal, vertical}`.",
+      "figmaLabel": "Label"
+    },
+    {
+      "name": "accessibleLabel",
+      "fixtureKey": "accessibleLabel",
+      "type": "String",
+      "required": false,
+      "default": "\"\"",
+      "description": "Optional override for screen-reader announcement. When set, the root `<div>` carries `aria-label=\"{{accessibleLabel}}\"`; when unset (the typical case), the root carries `role=\"separator\"` and the screen reader announces the implicit \"separator\" role with no name. For `layout = label`, the visible label text inside `.c-divider__label` is the accessible name without needing this override — screen readers read the text node verbatim.",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "layout",
+      "values": "`horizontal` (default — full-width horizontal rule painted as a `border-block-start` on a block-level root) / `vertical` (inline rule painted as a `border-inline-start` on an inline-block root sized by its parent's cross axis) / `label` (horizontal rule with centred text — root paints as an inline-flex row of `__rule--start` + `__label` + `__rule--end`). Drives the `.c-divider--<layout>` BEM modifier. Folds Figma's three sibling variant sets (`Divider / Horizontal`, `Divider / Vertical`, `Divider / Label`) onto one orthogonal axis."
+    },
+    {
+      "axis": "size",
+      "values": "`xs` (1 px hairline rule weight) / `s` (default — 2 px default rule weight) / `m` (3 px rule weight — literal pixel value, no matching design-system token, see § \"Notes & open questions\") / `l` (4 px emphasis rule weight). Drives the `.c-divider--size-<size>` BEM modifier. Mirrors Figma's `Size` axis on each sibling set."
+    },
+    {
+      "axis": "inverse",
+      "values": "`false` (default — rule paint binds to `--color-border-strong`, lifelock-green) / `true` (rule paint binds to `--color-border-inverse`, white). Drives the `.c-divider--inverse` BEM modifier (no value suffix — boolean). Mirrors Figma's `Inverse` axis."
+    },
+    {
+      "axis": "typography",
+      "values": "`body-sm-regular` (default — `--font-size-body-sm` + `--font-weight-regular`) / `body-sm-semibold` / `body-base-regular` / `body-base-semibold` (`--font-size-body-base` + `--font-weight-semibold`) / `body-lg-regular` / `body-lg-bold` (`--font-size-body-lg` + `--font-weight-bold`) / `h6-medium` (`--font-size-h6` + `--font-weight-medium`) / `h5-bold` (`--font-size-h5` + `--font-weight-bold`). Drives the `.c-divider--typography-<typography>` BEM modifier. **Combinatorial only when `layout=label`** — the modifier is built on every render for shape consistency, but only `.c-divider--label` consumes a `.c-divider__label` element where the typography paint applies. Mirrors Figma's `Typography` axis on the `Divider / Label` sibling set."
+    }
+  ],
+  "tokensConsumed": [
+    "--color-border-strong",
+    "--color-border-inverse",
+    "--border-width-hairline",
+    "--border-width-default",
+    "--border-width-emphasis",
+    "--space-3",
+    "--space-4",
+    "--font-family-primary",
+    "--font-weight-regular",
+    "--font-weight-medium",
+    "--font-weight-semibold",
+    "--font-weight-bold",
+    "--font-size-body-sm",
+    "--font-size-body-base",
+    "--font-size-body-lg",
+    "--font-size-h5",
+    "--font-size-h6",
+    "--lineheight-body-sm",
+    "--lineheight-body-base",
+    "--lineheight-body-lg",
+    "--lineheight-h5",
+    "--lineheight-h6",
+    "--letterspacing-body-sm",
+    "--letterspacing-body-base",
+    "--letterspacing-body-lg",
+    "--letterspacing-h5",
+    "--letterspacing-h6"
+  ],
+  "composes": [],
+  "hasBehavior": false,
+  "accessibility": [
+    "**Implicit `role=\"separator\"`.** The root `<div>` carries",
+    "**`layout = label`** — the visible label text inside",
+    "**`layout ∈ {horizontal, vertical}`** — divider has no visible",
+    "**Contrast.** The default rule paint",
+    "**No focus ring.** Divider is non-interactive (no `:hover` /",
+    "**Reduced motion.** No transitions or animations ship on this"
+  ],
+  "storybookId": "molecules-divider",
+  "generatedAt": "2026-08-02T02:14:49.789Z"
+}

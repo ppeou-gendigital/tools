@@ -1,0 +1,1341 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/token.v1.json",
+  "type": "token",
+  "name": "colors",
+  "status": "published",
+  "summary": "Resolved avg theme values from themes/default/.",
+  "specUrl": "/api/tokens/colors/spec.md",
+  "sourceFiles": {
+    "spec": "/api/tokens/colors/spec.md"
+  },
+  "figma": null,
+  "tokens": [
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-black",
+      "path": [
+        "avg",
+        "black"
+      ],
+      "$type": "color",
+      "$value": "#1c222e"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-white",
+      "path": [
+        "avg",
+        "white"
+      ],
+      "$type": "color",
+      "$value": "#ffffff"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-green",
+      "path": [
+        "avg",
+        "green"
+      ],
+      "$type": "color",
+      "$value": "#008941"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-blue",
+      "path": [
+        "avg",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#2276d9"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-green-inverse",
+      "path": [
+        "avg",
+        "green",
+        "inverse"
+      ],
+      "$type": "color",
+      "$value": "#24aa63"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-mid-green",
+      "path": [
+        "avg",
+        "mid",
+        "green"
+      ],
+      "$type": "color",
+      "$value": "#7acca0"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-light-green",
+      "path": [
+        "avg",
+        "light",
+        "green"
+      ],
+      "$type": "color",
+      "$value": "#a2dbbd"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-pale-green",
+      "path": [
+        "avg",
+        "pale",
+        "green"
+      ],
+      "$type": "color",
+      "$value": "#d1edde"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-faint-green",
+      "path": [
+        "avg",
+        "faint",
+        "green"
+      ],
+      "$type": "color",
+      "$value": "#e6f4ed"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-off-white-green",
+      "path": [
+        "avg",
+        "off",
+        "white",
+        "green"
+      ],
+      "$type": "color",
+      "$value": "#f2faf6"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-alt-green",
+      "path": [
+        "avg",
+        "alt",
+        "green"
+      ],
+      "$type": "color",
+      "$value": "#00783b"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-blue-inverse",
+      "path": [
+        "avg",
+        "blue",
+        "inverse"
+      ],
+      "$type": "color",
+      "$value": "#4d99f0"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-mid-blue",
+      "path": [
+        "avg",
+        "mid",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#93c1f5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-light-blue",
+      "path": [
+        "avg",
+        "light",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#b6d5f7"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-pale-blue",
+      "path": [
+        "avg",
+        "pale",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#d9e8fa"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-faint-blue",
+      "path": [
+        "avg",
+        "faint",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#e9f1fb"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-off-white-blue",
+      "path": [
+        "avg",
+        "off",
+        "white",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#f2f8ff"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-alt-blue",
+      "path": [
+        "avg",
+        "alt",
+        "blue"
+      ],
+      "$type": "color",
+      "$value": "#1d67bf"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-red",
+      "path": [
+        "avg",
+        "red"
+      ],
+      "$type": "color",
+      "$value": "#db3559"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-yellow",
+      "path": [
+        "avg",
+        "yellow"
+      ],
+      "$type": "color",
+      "$value": "#ffb600"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-pale-yellow",
+      "path": [
+        "avg",
+        "pale",
+        "yellow"
+      ],
+      "$type": "color",
+      "$value": "#ffe29e"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-faint-yellow",
+      "path": [
+        "avg",
+        "faint",
+        "yellow"
+      ],
+      "$type": "color",
+      "$value": "#fff2d4"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-off-white-yellow",
+      "path": [
+        "avg",
+        "off",
+        "white",
+        "yellow"
+      ],
+      "$type": "color",
+      "$value": "#fff9ed"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-grey-1",
+      "path": [
+        "avg",
+        "grey",
+        "1"
+      ],
+      "$type": "color",
+      "$value": "#2b323f"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-grey-2",
+      "path": [
+        "avg",
+        "grey",
+        "2"
+      ],
+      "$type": "color",
+      "$value": "#3a4252"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-grey-3",
+      "path": [
+        "avg",
+        "grey",
+        "3"
+      ],
+      "$type": "color",
+      "$value": "#697284"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-grey-4",
+      "path": [
+        "avg",
+        "grey",
+        "4"
+      ],
+      "$type": "color",
+      "$value": "#9aa3b5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-grey-5",
+      "path": [
+        "avg",
+        "grey",
+        "5"
+      ],
+      "$type": "color",
+      "$value": "#ced4e0"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-grey-6",
+      "path": [
+        "avg",
+        "grey",
+        "6"
+      ],
+      "$type": "color",
+      "$value": "#e4e8f0"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-grey-7",
+      "path": [
+        "avg",
+        "grey",
+        "7"
+      ],
+      "$type": "color",
+      "$value": "#edf0f7"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-grey-8",
+      "path": [
+        "avg",
+        "grey",
+        "8"
+      ],
+      "$type": "color",
+      "$value": "#f7f9fc"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-critical",
+      "path": [
+        "avg",
+        "critical"
+      ],
+      "$type": "color",
+      "$value": "#db3559"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-attention",
+      "path": [
+        "avg",
+        "attention"
+      ],
+      "$type": "color",
+      "$value": "#ffb600"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-success",
+      "path": [
+        "avg",
+        "success"
+      ],
+      "$type": "color",
+      "$value": "#00783b"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-info",
+      "path": [
+        "avg",
+        "info"
+      ],
+      "$type": "color",
+      "$value": "#1d67bf"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-neutral-50",
+      "path": [
+        "avg",
+        "neutral",
+        "50"
+      ],
+      "$type": "color",
+      "$value": "#f4f4f5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-neutral-100",
+      "path": [
+        "avg",
+        "neutral",
+        "100"
+      ],
+      "$type": "color",
+      "$value": "#e8e9ea"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-neutral-200",
+      "path": [
+        "avg",
+        "neutral",
+        "200"
+      ],
+      "$type": "color",
+      "$value": "#d2d3d5"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-neutral-300",
+      "path": [
+        "avg",
+        "neutral",
+        "300"
+      ],
+      "$type": "color",
+      "$value": "#bbbdc1"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-neutral-400",
+      "path": [
+        "avg",
+        "neutral",
+        "400"
+      ],
+      "$type": "color",
+      "$value": "#a4a7ac"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-neutral-500",
+      "path": [
+        "avg",
+        "neutral",
+        "500"
+      ],
+      "$type": "color",
+      "$value": "#8e9197"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-neutral-600",
+      "path": [
+        "avg",
+        "neutral",
+        "600"
+      ],
+      "$type": "color",
+      "$value": "#777a83"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-neutral-700",
+      "path": [
+        "avg",
+        "neutral",
+        "700"
+      ],
+      "$type": "color",
+      "$value": "#60646e"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-neutral-800",
+      "path": [
+        "avg",
+        "neutral",
+        "800"
+      ],
+      "$type": "color",
+      "$value": "#494e59"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-avg-neutral-900",
+      "path": [
+        "avg",
+        "neutral",
+        "900"
+      ],
+      "$type": "color",
+      "$value": "#333844"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-white",
+      "path": [
+        "white"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-white)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-critical",
+      "path": [
+        "functional",
+        "critical"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-critical)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-critical-muted",
+      "path": [
+        "functional",
+        "critical",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "#eb98a9"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-critical-subtle",
+      "path": [
+        "functional",
+        "critical",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "#f7e6e9"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-attention",
+      "path": [
+        "functional",
+        "attention"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-attention)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-attention-muted",
+      "path": [
+        "functional",
+        "attention",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "#fdd87c"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-attention-subtle",
+      "path": [
+        "functional",
+        "attention",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "#fbf3e0"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-success",
+      "path": [
+        "functional",
+        "success"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-success)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-success-muted",
+      "path": [
+        "functional",
+        "success",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "#7db99a"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-success-subtle",
+      "path": [
+        "functional",
+        "success",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "#e1ede6"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-info",
+      "path": [
+        "functional",
+        "info"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-info)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-info-muted",
+      "path": [
+        "functional",
+        "info",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "#8cb1dc"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-functional-info-subtle",
+      "path": [
+        "functional",
+        "info",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "#e4ebf3"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-5",
+      "path": [
+        "neutral",
+        "5"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-neutral-50)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-10",
+      "path": [
+        "neutral",
+        "10"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-neutral-100)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-20",
+      "path": [
+        "neutral",
+        "20"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-neutral-200)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-30",
+      "path": [
+        "neutral",
+        "30"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-neutral-300)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-40",
+      "path": [
+        "neutral",
+        "40"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-neutral-400)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-50",
+      "path": [
+        "neutral",
+        "50"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-neutral-500)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-60",
+      "path": [
+        "neutral",
+        "60"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-neutral-600)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-70",
+      "path": [
+        "neutral",
+        "70"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-neutral-700)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-80",
+      "path": [
+        "neutral",
+        "80"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-neutral-800)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-neutral-90",
+      "path": [
+        "neutral",
+        "90"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-neutral-900)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-default",
+      "path": [
+        "bg",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-white)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-subtle",
+      "path": [
+        "bg",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-off-white-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-muted",
+      "path": [
+        "bg",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-off-white-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-brand",
+      "path": [
+        "bg",
+        "brand"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-brand-soft",
+      "path": [
+        "bg",
+        "brand",
+        "soft"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-faint-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-accent",
+      "path": [
+        "bg",
+        "accent"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-pale-yellow)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-alpha",
+      "path": [
+        "bg",
+        "alpha"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-light-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-beta",
+      "path": [
+        "bg",
+        "beta"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-light-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-gamma",
+      "path": [
+        "bg",
+        "gamma"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-off-white-yellow)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-delta",
+      "path": [
+        "bg",
+        "delta"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-grey-7)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-inverse",
+      "path": [
+        "bg",
+        "inverse"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-black)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-inverse-strong",
+      "path": [
+        "bg",
+        "inverse",
+        "strong"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-black)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-primary",
+      "path": [
+        "bg",
+        "primary"
+      ],
+      "$type": "color",
+      "$value": "var(--color-bg-default)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-primary",
+      "path": [
+        "text",
+        "primary"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-black)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-secondary",
+      "path": [
+        "text",
+        "secondary"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-grey-3)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-brand",
+      "path": [
+        "text",
+        "brand"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-accent",
+      "path": [
+        "text",
+        "accent"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-inverse",
+      "path": [
+        "text",
+        "inverse"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-white)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-strong",
+      "path": [
+        "border",
+        "strong"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-black)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-strong-alt",
+      "path": [
+        "border",
+        "strong",
+        "alt"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-grey-2)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-subtle",
+      "path": [
+        "border",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-neutral-100)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-inverse",
+      "path": [
+        "border",
+        "inverse"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-white)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-brand",
+      "path": [
+        "border",
+        "brand"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-accent",
+      "path": [
+        "border",
+        "accent"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-focus",
+      "path": [
+        "border",
+        "focus"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-brand",
+      "path": [
+        "highlight",
+        "brand"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-brand-light",
+      "path": [
+        "highlight",
+        "brand",
+        "light"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-pale-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-accent",
+      "path": [
+        "highlight",
+        "accent"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-alpha-base",
+      "path": [
+        "highlight",
+        "alpha",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-red)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-beta-base",
+      "path": [
+        "highlight",
+        "beta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-grey-3)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-gamma-base",
+      "path": [
+        "highlight",
+        "gamma",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-yellow)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-delta-base",
+      "path": [
+        "highlight",
+        "delta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-pale-yellow)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-epsilon-base",
+      "path": [
+        "highlight",
+        "epsilon",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-mid-green)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-zeta-base",
+      "path": [
+        "highlight",
+        "zeta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-mid-blue)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-eta-base",
+      "path": [
+        "highlight",
+        "eta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-blue-inverse)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-theta-base",
+      "path": [
+        "highlight",
+        "theta",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-green-inverse)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-highlight-iota-base",
+      "path": [
+        "highlight",
+        "iota",
+        "base"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-grey-3)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-critical",
+      "path": [
+        "signal",
+        "critical"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-critical)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-critical-muted",
+      "path": [
+        "signal",
+        "critical",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-critical-muted)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-critical-subtle",
+      "path": [
+        "signal",
+        "critical",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-critical-subtle)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-warning",
+      "path": [
+        "signal",
+        "warning"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-attention)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-warning-muted",
+      "path": [
+        "signal",
+        "warning",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-attention-muted)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-warning-subtle",
+      "path": [
+        "signal",
+        "warning",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-attention-subtle)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-success",
+      "path": [
+        "signal",
+        "success"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-success)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-success-muted",
+      "path": [
+        "signal",
+        "success",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-success-muted)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-success-subtle",
+      "path": [
+        "signal",
+        "success",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-success-subtle)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-info",
+      "path": [
+        "signal",
+        "info"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-info)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-info-muted",
+      "path": [
+        "signal",
+        "info",
+        "muted"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-info-muted)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-signal-info-subtle",
+      "path": [
+        "signal",
+        "info",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "var(--color-functional-info-subtle)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-disabled-text",
+      "path": [
+        "disabled",
+        "text"
+      ],
+      "$type": "color",
+      "$value": "var(--color-neutral-50)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-disabled-border",
+      "path": [
+        "disabled",
+        "border"
+      ],
+      "$type": "color",
+      "$value": "var(--color-neutral-30)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-disabled-bg",
+      "path": [
+        "disabled",
+        "bg"
+      ],
+      "$type": "color",
+      "$value": "var(--color-neutral-20)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-canvas-default",
+      "path": [
+        "canvas",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-white)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-canvas-subtle",
+      "path": [
+        "canvas",
+        "subtle"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-grey-8)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-canvas-contrast",
+      "path": [
+        "canvas",
+        "contrast"
+      ],
+      "$type": "color",
+      "$value": "var(--color-avg-grey-8)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-shadow-default",
+      "path": [
+        "shadow",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "var(--color-neutral-50)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--gradient-horizontal",
+      "path": [
+        "gradient",
+        "horizontal"
+      ],
+      "$type": "color",
+      "$value": "linear-gradient(90deg, var(--color-avg-green) 0%, var(--color-avg-blue) 100%)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--gradient-vertical",
+      "path": [
+        "gradient",
+        "vertical"
+      ],
+      "$type": "color",
+      "$value": "linear-gradient(180deg, var(--color-avg-green) 0%, var(--color-avg-blue) 100%)"
+    }
+  ],
+  "generatedAt": "2026-08-02T02:14:45.024Z"
+}

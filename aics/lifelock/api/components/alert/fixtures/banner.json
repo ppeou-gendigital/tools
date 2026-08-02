@@ -1,0 +1,12 @@
+{
+  "layout": "banner",
+  "hierarchy": "low",
+  "tone": "info",
+  "title": "Alert title",
+  "description": "Short description.",
+  "showButton": true,
+  "ctaLabel": "Action",
+  "dismissible": false,
+  "wholeClickable": false,
+  "dismissLabel": "Dismiss"
+}

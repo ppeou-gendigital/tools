@@ -1,0 +1,245 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/token.v1.json",
+  "type": "token",
+  "name": "grid",
+  "status": "published",
+  "summary": "The grid system — container widths, column counts, gutters, outer margins, and derived column widths — encoded as primitive Figma `Number` Variables and CSS custom properties in the `--grid-*` namespace, plus the system-wide `--grid-max-width` semantic alias per [`code-conventions.mdc`](../../../../.cursor/rules/code-conventions.mdc) § 7.3.",
+  "specUrl": "/api/tokens/grid/spec.md",
+  "sourceFiles": {
+    "spec": "/api/tokens/grid/spec.md",
+    "scss": "/api/tokens/grid/source/_grid.scss"
+  },
+  "figma": {
+    "fileKey": "Nshd9ukxIzpeUnzOXiWxUP",
+    "nodeId": "18086:2008",
+    "url": "https://www.figma.com/design/Nshd9ukxIzpeUnzOXiWxUP/?node-id=18086-2008&m=dev"
+  },
+  "tokens": [
+    {
+      "family": "grid",
+      "cssVar": "--grid-content-sm",
+      "path": [
+        "content",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "328",
+      "$description": "360 − 2 × 16; reference content width at SM canonical viewport (band content is fluid)"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-content-md",
+      "path": [
+        "content",
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": "704",
+      "$description": "768 − 2 × 32 = 704; reference content width at MD canonical viewport (band content is fluid)"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-content-lg",
+      "path": [
+        "content",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": "936",
+      "$description": "1024 − 2 × 44 = 936; reference content width at LG canonical viewport (band content is fluid)"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-content-xl",
+      "path": [
+        "content",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "1312",
+      "$description": "1440 − 2 × 64 = 1312; authoritative XL content cap"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-max-width",
+      "path": [
+        "max",
+        "width"
+      ],
+      "$type": "dimension",
+      "$value": "1312",
+      "$description": "canonical container max for templates per `code-conventions.mdc` § 7.3"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-columns-sm",
+      "path": [
+        "columns",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "4",
+      "$description": "unit = \"columns\", not px; consumed by `grid-template-columns: repeat(var(--grid-columns-sm), 1fr)`"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-columns-md",
+      "path": [
+        "columns",
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": "12"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-columns-lg",
+      "path": [
+        "columns",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": "12"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-columns-xl",
+      "path": [
+        "columns",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "12"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-gutter-sm",
+      "path": [
+        "gutter",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "12"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-gutter-md",
+      "path": [
+        "gutter",
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": "16"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-gutter-lg",
+      "path": [
+        "gutter",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": "24"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-gutter-xl",
+      "path": [
+        "gutter",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "32"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-margin-sm",
+      "path": [
+        "margin",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "16"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-margin-md",
+      "path": [
+        "margin",
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": "32"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-margin-lg",
+      "path": [
+        "margin",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": "44",
+      "$description": "off-8px-grid (intentional)"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-margin-xl",
+      "path": [
+        "margin",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "64"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-column-width-sm",
+      "path": [
+        "column",
+        "width",
+        "sm"
+      ],
+      "$type": "dimension",
+      "$value": "73",
+      "$description": "`(328 − 3 × 12) / 4 = 73` (rounding leftover; not 4-px-aligned — intentional); reference value at canonical vw, actual track width fluid via 1fr"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-column-width-md",
+      "path": [
+        "column",
+        "width",
+        "md"
+      ],
+      "$type": "dimension",
+      "$value": "44",
+      "$description": "`(704 − 11 × 16) / 12 = 44`; reference value at canonical vw, actual track width fluid via 1fr"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-column-width-lg",
+      "path": [
+        "column",
+        "width",
+        "lg"
+      ],
+      "$type": "dimension",
+      "$value": "56",
+      "$description": "`(936 − 11 × 24) / 12 = 56`; reference value at canonical vw, actual track width fluid via 1fr"
+    },
+    {
+      "family": "grid",
+      "cssVar": "--grid-column-width-xl",
+      "path": [
+        "column",
+        "width",
+        "xl"
+      ],
+      "$type": "dimension",
+      "$value": "80",
+      "$description": "`(1312 − 11 × 32) / 12 = 80`; authoritative — XL is fixed"
+    }
+  ],
+  "generatedAt": "2026-08-02T02:14:49.789Z"
+}

@@ -1,0 +1,135 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "radio",
+  "status": "published",
+  "summary": "Single-select choice from a group of mutually-exclusive options. Mirrors the canonical [Web-ODS Shared Library → Radio master](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=666-36462&m=dev) (`666:36462`). Visual architecture and state-circle mechanics mirror the sibling Checkbox component; the only differences are the circular geometry (no corners) and the centred dot glyph in the checked state. Core default theme unit; brand packages supply theme token values.",
+  "specUrl": "/api/components/radio/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/radio/spec.md",
+    "hbs": "/api/components/radio/source/radio.hbs",
+    "scss": "/api/components/radio/source/radio.scss",
+    "js": "/api/components/radio/source/radio.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "666:36462",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=666-36462&m=dev"
+  },
+  "rootClass": "c-radio",
+  "bemClasses": [
+    "c-radio"
+  ],
+  "properties": [
+    {
+      "name": "tone",
+      "fixtureKey": "tone",
+      "type": "Enum (`default` / `accent` / `critical`)",
+      "required": true,
+      "default": "\"default\"",
+      "description": "Drives the checked fill.",
+      "figmaLabel": "Tone"
+    },
+    {
+      "name": "checked",
+      "fixtureKey": "checked",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Persistent. Sets native `checked` + `aria-checked=\"true\"`.",
+      "figmaLabel": "Checked"
+    },
+    {
+      "name": "disabled",
+      "fixtureKey": "disabled",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Persistent. Paints the `--color-disabled-*` trio, sets `aria-disabled=\"true\"`, sets native `disabled`.",
+      "figmaLabel": "Disabled"
+    },
+    {
+      "name": "name",
+      "fixtureKey": "name",
+      "type": "Text",
+      "required": true,
+      "default": "\"\"",
+      "description": "Required for grouping — all radios with the same `name` participate in the same mutually-exclusive set.",
+      "figmaLabel": "Name"
+    },
+    {
+      "name": "value",
+      "fixtureKey": "value",
+      "type": "Text",
+      "required": true,
+      "default": "\"\"",
+      "description": "The value posted when this radio is selected within its `name` group.",
+      "figmaLabel": "Value"
+    },
+    {
+      "name": "label",
+      "fixtureKey": "label",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Visible label rendered after the box. Wrapped inside the root `<label>`.",
+      "figmaLabel": "Label"
+    },
+    {
+      "name": "accessibleLabel",
+      "fixtureKey": "accessibleLabel",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Bound to the native input's `aria-label`. Required when no visible label is present.",
+      "figmaLabel": "Accessible label"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "tone",
+      "values": "`default` / `accent` / `critical`. Affects the checked-state fill paint. Unchecked stays neutral in every tone."
+    },
+    {
+      "axis": "`state` (transient)",
+      "values": "`default` / `hover` / `focused` / `pressed`. Pseudo-class driven on the native input. State-circle wash paints behind the box for all three transient paints."
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-default",
+    "--color-border-strong",
+    "--color-border-focus",
+    "--color-signal-info",
+    "--color-signal-success",
+    "--color-signal-critical",
+    "--color-text-primary",
+    "--color-text-secondary",
+    "--color-text-inverse",
+    "--color-disabled-bg",
+    "--color-disabled-border",
+    "--color-disabled-text",
+    "--space-1",
+    "--space-2",
+    "--space-3",
+    "--border-radius-pill",
+    "--border-width-default",
+    "--border-width-emphasis",
+    "--font-family-primary",
+    "--font-size-body-base",
+    "--lineheight-body-base",
+    "--font-weight-regular"
+  ],
+  "composes": [],
+  "hasBehavior": true,
+  "accessibility": [
+    "Uses native `<input type=\"radio\">`; screen readers announce \"Radio button, checked\" / \"Radio button, not checked\" directly.",
+    "`name` is required so the browser enforces single-selection across the group automatically.",
+    "Keyboard: `Arrow` keys move selection within the group; `Tab` / `Shift+Tab` jump in/out of the group.",
+    "Focus ring via `:focus-visible` only on keyboard navigation.",
+    "WCAG: every (tone × state) combination meets AA non-text contrast."
+  ],
+  "storybookId": "molecules-radio",
+  "generatedAt": "2026-08-02T02:14:49.789Z"
+}

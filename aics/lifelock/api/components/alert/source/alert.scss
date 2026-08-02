@@ -1,0 +1,302 @@
+/**
+ * Components/Alert — three layouts (banner / toast / passive) on one
+ * BEM block.
+ *
+ * Mirrors the canonical Web-ODS Shared Library `Alerts and Notifications`
+ * canvas at `537:28056` — three sibling component sets (Banner
+ * `1284:11542`, Toast `1284:11906`, Passive `1284:12270`) plus the
+ * `Alert — Overview` documentation frame at `1284:13821`. The three
+ * sibling sets are wired identically across `Hierarchy × Tone ×
+ * Breakpoint` so they fold onto one `.c-alert` block with `Layout` as
+ * the structural variant.
+ *
+ * Variant axes → BEM modifiers:
+ *   layout       → .c-alert--banner | --toast | --passive
+ *   hierarchy    → .c-alert--low    | --high
+ *   tone         → .c-alert--info | --critical | --attention
+ *                  | --success | --dark
+ *   wholeClickable → .c-alert--whole-clickable (root flips <div> → <a>)
+ *
+ * Composition:
+ *   - Status icon + dismiss × → both rendered via the {{> icon}}
+ *     partial. Inline SVG is forbidden per src/components/icon/spec.md
+ *     § "Composition rules for consumers".
+ *   - CTA → composes the registered `{{> button}}` partial (Size=S,
+ *     Style per hierarchy: low → primary, high → secondary). See
+ *     `this package/src/components/button/spec.md` for the
+ *     canonical paint / padding / focus / state ladder. When
+ *     `ctaHref` is set, the same paint surfaces as
+ *     `<a class="btn btn--<style> btn--s">` so navigation targets
+ *     reuse the Button styles without forcing the `<button>`
+ *     element. No `.c-alert__cta` selector lives in this file —
+ *     every CTA paint comes from
+ *     `this package/src/components/button/button.scss`.
+ *
+ * All inline-axis sizing uses logical properties so the component
+ * flips cleanly under `dir="rtl"`.
+ *
+ * Tokens consumed are listed in `./spec.md` § "Tokens consumed".
+ */
+
+@use '../../tokens/breakpoints/breakpoints' as bp;
+
+.c-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  inline-size: 100%;
+  box-sizing: border-box;
+  padding-block: var(--space-3);
+  padding-inline: var(--space-5);
+  border-radius: var(--border-radius-card);
+  font-family: var(--font-family-primary);
+  text-decoration: none;
+  flex-wrap: wrap;
+}
+
+.c-alert__status-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 20px;
+  block-size: 20px;
+  margin-block-start: 2px;
+}
+
+.c-alert__content {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.c-alert__title {
+  margin: 0;
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+.c-alert__description {
+  margin: 0;
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  font-weight: var(--font-weight-regular);
+}
+
+// -- CTA — composes `{{> button}}` partial. Every CTA paint /
+// padding / radius / focus / state token comes from
+// `this package/.../button/button.scss` (Size=S; Style per hierarchy:
+// low → primary, high → secondary, resolved by the `alertCtaStyle`
+// Handlebars helper). When `ctaHref` is set the template applies the
+// canonical Button classes directly to an `<a class="btn btn--<style>
+// btn--s">` element since the Button partial only emits
+// `<button>`. The flex-child slot the CTA sits in inherits its
+// `flex: 0 0 auto` from `.btn`'s `display: inline-flex` +
+// `width: fit-content` defaults.
+// The only Alert-side rule on the CTA is its **vertical alignment**
+// in the flex row — the CTA always centers on the cross axis
+// regardless of how many lines the description wraps to. This
+// mirrors the Figma source's `items-center` on the outer Alert
+// wrapper (verified live on Banner Low/Info `1284:11552` and Toast
+// Low/Info `1284:11916`). The icon + content sit at the top of the
+// row via this file's `align-items: flex-start` default, so the
+// CTA's centering is a per-child opt-in via `align-self: center`
+// rather than flipping the parent's alignment (which would also
+// re-position the icon and dismiss).
+.c-alert > .btn {
+  align-self: center;
+}
+
+// -- Dismiss button
+
+.c-alert__dismiss {
+  // Vertically center the dismiss button on the cross axis of the
+  // Alert's flex row regardless of how many lines the description
+  // wraps to — mirrors the Figma source's `items-center` on the
+  // outer Alert wrapper (same per-child opt-in pattern as the CTA
+  // above). The parent stays `align-items: flex-start` so the
+  // icon + content column anchor to the top of the row; the
+  // dismiss opts into centering individually rather than flipping
+  // the parent's alignment. Replaces the previous
+  // `margin-block-start: -6px` hack that nudged the 32×32 hit
+  // target up against the parent's `flex-start` default.
+  align-self: center;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-control);
+  background-color: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+  margin-inline-start: auto;
+}
+
+.c-alert__dismiss:hover,
+.c-alert[data-state="hover"] .c-alert__dismiss {
+  background-color: rgb(0 0 0 / 8%);
+}
+
+.c-alert__dismiss:focus-visible,
+.c-alert[data-state="focus"] .c-alert__dismiss {
+  outline: var(--border-width-default) solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+// -- Tone × Hierarchy paint matrix
+// Low (subtle tint surface, primary content) ---------------------------------
+
+.c-alert--low.c-alert--info {
+  background-color: var(--color-signal-info-subtle);
+  color: var(--color-text-primary);
+}
+
+.c-alert--low.c-alert--info .c-alert__status-icon {
+  color: var(--color-signal-info);
+}
+
+.c-alert--low.c-alert--critical {
+  background-color: var(--color-signal-critical-subtle);
+  color: var(--color-text-primary);
+}
+
+.c-alert--low.c-alert--critical .c-alert__status-icon {
+  color: var(--color-signal-critical);
+}
+
+.c-alert--low.c-alert--attention {
+  background-color: var(--color-signal-warning-subtle);
+  color: var(--color-text-primary);
+}
+
+.c-alert--low.c-alert--attention .c-alert__status-icon {
+  color: var(--color-signal-warning);
+}
+
+.c-alert--low.c-alert--success {
+  background-color: var(--color-signal-success-subtle);
+  color: var(--color-text-primary);
+}
+
+.c-alert--low.c-alert--success .c-alert__status-icon {
+  color: var(--color-signal-success);
+}
+
+.c-alert--low.c-alert--dark {
+  background-color: var(--color-bg-muted);
+  color: var(--color-text-primary);
+}
+
+.c-alert--low.c-alert--dark .c-alert__status-icon {
+  color: var(--color-text-primary);
+}
+
+// High (strong fill surface, inverse content) --------------------------------
+
+.c-alert--high.c-alert--info {
+  background-color: var(--color-signal-info);
+  color: var(--color-text-inverse);
+}
+
+.c-alert--high.c-alert--info .c-alert__status-icon {
+  color: var(--color-text-inverse);
+}
+
+.c-alert--high.c-alert--critical {
+  background-color: var(--color-signal-critical);
+  color: var(--color-text-inverse);
+}
+
+.c-alert--high.c-alert--critical .c-alert__status-icon {
+  color: var(--color-text-inverse);
+}
+
+// Attention High keeps primary text — the yellow / orange surface
+// fails contrast with inverse white text. Mirrors the Spec Frame's
+// `Content fill` row.
+.c-alert--high.c-alert--attention {
+  background-color: var(--color-signal-warning);
+  color: var(--color-text-primary);
+}
+
+.c-alert--high.c-alert--attention .c-alert__status-icon {
+  color: var(--color-text-primary);
+}
+
+.c-alert--high.c-alert--success {
+  background-color: var(--color-signal-success);
+  color: var(--color-text-inverse);
+}
+
+.c-alert--high.c-alert--success .c-alert__status-icon {
+  color: var(--color-text-inverse);
+}
+
+.c-alert--high.c-alert--dark {
+  background-color: var(--color-bg-inverse-strong);
+  color: var(--color-text-inverse);
+}
+
+.c-alert--high.c-alert--dark .c-alert__status-icon {
+  color: var(--color-text-inverse);
+}
+
+// -- Layouts -----------------------------------------------------------------
+
+.c-alert--banner {
+  inline-size: 100%;
+}
+
+.c-alert--toast {
+  inline-size: 100%;
+  max-inline-size: 343px;
+  box-shadow: var(--shadow-default);
+}
+
+@include bp.lg {
+  .c-alert--toast {
+    max-inline-size: 400px;
+  }
+}
+
+@include bp.xl {
+  .c-alert--toast {
+    max-inline-size: 400px;
+  }
+}
+
+.c-alert--passive {
+  inline-size: 100%;
+}
+
+// -- Whole-clickable hover affordance ----------------------------------------
+
+.c-alert--whole-clickable {
+  cursor: pointer;
+  transition: box-shadow 150ms ease;
+}
+
+.c-alert--whole-clickable:hover {
+  box-shadow: var(--shadow-default);
+}
+
+.c-alert--whole-clickable:focus-visible {
+  outline: var(--border-width-default) solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c-alert,
+  .c-alert__dismiss,
+  .c-alert--whole-clickable {
+    transition: none;
+  }
+}
