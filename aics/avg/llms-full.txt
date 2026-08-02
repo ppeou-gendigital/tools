@@ -3,6 +3,21 @@
 > Machine-readable design system for AI agents. Package: `@aics/storybook-avg`.
 > Self-contained library — consume this brand alone.
 
+## Start here (agents)
+
+- [AGENTS.md](./AGENTS.md) — **mandatory** implementation rules
+- [README.md](./README.md) — human + agent overview
+
+## MUST
+
+1. Read `AGENTS.md` before implementing any unit.
+2. Fetch `/api/index.json` then `/api/<type>/<name>.json`.
+3. Implement from `sourceFiles` (`.hbs`, `.scss`, `.js`) + `/api/tokens.json`.
+4. Keep published BEM class names; call published `init*` factories.
+5. Do **not** invent markup/CSS/behavior from Docs prose or Show code alone.
+6. Outside this Storybook host, use absolute URLs under:
+   `https://ppeou-gendigital.github.io/tools/aics/avg/`
+
 ## Registry
 
 - [Index of every unit](/api/index.json)
@@ -24,7 +39,7 @@
 ## Source
 
 - Package: @aics/storybook-avg@0.1.0
-- Storybook: http://localhost:4173/avg/
+- Storybook: https://ppeou-gendigital.github.io/tools/aics/avg/
 
 
 # Full dump
@@ -387,7 +402,7 @@ single-open, and custom events require `initAccordion` /
     "Disabled items keep a readable label; summary uses `tabindex=\"-1\"` when disabled."
   ],
   "storybookId": "patterns-accordion",
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -585,7 +600,7 @@ Use to frame a single award logo at a fixed aspect ratio so a row of awards line
     "Placeholder label is documentation-only and not shipped to users."
   ],
   "storybookId": "molecules-award-wrapper",
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -861,7 +876,7 @@ No size axis and no icon slot.
     "**Contrast:** `warning` / `high` carve-out; verify `inverse` / `low` on tinted hosts."
   ],
   "storybookId": "molecules-badge",
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -1312,7 +1327,7 @@ Shared CTA primitive for all first-party brands. Brand themes supply
     "`aria-busy` when loading; honour `prefers-reduced-motion`"
   ],
   "storybookId": "molecules-button",
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -1670,7 +1685,7 @@ property on the input — without JS, screen readers will announce
     "WCAG: every (tone × state) combination meets AA non-text contrast against `--color-bg-default`. Disabled paint retains a visible outline per WCAG 2.2 § 1.4.11."
   ],
   "storybookId": "molecules-checkbox",
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -1878,7 +1893,7 @@ counts use the canonical Pagination component (numbered).
     "WCAG: every (appearance × position) combination meets AA non-text contrast on its target surface."
   ],
   "storybookId": "molecules-pagination-dots",
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -2198,7 +2213,7 @@ dispatching the namespaced `other brand:radio:*` CustomEvents.
     "WCAG: every (tone × state) combination meets AA non-text contrast."
   ],
   "storybookId": "molecules-radio",
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -2571,7 +2586,7 @@ both work. The JS layer's only jobs are to dispatch the namespaced
     "Reduced motion: the knob's slide transition is removed when `prefers-reduced-motion: reduce` is set."
   ],
   "storybookId": "molecules-switch",
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -2863,7 +2878,7 @@ Resolved avg theme values from themes/default/.
       "$value": "var(--border-width-m)"
     }
   ],
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -3938,7 +3953,7 @@ Resolved avg theme values from themes/default/.
       "$value": "20px"
     }
   ],
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -5429,7 +5444,7 @@ Resolved avg theme values from themes/default/.
       "$value": "linear-gradient(180deg, var(--color-avg-green) 0%, var(--color-avg-blue) 100%)"
     }
   ],
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -5747,7 +5762,7 @@ Resolved avg theme values from themes/default/.
       "$value": "80px"
     }
   ],
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -5916,7 +5931,7 @@ Resolved avg theme values from themes/default/.
       "$value": "90%"
     }
   ],
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -6129,7 +6144,7 @@ Resolved avg theme values from themes/default/.
       "$value": "0 2px 6px 0 rgb(0 0 0 / var(--opacity-10))"
     }
   ],
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -6378,7 +6393,7 @@ Resolved avg theme values from themes/default/.
       "$value": "120px"
     }
   ],
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```
@@ -8056,7 +8071,7 @@ Resolved avg theme values from themes/default/.
       "$value": "16px"
     }
   ],
-  "generatedAt": "2026-08-02T02:14:45.024Z"
+  "generatedAt": "2026-08-02T03:31:57.470Z"
 }
 
 ```

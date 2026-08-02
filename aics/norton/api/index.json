@@ -1,11 +1,11 @@
 {
   "$schema": "https://design-system.aics.dev/schema/index.v2.json",
-  "generatedAt": "2026-08-02T02:14:55.657Z",
+  "generatedAt": "2026-08-02T03:31:57.371Z",
   "package": {
     "name": "@aics/storybook-norton",
     "version": "0.1.0",
     "brand": "norton",
-    "storybookUrl": "http://localhost:4173/norton/"
+    "storybookUrl": "https://ppeou-gendigital.github.io/tools/aics/norton/"
   },
   "counts": {
     "tokens": 8,
