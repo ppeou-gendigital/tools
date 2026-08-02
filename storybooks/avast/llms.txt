@@ -3,6 +3,21 @@
 > Machine-readable design system for AI agents. Package: `@aics/storybook-avast`.
 > Self-contained library — consume this brand alone.
 
+## Start here (agents)
+
+- [AGENTS.md](./AGENTS.md) — **mandatory** implementation rules
+- [README.md](./README.md) — human + agent overview
+
+## MUST
+
+1. Read `AGENTS.md` before implementing any unit.
+2. Fetch `/api/index.json` then `/api/<type>/<name>.json`.
+3. Implement from `sourceFiles` (`.hbs`, `.scss`, `.js`) + `/api/tokens.json`.
+4. Keep published BEM class names; call published `init*` factories.
+5. Do **not** invent markup/CSS/behavior from Docs prose or Show code alone.
+6. Outside this Storybook host, use absolute URLs under:
+   `https://ppeou-gendigital.github.io/tools/aics/avast/`
+
 ## Registry
 
 - [Index of every unit](/api/index.json)
@@ -24,4 +39,4 @@
 ## Source
 
 - Package: @aics/storybook-avast@0.1.0
-- Storybook: http://localhost:4173/avast/
+- Storybook: https://ppeou-gendigital.github.io/tools/aics/avast/

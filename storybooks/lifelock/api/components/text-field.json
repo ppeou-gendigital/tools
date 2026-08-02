@@ -254,5 +254,5 @@
     "WCAG: resting + focus borders meet AA non-text contrast against `--color-bg-input`; disabled paint retains a visible outline per WCAG 2.2 § 1.4.11. Per the Figma guidance frame (`984:2201`), inputs should sit on the primary background — avoid placing them on accent / status surfaces where the border contrast is not guaranteed."
   ],
   "storybookId": "patterns-text-field",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }

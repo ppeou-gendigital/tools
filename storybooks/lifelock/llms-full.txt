@@ -3,6 +3,21 @@
 > Machine-readable design system for AI agents. Package: `@aics/storybook-lifelock`.
 > Self-contained library — consume this brand alone.
 
+## Start here (agents)
+
+- [AGENTS.md](./AGENTS.md) — **mandatory** implementation rules
+- [README.md](./README.md) — human + agent overview
+
+## MUST
+
+1. Read `AGENTS.md` before implementing any unit.
+2. Fetch `/api/index.json` then `/api/<type>/<name>.json`.
+3. Implement from `sourceFiles` (`.hbs`, `.scss`, `.js`) + `/api/tokens.json`.
+4. Keep published BEM class names; call published `init*` factories.
+5. Do **not** invent markup/CSS/behavior from Docs prose or Show code alone.
+6. Outside this Storybook host, use absolute URLs under:
+   `https://ppeou-gendigital.github.io/tools/aics/lifelock/`
+
 ## Registry
 
 - [Index of every unit](/api/index.json)
@@ -24,7 +39,7 @@
 ## Source
 
 - Package: @aics/storybook-lifelock@0.1.0
-- Storybook: http://localhost:4173/lifelock/
+- Storybook: https://ppeou-gendigital.github.io/tools/aics/lifelock/
 
 
 # Full dump
@@ -387,7 +402,7 @@ single-open, and custom events require `initAccordion` /
     "Disabled items keep a readable label; summary uses `tabindex=\"-1\"` when disabled."
   ],
   "storybookId": "patterns-accordion",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -1119,7 +1134,7 @@ action.
     "Focus outline: 2 px `--color-border-focus` offset 2 px meets the"
   ],
   "storybookId": "patterns-alert",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -1317,7 +1332,7 @@ Use to frame a single award logo at a fixed aspect ratio so a row of awards line
     "Placeholder label is documentation-only and not shipped to users."
   ],
   "storybookId": "molecules-award-wrapper",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -1593,7 +1608,7 @@ No size axis and no icon slot.
     "**Contrast:** `warning` / `high` carve-out; verify `inverse` / `low` on tinted hosts."
   ],
   "storybookId": "molecules-badge",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -2311,7 +2326,7 @@ _Six parts, every breadcrumb variant._
     "BreadcrumbList schema.org markup is intentionally **not** baked"
   ],
   "storybookId": "patterns-breadcrumb",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -2762,7 +2777,7 @@ Shared CTA primitive for all first-party brands. Brand themes supply
     "`aria-busy` when loading; honour `prefers-reduced-motion`"
   ],
   "storybookId": "molecules-button",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -3120,7 +3135,7 @@ property on the input — without JS, screen readers will announce
     "WCAG: every (tone × state) combination meets AA non-text contrast against `--color-bg-default`. Disabled paint retains a visible outline per WCAG 2.2 § 1.4.11."
   ],
   "storybookId": "molecules-checkbox",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -3474,7 +3489,7 @@ still works.
     "`autocomplete=\"one-time-code\"` on the first box lets the platform offer an SMS code for one-tap fill. WCAG: the active box pairs an info-blue border with a grey fill for a clearly visible focus state; resting box borders meet AA non-text contrast against `--color-bg-default`. Per the Figma guidance frame (`984:2201`), keep the field on the primary background where border contrast is guaranteed."
   ],
   "storybookId": "patterns-code-entry",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -3977,7 +3992,7 @@ than a divider.
     "**Reduced motion.** No transitions or animations ship on this"
   ],
   "storybookId": "molecules-divider",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -4288,7 +4303,7 @@ option stacks one copy per brand driven by the shared args panel; see
     "The mask pipeline preserves SVG aspect ratio via `mask-size: contain`;"
   ],
   "storybookId": "molecules-icon",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -4772,7 +4787,7 @@ are out of scope for Label and belong on a future `Chip`.
     "**Reduced motion.** No transitions or animations ship on this"
   ],
   "storybookId": "molecules-label",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -4980,7 +4995,7 @@ counts use the canonical Pagination component (numbered).
     "WCAG: every (appearance × position) combination meets AA non-text contrast on its target surface."
   ],
   "storybookId": "molecules-pagination-dots",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -5719,7 +5734,7 @@ The progress indicator is a form-adjacent molecule composed of bounded primitive
     "`prefers-reduced-motion: reduce` does not currently apply — both"
   ],
   "storybookId": "molecules-progress-indicator",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -6039,7 +6054,7 @@ dispatching the namespaced `lifelock:radio:*` CustomEvents.
     "WCAG: every (tone × state) combination meets AA non-text contrast."
   ],
   "storybookId": "molecules-radio",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -6399,7 +6414,7 @@ affordance and the namespaced events.
     "WCAG: resting + focus borders meet AA non-text contrast against `--color-bg-input`; the glyph + separator are `aria-hidden`. Per the Figma guidance frame (`984:2201`), keep search boxes on the primary background where border contrast is guaranteed."
   ],
   "storybookId": "patterns-search-box",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -7016,7 +7031,7 @@ decision, not a code dial.
     "Honours `prefers-reduced-motion: reduce` — the JS thumb-position"
   ],
   "storybookId": "molecules-slider",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -7474,7 +7489,7 @@ shared icon primitive rather than inlining SVG.
     "Complete-state checkmark uses the icon partial with"
   ],
   "storybookId": "molecules-stepper",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -7847,7 +7862,7 @@ both work. The JS layer's only jobs are to dispatch the namespaced
     "Reduced motion: the knob's slide transition is removed when `prefers-reduced-motion: reduce` is set."
   ],
   "storybookId": "molecules-switch",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -8351,7 +8366,7 @@ stays a standard password input.
     "WCAG: resting + focus borders meet AA non-text contrast against `--color-bg-input`; disabled paint retains a visible outline per WCAG 2.2 § 1.4.11. Per the Figma guidance frame (`984:2201`), inputs should sit on the primary background — avoid placing them on accent / status surfaces where the border contrast is not guaranteed."
   ],
   "storybookId": "patterns-text-field",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -9081,7 +9096,7 @@ behavior across typography scales, themes, and layouts.
     "**`aria-label` policy** — when the visible label is not"
   ],
   "storybookId": "molecules-text-link",
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -9362,7 +9377,7 @@ Canonical source on disk: `themes/default/_borders.scss` (re-exported by `src/to
       "$value": "8px"
     }
   ],
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -9506,7 +9521,7 @@ Widths match the breakpoint token values. Adding `xs` / `xxl` requires updating 
       "$description": "dual-purpose: XL media-query lower threshold AND canonical viewport"
     }
   ],
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -10656,7 +10671,7 @@ Single theme — no per-mode overrides. No `@media` rules apply.
       "$description": "Composed with `size=\"20\"`"
     }
   ],
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -12788,7 +12803,7 @@ The `base-input` rebuild (and its specializing consumers — `text-input`, `pass
       "$description": "Same red as `signal/critical` so error-text reads consistently."
     }
   ],
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -13298,7 +13313,7 @@ Design rules consumers honor:
       "$description": "`(1312 − 11 × 32) / 12 = 80`; authoritative — XL is fixed"
     }
   ],
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -13565,7 +13580,7 @@ inner glyph will visibly drift by one device pixel between renders.
     "url": "https://www.figma.com/design/7NjgRv0ac9SNpgwEO7wmfe/?node-id=2-2583&m=dev"
   },
   "tokens": [],
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -13818,7 +13833,7 @@ Canonical source on disk: `themes/default/_opacity.scss` (re-exported by `src/to
       "$value": "`0.9` (= 90%)"
     }
   ],
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -14163,7 +14178,7 @@ Consumer usage:
       "$description": "Pressed elevation. Visibly tighter than `default` (smaller Y, smaller blur)."
     }
   ],
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -14501,7 +14516,7 @@ The atom primitives carry their `px` unit in CSS (`--space-1: 2px`, … `--space
       "$description": "reserved; project-wide carry-over"
     }
   ],
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
@@ -16078,7 +16093,7 @@ Both stacks resolve gracefully when the Google Fonts request is blocked, fails, 
       "$description": "Used by `base-input` Size=M, `password` / `text-input` / `picker` Size=M, `label` Size=Sm."
     }
   ],
-  "generatedAt": "2026-08-02T02:14:49.789Z"
+  "generatedAt": "2026-08-02T03:31:57.065Z"
 }
 
 ```
