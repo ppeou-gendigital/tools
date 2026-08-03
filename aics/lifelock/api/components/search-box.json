@@ -148,5 +148,5 @@
     "WCAG: resting + focus borders meet AA non-text contrast against `--color-bg-input`; the glyph + separator are `aria-hidden`. Per the Figma guidance frame (`984:2201`), keep search boxes on the primary background where border contrast is guaranteed."
   ],
   "storybookId": "patterns-search-box",
-  "generatedAt": "2026-08-03T00:18:54.465Z"
+  "generatedAt": "2026-08-03T01:08:47.005Z"
 }
