@@ -12,11 +12,13 @@
 
 1. Read `AGENTS.md` before implementing any unit.
 2. Fetch `/api/index.json` then `/api/<type>/<name>.json`.
-3. Implement from `sourceFiles` (`.hbs`, `.scss`, `.js`) + `/api/tokens.json`.
-4. Keep published BEM class names; call published `init*` factories.
-5. Do **not** invent markup/CSS/behavior from Docs prose or Show code alone.
-6. Outside this Storybook host, use absolute URLs under:
-   `http://localhost:4173/norton/`
+3. Copy **only** the path strings in that JSON’s `sourceFiles` (+ `specUrl`).
+   Do **not** invent URLs or extensions (no `.css`, no `*.config.json`).
+4. Implement from those files + `/api/tokens.json`.
+5. Keep published BEM class names; call published `init*` factories.
+6. Do **not** invent markup/CSS/behavior from Docs prose or Show code alone.
+7. Absolute brand base (prefix for every relative `/api/...` path):
+   `https://ppeou-gendigital.github.io/tools/aics/norton/`
 
 ## Registry
 
@@ -39,4 +41,4 @@
 ## Source
 
 - Package: @aics/storybook-norton@0.1.0
-- Storybook: http://localhost:4173/norton/
+- Storybook: https://ppeou-gendigital.github.io/tools/aics/norton/
