@@ -145,8 +145,8 @@
 /* Glyph wrapper inside the knob — always rendered (gated only by the
    `showIcon` prop and `loading` state in the template). Visibility is
    CSS-driven via `is-checked` so click-driven toggles don't have to
-   insert nodes. The icon element fills the 18 px knob; the `-small`
-   SVG renders its visible mark at ~9 px which matches Figma. */
+   insert nodes. Figma Icon mask wrapper is 18×18 (`717:48382`); nearest
+   enum is `size="16"` on the partial — do not re-size `.c-icon` here. */
 .c-switch__glyph {
   display: inline-flex;
   align-items: center;
@@ -158,12 +158,6 @@
 
 .c-switch.is-checked .c-switch__glyph {
   opacity: 1;
-}
-
-.c-switch__knob .c-icon {
-  display: inline-flex;
-  inline-size: var(--c-switch-knob-size);
-  block-size: var(--c-switch-knob-size);
 }
 
 /* --- State circle (hover / pressed wash) --------------------- */

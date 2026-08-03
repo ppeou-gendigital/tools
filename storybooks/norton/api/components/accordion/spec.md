@@ -71,6 +71,16 @@ Figma `accordion / card` set (rounded `--color-bg-subtle` surfaces).
 Composes: icon (trailing chevron `arrows-navigation/simple-expand-more`,
 optional leading icon via catalog key).
 
+### Geometry inventory (icon slots)
+
+Nested INSTANCE → `size` mapping (control-pad + inner icon; avoid
+double-count). Figma control `2499:2681` (`Control buttons`).
+
+| slot | outer px | pad | icon INSTANCE px | size= | frame= | wrapper pad? |
+|---|---|---|---|---|---|---|
+| `__item-chevron` | 24×24 | `--space-1` (2px) | 20×20 | `20` | none | yes (`padding: var(--space-1)` on `.c-accordion__item-chevron`) |
+| `__item-leading` | 24×24 | none | 24×24 | `24` | none | no |
+
 ## Variant axes
 
 | Axis | Values |

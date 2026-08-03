@@ -122,18 +122,15 @@
 // ============================================================================
 // ELEMENT — .c-breadcrumb__ellipsis (static collapsed-state placeholder)
 // ============================================================================
-// Mirrors the Figma `PaginationControls / Style=Square` instance at
-// 20×20 with padding `space-1` and `border-radius-s`. The placeholder
-// is presentation-only: it surfaces the hidden labels via the native
-// `title` tooltip on hover and the same labels via `aria-label` for
-// screen readers. There is no click, no keyboard activation, and no
-// JS layer — every collapsed-state trail keeps the last visible
-// intermediate link reachable as the user's recovery path.
+// Mirrors the Figma square control at 20×20 outer with `--space-1` pad
+// (border-box) → inner glyph 16×16. Icon `size="16"`; do not also pass
+// `size="20"` (control-pad + icon-size double-count).
 
 .c-breadcrumb__ellipsis {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   inline-size: 20px;
   block-size: 20px;
   padding: var(--space-1);

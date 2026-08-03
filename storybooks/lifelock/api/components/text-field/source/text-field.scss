@@ -167,7 +167,9 @@ input.c-text-field__field {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-1);
+  // Figma password reveal Icon mask wrapper is 20×20 (`4084:69`) with
+  // no control pad — keep `size="20"` on the partial and zero pad here.
+  padding: 0;
   border: 0;
   border-radius: var(--border-radius-control);
   background: transparent;

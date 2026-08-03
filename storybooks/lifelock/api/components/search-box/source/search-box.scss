@@ -95,7 +95,10 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  padding: var(--space-1);
+  // Figma clear / search Icon mask wrappers are 24×24 with no control pad
+  // (e.g. `1258:1389`). Do not add `--space-1` here — that double-counts
+  // with a 24 `size=` (or under-sizes a 20 `size=` vs the 24 mask).
+  padding: 0;
   border: 0;
   border-radius: var(--border-radius-control);
   background: transparent;

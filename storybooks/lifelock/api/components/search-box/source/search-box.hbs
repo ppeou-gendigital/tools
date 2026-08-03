@@ -15,7 +15,7 @@
   data-size="{{#if size}}{{lower size}}{{else}}m{{/if}}"
 >
   {{#if iconFirst}}
-    <span class="c-search-box__icon" aria-hidden="true">{{> icon name="actions/simple-search" size="20" color="current" decorative=true}}</span>
+    <span class="c-search-box__icon" aria-hidden="true">{{> icon name="actions/simple-search" size="24" color="current" decorative=true}}</span>
     <span class="c-search-box__separator" aria-hidden="true"></span>
   {{/if}}
 
@@ -36,11 +36,11 @@
     aria-label="{{#if clearLabel}}{{clearLabel}}{{else}}Clear search{{/if}}"
     {{#if disabled}}disabled{{/if}}
   >
-    {{> icon name="actions/simple-close" size="20" color="current" decorative=true}}
+    {{> icon name="actions/simple-close" size="24" color="current" decorative=true}}
   </button>
 
   {{#unless iconFirst}}
     <span class="c-search-box__separator" aria-hidden="true"></span>
-    <span class="c-search-box__icon" aria-hidden="true">{{> icon name="actions/simple-search" size="20" color="current" decorative=true}}</span>
+    <span class="c-search-box__icon" aria-hidden="true">{{> icon name="actions/simple-search" size="24" color="current" decorative=true}}</span>
   {{/unless}}
 </div>

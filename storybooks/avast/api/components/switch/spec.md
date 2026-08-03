@@ -73,10 +73,17 @@ glyph that paints inside the knob when
 rendered** when `showIcon !== false` (and `loading !== true`) and its
 visibility is CSS-driven via `opacity` keyed on the `is-checked`
 modifier class, so a JS click that flips `is-checked` doesn't have to
-insert nodes. The icon element fills the 18 × 18 px knob; the
-`-small` SVG's path occupies ~50 % of its 24 px viewBox, so the
-visible mark renders at ~9 px — matching the Figma master
-`717:48394` knob-icon geometry.
+insert nodes.
+
+### Geometry inventory (icon slots)
+
+Figma knob Icon mask wrapper is **18×18** (`717:48382`). Icon enum has
+no `18` — nearest is `size="16"`. Do **not** stretch `.c-icon` to the
+18 px knob via consumer CSS (control-pad / box override forbidden).
+
+| slot | outer px | pad | icon INSTANCE px | size= | frame= | wrapper pad? |
+|---|---|---|---|---|---|---|
+| `__glyph` (checkmark) | 18×18 knob | none on icon | 18×18 Figma / 16 code | `16` | none | no |
 
 ## Variant axes
 

@@ -1,0 +1,47 @@
+import{n as e}from"./rolldown-runtime-DkW27tQK.js";import{n as t,t as n}from"./pretty-source-Cg2Lp3N_.js";import{b as r,n as i,t as a,y as o}from"./handlebars-helpers-B3QDWh3r.js";import{a as s,n as c,t as l}from"./figma-links-DrHwXaYQ.js";function u(e,t={}){let n=[];if(!Array.isArray(e)||e.length===0)return n;let r=t.firstAsIcon===!0,i=t.collapsed===!0,a=t.hiddenPagesLabel||f,o=e.length-1,s=i&&e.length>=4,c=s?1:-1,l=s?o-2:-1,u=s?e.slice(c,l+1).map(e=>e&&e.label||``).filter(Boolean).join(`, `):``;for(let t=0;t<=o;t+=1){let i=e[t]||{},d=t===o,f=t===0;s&&t>=c&&t<=l||(f||n.push({kind:`separator`}),s&&t===o-1&&(n.push({kind:`ellipsis`,hiddenLabels:u,hiddenPagesLabel:a}),n.push({kind:`separator`})),d?n.push({kind:`current`,label:i.label??`Current page`}):f?r?n.push({kind:`link`,label:i.label??``,href:i.href??`#`,homeIconOnly:!0,ariaLabel:i.ariaLabel||i.label||`Home`}):s?n.push({kind:`link`,label:i.label??``,href:i.href??`#`,leadingHomeIcon:!0}):n.push({kind:`link`,label:i.label??``,href:i.href??`#`}):n.push({kind:`link`,label:i.label??``,href:i.href??`#`}))}return n}function d(e,t,n){let r={...m,...e},i=n??r.items??p;return t({firstAsIcon:r.firstAsIcon,collapsed:r.collapsed,truncation:r.truncation,ariaLabel:r.ariaLabel,hiddenPagesLabel:r.hiddenPagesLabel,iconType:r.iconType,items:u(i,{firstAsIcon:r.firstAsIcon,collapsed:r.collapsed,hiddenPagesLabel:r.hiddenPagesLabel})})}var f,p,m;function h(){return(h=e((()=>{f=`Hidden pages`,p=[{label:`Home`,href:`/`,ariaLabel:`Home`},{label:`Products`,href:`/products`},{label:`Software`,href:`/products/software`},{label:`Antivirus`}],m={items:p,firstAsIcon:!1,collapsed:!1,truncation:!1,ariaLabel:`Breadcrumb`,hiddenPagesLabel:f,iconType:`objects/simple-home`}})))()}function g({firstAsIcon:e,collapsed:t,truncation:n,label:r}){return`
+    <div class="sbd-doc__stack-item">
+      <p class="sbd-doc__stack-item-label">${r}</p>
+      <div class="sbd-doc__stack-item-canvas">${d({firstAsIcon:e,collapsed:t,truncation:n},_,n?S:p)}</div>
+    </div>
+  `}var _,v,y,b,x,S,C,w,T;function E(){return(E=e((()=>{i(),r(),t(),s(),h(),_=a.default.compile(o),v={items:{control:`object`,name:`Items`,description:'Ordered ancestors-to-current trail. Each entry: `{ label: string, href?: string, ariaLabel?: string }`. The last entry becomes the `aria-current="page"` text node. The Storybook helper `buildCrumbsFromItems` enriches this consumer trail into the rendered `items[]` sequence (separators + ellipsis placeholder).'},firstAsIcon:{control:`boolean`,name:`First as icon`,description:"When `true`, the first crumb renders as an icon-only home anchor (label moves to `aria-label`). When `false`, the first crumb is a plain text-link — except in collapsed mode, where a leading home icon is added next to the label as a wayfinding aid (mirrors the Figma master)."},collapsed:{control:`boolean`,name:`Collapsed`,description:'When `true` and the trail has 4+ items, every crumb between the first and the second-to-last is omitted from the DOM and replaced by a single static `<span class="c-breadcrumb__ellipsis">` placeholder. The placeholder surfaces the hidden labels via the native `title` tooltip on hover and the same labels via `aria-label` for screen readers — there is no expand button.'},truncation:{control:`boolean`,name:`Truncation`,description:"When `true`, caps each label at `max-inline-size: 12ch` and ellipsizes overflow. The full label stays in the DOM."},ariaLabel:{control:`text`,name:`Accessible name`,description:'Bound to the root `<nav aria-label="…">`.'},hiddenPagesLabel:{control:`text`,name:`Hidden-pages label`,description:'Prefix for the ellipsis placeholder\'s `aria-label`. Rendered as `"<hiddenPagesLabel>: <hidden labels>"`. Only emitted when `collapsed=true`.'},iconType:{control:`text`,name:`Icon type`,description:"Icon catalog key used for both the icon-only and leading-home shapes of the first crumb. Defaults to `objects/simple-home`."}},y={title:`Patterns/Breadcrumb`,tags:[`autodocs`,`shared-library`],render:e=>d(e,_),args:m,argTypes:v,parameters:{badges:[`shared`],contentWidth:`fluid`,design:l([[`Breadcrumb master — 1260:8373`,`1260:8373`],[`Breadcrumb canvas — 539:28420`,`539:28420`],[`Spec Frame — 1427:3565`,`1427:3565`]]),docs:{description:{component:'Patterns/Breadcrumb — semantic `<nav><ol>` wayfinding trail mirroring [Web-ODS Shared Library : Breadcrumb master](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1260-8373&m=dev) (`1260:8373`). Composes the registered `text-link` partial at `Size = sm, Weight = regular` for every intermediate crumb, the `icon` partial (`arrows-navigation/simple-chevron-right`, 16 px) for separators, the `icon` partial (`objects/simple-home`, 16 px) for the icon-only and leading-home first-crumb shapes, and the `icon` partial (`arrows-navigation/simple-more-horiz`, 20 px) inside a static `<span class="c-breadcrumb__ellipsis">` for the collapsed-state placeholder. The current page is always `<span aria-current="page">` — never a link. See [`./spec.md`](./spec.md) for the property contract and the LifeLock-mode follow-up under `## Notes & open questions`.'}}}},b={parameters:n(d(m,_),{unit:`breadcrumb`,extra:{design:l(`1260:8373`),docs:{description:{story:"Interactive playground — flip First as icon, Collapsed, or Truncation to walk every Figma variant. The trail uses a five-item fixture (`Home › Products › Cloud solutions › Acme cloud platform › Pricing`) so Collapsed has a meaningful middle to fold. When Collapsed=true and First as icon=false, the first crumb auto-renders with a leading home icon (verbatim Figma behaviour). When Collapsed=true, hover the `⋯` placeholder to see the tooltip naming the hidden labels."}}}})},x=[{firstAsIcon:!1,collapsed:!1,truncation:!1,label:`First as icon · No  ·  Collapsed · No  ·  Truncation · No`},{firstAsIcon:!0,collapsed:!1,truncation:!1,label:`First as icon · Yes ·  Collapsed · No  ·  Truncation · No`},{firstAsIcon:!1,collapsed:!0,truncation:!1,label:`First as icon · No  ·  Collapsed · Yes ·  Truncation · No`},{firstAsIcon:!0,collapsed:!0,truncation:!1,label:`First as icon · Yes ·  Collapsed · Yes ·  Truncation · No`},{firstAsIcon:!1,collapsed:!1,truncation:!0,label:`First as icon · No  ·  Collapsed · No  ·  Truncation · Yes`},{firstAsIcon:!0,collapsed:!1,truncation:!0,label:`First as icon · Yes ·  Collapsed · No  ·  Truncation · Yes`},{firstAsIcon:!1,collapsed:!0,truncation:!0,label:`First as icon · No  ·  Collapsed · Yes ·  Truncation · Yes`},{firstAsIcon:!0,collapsed:!0,truncation:!0,label:`First as icon · Yes ·  Collapsed · Yes ·  Truncation · Yes`}],S=[{label:`Acme Cloud Solutions`,href:`/`,ariaLabel:`Home`},{label:`Security Products`,href:`/products`},{label:`Software & Services`,href:`/products/software`},{label:`Antivirus & Threat Protection`}],C=e=>`<h3 class="sbd-doc__group-title">${e}</h3>`,w={parameters:{contentWidth:`fluid`,design:l(`1260:8373`),docs:{description:{story:"**Eight Figma variants** (First as icon × Collapsed × Truncation = 2 × 2 × 2) mirroring the master variant set at `1260:8373` cell-for-cell. The Truncation cells use a shorter four-item fixture (`Acme cloud solutions › Security products › Software & services › Antivirus & threat protection`) so the `12ch` cap visibly clips the labels exactly as the Figma row demonstrates."}}},render:()=>`
+    <div class="sbd-doc">
+      <p class="sbd-doc__section-figma">${c(`1260:8373`,`Breadcrumb master`)}</p>
+
+      ${C(`Eight buildable variants`)}
+      <div class="sbd-doc__stack">
+        ${x.map(e=>g(e)).join(``)}
+      </div>
+    </div>
+  `},b.parameters={...b.parameters,docs:{...b.parameters?.docs,source:{originalSource:`{
+  parameters: htmlStoryParameters(compileBreadcrumbArgs(defaultBreadcrumbArgs, compiled), {
+    unit: 'breadcrumb',
+    extra: {
+      design: figmaDesign('1260:8373'),
+      docs: {
+        description: {
+          story: 'Interactive playground — flip First as icon, Collapsed, or Truncation to walk every Figma variant. The trail uses a five-item fixture (\`Home › Products › Cloud solutions › Acme cloud platform › Pricing\`) so Collapsed has a meaningful middle to fold. When Collapsed=true and First as icon=false, the first crumb auto-renders with a leading home icon (verbatim Figma behaviour). When Collapsed=true, hover the \`⋯\` placeholder to see the tooltip naming the hidden labels.'
+        }
+      }
+    }
+  })
+}`,...b.parameters?.docs?.source}}},w.parameters={...w.parameters,docs:{...w.parameters?.docs,source:{originalSource:`{
+  parameters: {
+    contentWidth: 'fluid',
+    design: figmaDesign('1260:8373'),
+    docs: {
+      description: {
+        story: '**Eight Figma variants** (First as icon × Collapsed × Truncation = 2 × 2 × 2) mirroring the master variant set at \`1260:8373\` cell-for-cell. The Truncation cells use a shorter four-item fixture (\`Acme cloud solutions › Security products › Software & services › Antivirus & threat protection\`) so the \`12ch\` cap visibly clips the labels exactly as the Figma row demonstrates.'
+      }
+    }
+  },
+  render: () => \`
+    <div class="sbd-doc">
+      <p class="sbd-doc__section-figma">\${figmaFrameLink('1260:8373', 'Breadcrumb master')}</p>
+
+      \${STACK_TITLE('Eight buildable variants')}
+      <div class="sbd-doc__stack">
+        \${VARIANT_GRID.map(v => renderVariantCell(v)).join('')}
+      </div>
+    </div>
+  \`
+}`,...w.parameters?.docs?.source}}},T=[`Demo`,`AllStyles`]})))()}E();export{w as AllStyles,b as Demo,T as __namedExportsOrder,y as default};

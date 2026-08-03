@@ -80,6 +80,15 @@ injects icon nodes. The standalone `select` chevron is the **native UA
 arrow** (not the icon partial) so the closed control still works in
 Firefox / Safari — see `## Accessibility`.
 
+### Geometry inventory (icon slots)
+
+Figma password reveal Icon mask wrapper is **20×20** (`4084:69`) with
+no control pad.
+
+| slot | outer px | pad | icon INSTANCE px | size= | frame= | wrapper pad? |
+|---|---|---|---|---|---|---|
+| `__reveal` | 20×20 | none | 20×20 | `20` | none | no (`padding: 0`) |
+
 ## Variant axes
 
 | Axis | Values |

@@ -146,6 +146,41 @@ one of those values via the partial's `size` argument; the icon's
 own root applies `--icon-size` and the wrapper becomes that many
 pixels square.
 
+### Deriving `size` from nested Figma instances
+
+When mapping a Figma control / icon slot into `{{> icon size=…}}`,
+measure the layer that owns the **paint box**, not the parent
+header or slot frame alone.
+
+1. Walk the **nested Icon / Icon-mask / Control INSTANCE** inside
+   the consumer's Figma tree (from cached `get_metadata` /
+   `get_design_context`). Do **not** treat the outer auto-layout
+   control frame's width as `size` by default.
+2. `size` on `{{> icon}}` = that nested INSTANCE's width/height,
+   snapped to the nearest canonical enum value. **Map by resolved
+   pixel value**, never by Figma layer name or "looks like 24".
+3. If the parent auto-layout frame has padding **and** a child icon
+   INSTANCE, then **`size` ≠ parent frame width**. The outer frame
+   is the control box; the INSTANCE is the glyph box.
+4. **Double-count trap (control-pad + icon-size):** never apply
+   consumer-slot padding in SCSS *and* pass an icon `size` equal to
+   the padded outer control width. Choose exactly one model:
+   - **Wrapper = control** — slot keeps pad (+ radius); icon
+     `size` = inner INSTANCE px; **or**
+   - **Icon owns the box** — `size` = outer control px plus optional
+     `frame=` for inset; wrapper has **no** padding.
+5. Secondary (mask invent): when sizing outside the enum or
+   inventing mask boxes, check SVG path coverage vs viewBox; an
+   icon's canvas size is not always its visual size. Document any
+   coverage delta in the unit changelog.
+6. **Past HBS args are not source of truth** on designer-driven /
+   Figma-ahead revisits — re-measure the nested INSTANCE before
+   trusting a shipped `size=`.
+7. **Required inventory row before ship** (also the geometry
+   translation manifest consumed by `f2p-build-unit`):
+
+   `slot | outer px | pad | icon INSTANCE px | size= | frame= | wrapper pad?`
+
 **How colors flow.** Colors come from the `color` argument
 (`current` / `default` / `brand` / `accent` / `inverse` / `success` /
 `critical`). When `color="current"`, the icon inherits
@@ -158,8 +193,10 @@ audit runs on every component / layout / page sync (Stage 6 of
 [`f2p-sync-figma-code`](../../../../.cursor/skills/f2p-sync-figma-code/SKILL.md))
 and is a hard blocker on fail — it scans `.hbs` for forbidden
 patterns and `.scss` for forbidden declarations on icon-slot
-selectors. Units that legitimately bypass the wrapper pipeline
-declare `iconCompositionOptOut: true` (see carve-out above).
+selectors, and hard-fails nested INSTANCE `size` / pad double-count
+mismatches when a geometry manifest or Figma cache is available.
+Units that legitimately bypass the wrapper pipeline declare
+`iconCompositionOptOut: true` (see carve-out above).
 
 ## Tokens consumed
 
