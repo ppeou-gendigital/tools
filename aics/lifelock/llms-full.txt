@@ -16,7 +16,7 @@
 4. Keep published BEM class names; call published `init*` factories.
 5. Do **not** invent markup/CSS/behavior from Docs prose or Show code alone.
 6. Outside this Storybook host, use absolute URLs under:
-   `https://ppeou-gendigital.github.io/tools/aics/lifelock/`
+   `http://localhost:4173/lifelock/`
 
 ## Registry
 
@@ -39,7 +39,7 @@
 ## Source
 
 - Package: @aics/storybook-lifelock@0.1.0
-- Storybook: https://ppeou-gendigital.github.io/tools/aics/lifelock/
+- Storybook: http://localhost:4173/lifelock/
 
 
 # Full dump
@@ -118,6 +118,16 @@ Figma `accordion / card` set (rounded `--color-bg-subtle` surfaces).
 
 Composes: icon (trailing chevron `arrows-navigation/simple-expand-more`,
 optional leading icon via catalog key).
+
+### Geometry inventory (icon slots)
+
+Nested INSTANCE → `size` mapping (control-pad + inner icon; avoid
+double-count). Figma control `2499:2681` (`Control buttons`).
+
+| slot | outer px | pad | icon INSTANCE px | size= | frame= | wrapper pad? |
+|---|---|---|---|---|---|---|
+| `__item-chevron` | 24×24 | `--space-1` (2px) | 20×20 | `20` | none | yes (`padding: var(--space-1)` on `.c-accordion__item-chevron`) |
+| `__item-leading` | 24×24 | none | 24×24 | `24` | none | no |
 
 ## Variant axes
 
@@ -402,7 +412,7 @@ single-open, and custom events require `initAccordion` /
     "Disabled items keep a readable label; summary uses `tabindex=\"-1\"` when disabled."
   ],
   "storybookId": "patterns-accordion",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -1134,7 +1144,7 @@ action.
     "Focus outline: 2 px `--color-border-focus` offset 2 px meets the"
   ],
   "storybookId": "patterns-alert",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -1332,7 +1342,7 @@ Use to frame a single award logo at a fixed aspect ratio so a row of awards line
     "Placeholder label is documentation-only and not shipped to users."
   ],
   "storybookId": "molecules-award-wrapper",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -1608,7 +1618,7 @@ No size axis and no icon slot.
     "**Contrast:** `warning` / `high` carve-out; verify `inverse` / `low` on tinted hosts."
   ],
   "storybookId": "molecules-badge",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -1712,11 +1722,20 @@ Composes: text-link, icon.
   16 px), the home glyph (`objects/simple-home`, 16 px — used by
   both the icon-only first crumb and the collapsed-state leading
   home shape), and the collapsed-state ellipsis placeholder
-  (`arrows-navigation/simple-more-horiz`, 20 px) all compose the
-  `icon` partial with `color="current"` so each tracks the
-  containing crumb's paint via `currentColor`. See
+  (`arrows-navigation/simple-more-horiz`, **16** px glyph inside a
+  20×20 padded control) all compose the `icon` partial with
+  `color="current"` so each tracks the containing crumb's paint via
+  `currentColor`. See
   [`storybook-lifelock/src/components/icon/spec.md`](../icon/spec.md)
   § "Composition rules for consumers".
+
+### Geometry inventory (icon slots)
+
+| slot | outer px | pad | icon INSTANCE px | size= | frame= | wrapper pad? |
+|---|---|---|---|---|---|---|
+| separator chevron | 16×16 | none | 16×16 | `16` | none | no |
+| home | 16×16 | none | 16×16 | `16` | none | no |
+| `__ellipsis` | 20×20 (`border-box`) | `--space-1` (2px) | 16×16 | `16` | none | yes (control pad) |
 
 ## Variant axes
 
@@ -2040,7 +2059,8 @@ _Six parts, every breadcrumb variant._
 5. **Ellipsis placeholder** (collapsed variant only) —
    `<li class="c-breadcrumb__item--ellipsis"><span class="c-breadcrumb__ellipsis" role="text" title aria-label>`
    composing the `icon` partial with
-   `name="arrows-navigation/simple-more-horiz" size="20" color="current" decorative=true`.
+   `name="arrows-navigation/simple-more-horiz" size="16" color="current" decorative=true`
+   (20×20 outer control + `--space-1` pad → inner glyph 16).
    Not interactive; surfaces hidden labels via `title` (tooltip)
    and `aria-label` (assistive tech).
 6. **Current page** — `<span class="c-breadcrumb__current" aria-current="page">`
@@ -2326,7 +2346,7 @@ _Six parts, every breadcrumb variant._
     "BreadcrumbList schema.org markup is intentionally **not** baked"
   ],
   "storybookId": "patterns-breadcrumb",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -2777,7 +2797,7 @@ Shared CTA primitive for all first-party brands. Brand themes supply
     "`aria-busy` when loading; honour `prefers-reduced-motion`"
   ],
   "storybookId": "molecules-button",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -3135,7 +3155,7 @@ property on the input — without JS, screen readers will announce
     "WCAG: every (tone × state) combination meets AA non-text contrast against `--color-bg-default`. Disabled paint retains a visible outline per WCAG 2.2 § 1.4.11."
   ],
   "storybookId": "molecules-checkbox",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -3489,7 +3509,7 @@ still works.
     "`autocomplete=\"one-time-code\"` on the first box lets the platform offer an SMS code for one-tap fill. WCAG: the active box pairs an info-blue border with a grey fill for a clearly visible focus state; resting box borders meet AA non-text contrast against `--color-bg-default`. Per the Figma guidance frame (`984:2201`), keep the field on the primary background where border contrast is guaranteed."
   ],
   "storybookId": "patterns-code-entry",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -3992,7 +4012,7 @@ than a divider.
     "**Reduced motion.** No transitions or animations ship on this"
   ],
   "storybookId": "molecules-divider",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -4147,6 +4167,41 @@ one of those values via the partial's `size` argument; the icon's
 own root applies `--icon-size` and the wrapper becomes that many
 pixels square.
 
+### Deriving `size` from nested Figma instances
+
+When mapping a Figma control / icon slot into `{{> icon size=…}}`,
+measure the layer that owns the **paint box**, not the parent
+header or slot frame alone.
+
+1. Walk the **nested Icon / Icon-mask / Control INSTANCE** inside
+   the consumer's Figma tree (from cached `get_metadata` /
+   `get_design_context`). Do **not** treat the outer auto-layout
+   control frame's width as `size` by default.
+2. `size` on `{{> icon}}` = that nested INSTANCE's width/height,
+   snapped to the nearest canonical enum value. **Map by resolved
+   pixel value**, never by Figma layer name or "looks like 24".
+3. If the parent auto-layout frame has padding **and** a child icon
+   INSTANCE, then **`size` ≠ parent frame width**. The outer frame
+   is the control box; the INSTANCE is the glyph box.
+4. **Double-count trap (control-pad + icon-size):** never apply
+   consumer-slot padding in SCSS *and* pass an icon `size` equal to
+   the padded outer control width. Choose exactly one model:
+   - **Wrapper = control** — slot keeps pad (+ radius); icon
+     `size` = inner INSTANCE px; **or**
+   - **Icon owns the box** — `size` = outer control px plus optional
+     `frame=` for inset; wrapper has **no** padding.
+5. Secondary (mask invent): when sizing outside the enum or
+   inventing mask boxes, check SVG path coverage vs viewBox; an
+   icon's canvas size is not always its visual size. Document any
+   coverage delta in the unit changelog.
+6. **Past HBS args are not source of truth** on designer-driven /
+   Figma-ahead revisits — re-measure the nested INSTANCE before
+   trusting a shipped `size=`.
+7. **Required inventory row before ship** (also the geometry
+   translation manifest consumed by `f2p-build-unit`):
+
+   `slot | outer px | pad | icon INSTANCE px | size= | frame= | wrapper pad?`
+
 **How colors flow.** Colors come from the `color` argument
 (`current` / `default` / `brand` / `accent` / `inverse` / `success` /
 `critical`). When `color="current"`, the icon inherits
@@ -4159,8 +4214,10 @@ audit runs on every component / layout / page sync (Stage 6 of
 [`f2p-sync-figma-code`](../../../../.cursor/skills/f2p-sync-figma-code/SKILL.md))
 and is a hard blocker on fail — it scans `.hbs` for forbidden
 patterns and `.scss` for forbidden declarations on icon-slot
-selectors. Units that legitimately bypass the wrapper pipeline
-declare `iconCompositionOptOut: true` (see carve-out above).
+selectors, and hard-fails nested INSTANCE `size` / pad double-count
+mismatches when a geometry manifest or Figma cache is available.
+Units that legitimately bypass the wrapper pipeline declare
+`iconCompositionOptOut: true` (see carve-out above).
 
 ## Tokens consumed
 
@@ -4303,7 +4360,7 @@ option stacks one copy per brand driven by the shared args panel; see
     "The mask pipeline preserves SVG aspect ratio via `mask-size: contain`;"
   ],
   "storybookId": "molecules-icon",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -4787,7 +4844,7 @@ are out of scope for Label and belong on a future `Chip`.
     "**Reduced motion.** No transitions or animations ship on this"
   ],
   "storybookId": "molecules-label",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -4995,7 +5052,7 @@ counts use the canonical Pagination component (numbered).
     "WCAG: every (appearance × position) combination meets AA non-text contrast on its target surface."
   ],
   "storybookId": "molecules-pagination-dots",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -5734,7 +5791,7 @@ The progress indicator is a form-adjacent molecule composed of bounded primitive
     "`prefers-reduced-motion: reduce` does not currently apply — both"
   ],
   "storybookId": "molecules-progress-indicator",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -6054,7 +6111,7 @@ dispatching the namespaced `lifelock:radio:*` CustomEvents.
     "WCAG: every (tone × state) combination meets AA non-text contrast."
   ],
   "storybookId": "molecules-radio",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -6128,6 +6185,16 @@ search glyph) and `actions/simple-close` (the clear button). Both are
 rendered in the template; the clear glyph's wrapper button shows / hides
 via the `is-filled` modifier, so the JS layer never injects icon nodes.
 
+### Geometry inventory (icon slots)
+
+Figma Active `698:47768` — Icon mask wrappers are **24×24** with no
+control pad (search `1258:1327`, clear `1258:1389`).
+
+| slot | outer px | pad | icon INSTANCE px | size= | frame= | wrapper pad? |
+|---|---|---|---|---|---|---|
+| `__icon` (search) | 24×24 | none | 24×24 | `24` | none | no |
+| `__clear` | 24×24 | none | 24×24 | `24` | none | no (`padding: 0`) |
+
 ## Variant axes
 
 | Axis | Values |
@@ -6151,7 +6218,7 @@ via the `is-filled` modifier, so the JS layer never injects icon nodes.
 
 ## Tokens consumed
 
-**Structural** — `--space-1` (focus glow offset + clear padding),
+**Structural** — `--space-1` (focus glow / outline offset; not clear-button pad),
 `--space-2` (separator inset, input padding-block), `--space-3` (control
 gap + padding-inline), `--border-radius-card` (control radius),
 `--border-radius-control` (clear-button radius),
@@ -6414,7 +6481,7 @@ affordance and the namespaced events.
     "WCAG: resting + focus borders meet AA non-text contrast against `--color-bg-input`; the glyph + separator are `aria-hidden`. Per the Figma guidance frame (`984:2201`), keep search boxes on the primary background where border contrast is guaranteed."
   ],
   "storybookId": "patterns-search-box",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -7031,7 +7098,7 @@ decision, not a code dial.
     "Honours `prefers-reduced-motion: reduce` — the JS thumb-position"
   ],
   "storybookId": "molecules-slider",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -7489,7 +7556,7 @@ shared icon primitive rather than inlining SVG.
     "Complete-state checkmark uses the icon partial with"
   ],
   "storybookId": "molecules-stepper",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -7571,10 +7638,17 @@ glyph that paints inside the knob when
 rendered** when `showIcon !== false` (and `loading !== true`) and its
 visibility is CSS-driven via `opacity` keyed on the `is-checked`
 modifier class, so a JS click that flips `is-checked` doesn't have to
-insert nodes. The icon element fills the 18 × 18 px knob; the
-`-small` SVG's path occupies ~50 % of its 24 px viewBox, so the
-visible mark renders at ~9 px — matching the Figma master
-`717:48394` knob-icon geometry.
+insert nodes.
+
+### Geometry inventory (icon slots)
+
+Figma knob Icon mask wrapper is **18×18** (`717:48382`). Icon enum has
+no `18` — nearest is `size="16"`. Do **not** stretch `.c-icon` to the
+18 px knob via consumer CSS (control-pad / box override forbidden).
+
+| slot | outer px | pad | icon INSTANCE px | size= | frame= | wrapper pad? |
+|---|---|---|---|---|---|---|
+| `__glyph` (checkmark) | 18×18 knob | none on icon | 18×18 Figma / 16 code | `16` | none | no |
 
 ## Variant axes
 
@@ -7862,7 +7936,7 @@ both work. The JS layer's only jobs are to dispatch the namespaced
     "Reduced motion: the knob's slide transition is removed when `prefers-reduced-motion: reduce` is set."
   ],
   "storybookId": "molecules-switch",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -7950,6 +8024,15 @@ reveal button. Both glyphs are always present in the markup; the
 injects icon nodes. The standalone `select` chevron is the **native UA
 arrow** (not the icon partial) so the closed control still works in
 Firefox / Safari — see `## Accessibility`.
+
+### Geometry inventory (icon slots)
+
+Figma password reveal Icon mask wrapper is **20×20** (`4084:69`) with
+no control pad.
+
+| slot | outer px | pad | icon INSTANCE px | size= | frame= | wrapper pad? |
+|---|---|---|---|---|---|---|
+| `__reveal` | 20×20 | none | 20×20 | `20` | none | no (`padding: 0`) |
 
 ## Variant axes
 
@@ -8366,7 +8449,7 @@ stays a standard password input.
     "WCAG: resting + focus borders meet AA non-text contrast against `--color-bg-input`; disabled paint retains a visible outline per WCAG 2.2 § 1.4.11. Per the Figma guidance frame (`984:2201`), inputs should sit on the primary background — avoid placing them on accent / status surfaces where the border contrast is not guaranteed."
   ],
   "storybookId": "patterns-text-field",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -9096,7 +9179,7 @@ behavior across typography scales, themes, and layouts.
     "**`aria-label` policy** — when the visible label is not"
   ],
   "storybookId": "molecules-text-link",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -9377,7 +9460,7 @@ Canonical source on disk: `themes/default/_borders.scss` (re-exported by `src/to
       "$value": "8px"
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -9521,7 +9604,7 @@ Widths match the breakpoint token values. Adding `xs` / `xxl` requires updating 
       "$description": "dual-purpose: XL media-query lower threshold AND canonical viewport"
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -10671,7 +10754,7 @@ Single theme — no per-mode overrides. No `@media` rules apply.
       "$description": "Composed with `size=\"20\"`"
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -12803,7 +12886,7 @@ The `base-input` rebuild (and its specializing consumers — `text-input`, `pass
       "$description": "Same red as `signal/critical` so error-text reads consistently."
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -13313,7 +13396,7 @@ Design rules consumers honor:
       "$description": "`(1312 − 11 × 32) / 12 = 80`; authoritative — XL is fixed"
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -13580,7 +13663,7 @@ inner glyph will visibly drift by one device pixel between renders.
     "url": "https://www.figma.com/design/7NjgRv0ac9SNpgwEO7wmfe/?node-id=2-2583&m=dev"
   },
   "tokens": [],
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -13833,7 +13916,7 @@ Canonical source on disk: `themes/default/_opacity.scss` (re-exported by `src/to
       "$value": "`0.9` (= 90%)"
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -14178,7 +14261,7 @@ Consumer usage:
       "$description": "Pressed elevation. Visibly tighter than `default` (smaller Y, smaller blur)."
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -14516,7 +14599,7 @@ The atom primitives carry their `px` unit in CSS (`--space-1: 2px`, … `--space
       "$description": "reserved; project-wide carry-over"
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```
@@ -16093,7 +16176,7 @@ Both stacks resolve gracefully when the Google Fonts request is blocked, fails, 
       "$description": "Used by `base-input` Size=M, `password` / `text-input` / `picker` Size=M, `label` Size=Sm."
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }
 
 ```

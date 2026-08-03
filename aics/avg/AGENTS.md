@@ -9,10 +9,10 @@ machine-readable `/api` surface linked below.
 
 1. Read this file (`AGENTS.md`).
 2. Fetch the registry pointer: [`llms.txt`](./llms.txt)
-   Absolute: `https://ppeou-gendigital.github.io/tools/aics/avg/llms.txt`
+   Absolute: `http://localhost:4173/avg/llms.txt`
 3. Fetch [`/api/index.json`](./api/index.json) then
    `/api/<type>/<name>.json` for the unit you need
-   (example: `https://ppeou-gendigital.github.io/tools/aics/avg/api/components/accordion.json`).
+   (example: `http://localhost:4173/avg/api/components/accordion.json`).
 4. Implement from that manifest’s `sourceFiles`:
    - `source/<name>.hbs` — DOM structure and BEM classes
    - `source/<name>.scss` — styles (token-backed)
@@ -33,7 +33,7 @@ machine-readable `/api` surface linked below.
   palettes or alternate class systems.
 - **Absolute URLs outside this host.** Relative `/api/...` only works on
   this Storybook origin. From a consumer app or another workspace, prefix
-  with `https://ppeou-gendigital.github.io/tools/aics/avg/`.
+  with `http://localhost:4173/avg/`.
 - **Docs / Show code are not enough.** Thin HTML in Docs is for preview;
   agents must open `source/*` files.
 
@@ -44,4 +44,4 @@ machine-readable `/api` surface linked below.
 - [api/index.json](./api/index.json)
 - [api/tokens.json](./api/tokens.json)
 - [llms-full.txt](./llms-full.txt)
-- Storybook UI: https://ppeou-gendigital.github.io/tools/aics/avg/
+- Storybook UI: http://localhost:4173/avg/

@@ -16,7 +16,7 @@
 4. Keep published BEM class names; call published `init*` factories.
 5. Do **not** invent markup/CSS/behavior from Docs prose or Show code alone.
 6. Outside this Storybook host, use absolute URLs under:
-   `https://ppeou-gendigital.github.io/tools/aics/avg/`
+   `http://localhost:4173/avg/`
 
 ## Registry
 
@@ -39,4 +39,4 @@
 ## Source
 
 - Package: @aics/storybook-avg@0.1.0
-- Storybook: https://ppeou-gendigital.github.io/tools/aics/avg/
+- Storybook: http://localhost:4173/avg/

@@ -1,11 +1,11 @@
 {
   "$schema": "https://design-system.aics.dev/schema/index.v2.json",
-  "generatedAt": "2026-08-02T03:31:57.624Z",
+  "generatedAt": "2026-08-03T00:18:44.489Z",
   "package": {
     "name": "@aics/storybook-avast",
     "version": "0.1.0",
     "brand": "avast",
-    "storybookUrl": "https://ppeou-gendigital.github.io/tools/aics/avast/"
+    "storybookUrl": "http://localhost:4173/avast/"
   },
   "counts": {
     "tokens": 8,

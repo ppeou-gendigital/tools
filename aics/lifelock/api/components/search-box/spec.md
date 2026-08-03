@@ -65,6 +65,16 @@ search glyph) and `actions/simple-close` (the clear button). Both are
 rendered in the template; the clear glyph's wrapper button shows / hides
 via the `is-filled` modifier, so the JS layer never injects icon nodes.
 
+### Geometry inventory (icon slots)
+
+Figma Active `698:47768` — Icon mask wrappers are **24×24** with no
+control pad (search `1258:1327`, clear `1258:1389`).
+
+| slot | outer px | pad | icon INSTANCE px | size= | frame= | wrapper pad? |
+|---|---|---|---|---|---|---|
+| `__icon` (search) | 24×24 | none | 24×24 | `24` | none | no |
+| `__clear` | 24×24 | none | 24×24 | `24` | none | no (`padding: 0`) |
+
 ## Variant axes
 
 | Axis | Values |
@@ -88,7 +98,7 @@ via the `is-filled` modifier, so the JS layer never injects icon nodes.
 
 ## Tokens consumed
 
-**Structural** — `--space-1` (focus glow offset + clear padding),
+**Structural** — `--space-1` (focus glow / outline offset; not clear-button pad),
 `--space-2` (separator inset, input padding-block), `--space-3` (control
 gap + padding-inline), `--border-radius-card` (control radius),
 `--border-radius-control` (clear-button radius),

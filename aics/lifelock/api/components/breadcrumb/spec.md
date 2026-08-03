@@ -95,11 +95,20 @@ Composes: text-link, icon.
   16 px), the home glyph (`objects/simple-home`, 16 px — used by
   both the icon-only first crumb and the collapsed-state leading
   home shape), and the collapsed-state ellipsis placeholder
-  (`arrows-navigation/simple-more-horiz`, 20 px) all compose the
-  `icon` partial with `color="current"` so each tracks the
-  containing crumb's paint via `currentColor`. See
+  (`arrows-navigation/simple-more-horiz`, **16** px glyph inside a
+  20×20 padded control) all compose the `icon` partial with
+  `color="current"` so each tracks the containing crumb's paint via
+  `currentColor`. See
   [`storybook-lifelock/src/components/icon/spec.md`](../icon/spec.md)
   § "Composition rules for consumers".
+
+### Geometry inventory (icon slots)
+
+| slot | outer px | pad | icon INSTANCE px | size= | frame= | wrapper pad? |
+|---|---|---|---|---|---|---|
+| separator chevron | 16×16 | none | 16×16 | `16` | none | no |
+| home | 16×16 | none | 16×16 | `16` | none | no |
+| `__ellipsis` | 20×20 (`border-box`) | `--space-1` (2px) | 16×16 | `16` | none | yes (control pad) |
 
 ## Variant axes
 
@@ -423,7 +432,8 @@ _Six parts, every breadcrumb variant._
 5. **Ellipsis placeholder** (collapsed variant only) —
    `<li class="c-breadcrumb__item--ellipsis"><span class="c-breadcrumb__ellipsis" role="text" title aria-label>`
    composing the `icon` partial with
-   `name="arrows-navigation/simple-more-horiz" size="20" color="current" decorative=true`.
+   `name="arrows-navigation/simple-more-horiz" size="16" color="current" decorative=true`
+   (20×20 outer control + `--space-1` pad → inner glyph 16).
    Not interactive; surfaces hidden labels via `title` (tooltip)
    and `aria-label` (assistive tech).
 6. **Current page** — `<span class="c-breadcrumb__current" aria-current="page">`

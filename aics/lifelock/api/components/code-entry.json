@@ -134,5 +134,5 @@
     "`autocomplete=\"one-time-code\"` on the first box lets the platform offer an SMS code for one-tap fill. WCAG: the active box pairs an info-blue border with a grey fill for a clearly visible focus state; resting box borders meet AA non-text contrast against `--color-bg-default`. Per the Figma guidance frame (`984:2201`), keep the field on the primary background where border contrast is guaranteed."
   ],
   "storybookId": "patterns-code-entry",
-  "generatedAt": "2026-08-02T03:31:57.065Z"
+  "generatedAt": "2026-08-03T00:18:54.465Z"
 }

@@ -16,7 +16,7 @@
 4. Keep published BEM class names; call published `init*` factories.
 5. Do **not** invent markup/CSS/behavior from Docs prose or Show code alone.
 6. Outside this Storybook host, use absolute URLs under:
-   `https://ppeou-gendigital.github.io/tools/aics/norton/`
+   `http://localhost:4173/norton/`
 
 ## Registry
 
@@ -39,7 +39,7 @@
 ## Source
 
 - Package: @aics/storybook-norton@0.1.0
-- Storybook: https://ppeou-gendigital.github.io/tools/aics/norton/
+- Storybook: http://localhost:4173/norton/
 
 
 # Full dump
@@ -118,6 +118,16 @@ Figma `accordion / card` set (rounded `--color-bg-subtle` surfaces).
 
 Composes: icon (trailing chevron `arrows-navigation/simple-expand-more`,
 optional leading icon via catalog key).
+
+### Geometry inventory (icon slots)
+
+Nested INSTANCE → `size` mapping (control-pad + inner icon; avoid
+double-count). Figma control `2499:2681` (`Control buttons`).
+
+| slot | outer px | pad | icon INSTANCE px | size= | frame= | wrapper pad? |
+|---|---|---|---|---|---|---|
+| `__item-chevron` | 24×24 | `--space-1` (2px) | 20×20 | `20` | none | yes (`padding: var(--space-1)` on `.c-accordion__item-chevron`) |
+| `__item-leading` | 24×24 | none | 24×24 | `24` | none | no |
 
 ## Variant axes
 
@@ -402,7 +412,7 @@ single-open, and custom events require `initAccordion` /
     "Disabled items keep a readable label; summary uses `tabindex=\"-1\"` when disabled."
   ],
   "storybookId": "patterns-accordion",
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -600,7 +610,7 @@ Use to frame a single award logo at a fixed aspect ratio so a row of awards line
     "Placeholder label is documentation-only and not shipped to users."
   ],
   "storybookId": "molecules-award-wrapper",
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -876,7 +886,7 @@ No size axis and no icon slot.
     "**Contrast:** `warning` / `high` carve-out; verify `inverse` / `low` on tinted hosts."
   ],
   "storybookId": "molecules-badge",
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -1327,7 +1337,7 @@ Shared CTA primitive for all first-party brands. Brand themes supply
     "`aria-busy` when loading; honour `prefers-reduced-motion`"
   ],
   "storybookId": "molecules-button",
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -1685,7 +1695,7 @@ property on the input — without JS, screen readers will announce
     "WCAG: every (tone × state) combination meets AA non-text contrast against `--color-bg-default`. Disabled paint retains a visible outline per WCAG 2.2 § 1.4.11."
   ],
   "storybookId": "molecules-checkbox",
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -1893,7 +1903,7 @@ counts use the canonical Pagination component (numbered).
     "WCAG: every (appearance × position) combination meets AA non-text contrast on its target surface."
   ],
   "storybookId": "molecules-pagination-dots",
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -2213,7 +2223,7 @@ dispatching the namespaced `other brand:radio:*` CustomEvents.
     "WCAG: every (tone × state) combination meets AA non-text contrast."
   ],
   "storybookId": "molecules-radio",
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -2295,10 +2305,17 @@ glyph that paints inside the knob when
 rendered** when `showIcon !== false` (and `loading !== true`) and its
 visibility is CSS-driven via `opacity` keyed on the `is-checked`
 modifier class, so a JS click that flips `is-checked` doesn't have to
-insert nodes. The icon element fills the 18 × 18 px knob; the
-`-small` SVG's path occupies ~50 % of its 24 px viewBox, so the
-visible mark renders at ~9 px — matching the Figma master
-`717:48394` knob-icon geometry.
+insert nodes.
+
+### Geometry inventory (icon slots)
+
+Figma knob Icon mask wrapper is **18×18** (`717:48382`). Icon enum has
+no `18` — nearest is `size="16"`. Do **not** stretch `.c-icon` to the
+18 px knob via consumer CSS (control-pad / box override forbidden).
+
+| slot | outer px | pad | icon INSTANCE px | size= | frame= | wrapper pad? |
+|---|---|---|---|---|---|---|
+| `__glyph` (checkmark) | 18×18 knob | none on icon | 18×18 Figma / 16 code | `16` | none | no |
 
 ## Variant axes
 
@@ -2586,7 +2603,7 @@ both work. The JS layer's only jobs are to dispatch the namespaced
     "Reduced motion: the knob's slide transition is removed when `prefers-reduced-motion: reduce` is set."
   ],
   "storybookId": "molecules-switch",
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -2878,7 +2895,7 @@ Resolved norton theme values from themes/default/.
       "$value": "var(--border-width-m)"
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -3953,7 +3970,7 @@ Resolved norton theme values from themes/default/.
       "$value": "20px"
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -5660,7 +5677,7 @@ Resolved norton theme values from themes/default/.
       "$value": "linear-gradient(180deg, var(--color-norton-yellow) 0%, var(--color-blue-01) 100%)"
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -5978,7 +5995,7 @@ Resolved norton theme values from themes/default/.
       "$value": "80px"
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -6147,7 +6164,7 @@ Resolved norton theme values from themes/default/.
       "$value": "90%"
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -6360,7 +6377,7 @@ Resolved norton theme values from themes/default/.
       "$value": "0 2px 6px 0 rgb(0 0 0 / var(--opacity-10))"
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -6609,7 +6626,7 @@ Resolved norton theme values from themes/default/.
       "$value": "120px"
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
@@ -8139,7 +8156,7 @@ Resolved norton theme values from themes/default/.
       "$value": "16px"
     }
   ],
-  "generatedAt": "2026-08-02T03:31:57.371Z"
+  "generatedAt": "2026-08-03T00:19:00.214Z"
 }
 
 ```
