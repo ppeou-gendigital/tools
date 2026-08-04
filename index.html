@@ -12,9 +12,186 @@
     <link rel="icon" type="image/png" sizes="16x16" href="%BASE_URL%favicon-16.png" />
     <link rel="apple-touch-icon" href="%BASE_URL%icons/icon-180.png" />
     <title>Loopy</title>
+  
+    <style>
+      /* Boot recovery UI — only shown if React never paints #root */
+      #loopy-boot-fail {
+        display: none;
+        box-sizing: border-box;
+        min-height: 100dvh;
+        margin: 0;
+        padding: 2rem 1.25rem calc(2rem + env(safe-area-inset-bottom, 0px));
+        align-content: center;
+        justify-items: start;
+        gap: 0.75rem;
+        max-width: 28rem;
+        margin-inline: auto;
+        font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+        color: #f5f5f5;
+        background: #0a0a0a;
+      }
+      #loopy-boot-fail[data-show='1'] {
+        display: grid;
+      }
+      #loopy-boot-fail h1 {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+      }
+      #loopy-boot-fail p {
+        margin: 0;
+        font-size: 0.95rem;
+        line-height: 1.45;
+        color: rgba(245, 245, 245, 0.72);
+      }
+      #loopy-boot-fail button {
+        margin-top: 0.5rem;
+        appearance: none;
+        border: none;
+        border-radius: 999px;
+        padding: 0.7rem 1.15rem;
+        font: inherit;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #0a0a0a;
+        background: #f5f5f5;
+        cursor: pointer;
+      }
+      #loopy-boot-fail button:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <div id="loopy-boot-fail" role="alert">
+      <h1>Loopy couldn’t load</h1>
+      <p id="loopy-boot-fail-msg">
+        Something went wrong while starting the app. Reload clears all Loopy data
+        in this browser (sign-in, cache, and saved route) and starts fresh.
+      </p>
+      <button type="button" id="loopy-boot-fail-btn">Reload app</button>
+    </div>
+    <script>
+      ;(function () {
+        var FLAG = 'loopy.repaired'
+        var TIMEOUT_MS = 4000
+        var panel = document.getElementById('loopy-boot-fail')
+        var msg = document.getElementById('loopy-boot-fail-msg')
+        var btn = document.getElementById('loopy-boot-fail-btn')
+        var root = document.getElementById('root')
+        if (!panel || !btn || !root) return
+
+        function hasRepaired() {
+          try {
+            return sessionStorage.getItem(FLAG) === '1'
+          } catch (e) {
+            return false
+          }
+        }
+
+        function wipeSiteData() {
+          var tasks = []
+          if ('serviceWorker' in navigator) {
+            tasks.push(
+              navigator.serviceWorker.getRegistrations().then(function (regs) {
+                return Promise.all(
+                  regs.map(function (r) {
+                    return r.unregister()
+                  }),
+                )
+              }),
+            )
+          }
+          if (typeof caches !== 'undefined') {
+            tasks.push(
+              caches.keys().then(function (keys) {
+                return Promise.all(
+                  keys.map(function (k) {
+                    return caches.delete(k)
+                  }),
+                )
+              }),
+            )
+          }
+          if (typeof indexedDB !== 'undefined' && indexedDB.databases) {
+            tasks.push(
+              indexedDB.databases().then(function (dbs) {
+                return Promise.all(
+                  (dbs || []).map(function (db) {
+                    return new Promise(function (resolve) {
+                      if (!db || !db.name) {
+                        resolve()
+                        return
+                      }
+                      var req = indexedDB.deleteDatabase(db.name)
+                      req.onsuccess = function () {
+                        resolve()
+                      }
+                      req.onerror = function () {
+                        resolve()
+                      }
+                      req.onblocked = function () {
+                        resolve()
+                      }
+                    })
+                  }),
+                )
+              }),
+            )
+          }
+          return Promise.all(tasks)
+            .catch(function () {})
+            .then(function () {
+              try {
+                localStorage.clear()
+              } catch (e) {}
+              try {
+                sessionStorage.clear()
+              } catch (e) {}
+              try {
+                var cookies = document.cookie ? document.cookie.split(';') : []
+                for (var i = 0; i < cookies.length; i++) {
+                  var name = cookies[i].split('=')[0]
+                  if (!name) continue
+                  document.cookie =
+                    name.trim() +
+                    '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/'
+                }
+              } catch (e) {}
+              // Re-set after wipe so auto-repair cannot loop on the next load.
+              try {
+                sessionStorage.setItem(FLAG, '1')
+              } catch (e) {}
+            })
+        }
+
+        function repair(force) {
+          if (!force && hasRepaired()) return Promise.resolve(false)
+          btn.disabled = true
+          if (msg) msg.textContent = 'Clearing all site data and reloading…'
+          return wipeSiteData().then(function () {
+            location.reload()
+            return true
+          })
+        }
+
+        btn.addEventListener('click', function () {
+          repair(true)
+        })
+
+        setTimeout(function () {
+          if (root.childNodes && root.childNodes.length > 0) return
+          panel.setAttribute('data-show', '1')
+          if (!hasRepaired()) {
+            repair(false)
+          }
+        }, TIMEOUT_MS)
+      })()
+    </script>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

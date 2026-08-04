@@ -6,6 +6,7 @@ import { FontSizeProvider } from '@/providers/FontSizeProvider'
 import { FavoritesProvider } from '@/providers/FavoritesProvider'
 import { FavoritesOrderProvider } from '@/providers/FavoritesOrderProvider'
 import { NavigationProvider, useNavigation } from '@/providers/NavigationProvider'
+import { EdsUeSitesProvider } from '@/providers/EdsUeSitesProvider'
 import { PinnedSitesProvider } from '@/providers/PinnedSitesProvider'
 import { PrefsSync } from '@/providers/PrefsSync'
 import { ThemeProvider } from '@/providers/ThemeProvider'
@@ -18,6 +19,7 @@ import { Profile } from '@/pages/Profile'
 import { Landing } from '@/pages/Landing'
 import { DeckTest } from '@/pages/DeckTest'
 import { AemJump } from '@/pages/AemJump'
+import { AemEdsUe } from '@/pages/AemEdsUe'
 import { FavLinks } from '@/pages/FavLinks'
 import { Settings } from '@/pages/Settings'
 import { AemEnvironments } from '@/pages/AemEnvironments'
@@ -34,6 +36,7 @@ function Router() {
   if (route === 'landing') return <Landing />
   if (route === 'deck-test') return <DeckTest />
   if (route === 'aem-jump') return <AemJump />
+  if (route === 'aem-eds-ue') return <AemEdsUe />
   if (route === 'visited-urls') return <VisitedUrls />
   if (route === 'site-tree') return <SiteTree />
   if (route === 'fav-links') return <FavLinks />
@@ -66,20 +69,22 @@ export function App() {
               <AemDomainsProvider>
                 <TrackedHostnamesProvider>
                   <PinnedSitesProvider>
-                    <VisitedUrlsProvider>
-                      <FavoritesProvider>
-                        <FavoritesOrderProvider>
-                          <PrefsSync />
-                          <NavigationProvider>
-                            <AppShell>
-                              <AuthGate>
-                                <Router />
-                              </AuthGate>
-                            </AppShell>
-                          </NavigationProvider>
-                        </FavoritesOrderProvider>
-                      </FavoritesProvider>
-                    </VisitedUrlsProvider>
+                    <EdsUeSitesProvider>
+                      <VisitedUrlsProvider>
+                        <FavoritesProvider>
+                          <FavoritesOrderProvider>
+                            <PrefsSync />
+                            <NavigationProvider>
+                              <AppShell>
+                                <AuthGate>
+                                  <Router />
+                                </AuthGate>
+                              </AppShell>
+                            </NavigationProvider>
+                          </FavoritesOrderProvider>
+                        </FavoritesProvider>
+                      </VisitedUrlsProvider>
+                    </EdsUeSitesProvider>
                   </PinnedSitesProvider>
                 </TrackedHostnamesProvider>
               </AemDomainsProvider>

@@ -100,22 +100,8 @@
 }
 
 .searchField {
-  position: relative;
   flex: 1 1 12rem;
   min-width: 8rem;
-  display: flex;
-  align-items: center;
-}
-
-.searchIcon {
-  position: absolute;
-  left: var(--space-2);
-  color: var(--muted-fg);
-  pointer-events: none;
-}
-
-.searchInput {
-  padding-left: calc(var(--space-2) + 14px + var(--space-2));
 }
 
 .count {

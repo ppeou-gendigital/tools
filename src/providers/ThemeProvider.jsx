@@ -21,6 +21,7 @@ export function ThemeProvider({ children }) {
     <ToolsThemeProvider
       appId="loopy"
       defaultTheme="system"
+      enableDaynight
       pushRemote={pushRemote}
     >
       {children}

@@ -78,6 +78,35 @@ export function sortedChildren(node) {
   )
 }
 
+// GitHub-style path compression: fold a chain of single-child nodes that
+// have no visit (no clickable link) into one display label.
+//
+// Example:
+//   :x: → r → personal → (ankit…, gabriela…)
+// becomes
+//   :x:/r/personal → (ankit…, gabriela…)
+//
+// Stops when the tip has a visit (it's a real page) or more/fewer than
+// one child. The tip node carries the children / visit / fullPath used
+// for expand/collapse and linking; `displayName` is what the row shows.
+export function compressPathNode(node) {
+  if (!node) {
+    return { tip: node, displayName: '', parts: [] }
+  }
+  const parts = [node.name]
+  let tip = node
+  while (!tip.visit && tip.children.size === 1) {
+    const only = tip.children.values().next().value
+    parts.push(only.name)
+    tip = only
+  }
+  return {
+    tip,
+    displayName: parts.join('/'),
+    parts,
+  }
+}
+
 // Total number of distinct pathnames represented in the tree — matches the
 // count you'd get by summing variantCount at every node.
 export function countLeaves(root) {

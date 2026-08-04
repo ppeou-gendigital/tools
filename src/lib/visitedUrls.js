@@ -32,6 +32,8 @@
 // lastVisitedAt. Server-side trigger mirrors this bound so a client bug
 // can't balloon a single row past what the free tier can hold.
 
+import { preferTitle } from '@/lib/pageTitle'
+
 export const MAX_PATHS_PER_DOMAIN = 200
 
 // Human-friendly relative timestamp for the visited-URLs UI. Falls back
@@ -171,15 +173,16 @@ export function mergeVisit(prevBucket, visit) {
   const nextEntry = existing
     ? {
         ...existing,
-        // Prefer a non-empty new title so tabs whose title arrives late
-        // don't get stuck on the loading placeholder.
-        title: title || existing.title,
+        // Prefer a more specific title so SPA shell labels ("Jira")
+        // don't stick once the real issue / page heading arrives, and
+        // so a later generic title can't clobber a good one.
+        title: preferTitle(existing.title, title),
         matchedDomainId: matchedDomainId || existing.matchedDomainId,
         lastVisitedAt: at,
         visitCount: (existing.visitCount ?? 1) + 1,
       }
     : {
-        title,
+        title: preferTitle('', title),
         matchedDomainId,
         firstVisitedAt: at,
         lastVisitedAt: at,
@@ -192,6 +195,35 @@ export function mergeVisit(prevBucket, visit) {
       ? capPathsObject(nextPaths)
       : nextPaths
   return { paths: capped, updatedAt: at }
+}
+
+// Patch the title of an existing path without bumping visitCount.
+// Used when a SPA hydrates the real heading after the initial capture.
+// Returns the previous bucket unchanged when the path is unknown or the
+// candidate title isn't an improvement.
+export function updateVisitTitle(prevBucket, path, title) {
+  const pathKey = safeString(path).trim()
+  if (!pathKey) return prevBucket ?? { paths: {}, updatedAt: new Date().toISOString() }
+  const prevPaths =
+    prevBucket?.paths &&
+    typeof prevBucket.paths === 'object' &&
+    !Array.isArray(prevBucket.paths)
+      ? prevBucket.paths
+      : {}
+  const existing = prevPaths[pathKey]
+  if (!existing) return prevBucket ?? { paths: {}, updatedAt: new Date().toISOString() }
+  const nextTitle = preferTitle(existing.title, title)
+  if (nextTitle === (existing.title || '')) {
+    return prevBucket
+  }
+  const at = new Date().toISOString()
+  return {
+    paths: {
+      ...prevPaths,
+      [pathKey]: { ...existing, title: nextTitle },
+    },
+    updatedAt: at,
+  }
 }
 
 // Merge two paths objects into one, deduped by key. Same rules used by
@@ -225,7 +257,7 @@ export function mergePathObjects(a, b) {
     const newer = bLast >= aLast ? v : existing
     const older = newer === v ? existing : v
     out[k] = {
-      title: newer.title || older.title || '',
+      title: preferTitle(older.title, newer.title),
       matchedDomainId:
         newer.matchedDomainId || older.matchedDomainId || '',
       firstVisitedAt:

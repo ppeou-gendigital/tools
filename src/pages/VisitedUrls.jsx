@@ -220,11 +220,6 @@ export function VisitedUrls() {
         {!isEmpty && (
           <div className={styles.filters} role="search">
             <div className={styles.searchField}>
-              <Search
-                size={14}
-                aria-hidden="true"
-                className={styles.searchIcon}
-              />
               <Input
                 id="visited-search"
                 name="visited-search"
@@ -233,7 +228,7 @@ export function VisitedUrls() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search title or path…"
                 aria-label="Search visited URLs"
-                className={styles.searchInput}
+                iconStart={<Search size={14} />}
                 spellCheck={false}
                 autoComplete="off"
               />

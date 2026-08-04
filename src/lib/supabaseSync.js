@@ -14,7 +14,15 @@
 //
 // Streams:
 //   'favorites' | 'visits'  — one row per (user_id, domain); op mutates paths
-//   'prefs'                 — one user_data row; op mutates the camelCase row
+//   'prefs'                 — public.loopy_user_prefs; dual-reads legacy
+//                             public.user_data when the per-app row is missing;
+//                             dual-writes owned data + columnar lists back to
+//                             user_data so older builds keep working until
+//                             every tool migrates.
+//                             In-memory row stays camelCase for providers/ops:
+//                             { data, aemDomains, trackedHostnames,
+//                               pinnedSites, favoritesOrder, payload?,
+//                               updated_at }
 
 import { supabase } from '@/lib/supabase'
 import {
@@ -30,9 +38,11 @@ import {
 } from '@/lib/visitedUrls'
 import {
   extractForeignPrefs,
+  extractOwnedPrefs,
   normalizeAemDomains,
   normalizeRemotePrefs,
   PREFS_OWNED_KEYS,
+  PREFS_TABLE,
 } from '@/lib/prefs'
 import {
   normalizeFavoritesOrder,
@@ -64,8 +74,8 @@ const STREAMS = {
     sortKey: (v) => v?.lastVisitedAt ?? v?.addedAt ?? '',
   },
   prefs: {
-    table: 'user_data',
-    queryKey: (userId) => ['user_data', userId],
+    table: PREFS_TABLE,
+    queryKey: (userId) => ['user_prefs', userId, PREFS_TABLE],
   },
 }
 
@@ -121,32 +131,93 @@ function pathsEqual(a, b) {
   return true
 }
 
+/** Map loopy_user_prefs.payload (snake_case) → in-memory camelCase fields. */
+function listsFromPayload(payload) {
+  const p =
+    payload && typeof payload === 'object' && !Array.isArray(payload)
+      ? payload
+      : {}
+  return {
+    aemDomains: p.aem_domains ?? p.aemDomains,
+    trackedHostnames: p.tracked_hostnames ?? p.trackedHostnames,
+    pinnedSites: p.pinned_sites ?? p.pinnedSites,
+    favoritesOrder: p.favorites_order ?? p.favoritesOrder,
+  }
+}
+
+/** Serialize in-memory camelCase list fields → payload jsonb (snake_case). */
+function listsToPayload(row) {
+  return {
+    aem_domains: row.aemDomains ?? [],
+    tracked_hostnames: row.trackedHostnames ?? {},
+    pinned_sites: row.pinnedSites ?? [],
+    favorites_order: row.favoritesOrder ?? [],
+  }
+}
+
+/** Map a loopy_user_prefs DB row → in-memory camelCase shape. */
 function rowFromDb(row) {
   if (!row) return null
+  const lists = listsFromPayload(row.payload)
   return {
     data: row.data,
+    aemDomains: lists.aemDomains,
+    trackedHostnames: lists.trackedHostnames,
+    pinnedSites: lists.pinnedSites,
+    favoritesOrder: lists.favoritesOrder,
+    payload:
+      row.payload && typeof row.payload === 'object' && !Array.isArray(row.payload)
+        ? row.payload
+        : {},
+    updated_at: row.updated_at,
+  }
+}
+
+/** Map a legacy user_data DB row (top-level columns) → in-memory shape. */
+function rowFromLegacyDb(row) {
+  if (!row) return null
+  return {
+    data: extractOwnedPrefs(row.data),
     aemDomains: row.aem_domains,
     trackedHostnames: row.tracked_hostnames,
     pinnedSites: row.pinned_sites,
     favoritesOrder: row.favorites_order,
+    payload: {},
     updated_at: row.updated_at,
   }
 }
 
 function normalizePrefsRow(row) {
+  const lists = listsFromPayload(row?.payload)
+  const aemDomains = normalizeAemDomains(row?.aemDomains ?? lists.aemDomains)
+  const trackedHostnames = normalizeTrackedHostnames(
+    row?.trackedHostnames ?? lists.trackedHostnames,
+  )
+  const pinnedSites = normalizePinnedSites(
+    row?.pinnedSites ?? lists.pinnedSites,
+  )
+  const favoritesOrder = normalizeFavoritesOrder(
+    row?.favoritesOrder ?? lists.favoritesOrder,
+  )
   return {
     data: normalizeRemotePrefs(row?.data),
-    aemDomains: normalizeAemDomains(row?.aemDomains),
-    trackedHostnames: normalizeTrackedHostnames(row?.trackedHostnames),
-    pinnedSites: normalizePinnedSites(row?.pinnedSites),
-    favoritesOrder: normalizeFavoritesOrder(row?.favoritesOrder),
+    aemDomains,
+    trackedHostnames,
+    pinnedSites,
+    favoritesOrder,
+    payload: listsToPayload({
+      aemDomains,
+      trackedHostnames,
+      pinnedSites,
+      favoritesOrder,
+    }),
     updated_at: row?.updated_at ?? null,
   }
 }
 
 function prefsRowsEqual(a, b) {
   if (!a || !b) return false
-  // Compare only owned fields (+ Loopy columns). Sibling keys must not
+  // Compare only owned fields (+ Loopy lists). Sibling keys must not
   // force a rewrite.
   return (
     a.data.theme === b.data.theme &&
@@ -160,26 +231,25 @@ function prefsRowsEqual(a, b) {
   )
 }
 
-function toDbPrefsPayload(userId, row) {
-  const data = {
-    ...extractForeignPrefs(row.data),
+function ownedDataPayload(row) {
+  return {
     theme: row.data.theme,
     fontSize: row.data.fontSize,
     fabCorner: row.data.fabCorner,
     updatedAt: new Date().toISOString(),
   }
+}
+
+function toDbPrefsPayload(userId, row) {
   return {
     id: userId,
-    data,
-    aem_domains: row.aemDomains ?? [],
-    tracked_hostnames: row.trackedHostnames ?? {},
-    pinned_sites: row.pinnedSites ?? [],
-    favorites_order: row.favoritesOrder ?? [],
+    data: ownedDataPayload(row),
+    payload: listsToPayload(row),
     updated_at: new Date().toISOString(),
   }
 }
 
-/** Replace sibling-tool keys on `data` with the remote snapshot's. */
+/** Replace sibling-tool keys on a legacy shared blob with the remote snapshot's. */
 function applyRemoteForeignPrefs(data, remoteData) {
   for (const key of Object.keys(data)) {
     if (!PREFS_OWNED_KEYS.has(key)) delete data[key]
@@ -350,7 +420,108 @@ async function applyDomainPathsOp(stream, userId, domain, applyFn) {
 }
 
 // ---------------------------------------------------------------------------
-// Prefs row CAS
+// Prefs dual-stack helpers (primary: PREFS_TABLE = loopy_user_prefs)
+// ---------------------------------------------------------------------------
+
+async function fetchUserPrefsRaw(userId) {
+  const { data: row, error } = await supabase
+    .from(PREFS_TABLE)
+    .select('id, data, payload, updated_at')
+    .eq('id', userId)
+    .maybeSingle()
+  if (error) throw error
+  return row
+}
+
+async function fetchLegacyPrefsRow(userId) {
+  const { data: row, error } = await supabase
+    .from('user_data')
+    .select(
+      'data, aem_domains, tracked_hostnames, pinned_sites, favorites_order, updated_at',
+    )
+    .eq('id', userId)
+    .maybeSingle()
+  if (error) {
+    // Table missing or RLS — treat as no legacy row during greenfield setups.
+    console.warn('[supabaseSync] legacy user_data read failed', error.message)
+    return null
+  }
+  if (!row) return null
+  return normalizePrefsRow(rowFromLegacyDb(row))
+}
+
+/**
+ * Best-effort mirror of owned shell prefs + Loopy list columns into legacy
+ * shared user_data so older builds keep seeing updates during migration.
+ * Preserves foreign keys on `data`. Never throws — primary CAS already
+ * succeeded on PREFS_TABLE.
+ */
+async function mirrorToLegacyUserData(userId, prefsRow) {
+  try {
+    const owned = ownedDataPayload(prefsRow)
+    const columns = {
+      aem_domains: prefsRow.aemDomains ?? [],
+      tracked_hostnames: prefsRow.trackedHostnames ?? {},
+      pinned_sites: prefsRow.pinnedSites ?? [],
+      favorites_order: prefsRow.favoritesOrder ?? [],
+    }
+    const { data: raw, error: readErr } = await supabase
+      .from('user_data')
+      .select(
+        'data, aem_domains, tracked_hostnames, pinned_sites, favorites_order, updated_at',
+      )
+      .eq('id', userId)
+      .maybeSingle()
+    if (readErr) {
+      console.warn(
+        '[supabaseSync] legacy user_data mirror read failed',
+        readErr.message,
+      )
+      return
+    }
+
+    const now = new Date().toISOString()
+    if (!raw) {
+      const { error: insertErr } = await supabase.from('user_data').insert({
+        id: userId,
+        data: owned,
+        ...columns,
+        updated_at: now,
+      })
+      if (insertErr && insertErr.code !== PG_UNIQUE_VIOLATION) {
+        console.warn(
+          '[supabaseSync] legacy user_data mirror insert failed',
+          insertErr.message,
+        )
+      }
+      return
+    }
+
+    const nextData = {
+      ...extractForeignPrefs(raw.data),
+      ...owned,
+    }
+    const { error: updateErr } = await supabase
+      .from('user_data')
+      .update({ data: nextData, ...columns, updated_at: now })
+      .eq('id', userId)
+      .eq('updated_at', raw.updated_at)
+    if (updateErr) {
+      console.warn(
+        '[supabaseSync] legacy user_data mirror update failed',
+        updateErr.message,
+      )
+    }
+  } catch (err) {
+    console.warn(
+      '[supabaseSync] legacy user_data mirror failed',
+      err?.message ?? err,
+    )
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Prefs row CAS (primary: PREFS_TABLE = loopy_user_prefs)
 // ---------------------------------------------------------------------------
 
 async function applyPrefsOp(userId, applyFn) {
@@ -361,16 +532,16 @@ async function applyPrefsOp(userId, applyFn) {
 
   let lastError = null
   for (let attempt = 1; attempt <= CAS_MAX_ATTEMPTS; attempt++) {
-    const { data: raw, error: readErr } = await supabase
-      .from('user_data')
-      .select(
-        'data, aem_domains, tracked_hostnames, pinned_sites, favorites_order, updated_at',
-      )
-      .eq('id', userId)
-      .maybeSingle()
-    if (readErr) throw readErr
-
-    const current = normalizePrefsRow(rowFromDb(raw))
+    const raw = await fetchUserPrefsRaw(userId)
+    let current
+    if (raw) {
+      current = normalizePrefsRow(rowFromDb(raw))
+    } else {
+      // Seed CAS baseline from legacy shared row so first write does not
+      // drop theme/font/fab or Loopy list columns pulled from user_data.
+      current =
+        (await fetchLegacyPrefsRow(userId)) ?? normalizePrefsRow(null)
+    }
     const observedUpdatedAt = raw?.updated_at ?? null
 
     const applied = applyFn(current)
@@ -383,15 +554,14 @@ async function applyPrefsOp(userId, applyFn) {
 
     if (!raw) {
       const { data: inserted, error: insertErr } = await supabase
-        .from('user_data')
+        .from(PREFS_TABLE)
         .insert(payload)
-        .select(
-          'data, aem_domains, tracked_hostnames, pinned_sites, favorites_order, updated_at',
-        )
+        .select('id, data, payload, updated_at')
         .maybeSingle()
       if (!insertErr && inserted) {
         const row = normalizePrefsRow(rowFromDb(inserted))
         touchQueryCache('prefs', userId, row)
+        await mirrorToLegacyUserData(userId, row)
         return { ...row, attempts: attempt }
       }
       if (insertErr && insertErr.code !== PG_UNIQUE_VIOLATION) throw insertErr
@@ -402,17 +572,20 @@ async function applyPrefsOp(userId, applyFn) {
     }
 
     const { data: updated, error: updateErr } = await supabase
-      .from('user_data')
-      .update(payload)
+      .from(PREFS_TABLE)
+      .update({
+        data: payload.data,
+        payload: payload.payload,
+        updated_at: payload.updated_at,
+      })
       .eq('id', userId)
       .eq('updated_at', observedUpdatedAt)
-      .select(
-        'data, aem_domains, tracked_hostnames, pinned_sites, favorites_order, updated_at',
-      )
+      .select('id, data, payload, updated_at')
     if (updateErr) throw updateErr
     if (updated && updated.length > 0) {
       const row = normalizePrefsRow(rowFromDb(updated[0]))
       touchQueryCache('prefs', userId, row)
+      await mirrorToLegacyUserData(userId, row)
       return { ...row, attempts: attempt }
     }
     lastError = new Error(
@@ -557,16 +730,9 @@ async function fetchDomainMap(stream, userId) {
 }
 
 async function fetchPrefsRow(userId) {
-  const { data: row, error } = await supabase
-    .from('user_data')
-    .select(
-      'data, aem_domains, tracked_hostnames, pinned_sites, favorites_order, updated_at',
-    )
-    .eq('id', userId)
-    .maybeSingle()
-  if (error) throw error
-  if (!row) return null
-  return normalizePrefsRow(rowFromDb(row))
+  const raw = await fetchUserPrefsRaw(userId)
+  if (raw) return normalizePrefsRow(rowFromDb(raw))
+  return fetchLegacyPrefsRow(userId)
 }
 
 /**
@@ -604,7 +770,11 @@ export async function pullSync({ stream, userId, local, dirtyKeys } = {}) {
     const base = local
       ? normalizePrefsRow(local)
       : normalizePrefsRow(null)
-    const next = { ...base, data: { ...base.data } }
+    const next = {
+      ...base,
+      data: { ...base.data },
+      payload: { ...base.payload },
+    }
     if (!dirty.has('theme') && !dirty.has('data')) {
       next.data.theme = remote.data.theme
     }
@@ -614,7 +784,7 @@ export async function pullSync({ stream, userId, local, dirtyKeys } = {}) {
     if (!dirty.has('fabCorner') && !dirty.has('data')) {
       next.data.fabCorner = remote.data.fabCorner
     }
-    // Never dirty sibling keys — always take them from remote.
+    // Legacy shared-row foreign keys only matter when remote still carries them.
     if (!dirty.has('data')) {
       applyRemoteForeignPrefs(next.data, remote.data)
     }

@@ -181,6 +181,13 @@
   min-width: 0;
 }
 
+// Separator inside a GitHub-style compressed path (`:x:/r/personal`).
+.pathSep {
+  color: var(--muted-fg);
+  margin: 0 0.1em;
+  font-weight: 400;
+}
+
 .treeNameDisplay {
   font-family: inherit;
 }

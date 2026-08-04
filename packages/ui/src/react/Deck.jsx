@@ -1,12 +1,21 @@
+import { forwardRef } from 'react'
 import { cx } from './cx.js'
 
-export function Deck({ className, children, ...rest }) {
+export const Deck = forwardRef(function Deck(
+  { className, children, ...rest },
+  ref,
+) {
   return (
-    <div className={cx('ui-deck', className)} tabIndex={0} {...rest}>
+    <div
+      ref={ref}
+      className={cx('ui-deck', className)}
+      tabIndex={0}
+      {...rest}
+    >
       {children}
     </div>
   )
-}
+})
 
 export function Slide({
   span,

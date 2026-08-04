@@ -6,7 +6,14 @@ import { useCornerDrag } from '../hooks/useCornerDrag.js'
  * @param {object} props
  * @param {any} [props.icon]
  * @param {string} [props.label]
- * @param {(ctx: { corner: string, onClose: () => void }) => import('react').ReactNode} props.renderPanel
+ * @param {(ctx: {
+ *   corner: string,
+ *   edgeX: 'left' | 'right',
+ *   edgeY: 'top' | 'bottom',
+ *   fabLeft: number,
+ *   fabTop: number,
+ *   onClose: () => void,
+ * }) => import('react').ReactNode} props.renderPanel
  */
 export function FloatingMenu({
   icon: Icon = Wrench,
@@ -16,7 +23,18 @@ export function FloatingMenu({
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
   const skipClickToggleRef = useRef(false)
-  const { corner, dragOffset, isDragging, wasDragged, bind } = useCornerDrag()
+  const {
+    corner,
+    edgeX,
+    edgeY,
+    positionStyle,
+    isDragging,
+    wasDragged,
+    setTargetRef,
+    bind,
+  } = useCornerDrag({
+    fabId: 'menu',
+  })
   const { onPointerDown: dragPointerDown, ...restBind } = bind
 
   useEffect(() => {
@@ -54,31 +72,37 @@ export function FloatingMenu({
     setOpen((v) => !v)
   }
 
-  const fabStyle = dragOffset
-    ? { transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)` }
-    : undefined
+  const fabLeft = Number.parseFloat(positionStyle.left)
+  const fabTop = Number.parseFloat(positionStyle.top)
 
   return (
     <div ref={wrapRef} className="bh-fab-wrap">
       <button
         type="button"
         className="bh-fab"
-        data-corner={corner}
+        data-fab="menu"
         data-dragging={isDragging ? 'true' : undefined}
         aria-label={label}
         aria-haspopup="dialog"
         aria-expanded={open}
-        style={fabStyle}
+        style={positionStyle}
+        ref={setTargetRef}
         {...restBind}
         onPointerDown={handlePointerDown}
         onClick={handleClick}
       >
         <Icon size={20} aria-hidden="true" />
       </button>
-      {open && !isDragging && renderPanel?.({
-        corner,
-        onClose: () => setOpen(false),
-      })}
+      {open &&
+        !isDragging &&
+        renderPanel?.({
+          corner,
+          edgeX,
+          edgeY,
+          fabLeft,
+          fabTop,
+          onClose: () => setOpen(false),
+        })}
     </div>
   )
 }

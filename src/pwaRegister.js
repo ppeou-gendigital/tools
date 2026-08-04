@@ -10,8 +10,13 @@ import { registerSW } from 'virtual:pwa-register'
 
 const UPDATE_CHECK_MS = 30 * 60 * 1000
 
-registerSW({
+const updateSW = registerSW({
   immediate: true,
+  // When a new worker is waiting, activate it and reload so users leave a
+  // broken precache without a manual hard-refresh.
+  onNeedRefresh() {
+    updateSW(true)
+  },
   onRegisteredSW(_swUrl, registration) {
     if (!registration) return
 

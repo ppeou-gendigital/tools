@@ -1,10 +1,13 @@
-// Pure operators for the user_data prefs row. Consumed by
-// applySyncOp({ stream: 'prefs', op }). Each factory returns
+// Pure operators for the prefs row (loopy_user_prefs via supabaseSync).
+// Consumed by applySyncOp({ stream: 'prefs', op }). Each factory returns
 // `(row) => nextRow` that:
 //   - Never mutates the input.
 //   - Only touches the field(s) it owns so a CAS miss + re-apply
-//     preserves concurrent edits and sibling-tool keys on `data`.
+//     preserves concurrent edits (and sibling-tool keys on legacy `data`).
 //   - Returns the same row reference when the op is a no-op.
+//
+// In-memory shape stays camelCase ({ data, aemDomains, … }); supabaseSync
+// serializes list fields into payload jsonb on write.
 //
 // When you add a new owned prefs key, add it to PREFS_OWNED_KEYS in
 // prefs.js and an op factory here.
@@ -33,7 +36,7 @@ import {
 
 function emptyRow() {
   return {
-    data: { theme: 'system', fontSize: 16, fabCorner: 'bottom-right' },
+    data: { theme: 'system', fontSize: 16, fabCorner: '11:15' },
     aemDomains: [],
     trackedHostnames: {},
     pinnedSites: [],

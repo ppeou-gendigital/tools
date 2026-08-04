@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:login": "node scripts/dev-login.mjs",
     "dev:ext": "vite build --mode extension --watch",
     "build": "vite build --mode extension",
     "build:web": "vite build --mode web",

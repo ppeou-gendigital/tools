@@ -1,21 +1,31 @@
-// Normalizers for the user_data pref fields. Kept in one place so the
+// Normalizers for the per-app prefs `data` blob. Kept in one place so the
 // provider setters and PrefsSync agree on what a sane value looks like when
 // clamping remote / imported payloads.
 //
-// This row is shared across sibling tools on the same Supabase project.
-// Own only theme/font/fab (plus updatedAt). Pass every other key through
-// opaquely so prefs CAS never wipes sibling fields (e.g. legacy Accesso
-// vault blobs). Crypto salt/verifier must NOT live here — use vault_meta.
+// Primary store: public.loopy_user_prefs.
+//   data    — owned shell prefs: theme, fontSize, fabCorner, updatedAt
+//   payload — Loopy lists (snake_case keys):
+//             aem_domains, tracked_hostnames, pinned_sites, favorites_order
+// Legacy public.user_data is dual-read / best-effort dual-write only until
+// every sibling tool has migrated. Crypto salt/verifier must NOT live here
+// — use vault_meta.
 
-const THEMES = ['light', 'dark', 'system']
-const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+import {
+  DEFAULT_MENU_CELL,
+  normalizeFabCell,
+  oppositeFabCell,
+} from '@tools/service/fabCell'
+
+export const PREFS_TABLE = 'loopy_user_prefs'
+
+const THEMES = ['light', 'dark', 'system', 'daynight']
 
 const FONT_MIN = 12
 const FONT_MAX = 24
 const FONT_STEP = 2
 const FONT_DEFAULT = 16
 
-/** Keys this tool normalizes and may rewrite on the shared prefs blob. */
+/** Keys this tool normalizes and may rewrite on its prefs `data` blob. */
 export const PREFS_OWNED_KEYS = new Set([
   'theme',
   'fontSize',
@@ -23,7 +33,11 @@ export const PREFS_OWNED_KEYS = new Set([
   'updatedAt',
 ])
 
-/** Opaque sibling-tool fields — never validate or drop. */
+/**
+ * Opaque sibling-tool fields from a legacy shared user_data.data blob.
+ * Keep during dual-write so old clients are not wiped; unused on
+ * per-app loopy_user_prefs rows (those only store owned keys in `data`).
+ */
 export function extractForeignPrefs(remote) {
   if (!remote || typeof remote !== 'object' || Array.isArray(remote)) {
     return {}
@@ -35,6 +49,18 @@ export function extractForeignPrefs(remote) {
     }
   }
   return foreign
+}
+
+/** Pick only this tool's owned keys from a (possibly shared) blob. */
+export function extractOwnedPrefs(remote) {
+  if (!remote || typeof remote !== 'object' || Array.isArray(remote)) {
+    return {}
+  }
+  const owned = {}
+  for (const key of PREFS_OWNED_KEYS) {
+    if (remote[key] !== undefined) owned[key] = remote[key]
+  }
+  return owned
 }
 
 // AEM Jump domain enums. Kept together so Settings selects, the block
@@ -57,16 +83,23 @@ const AEM_REF_DEFAULT = 'main'
 const DEFAULTS = {
   theme: 'system',
   fontSize: FONT_DEFAULT,
-  fabCorner: 'bottom-right',
+  fabCorner: DEFAULT_MENU_CELL,
 }
 
 export function normalizeTheme(v) {
   return THEMES.includes(v) ? v : DEFAULTS.theme
 }
 
+/** FAB cell token ("col:row" in XL space) or legacy corner → XL cell. */
 export function normalizeFabCorner(v) {
-  return CORNERS.includes(v) ? v : DEFAULTS.fabCorner
+  return normalizeFabCell(v)
 }
+
+/** Horizontal opposite in XL space — keeps FABs from stacking on migrate. */
+export function oppositeFabCorner(corner) {
+  return oppositeFabCell(normalizeFabCell(corner))
+}
+
 
 // Snap to the FONT_STEP grid inside [MIN, MAX] and rescue any stale
 // odd-numbered values from earlier builds.
@@ -280,11 +313,11 @@ export function isDomainRenderable(entry) {
 
 // Sanitize a (possibly untrusted / partial) remote prefs blob before
 // applying it via the provider setters. Clamps owned keys; preserves
-// sibling-tool keys opaquely.
+// sibling-tool keys opaquely (legacy dual-read only).
 //
-// Only the `data` column shape is normalized here. The AEM domain list
-// lives in its own `aem_domains` column on `user_data` and is handled by
-// `normalizeAemDomains` directly.
+// Only the `data` column shape is normalized here. Loopy lists live in
+// `loopy_user_prefs.payload` (or legacy user_data top-level columns) and
+// are handled by their own normalizers via supabaseSync.
 export function normalizeRemotePrefs(remote) {
   return {
     ...extractForeignPrefs(remote),

@@ -1,11 +1,20 @@
 import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronRight, Globe } from 'lucide-react'
 import { FavStar } from '@/patterns/FavStar'
-import { buildTree, countLeaves, sortedChildren } from '@/lib/pathTree'
+import {
+  buildTree,
+  compressPathNode,
+  countLeaves,
+  sortedChildren,
+} from '@/lib/pathTree'
 import { cx } from '@/lib/cx'
 import styles from './PathTree.module.scss'
 
 // Recursive tree row. Depth drives indent via a CSS var.
+//
+// Empty single-child chains (no visit/link) are compressed into one
+// label like GitHub's file tree — `:x:/r/personal` instead of three
+// nested rows. Collapse / link / FavStar all bind to the chain tip.
 //
 // labelMode:
 //   - segment: path segment + optional visit title + FavStar (Site Tree)
@@ -18,17 +27,21 @@ function TreeNode({
   onToggle,
   labelMode = 'segment',
 }) {
-  const hasChildren = node.children.size > 0
-  const isCollapsed = hasChildren && collapsed.has(node.fullPath)
-  const clickable = !!node.visit
-  const title = node.visit?.title
-  const href = clickable ? `${origin}${node.fullKey ?? node.fullPath}` : null
+  const { tip, displayName, parts } = useMemo(
+    () => compressPathNode(node),
+    [node],
+  )
+  const hasChildren = tip.children.size > 0
+  const isCollapsed = hasChildren && collapsed.has(tip.fullPath)
+  const clickable = !!tip.visit
+  const title = tip.visit?.title
+  const href = clickable ? `${origin}${tip.fullKey ?? tip.fullPath}` : null
   const isDisplayName = labelMode === 'displayName'
   const primaryLabel = isDisplayName
     ? clickable
       ? title?.trim() || '(untitled)'
-      : node.name
-    : node.name
+      : displayName
+    : displayName
 
   return (
     <>
@@ -40,7 +53,7 @@ function TreeNode({
           <button
             type="button"
             className={styles.chevronBtn}
-            onClick={() => onToggle(node.fullPath)}
+            onClick={() => onToggle(tip.fullPath)}
             aria-expanded={!isCollapsed}
             aria-label={
               isCollapsed ? `Expand ${primaryLabel}` : `Collapse ${primaryLabel}`
@@ -64,37 +77,32 @@ function TreeNode({
             rel="noopener noreferrer"
             title={isDisplayName ? href : title || href}
           >
-            <span
-              className={cx(
-                styles.treeName,
-                isDisplayName && styles.treeNameDisplay,
-              )}
-            >
-              {primaryLabel}
-            </span>
-            {!isDisplayName && title && (
-              <span className={styles.treeTitle}>{title}</span>
+            {isDisplayName ? (
+              <span className={cx(styles.treeName, styles.treeNameDisplay)}>
+                {primaryLabel}
+              </span>
+            ) : (
+              <CompressedName parts={parts} title={title} />
             )}
           </a>
         ) : (
           <span className={styles.treePlain}>
-            <span
-              className={cx(
-                styles.treeName,
-                isDisplayName && styles.treeNameDisplay,
-              )}
-            >
-              {primaryLabel}
-            </span>
+            {isDisplayName ? (
+              <span className={cx(styles.treeName, styles.treeNameDisplay)}>
+                {primaryLabel}
+              </span>
+            ) : (
+              <CompressedName parts={parts} />
+            )}
           </span>
         )}
 
-        {!isDisplayName && node.variantCount > 1 && (
+        {!isDisplayName && tip.variantCount > 1 && (
           <span
             className={styles.variantBadge}
-            title={`${node.variantCount} query-string variants`}
+            title={`${tip.variantCount} query-string variants`}
           >
-            ×{node.variantCount}
+            ×{tip.variantCount}
           </span>
         )}
 
@@ -112,7 +120,7 @@ function TreeNode({
 
       {hasChildren && !isCollapsed && (
         <div className={styles.children}>
-          {sortedChildren(node).map((child) => (
+          {sortedChildren(tip).map((child) => (
             <TreeNode
               key={child.fullPath}
               node={child}
@@ -125,6 +133,28 @@ function TreeNode({
           ))}
         </div>
       )}
+    </>
+  )
+}
+
+// Render `a/b/c` with muted separators so compressed chains read like
+// GitHub's tree, while a single segment stays a plain name.
+function CompressedName({ parts, title }) {
+  return (
+    <>
+      <span className={styles.treeName} title={parts.join('/')}>
+        {parts.map((part, i) => (
+          <span key={`${i}:${part}`}>
+            {i > 0 && (
+              <span className={styles.pathSep} aria-hidden="true">
+                /
+              </span>
+            )}
+            {part}
+          </span>
+        ))}
+      </span>
+      {title && <span className={styles.treeTitle}>{title}</span>}
     </>
   )
 }

@@ -183,84 +183,50 @@ create trigger on_auth_user_created
 
 That's it — sign up, check inbox for the code, paste it into the popup.
 
-### 4. User preferences table (`user_data`)
+### 4. User preferences table (`loopy_user_prefs`)
 
-Backs the auto-sync layer. One row per user, with four independent JSONB
-columns:
+Backs the auto-sync layer in [PrefsSync.jsx](src/providers/PrefsSync.jsx).
+Loopy has its **own** table — `public.loopy_user_prefs` (`PREFS_TABLE` in
+[`prefs.js`](src/lib/prefs.js)). One row per user (`id = auth.uid()`):
 
-- `data` — the small prefs blob (`theme`, `fontSize`, `fabCorner`, `updatedAt`).
-- `aem_domains` — the AEM Jump domain list (array of normalized entries).
-- `tracked_hostnames` — the visit-capture rule set (JSONB **object keyed by pattern**, `{ [pattern]: { id, mode } }`; see the [Tracked hostnames](#tracked-hostnames) section).
-- `pinned_sites` — the Site Tree page's user-curated pin list (sorted array of lowercase hostname strings).
+- `data` — owned shell prefs (`theme`, `fontSize`, `fabCorner`, `updatedAt`).
+- `payload` — Loopy lists as one jsonb object with **snake_case** keys:
+  - `aem_domains` — AEM Jump domain list
+  - `tracked_hostnames` — visit-capture rule set (object keyed by pattern)
+  - `pinned_sites` — Site Tree pin list
+  - `favorites_order` — Fav Links domain display order
 
-Splitting keeps the payloads legible in the SQL editor and lets us
-promote any of them to a real column (indexable, queryable) later
-without touching the others. All three columns are still written together
-in a single upsert from the app.
+In-memory providers/ops still see camelCase fields
+(`aemDomains`, `trackedHostnames`, …); [`supabaseSync.js`](src/lib/supabaseSync.js)
+maps those ↔ `payload` on read/write.
 
-In **SQL Editor**, run:
+Run [`supabase/loopy_user_prefs.sql`](supabase/loopy_user_prefs.sql) in
+**SQL Editor** (safe to re-run).
 
-```sql
-create table public.user_data (
-  id                uuid        primary key references auth.users(id) on delete cascade,
-  data              jsonb       not null default '{}'::jsonb,
-  aem_domains       jsonb       not null default '[]'::jsonb,
-  tracked_hostnames jsonb       not null default '{}'::jsonb,
-  pinned_sites      jsonb       not null default '[]'::jsonb,
-  updated_at        timestamptz not null default now()
-);
+**Legacy `user_data`:** older builds stored shell prefs in `user_data.data`
+and Loopy lists as top-level columns (`aem_domains`, `tracked_hostnames`,
+`pinned_sites`, `favorites_order`). Sync dual-reads that row when
+`loopy_user_prefs` is missing, and best-effort dual-writes owned `data`
+keys (preserving foreign keys via `extractForeignPrefs`) **plus** the
+columnar list fields back to `user_data`. Keep `user_data` until every
+tool on the project has cut over; do not drop it yet.
 
-alter table public.user_data enable row level security;
+Favorites (`user_favorites`) and visits (`user_visits`) are separate
+streams — this prefs migration does not change them.
 
-create policy "user_data self-read"   on public.user_data for select using (auth.uid() = id);
-create policy "user_data self-insert" on public.user_data for insert with check (auth.uid() = id);
-create policy "user_data self-update" on public.user_data for update using (auth.uid() = id) with check (auth.uid() = id);
-```
+### 4b. AEM Author sites catalogs (`loopy_aem_author_sites`)
 
-Row-scoped RLS covers all columns automatically; no per-column policy is
-needed. No trigger either — the app upserts on first change, so rows only
-exist for users who have actually signed in and touched a pref, added a
-domain, or added a tracked-host rule.
+Backs the **AEM EDS-UE** page: per Author host, the discovered `/content`
+sites list, pin state, and pinned sites’ page catalogs (Query Builder).
+**Not** visit history — catalogs sync separately from `user_visits`.
 
-**Migration for `tracked_hostnames`** — single idempotent snippet that safely upgrades any prior state: adds the column if missing (created with the object default), swaps the default to `'{}'::jsonb` if the column already existed with the earlier array default, and converts any legacy array-shaped rows to the object shape. Re-runnable at any time.
+One row per `(user_id, author_host)` with `sites` jsonb,
+`sites_fetched_at`, and CAS on `updated_at`.
 
-```sql
-alter table public.user_data
-  add column if not exists tracked_hostnames jsonb not null default '{}'::jsonb;
-
-alter table public.user_data
-  alter column tracked_hostnames set default '{}'::jsonb;
-
-update public.user_data
-set tracked_hostnames = '{}'::jsonb,
-    updated_at        = now()
-where jsonb_typeof(tracked_hostnames) = 'array';
-```
-
-The client normalizer accepts both array and object shapes on read, so this migration is technically optional for existing rows (an array row would get overwritten as `{}` on next push), but running it makes the DB canonical immediately.
-
-**Migration for `pinned_sites`** — single idempotent snippet that adds the column if missing. Safe to re-run.
-
-```sql
-alter table public.user_data
-  add column if not exists pinned_sites jsonb not null default '[]'::jsonb;
-```
-
-The client normalizer already sorts + lowercases + dedupes the array on every read/write, so existing junk (or a `null`) heals itself on the next push. No backfill needed.
-
-**Migration (only if you created `user_data` before the aem_domains split)** — adds
-that column, backfills from the old nested key, then strips the key:
-
-```sql
-alter table public.user_data
-  add column if not exists aem_domains jsonb not null default '[]'::jsonb;
-
-update public.user_data
-set aem_domains = coalesce(data -> 'aemDomains', '[]'::jsonb),
-    data        = data - 'aemDomains',
-    updated_at  = now()
-where data ? 'aemDomains';
-```
+Run [`supabase/loopy_aem_author_sites.sql`](supabase/loopy_aem_author_sites.sql)
+in **SQL Editor** (safe to re-run). Local cache key: `loopy.aemAuthorSites`.
+API: [`src/lib/aemAuthorSitesApi.js`](src/lib/aemAuthorSitesApi.js); pull on
+sign-in via PrefsSync.
 
 **Sync contract** — all Supabase I/O goes through [`src/lib/supabaseSync.js`](src/lib/supabaseSync.js):
 
@@ -274,6 +240,7 @@ where data ? 'aemDomains';
   `applySyncOp` with a field-scoped operator from [`userDataOps.js`](src/lib/userDataOps.js)
   (`opTogglePinned`, `opSetTheme`, …). On CAS miss the op re-applies against
   the latest remote row so concurrent edits to *different* fields both survive.
+  First insert seeds CAS from legacy `user_data` when the per-app row is missing.
 - [`PrefsSync`](src/providers/PrefsSync.jsx) is **pull-only** on sign-in. Fields
   the user changed while the fetch was in flight are skipped (dirty-field
   guard) so a mid-pull pin is not wiped.
@@ -397,7 +364,7 @@ The AEM domain list is **not** consulted for capture. It stays exclusively behin
 
 ## Tracked hostnames
 
-Capture is governed by an explicit rule set stored in `chrome.storage.local` under `loopy.trackedHostnames` and mirrored to `user_data.tracked_hostnames`. The rule set is a **JSONB object keyed by the (canonicalized) pattern**; each value carries the rule's `id` and `mode`:
+Capture is governed by an explicit rule set stored in `chrome.storage.local` under `loopy.trackedHostnames` and mirrored to `loopy_user_prefs.payload.tracked_hostnames` (dual-written to legacy `user_data.tracked_hostnames` during migration). The rule set is a **JSONB object keyed by the (canonicalized) pattern**; each value carries the rule's `id` and `mode`:
 
 ```jsonc
 {
@@ -426,12 +393,12 @@ Not supported in v1: `**` (multi-label wildcards) or full regex. The single-`*` 
 
 **Legacy array shape**: the module's normalizer (`normalizeTrackedHostnames`) still accepts the previous `[{ id, pattern, mode }]` array form and upgrades it to the object shape on read. Any local storage or server row that predates the object cutover will be silently normalized on next load.
 
-### 6. Favorites table (`user_favorites`) + `user_data.favorites_order`
+### 6. Favorites table (`user_favorites`) + prefs `favorites_order`
 
 Backs the [Fav Links page](src/pages/FavLinks.jsx). Split into two stores:
 
-- **`user_favorites`** — the payload. One row per `(user_id, domain)` pair; `paths` is a **jsonb object keyed by path+search**. Modelled after `user_visits` so favorites can reuse the same per-domain CAS-merge sync pattern, but the per-favorite value is lighter — no visit counts, no first/last-visited timestamps, just the title captured at save time and an `addedAt` stamp used for freshness sorting.
-- **`user_data.favorites_order`** — the pref. An ordered jsonb array of lowercase hostnames that drives the Fav Links group display order. Behaves like `pinned_sites`: single-blob push, last-writer-wins, part of the regular prefs sync round-trip. Domains not listed here fall back to freshest-first at render time so newly saved domains show up without an explicit reorder step.
+- **`user_favorites`** — the payload. One row per `(user_id, domain)` pair; `paths` is a **jsonb object keyed by path+search**. Modelled after `user_visits` so favorites can reuse the same per-domain CAS-merge sync pattern, but the per-favorite value is lighter — no visit counts, no first/last-visited timestamps, just the title captured at save time and an `addedAt` stamp used for freshness sorting. This stream is unchanged by the prefs-table migration.
+- **`loopy_user_prefs.payload.favorites_order`** — the pref. An ordered jsonb array of lowercase hostnames that drives the Fav Links group display order. Behaves like `pinned_sites`: single-blob push, last-writer-wins, part of the regular prefs sync round-trip (dual-written to legacy `user_data.favorites_order`). Domains not listed here fall back to freshest-first at render time so newly saved domains show up without an explicit reorder step.
 
 In **SQL Editor**, run the block below. It's written to be safely re-runnable (`create table if not exists`, `drop policy if exists` before each `create policy`, `add column if not exists`, and idempotent DDL for the index / function / trigger):
 
@@ -485,7 +452,8 @@ create trigger user_favorites_paths_cap_trg
   before insert or update on public.user_favorites
   for each row execute function public.enforce_user_favorites_paths_cap();
 
--- Domain display order for the Fav Links page. Parallel to pinned_sites.
+-- Legacy column (still dual-written during migration). Prefer
+-- loopy_user_prefs.payload.favorites_order for new installs.
 alter table public.user_data
   add column if not exists favorites_order jsonb not null default '[]'::jsonb;
 ```
@@ -606,7 +574,7 @@ The web deploy is an installable Progressive Web App (manifest + service worker 
 
 - **iPhone / iPad (Safari):** open the live URL → Share → **Add to Home Screen**.
 - **Android (Chrome):** open the live URL → browser menu → **Install app** / **Add to Home screen** when Chrome offers it.
-- **Updates:** [`src/pwaRegister.js`](src/pwaRegister.js) checks for a new service worker on app focus / visibility and reloads automatically. Home-screen apps have no hard-reload control; if a build still looks stuck after deploy, force-quit the PWA once and reopen.
+- **Updates:** [`src/pwaRegister.js`](src/pwaRegister.js) checks for a new service worker on app focus / visibility and calls `updateSW(true)` when a waiting worker is ready (`registerType: 'autoUpdate'`), matching Viaggio. Home-screen apps have no hard-reload control; if the shell still won’t paint, the boot watchdog / [`BootErrorBoundary`](src/blocks/BootErrorBoundary.jsx) wipes site data once and reloads (or use **Reload app**).
 
 ---
 

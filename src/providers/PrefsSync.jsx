@@ -5,6 +5,7 @@ import { useFabCorner } from '@/providers/FabCornerProvider'
 import { useFavorites } from '@/providers/FavoritesProvider'
 import { useFavoritesOrder } from '@/providers/FavoritesOrderProvider'
 import { useFontSize } from '@/providers/FontSizeProvider'
+import { useEdsUeSites } from '@/providers/EdsUeSitesProvider'
 import { usePinnedSites } from '@/providers/PinnedSitesProvider'
 import { useTheme } from '@/providers/ThemeProvider'
 import { useTrackedHostnames } from '@/providers/TrackedHostnamesProvider'
@@ -73,10 +74,15 @@ export function PrefsSync() {
     setOrder: setFavoritesOrder,
     ready: favoritesOrderReady,
   } = useFavoritesOrder()
+  const {
+    ready: aemAuthorSitesReady,
+    pullRemote: pullAemAuthorSitesRemote,
+  } = useEdsUeSites()
 
   const initialPulledForUserRef = useRef(null)
   const visitsSyncedForUserRef = useRef(null)
   const favInitialPulledForUserRef = useRef(null)
+  const aemAuthorSitesPulledForUserRef = useRef(null)
 
   // Live refs so pull can detect dirty fields after the fetch starts.
   const prefsRef = useRef(null)
@@ -110,13 +116,15 @@ export function PrefsSync() {
     pinnedReady &&
     visitsReady &&
     favReady &&
-    favoritesOrderReady
+    favoritesOrderReady &&
+    aemAuthorSitesReady
 
   useEffect(() => {
     if (!userId) {
       initialPulledForUserRef.current = null
       visitsSyncedForUserRef.current = null
       favInitialPulledForUserRef.current = null
+      aemAuthorSitesPulledForUserRef.current = null
     }
   }, [userId])
 
@@ -238,6 +246,20 @@ export function PrefsSync() {
       console.warn('[loopy] visits initial sync failed:', err?.message ?? err)
     })
   }, [authLoading, userId, providersReady])
+
+  // AEM Author sites catalogs (EDS-UE) pull on sign-in.
+  useEffect(() => {
+    if (authLoading || !userId || !providersReady) return
+    if (aemAuthorSitesPulledForUserRef.current === userId) return
+    aemAuthorSitesPulledForUserRef.current = userId
+    pullAemAuthorSitesRemote().catch((err) => {
+      console.warn(
+        '[loopy] aemAuthorSites initial pull failed:',
+        err?.message ?? err,
+      )
+      aemAuthorSitesPulledForUserRef.current = null
+    })
+  }, [authLoading, userId, providersReady, pullAemAuthorSitesRemote])
 
   // Favorites pull (+ one-shot migration).
   useEffect(() => {

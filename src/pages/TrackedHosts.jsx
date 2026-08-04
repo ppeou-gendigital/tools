@@ -25,6 +25,7 @@ import {
   stableHostsKey,
   TRACKED_MODES,
 } from '@/lib/trackedHostnames'
+import { ensureOriginPermission } from '@/lib/pageTitle'
 import { cx } from '@/lib/cx'
 import styles from './TrackedHosts.module.scss'
 
@@ -168,7 +169,7 @@ export function TrackedHosts() {
     setRows((prev) => prev.filter((r) => r.draftId !== row.draftId))
   }, [])
 
-  const handleImportFromAem = useCallback(() => {
+  const handleImportFromAem = useCallback(async () => {
     // Collect the set of canonical patterns already present (from any
     // row that has a non-empty pattern, committed or draft) so we
     // don't re-add duplicates.
@@ -204,6 +205,11 @@ export function TrackedHosts() {
       )
       return
     }
+    // Request optional host access so visit capture can scrape real
+    // page titles on these origins (Jira / Confluence / etc.).
+    await Promise.all(
+      additions.map((row) => ensureOriginPermission(row.pattern)),
+    )
     setRows((prev) => [...prev, ...additions])
   }, [aemDomains, rows])
 
@@ -377,6 +383,15 @@ export function TrackedHosts() {
 }
 
 function TrackedRow({ row, onUpdate, onDelete }) {
+  // Ask for optional host access when an include rule looks ready.
+  // Denial is fine — capture still records cleaned tab titles.
+  function maybeRequestTitleAccess(pattern, mode) {
+    if (mode !== 'include') return
+    const canonical = canonicalizePattern(pattern)
+    if (!isValidPattern(canonical)) return
+    ensureOriginPermission(canonical)
+  }
+
   return (
     <tr className={styles.tr}>
       <td className={styles.tdMode}>
@@ -386,7 +401,11 @@ function TrackedRow({ row, onUpdate, onDelete }) {
             row.mode === 'exclude' ? styles.modeExclude : styles.modeInclude,
           )}
           value={row.mode}
-          onChange={(e) => onUpdate(row.draftId, { mode: e.target.value })}
+          onChange={(e) => {
+            const mode = e.target.value
+            onUpdate(row.draftId, { mode })
+            maybeRequestTitleAccess(row.pattern, mode)
+          }}
           aria-label={`Mode for ${row.pattern || 'this rule'}`}
         >
           {TRACKED_MODES.map((m) => (
@@ -401,6 +420,7 @@ function TrackedRow({ row, onUpdate, onDelete }) {
           type="text"
           value={row.pattern}
           onChange={(e) => onUpdate(row.draftId, { pattern: e.target.value })}
+          onBlur={() => maybeRequestTitleAccess(row.pattern, row.mode)}
           placeholder="e.g. *.norton.*"
           className={styles.patternInput}
           spellCheck={false}

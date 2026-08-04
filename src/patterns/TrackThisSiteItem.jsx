@@ -6,6 +6,7 @@ import {
   canonicalizePattern,
   isValidPattern,
 } from '@/lib/trackedHostnames'
+import { ensureOriginPermission } from '@/lib/pageTitle'
 import { isExtension } from '@/env'
 
 // Adds the currently active tab's hostname as an `include` rule on the
@@ -37,6 +38,11 @@ export function TrackThisSiteItem({ onClose }) {
       window.alert(`${pattern} is already tracked.`)
       return
     }
+    // Optional host access lets the service worker scrape Jira /
+    // Confluence headings (and other page titles) instead of the
+    // generic SPA document.title. Denial is fine — capture still
+    // works with cleaned tab titles.
+    await ensureOriginPermission(pattern)
     await setHosts((prev) => ({ ...prev, [pattern]: { mode: 'include' } }))
     window.alert(`Now tracking ${pattern}.`)
   }

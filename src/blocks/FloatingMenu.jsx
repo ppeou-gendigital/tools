@@ -7,8 +7,15 @@ export function FloatingMenu() {
     <ToolsFloatingMenu
       icon={Repeat}
       label="Loopy menu"
-      renderPanel={({ corner, onClose }) => (
-        <MenuPanel corner={corner} onClose={onClose} />
+      renderPanel={({ corner, edgeX, edgeY, fabLeft, fabTop, onClose }) => (
+        <MenuPanel
+          corner={corner}
+          edgeX={edgeX}
+          edgeY={edgeY}
+          fabLeft={fabLeft}
+          fabTop={fabTop}
+          onClose={onClose}
+        />
       )}
     />
   )

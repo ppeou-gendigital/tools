@@ -3,6 +3,7 @@ import {
   Activity,
   FlaskConical,
   FlaskConicalOff,
+  RefreshCw,
   TicketPercent,
 } from 'lucide-react'
 import { Button } from '@/molecules/Button'
@@ -112,10 +113,10 @@ function isParseableUrl(url) {
 // `onUrlChange` call fans out to all cards without extra plumbing.
 //
 // Groups two kinds of URL-param edits under one menu:
-//   1. Diagnostic toggles — Analytics debug + A/B testing kill switch.
-//      Both live at the top since they're the most-used and both
-//      swap the URL to the .html preview shape so the flag lands on
-//      the rendered page.
+//   1. Diagnostic actions — Analytics debug, A/B testing kill switch,
+//      and a cache-bust timestamp. Analytics / A/B swap to the .html
+//      preview shape so the flag lands on the rendered page; timestamp
+//      sets `timestamp=<ms>` in place to force a fresh HTML fetch.
 //   2. Promocode presets — set/replace/remove.
 export function UrlParamsMenu({ url, onUrlChange, className }) {
   const [open, setOpen] = useState(false)
@@ -166,6 +167,17 @@ export function UrlParamsMenu({ url, onUrlChange, className }) {
     commit(analytics.href)
   }
 
+  function handleCacheBust() {
+    if (disabled) return
+    commit(
+      applyParam(url, {
+        action: 'set',
+        key: 'timestamp',
+        value: String(Date.now()),
+      }),
+    )
+  }
+
   return (
     <div ref={wrapRef} className={styles.wrap}>
       <Button
@@ -184,7 +196,7 @@ export function UrlParamsMenu({ url, onUrlChange, className }) {
 
       {open && (
         <div role="menu" className={styles.menu} aria-label="URL parameters">
-          {(analytics || ab) && (
+          {(analytics || ab || !disabled) && (
             <>
               {analytics && (
                 <button
@@ -230,6 +242,21 @@ export function UrlParamsMenu({ url, onUrlChange, className }) {
                       ? 'Enable A/B testing'
                       : 'Disable A/B testing'}
                   </span>
+                </button>
+              )}
+              {!disabled && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={cx(styles.item, styles.itemWithIcon)}
+                  onClick={handleCacheBust}
+                >
+                  <RefreshCw
+                    size={14}
+                    className={styles.itemIcon}
+                    aria-hidden="true"
+                  />
+                  <span>Add timestamp</span>
                 </button>
               )}
               <Divider />

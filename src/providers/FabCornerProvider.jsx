@@ -7,7 +7,9 @@ import { applySyncOp, enqueueSyncOp } from '@/lib/supabaseSync'
 import { opSetFabCorner } from '@/lib/userDataOps'
 
 export function FabCornerProvider({ children }) {
-  const pushRemote = useCallback(async (userId, corner) => {
+  const pushRemote = useCallback(async (userId, patch = {}) => {
+    // Lattice provider may also pass aiFabCorner; this app has no AI FAB — ignore.
+    if (patch.fabCorner == null) return
     await enqueueSyncOp({
       stream: 'prefs',
       key: 'fabCorner',
@@ -15,7 +17,7 @@ export function FabCornerProvider({ children }) {
         applySyncOp({
           stream: 'prefs',
           userId,
-          op: opSetFabCorner(corner),
+          op: opSetFabCorner(patch.fabCorner),
         }),
     })
   }, [])
