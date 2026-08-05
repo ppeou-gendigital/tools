@@ -1,0 +1,135 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "toggle",
+  "status": "published",
+  "summary": "Three sibling control Types for binary or two-option choice. Distinct from Switch. Mirrors [Pattern / Toggle `539:28414`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28414&m=dev) and Spec [`.Toggle · spec` `4588:132`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4588-132&m=dev).",
+  "specUrl": "/api/components/toggle/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/toggle/spec.md",
+    "hbs": "/api/components/toggle/source/toggle.hbs",
+    "scss": "/api/components/toggle/source/toggle.scss",
+    "js": "/api/components/toggle/source/toggle.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "1336:15559",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1336-15559&m=dev"
+  },
+  "rootClass": "c-toggle",
+  "bemClasses": [
+    "c-toggle"
+  ],
+  "properties": [
+    {
+      "name": "type",
+      "fixtureKey": "type",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"link\"",
+      "description": "",
+      "figmaLabel": "Type"
+    },
+    {
+      "name": "selected",
+      "fixtureKey": "selected",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"off\"` / `\"a\"",
+      "description": "",
+      "figmaLabel": "Selected"
+    },
+    {
+      "name": "labelA` / `labelB",
+      "fixtureKey": "labelA` / `labelB",
+      "type": "TEXT",
+      "required": false,
+      "default": "Off/On etc.",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "showDiscountLabel",
+      "fixtureKey": "showDiscountLabel",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "true",
+      "description": "Pill",
+      "figmaLabel": "Discount Label"
+    },
+    {
+      "name": "discountText",
+      "fixtureKey": "discountText",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"Save 40%\"",
+      "description": "Pill",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "disabled",
+      "fixtureKey": "disabled",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "type",
+      "values": "link`, `segmented`, `pill"
+    },
+    {
+      "axis": "selected",
+      "values": "Link: `off`\\"
+    },
+    {
+      "axis": "state",
+      "values": "`default`, `hover`, `pressed`, `focus`, `disabled` (gallery)"
+    }
+  ],
+  "tokensConsumed": [
+    "--space-2",
+    "--space-3",
+    "--space-4",
+    "--space-5",
+    "--space-7",
+    "--space-8",
+    "--border-width-xs",
+    "--border-width-s",
+    "--border-radius-s",
+    "--border-radius-l",
+    "--border-radius-pill",
+    "--color-text-primary",
+    "--color-text-secondary",
+    "--color-text-inverse",
+    "--color-bg-default",
+    "--color-bg-subtle",
+    "--color-bg-brand",
+    "--color-border-subtle",
+    "--color-border-strong",
+    "--color-border-focus",
+    "--color-signal-info",
+    "--button-primary-bg-default",
+    "--button-primary-content-default",
+    "--font-family-primary",
+    "--font-size-body-base",
+    "--font-weight-regular",
+    "--font-weight-medium",
+    "--font-weight-semibold"
+  ],
+  "composes": [
+    "discount-label"
+  ],
+  "hasBehavior": true,
+  "accessibility": [
+    "Link: `aria-pressed` on control button",
+    "Segmented/Pill: `role=\"radiogroup\"` + `role=\"radio\"`; arrow keys move selection"
+  ],
+  "storybookId": "patterns-toggle",
+  "generatedAt": "2026-08-05T20:59:13.518Z"
+}

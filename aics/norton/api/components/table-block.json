@@ -1,0 +1,73 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "table-block",
+  "status": "published",
+  "summary": "Composed table pattern that stacks Table cell instances in rows. Mirrors [Table block · content slot `5914:53`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=5914-53&m=dev) on Pattern / TableBlock (`4339:13402`) and Spec Frame [`.Table block · content slot · spec` `6032:729`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=6032-729&m=dev).",
+  "specUrl": "/api/components/table-block/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/table-block/spec.md",
+    "hbs": "/api/components/table-block/source/table-block.hbs",
+    "scss": "/api/components/table-block/source/table-block.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "5914:53",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=5914-53&m=dev"
+  },
+  "rootClass": "c-table-block",
+  "bemClasses": [
+    "c-table-block",
+    "c-table-cell"
+  ],
+  "properties": [
+    {
+      "name": "rows",
+      "fixtureKey": "rows",
+      "type": "SLOT",
+      "required": false,
+      "default": "demo matrix",
+      "description": "Array of `{ cells: [table-cell args] }`.",
+      "figmaLabel": "Table content"
+    },
+    {
+      "name": "slotHtml",
+      "fixtureKey": "slotHtml",
+      "type": "TEXT",
+      "required": false,
+      "default": "—",
+      "description": "Escape hatch replacing `rows`.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "rows[].cells[]",
+      "fixtureKey": "rows[].cells[]",
+      "type": "OBJECT",
+      "required": false,
+      "default": "—",
+      "description": "Per-cell args forwarded to `table-cell` (see that unit’s Properties).",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "_(none on the block)_",
+      "values": "Structure is authored via `rows` / `slotHtml`. Cell Type × Align live on `table-cell`."
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-primary"
+  ],
+  "composes": [
+    "table-cell"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "Default markup uses div rows/cells for flexible composition. When",
+    "Decorative icons remain decorative via `table-cell`."
+  ],
+  "storybookId": "patterns-table-block",
+  "generatedAt": "2026-08-05T20:59:30.540Z"
+}

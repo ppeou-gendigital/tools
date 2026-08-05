@@ -1,7 +1,7 @@
 {
   "$schema": "https://design-system.aics.dev/schema/asset-inventory.v1.json",
   "family": "icons",
-  "count": 407,
+  "count": 466,
   "assets": [
     {
       "key": "actions/detailed-delete",
@@ -1214,6 +1214,251 @@
       "category": "objects"
     },
     {
+      "key": "other-apps/android-settings",
+      "url": "/assets/icons/other-apps/android-settings.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/brave",
+      "url": "/assets/icons/other-apps/brave.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/chrome",
+      "url": "/assets/icons/other-apps/chrome.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/chromium",
+      "url": "/assets/icons/other-apps/chromium.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/dropbox",
+      "url": "/assets/icons/other-apps/dropbox.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/edge",
+      "url": "/assets/icons/other-apps/edge.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/firefox",
+      "url": "/assets/icons/other-apps/firefox.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/google-drive",
+      "url": "/assets/icons/other-apps/google-drive.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/google-mail",
+      "url": "/assets/icons/other-apps/google-mail.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/google-play",
+      "url": "/assets/icons/other-apps/google-play.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/internet-explorer",
+      "url": "/assets/icons/other-apps/internet-explorer.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/messenger",
+      "url": "/assets/icons/other-apps/messenger.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/neo",
+      "url": "/assets/icons/other-apps/neo.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/onedrive",
+      "url": "/assets/icons/other-apps/onedrive.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/opera",
+      "url": "/assets/icons/other-apps/opera.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/outlook",
+      "url": "/assets/icons/other-apps/outlook.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/safari",
+      "url": "/assets/icons/other-apps/safari.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/spotify",
+      "url": "/assets/icons/other-apps/spotify.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/vivaldi",
+      "url": "/assets/icons/other-apps/vivaldi.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/whatsapp",
+      "url": "/assets/icons/other-apps/whatsapp.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-apps/yandex",
+      "url": "/assets/icons/other-apps/yandex.svg",
+      "category": "other-apps"
+    },
+    {
+      "key": "other-brands/google",
+      "url": "/assets/icons/other-brands/google.svg",
+      "category": "other-brands"
+    },
+    {
+      "key": "other-brands/microsoft",
+      "url": "/assets/icons/other-brands/microsoft.svg",
+      "category": "other-brands"
+    },
+    {
+      "key": "payment/amazon-pay-large",
+      "url": "/assets/icons/payment/amazon-pay-large.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/amazon-pay-small",
+      "url": "/assets/icons/payment/amazon-pay-small.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/amex-large-1",
+      "url": "/assets/icons/payment/amex-large-1.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/amex-large-2",
+      "url": "/assets/icons/payment/amex-large-2.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/amex-small-1",
+      "url": "/assets/icons/payment/amex-small-1.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/amex-small-2",
+      "url": "/assets/icons/payment/amex-small-2.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/apple-pay-large",
+      "url": "/assets/icons/payment/apple-pay-large.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/apple-pay-small",
+      "url": "/assets/icons/payment/apple-pay-small.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/bitcoin-large",
+      "url": "/assets/icons/payment/bitcoin-large.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/bitcoin-small",
+      "url": "/assets/icons/payment/bitcoin-small.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/discover-large",
+      "url": "/assets/icons/payment/discover-large.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/discover-small",
+      "url": "/assets/icons/payment/discover-small.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/google-pay-large",
+      "url": "/assets/icons/payment/google-pay-large.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/google-pay-small",
+      "url": "/assets/icons/payment/google-pay-small.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/ideal-wero-large",
+      "url": "/assets/icons/payment/ideal-wero-large.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/ideal-wero-small",
+      "url": "/assets/icons/payment/ideal-wero-small.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/jcb-large",
+      "url": "/assets/icons/payment/jcb-large.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/jcb-small",
+      "url": "/assets/icons/payment/jcb-small.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/klarna-large",
+      "url": "/assets/icons/payment/klarna-large.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/klarna-small",
+      "url": "/assets/icons/payment/klarna-small.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/mastercard-large",
+      "url": "/assets/icons/payment/mastercard-large.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/mastercard-small",
+      "url": "/assets/icons/payment/mastercard-small.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/paypal-large",
+      "url": "/assets/icons/payment/paypal-large.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/paypal-small",
+      "url": "/assets/icons/payment/paypal-small.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/visa-large",
+      "url": "/assets/icons/payment/visa-large.svg",
+      "category": "payment"
+    },
+    {
+      "key": "payment/visa-small",
+      "url": "/assets/icons/payment/visa-small.svg",
+      "category": "payment"
+    },
+    {
       "key": "product-features/detailed-browser-protection",
       "url": "/assets/icons/product-features/detailed-browser-protection.svg",
       "category": "product-features"
@@ -1884,6 +2129,56 @@
       "category": "security"
     },
     {
+      "key": "social/facebook",
+      "url": "/assets/icons/social/facebook.svg",
+      "category": "social"
+    },
+    {
+      "key": "social/instagram-black",
+      "url": "/assets/icons/social/instagram-black.svg",
+      "category": "social"
+    },
+    {
+      "key": "social/instagram-gradient",
+      "url": "/assets/icons/social/instagram-gradient.svg",
+      "category": "social"
+    },
+    {
+      "key": "social/instagram-white",
+      "url": "/assets/icons/social/instagram-white.svg",
+      "category": "social"
+    },
+    {
+      "key": "social/linkedin-round",
+      "url": "/assets/icons/social/linkedin-round.svg",
+      "category": "social"
+    },
+    {
+      "key": "social/linkedin",
+      "url": "/assets/icons/social/linkedin.svg",
+      "category": "social"
+    },
+    {
+      "key": "social/x-reverse-round",
+      "url": "/assets/icons/social/x-reverse-round.svg",
+      "category": "social"
+    },
+    {
+      "key": "social/x-reverse",
+      "url": "/assets/icons/social/x-reverse.svg",
+      "category": "social"
+    },
+    {
+      "key": "social/x-round",
+      "url": "/assets/icons/social/x-round.svg",
+      "category": "social"
+    },
+    {
+      "key": "social/x",
+      "url": "/assets/icons/social/x.svg",
+      "category": "social"
+    },
+    {
       "key": "status/detailed-access-allowed",
       "url": "/assets/icons/status/detailed-access-allowed.svg",
       "category": "status"
@@ -2039,5 +2334,5 @@
       "category": "users"
     }
   ],
-  "generatedAt": "2026-08-03T01:08:35.523Z"
+  "generatedAt": "2026-08-05T20:59:07.364Z"
 }

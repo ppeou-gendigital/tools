@@ -1,0 +1,68 @@
+{{!--
+  Molecules/Rating — BEM root .c-rating
+  Figma: Pattern / Ratings 2355:19638 · Spec 4630:2285
+
+  Types: teaser | inline | text-led | trustpilot | trustpilot-teaser
+
+  Stories precompute: stars[], scoreLabel, iconSize, countSize,
+  trustpilotColor, isTeaserFamily, isTrustpilotFamily.
+--}}
+<div
+  class="c-rating c-rating--{{#if type}}{{lower type}}{{else}}teaser{{/if}} c-rating--{{#if device}}{{lower device}}{{else}}desktop{{/if}}{{#if (eq (lower type) "trustpilot-teaser")}} c-rating--bg-{{#if background}}{{lower background}}{{else}}light{{/if}}{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="rating"
+  data-type="{{#if type}}{{lower type}}{{else}}teaser{{/if}}"
+  data-value="{{#if scoreLabel}}{{scoreLabel}}{{else}}{{value}}{{/if}}"
+  role="img"
+  aria-label="{{#if accessibleLabel}}{{accessibleLabel}}{{else}}{{#if scoreLabel}}{{scoreLabel}}{{else}}{{value}}{{/if}} out of 5 stars{{/if}}"
+  {{#if isTrustpilotFamily}}style="--c-rating-trustpilot: {{#if trustpilotColor}}{{trustpilotColor}}{{else}}#00b67a{{/if}};"{{/if}}
+>
+  {{#if (eq (lower type) "inline")}}
+    <span class="c-rating__score" aria-hidden="true">{{#if scoreLabel}}{{scoreLabel}}{{else}}{{value}}{{/if}}</span>
+    {{> icon name="generic/simple-star-filled" size=iconSize color="current" decorative=true}}
+
+  {{else if (eq (lower type) "text-led")}}
+    {{#if leadingText}}<span class="c-rating__leading" aria-hidden="true">{{leadingText}}</span>{{/if}}
+    {{> icon name="generic/simple-star-filled" size=iconSize color="current" decorative=true}}
+    {{#if trailing}}
+      {{#if trailingText}}<span class="c-rating__trailing" aria-hidden="true">{{trailingText}}</span>{{/if}}
+    {{/if}}
+
+  {{else}}
+    <div class="c-rating__stars" aria-hidden="true">
+      {{#each stars}}
+        <span class="c-rating__star c-rating__star--{{fill}}">
+          {{#if (eq fill "full")}}
+            {{> icon name="generic/simple-star-filled" size=../iconSize color="current" decorative=true}}
+          {{else if (eq fill "half")}}
+            {{> icon name="generic/simple-star-half" size=../iconSize color="current" decorative=true}}
+          {{else}}
+            {{> icon name="generic/simple-star" size=../iconSize color="current" decorative=true}}
+          {{/if}}
+        </span>
+      {{/each}}
+    </div>
+
+    {{#if isTeaserFamily}}
+      {{#unless (eq showScore false)}}
+        <span class="c-rating__score" aria-hidden="true">{{#if scoreLabel}}{{scoreLabel}}{{else}}{{value}}{{/if}}</span>
+      {{/unless}}
+      {{#unless (eq showCount false)}}
+        {{#if countLabel}}
+          {{#if countHref}}
+            {{> text-link
+              label=countLabel
+              href=countHref
+              size=countSize
+              weight="regular"
+              background=countBackground
+              iconTreatment="none"
+              className="c-rating__count"
+            }}
+          {{else}}
+            <span class="c-rating__count c-rating__count--static" aria-hidden="true">{{countLabel}}</span>
+          {{/if}}
+        {{/if}}
+      {{/unless}}
+    {{/if}}
+  {{/if}}
+</div>

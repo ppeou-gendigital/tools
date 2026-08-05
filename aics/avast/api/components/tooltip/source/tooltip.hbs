@@ -1,0 +1,28 @@
+{{!--
+  Molecules/Tooltip — BEM root .c-tooltip
+  Figma: Pattern / Tooltip 539:28418 — Spec 4601:164
+
+  Axes: type (small|medium|rich) × tint × pointer
+--}}
+<div
+  class="c-tooltip c-tooltip--type-{{#if type}}{{lower type}}{{else}}small{{/if}} c-tooltip--tint-{{#if tint}}{{lower tint}}{{else}}default{{/if}} c-tooltip--pointer-{{#if pointer}}{{lower pointer}}{{else}}top-center{{/if}}{{#if open}} is-open{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="tooltip"
+  data-type="{{#if type}}{{lower type}}{{else}}small{{/if}}"
+  data-tint="{{#if tint}}{{lower tint}}{{else}}default{{/if}}"
+  {{#if id}}id="{{id}}"{{/if}}
+  role="tooltip"
+  {{#unless open}}hidden{{/unless}}
+>
+  <div class="c-tooltip__bubble">
+    {{#if (eq (lower type) "rich")}}
+      {{#if title}}<p class="c-tooltip__title">{{title}}</p>{{/if}}
+      <p class="c-tooltip__body">{{#if body}}{{body}}{{else}}Tooltip text{{/if}}</p>
+    {{else if (eq (lower type) "medium")}}
+      {{#if title}}<p class="c-tooltip__title">{{title}}</p>{{/if}}
+      <p class="c-tooltip__body">{{#if body}}{{body}}{{else}}Tooltip text{{/if}}</p>
+    {{else}}
+      <p class="c-tooltip__body">{{#if body}}{{body}}{{else}}{{#if title}}{{title}}{{else}}Tooltip text{{/if}}{{/if}}</p>
+    {{/if}}
+  </div>
+  <span class="c-tooltip__pointer" aria-hidden="true"></span>
+</div>

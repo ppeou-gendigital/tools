@@ -1,0 +1,141 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "discount-label",
+  "status": "published",
+  "summary": "Compact pill for discount / promo metadata. Figma: [Pattern / DiscountLabel](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28415&m=dev) (set `1408:443`; Spec Frame `3024:48`).",
+  "specUrl": "/api/components/discount-label/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/discount-label/spec.md",
+    "hbs": "/api/components/discount-label/source/discount-label.hbs",
+    "scss": "/api/components/discount-label/source/discount-label.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "1408:443",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1408-443&m=dev"
+  },
+  "rootClass": "c-discount-label",
+  "bemClasses": [
+    "c-discount-label"
+  ],
+  "properties": [
+    {
+      "name": "background",
+      "fixtureKey": "background",
+      "type": "enum",
+      "required": false,
+      "default": "primary",
+      "description": "Surface role",
+      "figmaLabel": "Background"
+    },
+    {
+      "name": "fill",
+      "fixtureKey": "fill",
+      "type": "enum",
+      "required": false,
+      "default": "solid",
+      "description": "Solid / Transparent / Tint",
+      "figmaLabel": "Fill"
+    },
+    {
+      "name": "strength",
+      "fixtureKey": "strength",
+      "type": "enum",
+      "required": false,
+      "default": "base",
+      "description": "Opacity stop",
+      "figmaLabel": "Strength"
+    },
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "enum",
+      "required": false,
+      "default": "small",
+      "description": "Only Small published",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "text",
+      "fixtureKey": "text",
+      "type": "plain-text",
+      "required": false,
+      "default": "label",
+      "description": "Pill copy",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "showIcon",
+      "fixtureKey": "showIcon",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "Leading icon",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "icon",
+      "fixtureKey": "icon",
+      "type": "catalog-key",
+      "required": false,
+      "default": "actions/simple-add",
+      "description": "Icon catalog key",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "background",
+      "values": "primary`, `secondary`, `brand`, `brand-soft`, `accent`, `alpha`, `beta`, `gamma`, `delta`, `inverse-primary`, `inverse-secondary`, `success"
+    },
+    {
+      "axis": "fill",
+      "values": "solid`, `transparent`, `tint"
+    },
+    {
+      "axis": "strength",
+      "values": "base`, `30`, `50`, `80"
+    },
+    {
+      "axis": "size",
+      "values": "small"
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-default",
+    "--color-bg-subtle",
+    "--color-bg-brand",
+    "--color-bg-brand-soft",
+    "--color-bg-accent",
+    "--color-bg-alpha",
+    "--color-bg-beta",
+    "--color-bg-gamma",
+    "--color-bg-delta",
+    "--color-bg-inverse",
+    "--color-bg-inverse-strong",
+    "--color-signal-success",
+    "--color-text-primary",
+    "--color-text-inverse",
+    "--border-radius-xl",
+    "--space-1",
+    "--space-3",
+    "--font-family-primary",
+    "--font-weight-semibold",
+    "--font-size-label",
+    "--lineheight-label",
+    "--letterspacing-label"
+  ],
+  "composes": [
+    "icon"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "Root is a `<span>` (decorative metadata). Pair with surrounding copy that carries meaning.",
+    "Leading icon is `aria-hidden` / decorative."
+  ],
+  "storybookId": "molecules-discount-label",
+  "generatedAt": "2026-08-05T20:59:20.192Z"
+}

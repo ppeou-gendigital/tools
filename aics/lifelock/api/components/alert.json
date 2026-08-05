@@ -4,23 +4,19 @@
   "subtype": "pattern",
   "librarySource": "brand",
   "name": "alert",
-  "status": "draft",
-  "summary": "Inline messaging primitive — banner, toast, or passive surface — that carries a tone-coded leading status icon, an optional title / description pair, and opt-in CTA + dismiss affordances. Renders the canonical [Web-ODS Shared Library → Alerts and Notifications](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=537-28056&m=dev) canvas, which publishes three sibling component sets — `DS · Alert / Banner` ([`1284:11542`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1284-11542&m=dev), 40 variants), `DS · Alert / Toast` ([`1284:",
+  "status": "published",
+  "summary": "Unified account- or page-level status surface. Figma: [Pattern / Alerts](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=537-28056&m=dev) (`537:28056`). Spec Frame [`.Alert · spec`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=5399-1816&m=dev) (`5399:1816`). Board `5358:1619`.",
   "specUrl": "/api/components/alert/spec.md",
   "sourceFiles": {
     "spec": "/api/components/alert/spec.md",
     "hbs": "/api/components/alert/source/alert.hbs",
     "scss": "/api/components/alert/source/alert.scss",
-    "fixtures": [
-      "/api/components/alert/fixtures/banner.json",
-      "/api/components/alert/fixtures/passive.json",
-      "/api/components/alert/fixtures/toast.json"
-    ]
+    "js": "/api/components/alert/source/alert.js"
   },
   "figma": {
     "fileKey": "0o8SL5BEk8wHtgud00dRyg",
-    "nodeId": "1284:11542",
-    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1284-11542&m=dev"
+    "nodeId": "537:28056",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=537-28056&m=dev"
   },
   "rootClass": "c-alert",
   "bemClasses": [
@@ -29,119 +25,178 @@
   ],
   "properties": [
     {
-      "name": "title",
-      "fixtureKey": "title",
-      "type": "TEXT",
-      "required": true,
-      "default": "\"Alert title\"",
-      "description": "Main message line. Bound to `--font-size-body-base` (16/24) + `--font-weight-semibold` + `--font-family-primary` on the SemiBold-aware brand fallback. Optional in code — when omitted, the description fills the slot at the same typography to preserve hit-area.",
-      "figmaLabel": "Title"
+      "name": "tone",
+      "fixtureKey": "tone",
+      "type": "enum",
+      "required": false,
+      "default": "info",
+      "description": "Drives surface + default icon",
+      "figmaLabel": "Tone"
     },
     {
-      "name": "description",
-      "fixtureKey": "description",
-      "type": "TEXT",
+      "name": "hierarchy",
+      "fixtureKey": "hierarchy",
+      "type": "enum",
       "required": false,
-      "default": "\"Short description.\"",
-      "description": "Sub-text under the title. Bound to `--font-size-body-sm` (14/22) + `--font-weight-regular` + `--font-family-primary`. Stays 14 px across every breakpoint per the Spec Frame's `Description type` row.",
-      "figmaLabel": "Description"
+      "default": "low",
+      "description": "Low = subtle; High = solid",
+      "figmaLabel": "Hierarchy"
+    },
+    {
+      "name": "width",
+      "fixtureKey": "width",
+      "type": "enum",
+      "required": false,
+      "default": "in-grid",
+      "description": "In-grid radius-l; full-bleed radius-0 + responsive pad",
+      "figmaLabel": "Width"
+    },
+    {
+      "name": "showIcon",
+      "fixtureKey": "showIcon",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "",
+      "figmaLabel": "Show icon"
+    },
+    {
+      "name": "showBody",
+      "fixtureKey": "showBody",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "",
+      "figmaLabel": "Show body text"
     },
     {
       "name": "showButton",
       "fixtureKey": "showButton",
-      "type": "BOOLEAN",
+      "type": "boolean",
       "required": false,
-      "default": "Banner: `true` · Toast: `true` · Passive: `false`",
-      "description": "Toggles the CTA. The CTA composes the registered `{{> button}}` partial (Size=S; `Style=Primary` on Low, `Style=Secondary` on High — resolved automatically via the `alertCtaStyle` Handlebars helper, **verified against live Figma — see § \"Composition rules for consumers\" for the per-variant sample table**). When `ctaHref` is set, the same paint surfaces as `<a class=\"btn btn--<style> btn--s\">` so the canonical Button paint / padding / focus ring are reused without forcing the `<button>` element on a navigation target.",
+      "default": "true",
+      "description": "Size S Button; style via hierarchy",
       "figmaLabel": "Show button"
     },
     {
       "name": "dismissible",
       "fixtureKey": "dismissible",
-      "type": "BOOLEAN",
+      "type": "boolean",
       "required": false,
-      "default": "Banner: `false` · Toast: `true` · Passive: `false`",
-      "description": "Toggles the dismiss frame holding the `actions/simple-close` icon. The dismiss button carries `aria-label=\"Dismiss\"` and emits a `click` event the consumer wires up — the alert itself is a presentational primitive and does NOT ship a `<name>.js` runtime. Dismiss behaviour is the host's responsibility.",
+      "default": "false",
+      "description": "",
       "figmaLabel": "Dismissible"
     },
     {
-      "name": "wholeClickable",
-      "fixtureKey": "wholeClickable",
-      "type": "BOOLEAN",
+      "name": "elevation",
+      "fixtureKey": "elevation",
+      "type": "boolean",
       "required": false,
-      "default": "`false` (on all 3)",
-      "description": "Reserved for the \"entire surface is the action\" pattern. When `true`, the alert renders inside a wrapping `<a class=\"c-alert__shell\">` (rather than a `<div>`) so the whole surface becomes the link target; consumers must pass `href` alongside. Today this is a placeholder — the Figma side flags it as informational and no Banner / Toast / Passive variant currently exercises the wrap.",
-      "figmaLabel": "Whole clickable"
+      "default": "false",
+      "description": "`--shadow-default`",
+      "figmaLabel": "Elevation"
     },
     {
-      "name": "icon",
-      "fixtureKey": "icon",
-      "type": "INSTANCE_SWAP",
-      "required": false,
-      "default": "Per-tone defaults: `status/simple-status-info` (Info) / `status/simple-status-critical` (Critical) / `status/simple-status-attention` (Attention) / `status/simple-status-ok` (Success) / `status/simple-info` (Dark)",
-      "description": "Leading status icon. The Figma source pulls from Web-ODS-Icons; the LifeLock code mirror resolves the per-tone catalog key automatically when omitted and accepts any valid catalog key from `storybook-lifelock/src/components/icon/_icon-catalog.js` when overridden.",
-      "figmaLabel": "Icon"
+      "name": "title",
+      "fixtureKey": "title",
+      "type": "text",
+      "required": true,
+      "default": "—",
+      "description": "Body-base/SemiBold",
+      "figmaLabel": "Title"
     },
     {
-      "name": "href",
-      "fixtureKey": "href",
-      "type": "String",
+      "name": "description",
+      "fixtureKey": "description",
+      "type": "text",
       "required": false,
-      "default": "null",
-      "description": "Required when `wholeClickable=true`; ignored otherwise. The whole-clickable wrap renders `<a href=\"{{href}}\">`; the link target is the consumer's responsibility.",
-      "figmaLabel": "Href"
+      "default": "—",
+      "description": "Body-sm; gated by `showBody`",
+      "figmaLabel": "Description"
     },
     {
       "name": "ctaLabel",
       "fixtureKey": "ctaLabel",
-      "type": "String",
+      "type": "text",
       "required": false,
-      "default": "\"Action\"",
-      "description": "Visible label on the CTA when `showButton=true`. Forwarded to the `{{> button}}` partial as its `label` argument (the partial paints it inside `.btn__label`).",
-      "figmaLabel": "CTA label"
+      "default": "Action",
+      "description": "",
+      "figmaLabel": "—"
     },
     {
       "name": "ctaHref",
       "fixtureKey": "ctaHref",
-      "type": "String",
+      "type": "text",
       "required": false,
-      "default": "null",
-      "description": "When set, the CTA renders as `<a class=\"btn btn--<style> btn--s\" href=\"{{ctaHref}}\">` instead of composing the `{{> button}}` partial (the partial only emits `<button>`, so anchor variants apply the canonical Button classes directly to the `<a>` element). Otherwise the CTA composes `{{> button}}` and renders as `<button type=\"button\">`.",
-      "figmaLabel": "CTA href"
+      "default": "—",
+      "description": "When set, CTA is `<a class=\"btn\">`",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "icon",
+      "fixtureKey": "icon",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Catalog key override",
+      "figmaLabel": "—"
     },
     {
       "name": "dismissLabel",
       "fixtureKey": "dismissLabel",
-      "type": "String",
+      "type": "text",
       "required": false,
-      "default": "\"Dismiss\"",
-      "description": "Bound to the dismiss button's `aria-label`. Always provide a localized value when shipping.",
-      "figmaLabel": "Dismiss label"
+      "default": "Dismiss",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "className",
+      "fixtureKey": "className",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Outer escape hatch",
+      "figmaLabel": "—"
     }
   ],
   "variants": [
     {
-      "axis": "layout",
-      "values": "`banner` (default — persistent inline alert, spans the full width of its container, CTA visible by default with dismiss collapsed) / `toast` (floating ephemeral alert with `--shadow-default`, dismiss visible by default with CTA optional, width capped before reaching the container) / `passive` (compact informational alert with neither CTA nor dismiss in the default state). Drives the `.c-alert--<layout>` BEM modifier."
+      "axis": "Tone",
+      "values": "info`, `critical`, `attention`, `success`, `dark`, `brand"
     },
     {
-      "axis": "hierarchy",
-      "values": "`low` (default — subtle tinted surface in `--color-signal-<tone>-subtle`, content in `--color-text-primary`) / `high` (strong tone fill in `--color-signal-<tone>`, content in `--color-text-inverse` for Info / Critical / Success / Dark; `--color-text-primary` for Attention so the high-contrast yellow surface still meets WCAG AA). Drives the `.c-alert--<hierarchy>` BEM modifier."
+      "axis": "Hierarchy",
+      "values": "low`, `high"
     },
     {
-      "axis": "tone",
-      "values": "`info` (default — General system information; statusInfo icon) / `critical` (Destructive or blocking error; statusCritical icon) / `attention` (Cautionary state; statusAttention icon) / `success` (Positive confirmation; statusOk icon) / `dark` (Neutral emphasis when the tone shouldn't suggest semantic state; info icon). Drives the `.c-alert--<tone>` BEM modifier."
-    },
-    {
-      "axis": "breakpoint",
-      "values": "`Mobile 375` / `Tablet 768` / `SmDesktop 1024` / `LgDesktop 1280` — Figma-only axis surfacing the breakpoint variant set; the code mirror handles responsive behaviour through Storybook's viewport toolbar + the LifeLock band mixins from [`tokens/breakpoints/_breakpoints.scss`](../../tokens/breakpoints/_breakpoints.scss), not through a code-side argType (per [`component-anatomy.mdc`](../../../../.cursor/rules/component-anatomy.mdc) Rule 3)."
+      "axis": "Width",
+      "values": "in-grid`, `full-bleed"
     }
   ],
   "tokensConsumed": [
-    "--border-radius-card",
-    "--space-3",
     "--space-4",
     "--space-5",
+    "--space-7",
+    "--space-8",
+    "--space-10",
+    "--space-13",
+    "--border-radius-0",
+    "--border-radius-l",
+    "--border-radius-control",
+    "--border-width-default",
+    "--color-border-focus",
+    "--font-family-primary",
+    "--font-size-body-base",
+    "--lineheight-body-base",
+    "--letterspacing-body-base",
+    "--font-weight-semibold",
+    "--font-size-body-sm",
+    "--lineheight-body-sm",
+    "--letterspacing-body-sm",
+    "--font-weight-regular",
+    "--color-text-primary",
+    "--color-text-inverse",
     "--color-signal-info",
     "--color-signal-info-subtle",
     "--color-signal-critical",
@@ -152,36 +207,22 @@
     "--color-signal-success-subtle",
     "--color-bg-muted",
     "--color-bg-inverse-strong",
-    "--color-text-primary",
-    "--color-text-inverse",
-    "--color-border-strong",
-    "--color-border-focus",
-    "--color-canvas-default",
-    "--font-family-primary",
-    "--font-size-body-base",
-    "--lineheight-body-base",
-    "--font-size-body-sm",
-    "--lineheight-body-sm",
-    "--font-weight-semibold",
-    "--font-weight-regular",
-    "--shadow-default",
-    "--border-width-default"
+    "--color-bg-brand",
+    "--color-bg-brand-soft",
+    "--shadow-default"
   ],
   "composes": [
     "icon",
     "button"
   ],
-  "hasBehavior": false,
+  "hasBehavior": true,
   "accessibility": [
-    "The alert root carries `role=\"status\"` (Low) or `role=\"alert\"`",
-    "`aria-live=\"polite\"` is set on every alert; High Critical overrides",
-    "The dismiss button carries an `aria-label` (default `\"Dismiss\"`)",
-    "The CTA button / anchor inherits standard `<button>` / `<a>`",
-    "The leading status icon is decorative by default (`aria-hidden=\"true\"`)",
-    "When `wholeClickable=true`, the entire surface becomes a single",
-    "Color contrast: every `(hierarchy × tone)` combination meets WCAG",
-    "Focus outline: 2 px `--color-border-focus` offset 2 px meets the"
+    "Icon is decorative (`aria-hidden`)",
+    "Dismiss is a real `<button>` with accessible label",
+    "Focus ring on interactive controls via `--color-border-focus`",
+    "Attention High keeps primary text for contrast",
+    "Never colour-only — icon + copy carry meaning"
   ],
   "storybookId": "patterns-alert",
-  "generatedAt": "2026-08-03T01:08:47.005Z"
+  "generatedAt": "2026-08-05T20:59:20.192Z"
 }

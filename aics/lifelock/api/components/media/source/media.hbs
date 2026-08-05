@@ -1,0 +1,72 @@
+{{!--
+  Molecules/Media — BEM root .c-media
+  Figma: Web-ODS Shared Library 3412:17329 / Spec 3443:11387.
+
+  Axes:
+    type   image | video | youtube
+    width  full | half  → .c-media--width-{full|half}
+    objectFit cover|contain|fill|none|scale-down → .c-media--fit-{…}
+--}}
+<div
+  class="c-media c-media--type-{{#if type}}{{lower type}}{{else}}image{{/if}} c-media--width-{{#if width}}{{lower width}}{{else}}full{{/if}} c-media--fit-{{#if objectFit}}{{lower objectFit}}{{else}}cover{{/if}}{{#if className}} {{className}}{{/if}}"
+  {{#if aspectRatio}}style="aspect-ratio: {{aspectRatio}};"{{/if}}
+>
+  {{#if (eq (lower type) "video")}}
+    {{#if src}}
+      <video
+        class="c-media__media"
+        src="{{src}}"
+        {{#if poster}}poster="{{poster}}"{{/if}}
+        {{#unless (eq controls false)}}controls{{/unless}}
+        {{#if autoPlay}}autoplay{{/if}}
+        {{#if muted}}muted{{/if}}
+        {{#if loop}}loop{{/if}}
+        playsinline
+      ></video>
+    {{else}}
+      <div class="c-media__placeholder" aria-hidden="true">
+        <img class="c-media__placeholder-glyph" src="/assets/media/play-overlay.svg" alt="" />
+      </div>
+    {{/if}}
+  {{else if (eq (lower type) "youtube")}}
+    {{#if url}}
+      <iframe
+        class="c-media__media"
+        src="{{youtubeEmbedUrl url}}"
+        title="{{#if title}}{{title}}{{else}}YouTube video{{/if}}"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        {{#unless (eq allowFullScreen false)}}allowfullscreen{{/unless}}
+        referrerpolicy="strict-origin-when-cross-origin"
+      ></iframe>
+    {{else if videoId}}
+      <iframe
+        class="c-media__media"
+        src="{{youtubeEmbedUrl videoId}}"
+        title="{{#if title}}{{title}}{{else}}YouTube video{{/if}}"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        {{#unless (eq allowFullScreen false)}}allowfullscreen{{/unless}}
+        referrerpolicy="strict-origin-when-cross-origin"
+      ></iframe>
+    {{else}}
+      <div class="c-media__placeholder" aria-hidden="true">
+        <img class="c-media__placeholder-glyph" src="/assets/media/play-overlay.svg" alt="" />
+      </div>
+    {{/if}}
+  {{else}}
+    {{#if src}}
+      <img
+        class="c-media__media"
+        src="{{src}}"
+        alt="{{#if alt}}{{alt}}{{/if}}"
+        loading="lazy"
+        decoding="async"
+      />
+    {{else}}
+      <div class="c-media__placeholder" aria-hidden="true">
+        <img class="c-media__placeholder-glyph" src="/assets/media/placeholder.svg" alt="" />
+      </div>
+    {{/if}}
+  {{/if}}
+</div>

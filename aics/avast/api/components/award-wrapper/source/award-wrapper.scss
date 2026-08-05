@@ -45,7 +45,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-disabled-bg, #b3b3b3);
+  /* Figma Color/Disabled/secondary — theme alias is --color-disabled-border */
+  background-color: var(--color-disabled-border, #b3b3b3);
   padding: var(--space-0, 0);
 }
 

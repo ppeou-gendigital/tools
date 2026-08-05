@@ -1,0 +1,196 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "media",
+  "status": "published",
+  "summary": "Single media viewport (image, MP4 video, or YouTube embed) inside a fixed 16:9 box. Figma: [Molecule / Media](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3412-17329&m=dev) (`3412:17329`). Spec Frame [`3443:11387`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3443-11387&m=dev). Component set `3438:54`.",
+  "specUrl": "/api/components/media/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/media/spec.md",
+    "hbs": "/api/components/media/source/media.hbs",
+    "scss": "/api/components/media/source/media.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "3412:17329",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=3412-17329&m=dev"
+  },
+  "rootClass": "c-media",
+  "bemClasses": [
+    "c-media"
+  ],
+  "properties": [
+    {
+      "name": "type",
+      "fixtureKey": "type",
+      "type": "enum",
+      "required": true,
+      "default": "image",
+      "description": "`image` \\",
+      "figmaLabel": "Type"
+    },
+    {
+      "name": "width",
+      "fixtureKey": "width",
+      "type": "enum",
+      "required": false,
+      "default": "full",
+      "description": "`full` \\",
+      "figmaLabel": "Width"
+    },
+    {
+      "name": "aspectRatio",
+      "fixtureKey": "aspectRatio",
+      "type": "text",
+      "required": false,
+      "default": "16 / 9",
+      "description": "CSS aspect-ratio string",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "objectFit",
+      "fixtureKey": "objectFit",
+      "type": "enum",
+      "required": false,
+      "default": "cover",
+      "description": "`cover` \\",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "src",
+      "fixtureKey": "src",
+      "type": "image-url",
+      "required": false,
+      "default": "\"\"",
+      "description": "Required for image/video when not placeholder",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "alt",
+      "fixtureKey": "alt",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Required for meaningful images",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "poster",
+      "fixtureKey": "poster",
+      "type": "image-url",
+      "required": false,
+      "default": "\"\"",
+      "description": "Video still",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "controls",
+      "fixtureKey": "controls",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "Video",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "autoPlay",
+      "fixtureKey": "autoPlay",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "Pair with `muted`",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "muted",
+      "fixtureKey": "muted",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "Video",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "loop",
+      "fixtureKey": "loop",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "Video",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "url",
+      "fixtureKey": "url",
+      "type": "url",
+      "required": false,
+      "default": "\"\"",
+      "description": "YouTube URL",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "videoId",
+      "fixtureKey": "videoId",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Raw 11-char YouTube id",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "title",
+      "fixtureKey": "title",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "iframe title (YouTube)",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "allowFullScreen",
+      "fixtureKey": "allowFullScreen",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "YouTube",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "className",
+      "fixtureKey": "className",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Outer surface",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Type",
+      "values": "image`, `video`, `youtube"
+    },
+    {
+      "axis": "Width",
+      "values": "`full` (100%), `half` (100% → 50% from md)"
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-subtle",
+    "--border-radius-l",
+    "--breakpoint-md"
+  ],
+  "composes": [],
+  "hasBehavior": false,
+  "accessibility": [
+    "Native `img` / `video` / `iframe` only — never a div-as-media.",
+    "Images require meaningful `alt` (or `\"\"` when decorative).",
+    "YouTube iframe requires descriptive `title`.",
+    "No custom keyboard handlers; never `outline: none`.",
+    "Autoplay is opt-in and should be muted."
+  ],
+  "storybookId": "molecules-media",
+  "generatedAt": "2026-08-05T20:59:30.540Z"
+}

@@ -1,0 +1,90 @@
+{{!--
+  Patterns/Award item — BEM root .c-award-item
+  Figma: Web-ODS Shared Library 2355:19639 / Spec Frame 3882:473.
+
+  Axes:
+    imageRatio  1:1 | 9:16 | 16:9  → passed to {{> award-wrapper}}
+    layout      quote | title-rating | compact | compact-stacked |
+                rating-stacked | title-description
+
+  Stars: inline {{> icon}} until RatingTeaser / RatingInline onboard.
+--}}
+<div
+  class="c-award-item c-award-item--layout-{{#if layout}}{{layout}}{{else}}quote{{/if}} c-award-item--ratio-{{#if (eq imageRatio "16:9")}}16-9{{else}}{{#if (eq imageRatio "9:16")}}9-16{{else}}1-1{{/if}}{{/if}}{{#if className}} {{className}}{{/if}}"
+>
+  <div class="c-award-item__media">
+    {{> award-wrapper
+      imageRatio=imageRatio
+      src=src
+      alt=alt
+    }}
+  </div>
+
+  {{#unless (eq layout "rating-stacked")}}
+    <div class="c-award-item__content">
+      {{#if (eq layout "quote")}}
+        {{#if quoteText}}
+          <p class="c-award-item__quote">{{quoteText}}</p>
+        {{/if}}
+        {{#if source}}
+          <p class="c-award-item__source">{{source}}</p>
+        {{/if}}
+        {{#if showRating}}
+          <div class="c-award-item__rating" role="img" aria-label="{{#if ratingValue}}{{ratingValue}}{{else}}5{{/if}} out of 5 stars">
+            {{> icon name="generic/simple-star-filled" size="24" color="current" decorative=true}}
+            {{> icon name="generic/simple-star-filled" size="24" color="current" decorative=true}}
+            {{> icon name="generic/simple-star-filled" size="24" color="current" decorative=true}}
+            {{> icon name="generic/simple-star-filled" size="24" color="current" decorative=true}}
+            {{> icon name="generic/simple-star-filled" size="24" color="current" decorative=true}}
+          </div>
+        {{/if}}
+      {{/if}}
+
+      {{#if (eq layout "title-rating")}}
+        {{#if year}}
+          <p class="c-award-item__year">{{year}}</p>
+        {{/if}}
+        {{#if title}}
+          <p class="c-award-item__title">{{title}}</p>
+        {{/if}}
+        {{#if showRating}}
+          <div class="c-award-item__rating" role="img" aria-label="{{#if ratingValue}}{{ratingValue}}{{else}}5{{/if}} out of 5 stars">
+            {{> icon name="generic/simple-star-filled" size="24" color="current" decorative=true}}
+            {{> icon name="generic/simple-star-filled" size="24" color="current" decorative=true}}
+            {{> icon name="generic/simple-star-filled" size="24" color="current" decorative=true}}
+            {{> icon name="generic/simple-star-filled" size="24" color="current" decorative=true}}
+            {{> icon name="generic/simple-star-filled" size="24" color="current" decorative=true}}
+          </div>
+        {{/if}}
+      {{/if}}
+
+      {{#if (eq layout "compact")}}
+        {{#if title}}
+          <p class="c-award-item__title">{{title}}</p>
+        {{/if}}
+      {{/if}}
+
+      {{#if (eq layout "compact-stacked")}}
+        {{#if title}}
+          <p class="c-award-item__title">{{title}}</p>
+        {{/if}}
+      {{/if}}
+
+      {{#if (eq layout "title-description")}}
+        {{#if title}}
+          <p class="c-award-item__title">{{title}}</p>
+        {{/if}}
+        {{#if description}}
+          <p class="c-award-item__description">{{description}}</p>
+        {{/if}}
+      {{/if}}
+    </div>
+  {{/unless}}
+
+  {{#if (eq layout "rating-stacked")}}
+    <div class="c-award-item__rating c-award-item__rating--inline" role="img" aria-label="{{#if ratingValue}}{{ratingValue}}{{else}}5.0{{/if}} out of 5 stars">
+      <span class="c-award-item__score" aria-hidden="true">{{#if ratingValue}}{{ratingValue}}{{else}}5.0{{/if}}</span>
+      {{> icon name="generic/simple-star-filled" size="24" color="current" decorative=true}}
+    </div>
+  {{/if}}
+</div>

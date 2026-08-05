@@ -1,0 +1,31 @@
+{{!--
+  Patterns/Trustpilot — review cell .c-trustpilot
+  Figma: Pattern / Trustpilot 2356:19641 — cell 2500:4244 — Spec 3969:12883
+
+  Composes rating (type=trustpilot, score/count hidden).
+  Pass `ratingArgs` object from story helper for the nested partial.
+--}}
+<article
+  class="c-trustpilot{{#if className}} {{className}}{{/if}}"
+  data-component="trustpilot"
+>
+  <h3 class="c-trustpilot__title">{{#if title}}{{title}}{{else}}Quote title{{/if}}</h3>
+  {{#unless (eq showProductLabel false)}}
+    <p class="c-trustpilot__product">{{#if productLabel}}{{productLabel}}{{else}}Product{{/if}}</p>
+  {{/unless}}
+  <div class="c-trustpilot__rating">
+    {{#if ratingArgs}}
+      {{> rating ratingArgs}}
+    {{/if}}
+  </div>
+  <p class="c-trustpilot__meta">
+    <span class="c-trustpilot__reviewer">{{#if reviewerLine}}{{reviewerLine}}{{else}}Reviewer · Date{{/if}}</span>
+    {{#unless (eq showVerified false)}}
+      <span class="c-trustpilot__sep" aria-hidden="true"> · </span>
+      <span class="c-trustpilot__verified">{{#if verifiedLabel}}{{verifiedLabel}}{{else}}Verified purchaser{{/if}}</span>
+    {{/unless}}
+  </p>
+  {{#unless (eq showQuote false)}}
+    <p class="c-trustpilot__quote">{{#if quoteBody}}{{quoteBody}}{{else}}Customer quote body text goes here.{{/if}}</p>
+  {{/unless}}
+</article>

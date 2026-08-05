@@ -1515,7 +1515,158 @@
       ],
       "$type": "color",
       "$value": "linear-gradient(180deg, var(--color-avast-bright-orange) 0%, var(--color-avast-yellow) 100%)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-input",
+      "path": [
+        "bg",
+        "input"
+      ],
+      "$type": "color",
+      "$value": "var(--color-bg-default)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-bg-input-disabled",
+      "path": [
+        "bg",
+        "input",
+        "disabled"
+      ],
+      "$type": "color",
+      "$value": "var(--color-disabled-bg)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-default",
+      "path": [
+        "border",
+        "input",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "var(--color-neutral-30)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-hover",
+      "path": [
+        "border",
+        "input",
+        "hover"
+      ],
+      "$type": "color",
+      "$value": "var(--color-neutral-50)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-focus",
+      "path": [
+        "border",
+        "input",
+        "focus"
+      ],
+      "$type": "color",
+      "$value": "var(--color-border-focus)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-focus-glow",
+      "path": [
+        "border",
+        "input",
+        "focus",
+        "glow"
+      ],
+      "$type": "color",
+      "$value": "color-mix(\n    in srgb,\n    var(--color-border-focus) 24%,\n    transparent\n  )"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-error",
+      "path": [
+        "border",
+        "input",
+        "error"
+      ],
+      "$type": "color",
+      "$value": "var(--color-signal-critical)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-error-glow",
+      "path": [
+        "border",
+        "input",
+        "error",
+        "glow"
+      ],
+      "$type": "color",
+      "$value": "var(--color-signal-critical-subtle)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-disabled",
+      "path": [
+        "border",
+        "input",
+        "disabled"
+      ],
+      "$type": "color",
+      "$value": "var(--color-disabled-border)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-border-input-divider",
+      "path": [
+        "border",
+        "input",
+        "divider"
+      ],
+      "$type": "color",
+      "$value": "var(--color-neutral-20)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-placeholder",
+      "path": [
+        "text",
+        "placeholder"
+      ],
+      "$type": "color",
+      "$value": "var(--color-disabled-text)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-default",
+      "path": [
+        "text",
+        "default"
+      ],
+      "$type": "color",
+      "$value": "var(--color-text-primary)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-disabled",
+      "path": [
+        "text",
+        "disabled"
+      ],
+      "$type": "color",
+      "$value": "var(--color-disabled-text)"
+    },
+    {
+      "family": "colors",
+      "cssVar": "--color-text-error",
+      "path": [
+        "text",
+        "error"
+      ],
+      "$type": "color",
+      "$value": "var(--color-signal-critical)"
     }
   ],
-  "generatedAt": "2026-08-03T01:08:35.523Z"
+  "generatedAt": "2026-08-05T20:59:07.364Z"
 }

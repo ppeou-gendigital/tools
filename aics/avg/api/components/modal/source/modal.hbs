@@ -1,0 +1,83 @@
+{{!--
+  Patterns/Modal — BEM root .c-modal
+  Figma: Modal set 1344:18518 / Overview 1359:21341 / page 539:28427.
+
+  Props:
+    variant          standard | scrollable | media
+    size             sm | md | lg
+    title            string
+    body             string
+    mediaHtml        optional HTML for media variant
+    primaryLabel     string (default Continue)
+    secondaryLabel   string (default Cancel)
+    showSecondary    boolean (default true)
+    showClose        boolean (default true)
+    open             boolean — omit hidden when true
+    id               string — required for trigger aria-controls
+    labelledById     optional override for aria-labelledby
+    describedById    optional override for aria-describedby
+    className
+--}}
+<div
+  class="c-modal c-modal--{{#if variant}}{{lower variant}}{{else}}standard{{/if}} c-modal--{{#if size}}{{lower size}}{{else}}md{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="modal"
+  role="dialog"
+  aria-modal="true"
+  {{#if id}}id="{{id}}"{{/if}}
+  aria-labelledby="{{#if labelledById}}{{labelledById}}{{else}}{{#if id}}{{id}}-title{{else}}modal-title{{/if}}{{/if}}"
+  {{#if body}}aria-describedby="{{#if describedById}}{{describedById}}{{else}}{{#if id}}{{id}}-body{{else}}modal-body{{/if}}{{/if}}"{{/if}}
+  {{#unless open}}hidden{{/unless}}
+>
+  <div class="c-modal__backdrop" data-modal-backdrop tabindex="-1"></div>
+  <div class="c-modal__card" role="document" data-modal-card>
+    <div class="c-modal__header">
+      <h2 class="c-modal__title" id="{{#if id}}{{id}}-title{{else}}modal-title{{/if}}">
+        {{#if title}}{{title}}{{else}}Modal title{{/if}}
+      </h2>
+      {{#unless (eq showClose false)}}
+        <button
+          type="button"
+          class="c-modal__close"
+          data-modal-close
+          aria-label="{{#if closeLabel}}{{closeLabel}}{{else}}Close{{/if}}"
+        >
+          {{> icon name="actions/simple-close" size="20" color="current" decorative=true}}
+        </button>
+      {{/unless}}
+    </div>
+
+    {{#if (eq (lower variant) "media")}}
+      <div class="c-modal__media">
+        {{#if mediaHtml}}
+          {{{mediaHtml}}}
+        {{else}}
+          <div class="c-modal__media-placeholder" aria-hidden="true"></div>
+        {{/if}}
+      </div>
+    {{/if}}
+
+    {{#if body}}
+      <div
+        class="c-modal__body{{#if (eq (lower variant) "scrollable")}} c-modal__body--scroll{{/if}}"
+        id="{{#if id}}{{id}}-body{{else}}modal-body{{/if}}"
+      >
+        <p class="c-modal__description">{{body}}</p>
+      </div>
+    {{/if}}
+
+    <div class="c-modal__footer">
+      {{#unless (eq showSecondary false)}}
+        {{#if secondaryLabel}}
+          {{> button style="text" size="m" label=secondaryLabel className="c-modal__action c-modal__action--secondary"}}
+        {{else}}
+          {{> button style="text" size="m" label="Cancel" className="c-modal__action c-modal__action--secondary"}}
+        {{/if}}
+      {{/unless}}
+      {{#if primaryLabel}}
+        {{> button style="primary" size="m" label=primaryLabel className="c-modal__action c-modal__action--primary"}}
+      {{else}}
+        {{> button style="primary" size="m" label="Continue" className="c-modal__action c-modal__action--primary"}}
+      {{/if}}
+    </div>
+  </div>
+</div>

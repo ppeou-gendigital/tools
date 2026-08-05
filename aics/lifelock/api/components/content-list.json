@@ -1,0 +1,181 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "content-list",
+  "status": "published",
+  "summary": "Pattern for bulleted, numbered, nested, and control-led list rows. Figma: [Pattern / ContentList](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3483-3503&m=dev) (page `3483:3503`; Spec Frames Unordered `3862:323`, Ordered `3863:370`, Nested `3864:413`, Content list item `3861:272`; item set `3483:3631`).",
+  "specUrl": "/api/components/content-list/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/content-list/spec.md",
+    "hbs": "/api/components/content-list/source/content-list.hbs",
+    "scss": "/api/components/content-list/source/content-list.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "3483:3503",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=3483-3503&m=dev"
+  },
+  "rootClass": "c-content-list",
+  "bemClasses": [
+    "c-content-list",
+    "c-switch",
+    "c-checkbox",
+    "c-radio"
+  ],
+  "properties": [
+    {
+      "name": "listType",
+      "fixtureKey": "listType",
+      "type": "enum",
+      "required": true,
+      "default": "unordered",
+      "description": "→ `<ul>` vs `<ol>`; nested still picks root tag",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "marker",
+      "fixtureKey": "marker",
+      "type": "enum",
+      "required": false,
+      "default": "bullet",
+      "description": "`bullet` \\",
+      "figmaLabel": "marker"
+    },
+    {
+      "name": "iconName",
+      "fixtureKey": "iconName",
+      "type": "catalog-key",
+      "required": false,
+      "default": "status/simple-checkmark-small",
+      "description": "Shared default for icon-marker rows when item omits `iconName`",
+      "figmaLabel": "icon"
+    },
+    {
+      "name": "surfaced",
+      "fixtureKey": "surfaced",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "Card chrome: `--color-bg-subtle`, `--space-7` pad, `--border-radius-l`",
+      "figmaLabel": "surfaced"
+    },
+    {
+      "name": "items",
+      "fixtureKey": "items",
+      "type": "array",
+      "required": true,
+      "default": "—",
+      "description": "Content list item rows",
+      "figmaLabel": "items"
+    },
+    {
+      "name": "items[].text",
+      "fixtureKey": "items[].text",
+      "type": "plain-text",
+      "required": true,
+      "default": "—",
+      "description": "Body copy",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "items[].type",
+      "fixtureKey": "items[].type",
+      "type": "enum",
+      "required": false,
+      "default": "inherits listType",
+      "description": "`unordered` \\",
+      "figmaLabel": "Type"
+    },
+    {
+      "name": "items[].iconName",
+      "fixtureKey": "items[].iconName",
+      "type": "catalog-key",
+      "required": false,
+      "default": "—",
+      "description": "Per-row icon override",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "items[].checked",
+      "fixtureKey": "items[].checked",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "Switch / checkbox / radio",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "items[].children",
+      "fixtureKey": "items[].children",
+      "type": "array",
+      "required": false,
+      "default": "—",
+      "description": "Nested child items (nested arrangement)",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "items[].childrenListType",
+      "fixtureKey": "items[].childrenListType",
+      "type": "enum",
+      "required": false,
+      "default": "unordered",
+      "description": "Child list tag when `children` present",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "className",
+      "fixtureKey": "className",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Outer escape hatch",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "listType",
+      "values": "unordered`, `ordered`, `nested"
+    },
+    {
+      "axis": "marker",
+      "values": "bullet`, `icon"
+    },
+    {
+      "axis": "surfaced",
+      "values": "true`, `false"
+    }
+  ],
+  "tokensConsumed": [
+    "--color-text-primary",
+    "--color-bg-subtle",
+    "--font-family-primary",
+    "--font-size-body-sm",
+    "--lineheight-body-sm",
+    "--letterspacing-body-sm",
+    "--font-weight-regular",
+    "--space-0",
+    "--space-3",
+    "--space-7",
+    "--border-radius-l"
+  ],
+  "composes": [
+    "icon",
+    "switch",
+    "checkbox",
+    "radio"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "Real `<ul>` / `<ol>` + `<li>` — never stacked `<div>`s (including Surfaced).",
+    "Text / bullet markers are decorative; native list semantics announce count.",
+    "Icon markers are `aria-hidden=\"true\"`; meaning lives in body text.",
+    "Control rows use the composed molecule’s native `<input>` + label association (`accessibleLabel` when needed).",
+    "Contrast: Body sm on white / `--color-bg-subtle` clears WCAG AA.",
+    "No motion."
+  ],
+  "storybookId": "patterns-content-list",
+  "generatedAt": "2026-08-05T20:59:20.192Z"
+}

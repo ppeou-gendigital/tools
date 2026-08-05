@@ -1,0 +1,121 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "icon",
+  "status": "published",
+  "summary": "Reusable icon primitive that paints an SVG silhouette in `currentColor` via CSS `mask-image`. Mirrors the canonical [Web-ODS Shared Library → Molecule / Icon Wrapper](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=984-863&m=dev) (`984:863`) — sticker sheet [`984:2871`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=984-2871&m=dev), Spec Frame [`3057:523`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3057-523&m=dev).",
+  "specUrl": "/api/components/icon/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/icon/spec.md",
+    "hbs": "/api/components/icon/source/icon.hbs",
+    "scss": "/api/components/icon/source/icon.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "984:863",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=984-863&m=dev"
+  },
+  "rootClass": "c-icon",
+  "bemClasses": [
+    "c-icon"
+  ],
+  "properties": [
+    {
+      "name": "name",
+      "fixtureKey": "name",
+      "type": "String",
+      "required": true,
+      "default": "—",
+      "description": "Catalog key.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"24\"",
+      "description": "One of the eleven px steps.",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "color",
+      "fixtureKey": "color",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"current\"",
+      "description": "Semantic paint or inherit.",
+      "figmaLabel": "Colour"
+    },
+    {
+      "name": "frame",
+      "fixtureKey": "frame",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"none\"",
+      "description": "Transparent positioning envelope.",
+      "figmaLabel": "Frame"
+    },
+    {
+      "name": "decorative",
+      "fixtureKey": "decorative",
+      "type": "Boolean",
+      "required": false,
+      "default": "true",
+      "description": "`aria-hidden` vs `role=\"img\"`.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "accessibleLabel",
+      "fixtureKey": "accessibleLabel",
+      "type": "String",
+      "required": false,
+      "default": "\"\"",
+      "description": "`aria-label` when `decorative=false`.",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "name",
+      "values": "Catalog keys `\"<category>/<simple\\"
+    },
+    {
+      "axis": "size",
+      "values": "`16` / `20` / `24` / `32` / `40` / `48` / `64` / `72` / `80` / `96` / `144` → `.c-icon--<size>`."
+    },
+    {
+      "axis": "color",
+      "values": "`current` / `default` / `brand` / `accent` / `inverse` / `success` / `critical` → `.c-icon--<color>`."
+    },
+    {
+      "axis": "frame",
+      "values": "`none` (default) / `square` / `circle` / `vertical-rectangle` / `horizontal-rectangle` → `.c-icon--<frame>`."
+    },
+    {
+      "axis": "decorative",
+      "values": "`true` (default) / `false`."
+    }
+  ],
+  "tokensConsumed": [
+    "--icon-size",
+    "--icon-source",
+    "--color-text-primary",
+    "--color-text-brand",
+    "--color-text-accent",
+    "--color-text-inverse",
+    "--color-signal-success",
+    "--color-signal-critical"
+  ],
+  "composes": [],
+  "hasBehavior": false,
+  "accessibility": [
+    "`decorative=true` (default) → `aria-hidden=\"true\"`.",
+    "`decorative=false` → `role=\"img\"` + required `accessibleLabel`.",
+    "Authors verify contrast at the rendered size; the component does not"
+  ],
+  "storybookId": "molecules-icon",
+  "generatedAt": "2026-08-05T20:59:13.518Z"
+}

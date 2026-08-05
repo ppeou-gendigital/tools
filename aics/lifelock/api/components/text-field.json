@@ -4,7 +4,7 @@
   "subtype": "pattern",
   "librarySource": "brand",
   "name": "text-field",
-  "status": "draft",
+  "status": "published",
   "summary": "A labelled text-entry pattern built on native `<input>` and `<select>` elements. Mirrors the [Web-ODS Shared Library → Text field](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=698-47055&m=dev) (`698:47055`) under the LifeLock mode pick. The native HTML intentionally diverges from the Figma div / instance tree — visual + token fidelity is the bar, not structural fidelity.",
   "specUrl": "/api/components/text-field/spec.md",
   "sourceFiles": {
@@ -254,5 +254,5 @@
     "WCAG: resting + focus borders meet AA non-text contrast against `--color-bg-input`; disabled paint retains a visible outline per WCAG 2.2 § 1.4.11. Per the Figma guidance frame (`984:2201`), inputs should sit on the primary background — avoid placing them on accent / status surfaces where the border contrast is not guaranteed."
   ],
   "storybookId": "patterns-text-field",
-  "generatedAt": "2026-08-03T01:08:47.005Z"
+  "generatedAt": "2026-08-05T20:59:20.192Z"
 }

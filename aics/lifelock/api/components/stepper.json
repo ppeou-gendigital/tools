@@ -4,8 +4,8 @@
   "subtype": "molecule",
   "librarySource": "brand",
   "name": "stepper",
-  "status": "draft",
-  "summary": "Ordered multi-step progress indicator for checkout flows, onboarding wizards, and any experience that needs to show where the user is in a sequence of up to six steps. Mirrors the LifeLock-themed master variant set on [Web-ODS Shared Library / 1386:867](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1386-867&m=dev) and the companion [Spec Frame `1386:1325`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1386-1325&m=dev).",
+  "status": "published",
+  "summary": "Ordered multi-step progress indicator for checkout flows, onboarding wizards, and any experience that needs to show where the user is in a sequence of up to six steps. Mirrors the Shared Library master on [Web-ODS Shared Library / 1386:867](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1386-867&m=dev) and the companion [Spec Frame `3067:548`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3067-548&m=dev).",
   "specUrl": "/api/components/stepper/spec.md",
   "sourceFiles": {
     "spec": "/api/components/stepper/spec.md",
@@ -83,7 +83,7 @@
       "type": "VARIANT",
       "required": false,
       "default": "\"default\"",
-      "description": "One of `default` / `active` / `complete` for steps 1–6. Active step should carry `aria-current=\"step\"`.",
+      "description": "One of `default` / `active` / `complete` for steps 1–6.",
       "figmaLabel": "State (per step)"
     },
     {
@@ -101,7 +101,7 @@
       "type": "BOOLEAN",
       "required": false,
       "default": "false",
-      "description": "When `true`, renders the label slot below (horizontal) or beside (vertical) the indicator.",
+      "description": "When `true`, renders the label slot.",
       "figmaLabel": "Show label (per step)"
     },
     {
@@ -128,7 +128,7 @@
       "type": "TEXT",
       "required": false,
       "default": "\"default\"",
-      "description": "Helper-derived. Per-step state (`default` / `active` / `complete`) the stories layer flattens from `step<N>State`; drives `.c-stepper__step--state-<state>`.",
+      "description": "Helper-derived.",
       "figmaLabel": "—"
     },
     {
@@ -137,7 +137,7 @@
       "type": "BOOLEAN",
       "required": false,
       "default": "false",
-      "description": "Helper-derived from `step<N>State === \"active\"`; adds `.c-stepper__step--current` + `aria-current=\"step\"`.",
+      "description": "Helper-derived; adds `aria-current=\"step\"`.",
       "figmaLabel": "—"
     },
     {
@@ -146,7 +146,7 @@
       "type": "BOOLEAN",
       "required": false,
       "default": "false",
-      "description": "Helper-derived from `step<N>ShowLabel`; gates the label slot.",
+      "description": "Helper-derived.",
       "figmaLabel": "—"
     },
     {
@@ -155,7 +155,7 @@
       "type": "TEXT",
       "required": false,
       "default": "\"Label\"",
-      "description": "Helper-derived from `step<N>Label`; the visible label text.",
+      "description": "Helper-derived.",
       "figmaLabel": "—"
     },
     {
@@ -164,7 +164,7 @@
       "type": "BOOLEAN",
       "required": false,
       "default": "—",
-      "description": "Helper-derived. Emits the decorative connector after every step except the last.",
+      "description": "Helper-derived.",
       "figmaLabel": "—"
     },
     {
@@ -173,7 +173,7 @@
       "type": "TEXT",
       "required": false,
       "default": "—",
-      "description": "Helper-derived from `step<N>Number`; the indicator digit for non-complete steps.",
+      "description": "Helper-derived.",
       "figmaLabel": "—"
     }
   ],
@@ -184,11 +184,11 @@
     },
     {
       "axis": "`state` (per step)",
-      "values": "`default` / `active` / `complete`. Drives `.c-stepper__step--state-<state>`. Not a Figma variant axis on the Stepper container — applied per Step instance (`1386:803`). Interaction is presentation-only; the consumer sets which step is active by passing markup/state props."
+      "values": "`default` / `active` / `complete`. Drives `.c-stepper__step--state-<state>`. Applied per Step instance (`1386:803`)."
     },
     {
       "axis": "showStep2` … `showStep6",
-      "values": "Boolean visibility toggles on the Stepper container (`1386:867`). Step 1 is always visible. Hidden steps are omitted from the DOM and the accessibility tree."
+      "values": "Boolean visibility toggles. Step 1 is always visible. Hidden steps are omitted from the DOM."
     }
   ],
   "tokensConsumed": [
@@ -196,8 +196,8 @@
     "--color-bg-inverse",
     "--color-bg-inverse-strong",
     "--color-border-brand",
-    "--color-border-secondary",
-    "--color-border-tertiary",
+    "--color-border-strong",
+    "--color-border-subtle",
     "--color-text-primary",
     "--color-text-secondary",
     "--color-text-inverse",
@@ -209,7 +209,7 @@
     "--font-size-tagline-sm",
     "--lineheight-tagline-sm",
     "--letterspacing-tagline-sm",
-    "--border-width-default",
+    "--border-width-s",
     "--border-width-hairline",
     "--space-0",
     "--space-3",
@@ -223,10 +223,9 @@
     "Root renders as `<ol>`; each step is `<li>`.",
     "The active step carries `aria-current=\"step\"`.",
     "When step labels are hidden, supply `ariaLabel` on the root.",
-    "Connector lines are `aria-hidden=\"true\"` decorative elements.",
-    "Steps hidden via `showStep2` … `showStep6` are removed from the DOM",
-    "Complete-state checkmark uses the icon partial with"
+    "Connector lines are `aria-hidden=\"true\"`.",
+    "Complete-state checkmark uses `decorative=true`."
   ],
   "storybookId": "molecules-stepper",
-  "generatedAt": "2026-08-03T01:08:47.005Z"
+  "generatedAt": "2026-08-05T20:59:20.192Z"
 }

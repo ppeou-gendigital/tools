@@ -1,0 +1,198 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "sheet",
+  "status": "published",
+  "summary": "Edge sheet and bottom drawer pattern. Mirrors [Pattern / Sheets + Drawer](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28430&m=dev) (`539:28430`) and Spec Frame [`.Sheet · spec`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4522-67&m=dev) (`4522:67`). Bottom layout is the Drawer; one BEM root `.c-sheet`.",
+  "specUrl": "/api/components/sheet/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/sheet/spec.md",
+    "hbs": "/api/components/sheet/source/sheet.hbs",
+    "scss": "/api/components/sheet/source/sheet.scss",
+    "js": "/api/components/sheet/source/sheet.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "539:28430",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=539-28430&m=dev"
+  },
+  "rootClass": "c-sheet",
+  "bemClasses": [
+    "c-sheet"
+  ],
+  "properties": [
+    {
+      "name": "layout",
+      "fixtureKey": "layout",
+      "type": "Enum",
+      "required": true,
+      "default": "\"left\"",
+      "description": "",
+      "figmaLabel": "Layout"
+    },
+    {
+      "name": "mode",
+      "fixtureKey": "mode",
+      "type": "Enum",
+      "required": true,
+      "default": "\"modal\"",
+      "description": "",
+      "figmaLabel": "Mode"
+    },
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "Enum",
+      "required": true,
+      "default": "\"compact\"",
+      "description": "Side: 280/360/480. Bottom max-width 360/600/1200",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "cta",
+      "fixtureKey": "cta",
+      "type": "Enum",
+      "required": true,
+      "default": "\"two\"",
+      "description": "",
+      "figmaLabel": "CTA"
+    },
+    {
+      "name": "buttonLayout",
+      "fixtureKey": "buttonLayout",
+      "type": "Enum",
+      "required": false,
+      "default": "\"inline\"",
+      "description": "Bottom only",
+      "figmaLabel": "Button layout"
+    },
+    {
+      "name": "title",
+      "fixtureKey": "title",
+      "type": "String",
+      "required": false,
+      "default": "\"Sheet title\"",
+      "description": "",
+      "figmaLabel": "Title"
+    },
+    {
+      "name": "body",
+      "fixtureKey": "body",
+      "type": "String",
+      "required": false,
+      "default": "—",
+      "description": "Or `bodyHtml`",
+      "figmaLabel": "Body"
+    },
+    {
+      "name": "supportingText",
+      "fixtureKey": "supportingText",
+      "type": "String",
+      "required": false,
+      "default": "\"\"",
+      "description": "",
+      "figmaLabel": "Supporting text"
+    },
+    {
+      "name": "primaryLabel",
+      "fixtureKey": "primaryLabel",
+      "type": "String",
+      "required": false,
+      "default": "\"Apply\"",
+      "description": "",
+      "figmaLabel": "Primary"
+    },
+    {
+      "name": "secondaryLabel",
+      "fixtureKey": "secondaryLabel",
+      "type": "String",
+      "required": false,
+      "default": "\"Cancel\"",
+      "description": "When CTA=two",
+      "figmaLabel": "Secondary"
+    },
+    {
+      "name": "open",
+      "fixtureKey": "open",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Code",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "id",
+      "fixtureKey": "id",
+      "type": "String",
+      "required": false,
+      "default": "—",
+      "description": "Code",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Layout",
+      "values": "`left` / `right` / `bottom` (drawer)"
+    },
+    {
+      "axis": "Mode",
+      "values": "modal` / `non-modal"
+    },
+    {
+      "axis": "Size",
+      "values": "compact` / `medium` / `large"
+    },
+    {
+      "axis": "CTA",
+      "values": "two` / `one` / `none"
+    },
+    {
+      "axis": "Button layout",
+      "values": "`inline` / `stacked` — **bottom only**"
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-primary",
+    "--color-bg-inverse",
+    "--color-text-primary",
+    "--color-text-secondary",
+    "--color-text-accent",
+    "--color-border-subtle",
+    "--color-border-focus",
+    "--border-radius-l",
+    "--border-radius-s",
+    "--border-radius-pill",
+    "--border-width-s",
+    "--space-1",
+    "--space-2",
+    "--space-3",
+    "--space-5",
+    "--space-7",
+    "--font-family-primary",
+    "--font-size-h6",
+    "--lineheight-h6",
+    "--letterspacing-h6",
+    "--font-weight-semibold",
+    "--font-size-body-base",
+    "--lineheight-body-base",
+    "--letterspacing-body-base",
+    "--font-size-body-sm",
+    "--lineheight-body-sm",
+    "--font-weight-regular"
+  ],
+  "composes": [
+    "button",
+    "icon"
+  ],
+  "hasBehavior": true,
+  "accessibility": [
+    "`role=\"dialog\"`; `aria-modal=\"true\"` only in modal mode.",
+    "Focus trap + restore focus in modal mode (same contract as Modal).",
+    "Close control labelled; title wired via `aria-labelledby`."
+  ],
+  "storybookId": "patterns-sheet",
+  "generatedAt": "2026-08-05T20:59:13.518Z"
+}

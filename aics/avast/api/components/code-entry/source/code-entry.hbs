@@ -1,0 +1,44 @@
+{{!--
+  Patterns/Inputs/Code entry template — a segmented one-time-code (OTP)
+  field: `length` single-character native <input> boxes wrapped in a
+  labelled role="group", with an optional helper message. The per-box
+  descriptors come from the `codeBoxes` helper (index / position / total
+  / char); `value` is distributed one character per box. The JS layer
+  adds auto-advance, backspace-to-previous, and paste-spread.
+
+  Defaults: length → 6, group label → "Verification code".
+--}}
+<div
+  class="c-code-entry{{#if error}} is-error{{/if}}{{#if disabled}} is-disabled{{/if}}"
+  data-component="code-entry"
+  data-length="{{#if length}}{{length}}{{else}}6{{/if}}"
+  role="group"
+  aria-label="{{#if label}}{{label}}{{else}}Verification code{{/if}}"
+  {{#if helperText}}aria-describedby="{{#if groupId}}{{groupId}}{{else}}code-entry{{/if}}-helper"{{/if}}
+>
+  {{#if label}}
+    <span class="c-code-entry__label">{{label}}</span>
+  {{/if}}
+
+  <div class="c-code-entry__boxes">
+    {{#each (codeBoxes length value)}}
+      <input
+        class="c-code-entry__box{{#if this.char}} is-filled{{/if}}"
+        type="text"
+        inputmode="numeric"
+        autocomplete="{{#if this.index}}off{{else}}one-time-code{{/if}}"
+        maxlength="1"
+        pattern="[0-9]*"
+        aria-label="Digit {{this.position}} of {{this.total}}"
+        data-index="{{this.index}}"
+        {{#if this.char}}value="{{this.char}}"{{/if}}
+        {{#if ../error}}aria-invalid="true"{{/if}}
+        {{#if ../disabled}}disabled{{/if}}
+      >
+    {{/each}}
+  </div>
+
+  {{#if helperText}}
+    <p class="c-code-entry__helper" id="{{#if groupId}}{{groupId}}{{else}}code-entry{{/if}}-helper">{{helperText}}</p>
+  {{/if}}
+</div>

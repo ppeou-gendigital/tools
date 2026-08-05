@@ -1,0 +1,105 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "breadcrumb",
+  "status": "published",
+  "summary": "Semantic wayfinding trail. Spec Frame [`.Breadcrumb · spec`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4560-48&m=dev) (`4560:48`) on page [`539:28420`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28420&m=dev). Visual set [`1260:8373`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1260-8373&m=dev).",
+  "specUrl": "/api/components/breadcrumb/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/breadcrumb/spec.md",
+    "hbs": "/api/components/breadcrumb/source/breadcrumb.hbs",
+    "scss": "/api/components/breadcrumb/source/breadcrumb.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "1260:8373",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1260-8373&m=dev"
+  },
+  "rootClass": "c-breadcrumb",
+  "bemClasses": [
+    "c-breadcrumb"
+  ],
+  "properties": [
+    {
+      "name": "collapsed",
+      "fixtureKey": "collapsed",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "first + … + last",
+      "figmaLabel": "Collapsed"
+    },
+    {
+      "name": "firstAsIcon",
+      "fixtureKey": "firstAsIcon",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "Home via `objects/simple-home`",
+      "figmaLabel": "First as icon"
+    },
+    {
+      "name": "showCurrentPage",
+      "fixtureKey": "showCurrentPage",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "Terminal Bold `aria-current=\"page\"`",
+      "figmaLabel": "Show current page"
+    },
+    {
+      "name": "items",
+      "fixtureKey": "items",
+      "type": "array",
+      "required": true,
+      "default": "—",
+      "description": "`{ label, href?, truncate?, ariaLabel? }[]`",
+      "figmaLabel": "Items"
+    },
+    {
+      "name": "ariaLabel",
+      "fixtureKey": "ariaLabel",
+      "type": "text",
+      "required": false,
+      "default": "Breadcrumb",
+      "description": "On `<nav>`",
+      "figmaLabel": "Aria label"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Collapsed",
+      "values": "`false` (default), `true` — middle crumbs → static `…`; SM dual-list forces compact below 768px"
+    }
+  ],
+  "tokensConsumed": [
+    "--space-1",
+    "--space-2",
+    "--space-3",
+    "--color-text-brand",
+    "--color-text-primary",
+    "--color-disabled-text",
+    "--color-border-focus",
+    "--font-family-primary",
+    "--font-size-body-sm",
+    "--lineheight-body-sm",
+    "--letterspacing-body-sm",
+    "--font-weight-bold",
+    "--border-radius-control"
+  ],
+  "composes": [
+    "text-link",
+    "icon"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "`<nav aria-label>` + ordered list",
+    "Current page: `<span aria-current=\"page\">` (never a link)",
+    "Separators `aria-hidden`; chevron flips in RTL",
+    "Collapsed ellipsis exposes hidden labels via `title` / `aria-label`"
+  ],
+  "storybookId": "patterns-breadcrumb",
+  "generatedAt": "2026-08-05T20:59:30.540Z"
+}

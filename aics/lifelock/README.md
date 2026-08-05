@@ -12,10 +12,10 @@ Start with **[AGENTS.md](./AGENTS.md)** (mandatory rules), then:
    (do not invent `.css` or `*.config.json` paths)
 4. [api/tokens.json](./api/tokens.json)
 
-Absolute brand base: `https://ppeou-gendigital.github.io/tools/aics/lifelock/`
+Absolute brand base: `http://localhost:4173/lifelock/`
 
 ## For humans
 
-- Open the Storybook UI: https://ppeou-gendigital.github.io/tools/aics/lifelock/
+- Open the Storybook UI: http://localhost:4173/lifelock/
 - Browse **Introduction**, **Design System**, and **Molecules / Patterns**.
 - Machine-readable sources stay under `/api/` and `/llms.txt`.

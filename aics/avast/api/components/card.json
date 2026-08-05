@@ -1,0 +1,109 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "card",
+  "status": "published",
+  "summary": "Media card with gradient scrim and inverse content. Mirrors [Pattern / Card `4695:31653`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4695-31653&m=dev) master `4695:33460` and Spec [`.Card · spec` `5664:296`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=5664-296&m=dev).",
+  "specUrl": "/api/components/card/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/card/spec.md",
+    "hbs": "/api/components/card/source/card.hbs",
+    "scss": "/api/components/card/source/card.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "4695:33460",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=4695-33460&m=dev"
+  },
+  "rootClass": "c-card",
+  "bemClasses": [
+    "c-card",
+    "c-content-title",
+    "c-content-body",
+    "c-text-link"
+  ],
+  "properties": [
+    {
+      "name": "ratio",
+      "fixtureKey": "ratio",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"16-9\"",
+      "description": "",
+      "figmaLabel": "Ratio"
+    },
+    {
+      "name": "alignment",
+      "fixtureKey": "alignment",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"bottom-left\"",
+      "description": "Simple board",
+      "figmaLabel": "Alignment"
+    },
+    {
+      "name": "imageSrc",
+      "fixtureKey": "imageSrc",
+      "type": "TEXT",
+      "required": false,
+      "default": "/assets/images/sample.jpg",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "label` / `title` / `body` / `category` / `footerLabel",
+      "fixtureKey": "label` / `title` / `body` / `category` / `footerLabel",
+      "type": "TEXT",
+      "required": false,
+      "default": "sample copy",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "showLabel` / `showCategory` / `showFooter",
+      "fixtureKey": "showLabel` / `showCategory` / `showFooter",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "ratio",
+      "values": "16-9`, `4-3`, `1-1`, `3-4`, `2-1"
+    },
+    {
+      "axis": "alignment",
+      "values": "top-left`, `top-right`, `bottom-left`, `bottom-right"
+    }
+  ],
+  "tokensConsumed": [
+    "--space-3",
+    "--space-4",
+    "--space-5",
+    "--border-radius-l",
+    "--color-text-inverse",
+    "--font-family-primary",
+    "--font-size-label",
+    "--font-weight-semibold"
+  ],
+  "composes": [
+    "discount-label",
+    "content-title",
+    "content-body",
+    "text-link",
+    "icon"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "Decorative image `alt=\"\"`; meaningful title is the heading",
+    "Footer is a real text-link",
+    "`iconCompositionOptOut` — photo media is not mask-based"
+  ],
+  "storybookId": "patterns-card",
+  "generatedAt": "2026-08-05T20:59:07.364Z"
+}

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "logo-wrapper",
+  "status": "published",
+  "summary": "Aspect-locked frame for a single brand logo so it scales without distortion. Figma: [Molecule / Logo Wrapper](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3768-2718&m=dev) (`3768:2718`). Spec Frame [`3846:98`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3846-98&m=dev). Sticker board `3792:48`.",
+  "specUrl": "/api/components/logo-wrapper/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/logo-wrapper/spec.md",
+    "hbs": "/api/components/logo-wrapper/source/logo-wrapper.hbs",
+    "scss": "/api/components/logo-wrapper/source/logo-wrapper.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "3768:2718",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=3768-2718&m=dev"
+  },
+  "rootClass": "c-logo-wrapper",
+  "bemClasses": [
+    "c-logo-wrapper"
+  ],
+  "properties": [
+    {
+      "name": "lockUp",
+      "fixtureKey": "lockUp",
+      "type": "enum",
+      "required": true,
+      "default": "horizontal",
+      "description": "`horizontal` \\",
+      "figmaLabel": "LockUp"
+    },
+    {
+      "name": "src",
+      "fixtureKey": "src",
+      "type": "image-url",
+      "required": false,
+      "default": "\"\"",
+      "description": "Brand logo URL; empty shows docs placeholder",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "alt",
+      "fixtureKey": "alt",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Brand name, or `\"\"` when named nearby",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "className",
+      "fixtureKey": "className",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Outer box escape hatch only",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "LockUp",
+      "values": "horizontal`, `stacked`, `checkmark"
+    }
+  ],
+  "tokensConsumed": [
+    "--border-radius-0",
+    "--space-0",
+    "--color-disabled-border",
+    "--color-text-inverse",
+    "--font-family-primary",
+    "--font-weight-regular",
+    "--font-size-label",
+    "--lineheight-label",
+    "--letterspacing-label"
+  ],
+  "composes": [],
+  "hasBehavior": false,
+  "accessibility": [
+    "Render logo as a native `img` with descriptive `alt` naming the brand, or `alt=\"\"` when the brand is already named nearby.",
+    "No custom roles; meaning is carried by `alt`.",
+    "Non-interactive — never in the tab order. If the logo links home, the wrapping link owns keyboard + focus.",
+    "Placeholder label is documentation-only and not shipped to users."
+  ],
+  "storybookId": "molecules-logo-wrapper",
+  "generatedAt": "2026-08-05T20:59:30.540Z"
+}

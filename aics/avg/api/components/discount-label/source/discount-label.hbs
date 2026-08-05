@@ -1,0 +1,29 @@
+{{!--
+  Molecules/Discount label — BEM root .c-discount-label
+  Figma: Web-ODS Shared Library set 1408:443 (page 539:28415, Spec 3024:48).
+
+  Axes:
+    background  primary | secondary | brand | brand-soft | accent |
+                alpha | beta | gamma | delta | inverse-primary |
+                inverse-secondary | success
+    fill        solid | transparent | tint
+    strength    base | 30 | 50 | 80   (base only with fill=solid)
+    size        small
+
+  Optional leading icon via {{> icon}} at 16×16, color=current.
+--}}
+<span
+  class="c-discount-label c-discount-label--{{#if background}}{{lower background}}{{else}}primary{{/if}} c-discount-label--fill-{{#if fill}}{{lower fill}}{{else}}solid{{/if}} c-discount-label--strength-{{#if strength}}{{lower strength}}{{else}}base{{/if}} c-discount-label--size-{{#if size}}{{lower size}}{{else}}small{{/if}}"
+  data-component="discount-label"
+>
+  {{#if showIcon}}
+    <span class="c-discount-label__icon" aria-hidden="true">
+      {{#if icon}}
+        {{> icon name=icon size="16" color="current" decorative=true}}
+      {{else}}
+        {{> icon name="actions/simple-add" size="16" color="current" decorative=true}}
+      {{/if}}
+    </span>
+  {{/if}}
+  <span class="c-discount-label__text">{{#if text}}{{text}}{{else}}label{{/if}}</span>
+</span>

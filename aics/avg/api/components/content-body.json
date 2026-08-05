@@ -1,0 +1,112 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "content-body",
+  "status": "published",
+  "summary": "Typography molecule for paragraph / body copy across the primary body size ramp. Figma: [Molecule / ContentBody](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3598-7414&m=dev) (component set `3483:3453`).",
+  "specUrl": "/api/components/content-body/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/content-body/spec.md",
+    "hbs": "/api/components/content-body/source/content-body.hbs",
+    "scss": "/api/components/content-body/source/content-body.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "3483:3453",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=3483-3453&m=dev"
+  },
+  "rootClass": "c-content-body",
+  "bemClasses": [
+    "c-content-body"
+  ],
+  "properties": [
+    {
+      "name": "style",
+      "fixtureKey": "style",
+      "type": "enum",
+      "required": true,
+      "default": "body-3xl",
+      "description": "→ BEM `--body-*`",
+      "figmaLabel": "Style"
+    },
+    {
+      "name": "weight",
+      "fixtureKey": "weight",
+      "type": "enum",
+      "required": true,
+      "default": "base",
+      "description": "→ BEM `--weight-*`",
+      "figmaLabel": "Weight"
+    },
+    {
+      "name": "text",
+      "fixtureKey": "text",
+      "type": "text",
+      "required": true,
+      "default": "Body text",
+      "description": "Paragraph content",
+      "figmaLabel": "Text"
+    },
+    {
+      "name": "className",
+      "fixtureKey": "className",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Outer escape hatch",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Style",
+      "values": "body-3xl`, `body-2xl`, `body-xl`, `body-lg`, `body-base`, `body-sm`, `body-xs"
+    },
+    {
+      "axis": "Weight",
+      "values": "subtle`, `base`, `prominent`, `emphasis`, `strong"
+    }
+  ],
+  "tokensConsumed": [
+    "--font-family-primary",
+    "--color-text-primary",
+    "--font-weight-light",
+    "--font-weight-regular",
+    "--font-weight-medium",
+    "--font-weight-semibold",
+    "--font-weight-bold",
+    "--font-size-body-3xl",
+    "--lineheight-body-3xl",
+    "--letterspacing-body-3xl",
+    "--font-size-body-2xl",
+    "--lineheight-body-2xl",
+    "--letterspacing-body-2xl",
+    "--font-size-body-xl",
+    "--lineheight-body-xl",
+    "--letterspacing-body-xl",
+    "--font-size-body-lg",
+    "--lineheight-body-lg",
+    "--letterspacing-body-lg",
+    "--font-size-body-base",
+    "--lineheight-body-base",
+    "--letterspacing-body-base",
+    "--font-size-body-sm",
+    "--lineheight-body-sm",
+    "--letterspacing-body-sm",
+    "--font-size-body-xs",
+    "--lineheight-body-xs",
+    "--letterspacing-body-xs"
+  ],
+  "composes": [],
+  "hasBehavior": false,
+  "accessibility": [
+    "Render as a native `<p>` with the authored `text` as content.",
+    "No custom roles or ARIA; meaning is carried by the paragraph text.",
+    "Never place interactive controls inside Content body; compose links as children of a wrapping interactive pattern when needed.",
+    "Meet WCAG contrast for `--color-text-primary` on the surrounding canvas."
+  ],
+  "storybookId": "molecules-content-body",
+  "generatedAt": "2026-08-05T20:59:13.518Z"
+}

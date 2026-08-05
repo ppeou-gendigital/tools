@@ -1,0 +1,231 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "stepper",
+  "status": "published",
+  "summary": "Ordered multi-step progress indicator for checkout flows, onboarding wizards, and any experience that needs to show where the user is in a sequence of up to six steps. Mirrors the Shared Library master on [Web-ODS Shared Library / 1386:867](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1386-867&m=dev) and the companion [Spec Frame `3067:548`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3067-548&m=dev).",
+  "specUrl": "/api/components/stepper/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/stepper/spec.md",
+    "hbs": "/api/components/stepper/source/stepper.hbs",
+    "scss": "/api/components/stepper/source/stepper.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "1386:867",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1386-867&m=dev"
+  },
+  "rootClass": "c-stepper",
+  "bemClasses": [
+    "c-stepper",
+    "c-icon"
+  ],
+  "properties": [
+    {
+      "name": "direction",
+      "fixtureKey": "direction",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"horizontal\"",
+      "description": "`horizontal` or `vertical`.",
+      "figmaLabel": "Direction"
+    },
+    {
+      "name": "showStep2",
+      "fixtureKey": "showStep2",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "true",
+      "description": "When `false`, step 2 and its connector are omitted.",
+      "figmaLabel": "Show step 2"
+    },
+    {
+      "name": "showStep3",
+      "fixtureKey": "showStep3",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "true",
+      "description": "Same contract as step 2.",
+      "figmaLabel": "Show step 3"
+    },
+    {
+      "name": "showStep4",
+      "fixtureKey": "showStep4",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "true",
+      "description": "Same contract as step 2.",
+      "figmaLabel": "Show step 4"
+    },
+    {
+      "name": "showStep5",
+      "fixtureKey": "showStep5",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "true",
+      "description": "Same contract as step 2.",
+      "figmaLabel": "Show step 5"
+    },
+    {
+      "name": "showStep6",
+      "fixtureKey": "showStep6",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "true",
+      "description": "Same contract as step 2.",
+      "figmaLabel": "Show step 6"
+    },
+    {
+      "name": "step<N>State",
+      "fixtureKey": "step<N>State",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"default\"",
+      "description": "One of `default` / `active` / `complete` for steps 1–6.",
+      "figmaLabel": "State (per step)"
+    },
+    {
+      "name": "step<N>Number",
+      "fixtureKey": "step<N>Number",
+      "type": "TEXT",
+      "required": false,
+      "default": "<N>",
+      "description": "Indicator digit for non-complete steps.",
+      "figmaLabel": "Number (per step)"
+    },
+    {
+      "name": "step<N>ShowLabel",
+      "fixtureKey": "step<N>ShowLabel",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "false",
+      "description": "When `true`, renders the label slot.",
+      "figmaLabel": "Show label (per step)"
+    },
+    {
+      "name": "step<N>Label",
+      "fixtureKey": "step<N>Label",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"Label\"",
+      "description": "Plain text; renders only when `step<N>ShowLabel=true`.",
+      "figmaLabel": "Label (per step)"
+    },
+    {
+      "name": "ariaLabel",
+      "fixtureKey": "ariaLabel",
+      "type": "TEXT",
+      "required": false,
+      "default": "—",
+      "description": "Optional `aria-label` on the `<ol>` root when labels are hidden.",
+      "figmaLabel": "Accessible name"
+    },
+    {
+      "name": "steps[].state",
+      "fixtureKey": "steps[].state",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"default\"",
+      "description": "Helper-derived.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "steps[].isActive",
+      "fixtureKey": "steps[].isActive",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "false",
+      "description": "Helper-derived; adds `aria-current=\"step\"`.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "steps[].showLabel",
+      "fixtureKey": "steps[].showLabel",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "false",
+      "description": "Helper-derived.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "steps[].label",
+      "fixtureKey": "steps[].label",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"Label\"",
+      "description": "Helper-derived.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "steps[].showConnector",
+      "fixtureKey": "steps[].showConnector",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "—",
+      "description": "Helper-derived.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "steps[].number",
+      "fixtureKey": "steps[].number",
+      "type": "TEXT",
+      "required": false,
+      "default": "—",
+      "description": "Helper-derived.",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "direction",
+      "values": "`horizontal` (default) / `vertical`. Drives `.c-stepper--direction-<direction>`. Horizontal distributes steps evenly across the inline axis (every step with a trailing connector grows; the final step hugs its content). Vertical stacks steps with 80 px row height between connectors."
+    },
+    {
+      "axis": "`state` (per step)",
+      "values": "`default` / `active` / `complete`. Drives `.c-stepper__step--state-<state>`. Applied per Step instance (`1386:803`)."
+    },
+    {
+      "axis": "showStep2` … `showStep6",
+      "values": "Boolean visibility toggles. Step 1 is always visible. Hidden steps are omitted from the DOM."
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-subtle",
+    "--color-bg-inverse",
+    "--color-bg-inverse-strong",
+    "--color-border-brand",
+    "--color-border-strong",
+    "--color-border-subtle",
+    "--color-text-primary",
+    "--color-text-secondary",
+    "--color-text-inverse",
+    "--font-family-primary",
+    "--font-weight-regular",
+    "--font-size-body-lg",
+    "--lineheight-body-lg",
+    "--letterspacing-body-lg",
+    "--font-size-tagline-sm",
+    "--lineheight-tagline-sm",
+    "--letterspacing-tagline-sm",
+    "--border-width-s",
+    "--border-width-hairline",
+    "--space-0",
+    "--space-3",
+    "--space-15"
+  ],
+  "composes": [
+    "icon"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "Root renders as `<ol>`; each step is `<li>`.",
+    "The active step carries `aria-current=\"step\"`.",
+    "When step labels are hidden, supply `ariaLabel` on the root.",
+    "Connector lines are `aria-hidden=\"true\"`.",
+    "Complete-state checkmark uses `decorative=true`."
+  ],
+  "storybookId": "molecules-stepper",
+  "generatedAt": "2026-08-05T20:59:07.364Z"
+}

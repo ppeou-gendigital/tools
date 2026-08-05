@@ -1,0 +1,24 @@
+{{!--
+  Molecules/Tag — BEM root .c-tag
+  Figma: Web-ODS Shared Library set 6114:53 (page 6109:6522, Spec 6328:54273).
+
+  Axes:
+    background  primary | secondary | brand | brand-soft | accent |
+                alpha | beta | gamma | delta | inverse-primary |
+                inverse-secondary
+    fill        solid | transparent | tint
+    strength    base | 30 | 50 | 80   (base only with fill=solid)
+
+  Optional leading icon via {{> icon}} at 16×16, color=current (default on).
+--}}
+<span
+  class="c-tag c-tag--{{#if background}}{{lower background}}{{else}}primary{{/if}} c-tag--fill-{{#if fill}}{{lower fill}}{{else}}solid{{/if}} c-tag--strength-{{#if strength}}{{lower strength}}{{else}}base{{/if}}"
+  data-component="tag"
+>
+  {{#unless (eq showIcon false)}}
+    <span class="c-tag__icon" aria-hidden="true">
+      {{> icon name=iconName size="16" color="current" decorative=true}}
+    </span>
+  {{/unless}}
+  <span class="c-tag__text">{{#if text}}{{text}}{{else}}Tag{{/if}}</span>
+</span>

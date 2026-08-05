@@ -1,0 +1,62 @@
+/**
+ * Patterns/Trustpilot — review cell (.c-trustpilot).
+ * Figma: 2500:4244 / Spec 3969:12883.
+ */
+
+@use '../rating/rating';
+
+.c-trustpilot {
+  background-color: var(--color-bg-default);
+  border-radius: var(--border-radius-s);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-family-primary);
+  gap: var(--space-3);
+  inline-size: 100%;
+  max-inline-size: 304px;
+  padding: var(--space-8);
+}
+
+.c-trustpilot__title {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letterspacing-body-lg);
+  line-height: var(--lineheight-body-lg);
+  margin: 0;
+}
+
+.c-trustpilot__product {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--letterspacing-body-sm);
+  line-height: var(--lineheight-body-sm);
+  margin: 0;
+}
+
+.c-trustpilot__rating {
+  display: flex;
+}
+
+.c-trustpilot__meta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-sm);
+  letter-spacing: var(--letterspacing-body-sm);
+  line-height: var(--lineheight-body-sm);
+  margin: 0;
+}
+
+.c-trustpilot__verified {
+  color: var(--color-text-accent);
+}
+
+.c-trustpilot__quote {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body-base);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--letterspacing-body-base);
+  line-height: var(--lineheight-body-base);
+  margin: 0;
+}

@@ -1,0 +1,90 @@
+{{!--
+  Patterns/Toggle — BEM root .c-toggle
+  Figma: Pattern / Toggle 539:28414 — Spec 4588:132
+
+  type: link | segmented | pill
+  selected: off|on (link) · a|b (segmented|pill)
+--}}
+<div
+  class="c-toggle c-toggle--type-{{#if type}}{{lower type}}{{else}}link{{/if}}{{#if disabled}} is-disabled{{/if}}{{#if state}}{{#unless (eq (lower state) "default")}} c-toggle--state-{{lower state}}{{/unless}}{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="toggle"
+  data-type="{{#if type}}{{lower type}}{{else}}link{{/if}}"
+  data-selected="{{#if selected}}{{lower selected}}{{else}}{{#if (eq (lower type) "link")}}off{{else}}a{{/if}}{{/if}}"
+  {{#if state}}data-state="{{lower state}}"{{/if}}
+  {{#if id}}id="{{id}}"{{/if}}
+>
+  {{#if (eq (lower type) "link")}}
+    <button
+      type="button"
+      class="c-toggle__link"
+      data-toggle-control
+      aria-pressed="{{#if (eq (lower selected) "on")}}true{{else}}false{{/if}}"
+      {{#if disabled}}disabled{{/if}}
+    >
+      <span class="c-toggle__label c-toggle__label--start{{#unless (eq (lower selected) "on")}} is-active{{/unless}}">{{#if labelA}}{{labelA}}{{else}}Off{{/if}}</span>
+      <span class="c-toggle__track" aria-hidden="true">
+        <span class="c-toggle__knob"></span>
+      </span>
+      <span class="c-toggle__label c-toggle__label--end{{#if (eq (lower selected) "on")}} is-active{{/if}}">{{#if labelB}}{{labelB}}{{else}}On{{/if}}</span>
+    </button>
+
+  {{else if (eq (lower type) "segmented")}}
+    <div class="c-toggle__segmented" role="radiogroup" aria-label="{{#if ariaLabel}}{{ariaLabel}}{{else}}Toggle{{/if}}">
+      <button
+        type="button"
+        class="c-toggle__seg{{#unless (eq (lower selected) "b")}} is-selected{{/unless}}"
+        role="radio"
+        data-toggle-value="a"
+        aria-checked="{{#unless (eq (lower selected) "b")}}true{{else}}false{{/unless}}"
+        {{#if disabled}}disabled{{/if}}
+      >{{#if labelA}}{{labelA}}{{else}}Free{{/if}}</button>
+      <button
+        type="button"
+        class="c-toggle__seg{{#if (eq (lower selected) "b")}} is-selected{{/if}}"
+        role="radio"
+        data-toggle-value="b"
+        aria-checked="{{#if (eq (lower selected) "b")}}true{{else}}false{{/if}}"
+        {{#if disabled}}disabled{{/if}}
+      >{{#if labelB}}{{labelB}}{{else}}Premium{{/if}}</button>
+    </div>
+
+  {{else}}
+    {{!-- pill --}}
+    <div class="c-toggle__pill" role="radiogroup" aria-label="{{#if ariaLabel}}{{ariaLabel}}{{else}}Toggle{{/if}}">
+      <button
+        type="button"
+        class="c-toggle__pill-opt{{#unless (eq (lower selected) "b")}} is-selected{{/unless}}"
+        role="radio"
+        data-toggle-value="a"
+        aria-checked="{{#unless (eq (lower selected) "b")}}true{{else}}false{{/unless}}"
+        {{#if disabled}}disabled{{/if}}
+      >
+        <span class="c-toggle__pill-label">{{#if labelA}}{{labelA}}{{else}}Annual{{/if}}</span>
+        {{#unless (eq showDiscountLabel false)}}
+          {{#unless (eq (lower selected) "b")}}
+            <span class="c-toggle__pill-chip">
+              {{> discount-label
+                text=discountText
+                background="gamma"
+                fill="tint"
+                strength="30"
+                size="small"
+                showIcon=false
+              }}
+            </span>
+          {{/unless}}
+        {{/unless}}
+      </button>
+      <button
+        type="button"
+        class="c-toggle__pill-opt{{#if (eq (lower selected) "b")}} is-selected{{/if}}"
+        role="radio"
+        data-toggle-value="b"
+        aria-checked="{{#if (eq (lower selected) "b")}}true{{else}}false{{/if}}"
+        {{#if disabled}}disabled{{/if}}
+      >
+        <span class="c-toggle__pill-label">{{#if labelB}}{{labelB}}{{else}}Monthly{{/if}}</span>
+      </button>
+    </div>
+  {{/if}}
+</div>

@@ -1,0 +1,55 @@
+{{!--
+  Patterns/Card — BEM root .c-card
+  Figma: Pattern / Card 4695:31653 — master 4695:33460 — Spec 5664:296
+
+  Axes: ratio × alignment
+  Composes: discount-label, content-title, content-body, text-link, icon
+--}}
+<article
+  class="c-card c-card--ratio-{{#if ratio}}{{lower ratio}}{{else}}16-9{{/if}} c-card--align-{{#if alignment}}{{lower alignment}}{{else}}bottom-left{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="card"
+  data-ratio="{{#if ratio}}{{lower ratio}}{{else}}16-9{{/if}}"
+>
+  <div class="c-card__media" aria-hidden="true">
+    {{#if imageSrc}}
+      <img class="c-card__image" src="{{imageSrc}}" alt="" />
+    {{/if}}
+    <div class="c-card__scrim"></div>
+  </div>
+  <div class="c-card__content">
+    <div class="c-card__top">
+      {{#unless (eq showLabel false)}}
+        {{> discount-label
+          text=label
+          background="inverse-primary"
+          fill="solid"
+          strength="base"
+          size="small"
+          showIcon=false
+        }}
+      {{/unless}}
+    </div>
+    <div class="c-card__bottom">
+      {{> content-title style="h7" weight="emphasis" tag="h3" text=title className="c-card__title"}}
+      {{> content-body style="body-sm" weight="base" text=body className="c-card__body"}}
+      {{#unless (eq showCategory false)}}
+        <p class="c-card__category">{{#if category}}{{category}}{{else}}Category{{/if}}</p>
+      {{/unless}}
+      {{#unless (eq showFooter false)}}
+        <div class="c-card__footer">
+          {{> text-link
+            label=footerLabel
+            href=footerHref
+            size="sm"
+            weight="regular"
+            background="dark"
+            iconTreatment="inline"
+            iconName="arrows-navigation/simple-arrow-forward"
+            iconPosition="trailing"
+            className="c-card__footer-link"
+          }}
+        </div>
+      {{/unless}}
+    </div>
+  </div>
+</article>

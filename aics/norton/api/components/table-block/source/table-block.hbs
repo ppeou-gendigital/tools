@@ -1,0 +1,48 @@
+{{!--
+  Patterns/Table block — BEM root .c-table-block
+  Figma: Table block · content slot `5914:53` (page `4339:13402`,
+  Spec `.Table block · content slot · spec` `6032:729`).
+
+  Props:
+    rows       array of { cells: [table-cell args…] }
+    slotHtml   raw HTML escape hatch for the table content slot
+    className
+
+  Adjacent cells / rows overlap by -1px (SCSS) so shared borders collapse.
+  Deprecated boards are out of scope.
+--}}
+<div
+  class="c-table-block{{#if className}} {{className}}{{/if}}"
+  data-component="table-block"
+>
+  <div class="c-table-block__content">
+    {{#if slotHtml}}
+      {{{slotHtml}}}
+    {{else}}
+      {{#each rows}}
+        <div class="c-table-block__row">
+          {{#each cells}}
+            {{> table-cell
+              type=type
+              align=align
+              background=background
+              borders=borders
+              topBorder=topBorder
+              rightBorder=rightBorder
+              bottomBorder=bottomBorder
+              leftBorder=leftBorder
+              leadingIcon=leadingIcon
+              trailingIcon=trailingIcon
+              leadingIconName=leadingIconName
+              trailingIconName=trailingIconName
+              label=label
+              contentHtml=contentHtml
+              width=width
+              className=className
+            }}
+          {{/each}}
+        </div>
+      {{/each}}
+    {{/if}}
+  </div>
+</div>

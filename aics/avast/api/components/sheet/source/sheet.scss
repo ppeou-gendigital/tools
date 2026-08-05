@@ -1,0 +1,223 @@
+/**
+ * Patterns/Sheet — .c-sheet (left / right / bottom drawer)
+ * Figma: 539:28430 / Spec 4522:67
+ *
+ * Side sizes: compact 280 / medium 360 / large 480.
+ * Bottom max widths: compact 360 / medium 600 / large 1200.
+ * Modal backdrop: --color-bg-inverse at 75%.
+ * Card radius: --border-radius-l on the open edge(s).
+ * Shadow: 0 8px 24px / 18%.
+ */
+
+.c-sheet {
+  box-sizing: border-box;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+}
+
+.c-sheet[hidden] {
+  display: none;
+}
+
+.c-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: color-mix(
+    in srgb,
+    var(--color-bg-inverse) 75%,
+    transparent
+  );
+}
+
+.c-sheet__card {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-7);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  box-shadow: 0 8px 24px 0 rgb(0 0 0 / 18%);
+  max-block-size: 100%;
+}
+
+/* —— Layout: Left / Right —— */
+
+.c-sheet--left {
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.c-sheet--right {
+  justify-content: flex-end;
+  align-items: stretch;
+}
+
+.c-sheet--left .c-sheet__card,
+.c-sheet--right .c-sheet__card {
+  block-size: 100%;
+  inline-size: 280px;
+  max-inline-size: min(100%, 480px);
+}
+
+.c-sheet--left.c-sheet--compact .c-sheet__card,
+.c-sheet--right.c-sheet--compact .c-sheet__card {
+  inline-size: 280px;
+}
+
+.c-sheet--left.c-sheet--medium .c-sheet__card,
+.c-sheet--right.c-sheet--medium .c-sheet__card {
+  inline-size: 360px;
+}
+
+.c-sheet--left.c-sheet--large .c-sheet__card,
+.c-sheet--right.c-sheet--large .c-sheet__card {
+  inline-size: 480px;
+}
+
+.c-sheet--left .c-sheet__card {
+  border-start-end-radius: var(--border-radius-l);
+  border-end-end-radius: var(--border-radius-l);
+}
+
+.c-sheet--right .c-sheet__card {
+  border-start-start-radius: var(--border-radius-l);
+  border-end-start-radius: var(--border-radius-l);
+}
+
+/* —— Layout: Bottom (Drawer) —— */
+
+.c-sheet--bottom {
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.c-sheet--bottom .c-sheet__card {
+  inline-size: 100%;
+  max-inline-size: 360px;
+  max-block-size: min(90dvh, 640px);
+  border-start-start-radius: var(--border-radius-l);
+  border-start-end-radius: var(--border-radius-l);
+}
+
+.c-sheet--bottom.c-sheet--medium .c-sheet__card {
+  max-inline-size: 600px;
+  max-block-size: min(90dvh, 600px);
+}
+
+.c-sheet--bottom.c-sheet--large .c-sheet__card {
+  max-inline-size: 1200px;
+  max-block-size: min(90dvh, 700px);
+}
+
+/* —— Non-modal: no full-viewport trap chrome —— */
+
+.c-sheet--non-modal {
+  pointer-events: none;
+}
+
+.c-sheet--non-modal .c-sheet__card {
+  pointer-events: auto;
+}
+
+.c-sheet__drag-handle-wrap {
+  display: flex;
+  justify-content: center;
+  inline-size: 100%;
+  padding-block: var(--space-1) 0;
+}
+
+.c-sheet__drag-handle {
+  display: block;
+  inline-size: 40px;
+  block-size: 4px;
+  border-radius: var(--border-radius-pill);
+  background-color: var(--color-border-subtle);
+}
+
+.c-sheet__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  inline-size: 100%;
+  flex: 0 0 auto;
+}
+
+.c-sheet__title {
+  flex: 1 1 auto;
+  margin: 0;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-h6);
+  line-height: var(--lineheight-h6);
+  letter-spacing: var(--letterspacing-h6);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.c-sheet__close {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--border-radius-s);
+  background: transparent;
+  color: var(--color-text-accent);
+  cursor: pointer;
+}
+
+.c-sheet__close:focus-visible {
+  outline: var(--border-width-s) solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+.c-sheet__body {
+  flex: 1 1 auto;
+  inline-size: 100%;
+  overflow-y: auto;
+  min-block-size: 0;
+}
+
+.c-sheet__description {
+  margin: 0;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+  letter-spacing: var(--letterspacing-body-base);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
+}
+
+.c-sheet__footer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  inline-size: 100%;
+}
+
+.c-sheet--buttons-stacked .c-sheet__footer {
+  flex-direction: column-reverse;
+  align-items: stretch;
+}
+
+.c-sheet--buttons-stacked .c-sheet__action {
+  inline-size: 100%;
+}
+
+.c-sheet__supporting {
+  margin: 0;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+}

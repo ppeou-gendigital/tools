@@ -1,0 +1,62 @@
+/**
+ * Logo Wrapper — core molecule (.c-logo-wrapper).
+ * Figma Web-ODS Shared Library page 3768:2718 / Spec 3846:98.
+ *
+ * LockUp pins a fixed aspect ratio; surface is transparent; overflow clipped.
+ * Default block-size matches the sticker board (88px); consumers override
+ * height via CSS on the root.
+ */
+
+.c-logo-wrapper {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  overflow: clip;
+  background-color: transparent;
+  border-radius: var(--border-radius-0, 0);
+  block-size: var(--logo-wrapper-height, 88px);
+  inline-size: auto;
+  max-inline-size: 100%;
+}
+
+.c-logo-wrapper--horizontal {
+  aspect-ratio: 1040 / 237;
+}
+
+.c-logo-wrapper--stacked {
+  aspect-ratio: 265 / 237;
+}
+
+.c-logo-wrapper--checkmark {
+  aspect-ratio: 238 / 237;
+}
+
+.c-logo-wrapper__image {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.c-logo-wrapper__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-disabled-border, #b3b3b3);
+  padding: var(--space-0, 0);
+}
+
+.c-logo-wrapper__placeholder-label {
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-regular, 400);
+  font-size: var(--font-size-label, 12px);
+  line-height: var(--lineheight-label, 16px);
+  letter-spacing: var(--letterspacing-label, 0.24px);
+  color: var(--color-text-inverse, #fff);
+  text-align: center;
+  word-break: break-word;
+}

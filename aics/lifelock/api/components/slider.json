@@ -5,7 +5,7 @@
   "librarySource": "brand",
   "name": "slider",
   "status": "published",
-  "summary": "Continuous and discrete sliders for single-value and range selection. Mirrors the canonical [Web-ODS Shared Library → Sliders 🟢](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28421&m=dev) canvas and its master component `DS · Slider` ([`1336:2939`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1336-2939&m=dev)). Twenty Figma variants distribute across four `Variant × Selection` combinations and five interaction states — every visual binds to LifeLock `THEME = LifeLock` + `PLATFORM = LifeLock / Desktop|Tablet|Mobile`",
+  "summary": "Continuous and discrete sliders for single-value and range selection. Mirrors the canonical [Web-ODS Shared Library → Sliders 🟢](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28421&m=dev) canvas and its master component `DS · Slider` ([`1336:2939`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1336-2939&m=dev)), with Spec Frame [`.Slider · spec`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4580-15595&m=dev) (`4580:15595`). Core default theme unit; brands inherit via theme token",
   "specUrl": "/api/components/slider/spec.md",
   "sourceFiles": {
     "spec": "/api/components/slider/spec.md",
@@ -156,10 +156,11 @@
     }
   ],
   "tokensConsumed": [
-    "--color-background-primary",
-    "--color-border-tertiary",
+    "--color-bg-primary",
+    "--color-border-subtle",
     "--color-border-focus",
     "--color-signal-info",
+    "--color-text-primary",
     "--button-primary-bg-default",
     "--button-primary-bg-hover",
     "--button-primary-bg-pressed",
@@ -169,7 +170,7 @@
     "--space-3",
     "--space-6",
     "--border-radius-pill",
-    "--border-width-default",
+    "--border-width-s",
     "--font-family-primary",
     "--font-size-body-sm",
     "--font-size-body-base",
@@ -193,5 +194,5 @@
     "Honours `prefers-reduced-motion: reduce` — the JS thumb-position"
   ],
   "storybookId": "molecules-slider",
-  "generatedAt": "2026-08-03T01:08:47.005Z"
+  "generatedAt": "2026-08-05T20:59:20.192Z"
 }

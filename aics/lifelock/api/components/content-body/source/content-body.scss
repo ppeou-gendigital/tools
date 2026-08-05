@@ -1,0 +1,87 @@
+/**
+ * Molecules/Content body — core (.c-content-body).
+ * Figma: Web-ODS Shared Library 3483:3453 / canvas 3598:7414.
+ *
+ * Axes → BEM:
+ *   style  → .c-content-body--body-3xl | --body-2xl | --body-xl |
+ *            --body-lg | --body-base | --body-sm | --body-xs
+ *   weight → .c-content-body--weight-subtle | --weight-base |
+ *            --weight-prominent | --weight-emphasis | --weight-strong
+ */
+
+.c-content-body {
+  box-sizing: border-box;
+  margin-block: 0;
+  margin-inline: 0;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  font-family: var(--font-family-primary);
+  color: var(--color-text-primary);
+  overflow-wrap: break-word;
+}
+
+// --- Style (size / line-height / letter-spacing) -----------------------------
+
+.c-content-body--body-3xl {
+  font-size: var(--font-size-body-3xl);
+  line-height: var(--lineheight-body-3xl);
+  letter-spacing: var(--letterspacing-body-3xl);
+}
+
+.c-content-body--body-2xl {
+  font-size: var(--font-size-body-2xl);
+  line-height: var(--lineheight-body-2xl);
+  letter-spacing: var(--letterspacing-body-2xl);
+}
+
+.c-content-body--body-xl {
+  font-size: var(--font-size-body-xl);
+  line-height: var(--lineheight-body-xl);
+  letter-spacing: var(--letterspacing-body-xl);
+}
+
+.c-content-body--body-lg {
+  font-size: var(--font-size-body-lg);
+  line-height: var(--lineheight-body-lg);
+  letter-spacing: var(--letterspacing-body-lg);
+}
+
+.c-content-body--body-base {
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+  letter-spacing: var(--letterspacing-body-base);
+}
+
+.c-content-body--body-sm {
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  letter-spacing: var(--letterspacing-body-sm);
+}
+
+.c-content-body--body-xs {
+  font-size: var(--font-size-body-xs);
+  line-height: var(--lineheight-body-xs);
+  letter-spacing: var(--letterspacing-body-xs);
+}
+
+// --- Weight -----------------------------------------------------------------
+
+.c-content-body--weight-subtle {
+  font-weight: var(--font-weight-light);
+}
+
+.c-content-body--weight-base {
+  font-weight: var(--font-weight-regular);
+}
+
+.c-content-body--weight-prominent {
+  font-weight: var(--font-weight-medium);
+}
+
+.c-content-body--weight-emphasis {
+  font-weight: var(--font-weight-semibold);
+}
+
+.c-content-body--weight-strong {
+  font-weight: var(--font-weight-bold);
+}

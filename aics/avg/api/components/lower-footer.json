@@ -1,0 +1,157 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "block",
+  "librarySource": "brand",
+  "name": "lower-footer",
+  "status": "published",
+  "summary": "Final low-emphasis utility band under the main footer. Mirrors [Block / Lower Footer `3598:2174`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3598-2174&m=dev) component set `2498:2022` and Spec [`.Lower footer · spec` `4278:466`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4278-466&m=dev).",
+  "specUrl": "/api/components/lower-footer/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/lower-footer/spec.md",
+    "hbs": "/api/components/lower-footer/source/lower-footer.hbs",
+    "scss": "/api/components/lower-footer/source/lower-footer.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "2498:2022",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=2498-2022&m=dev"
+  },
+  "rootClass": "c-lower-footer",
+  "bemClasses": [
+    "c-lower-footer",
+    "c-logo-wrapper",
+    "c-content-body",
+    "c-menu-list"
+  ],
+  "properties": [
+    {
+      "name": "theme",
+      "fixtureKey": "theme",
+      "type": "enum",
+      "required": false,
+      "default": "light",
+      "description": "`light` \\",
+      "figmaLabel": "Theme"
+    },
+    {
+      "name": "showLowerLinks",
+      "fixtureKey": "showLowerLinks",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "Hides the link nav when false",
+      "figmaLabel": "Show lower links"
+    },
+    {
+      "name": "logoSrc",
+      "fixtureKey": "logoSrc",
+      "type": "image-url",
+      "required": false,
+      "default": "/assets/logos/gen-horizontal.svg",
+      "description": "Gen corporate mark",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "logoAlt",
+      "fixtureKey": "logoAlt",
+      "type": "TEXT",
+      "required": false,
+      "default": "Gen",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "brandName",
+      "fixtureKey": "brandName",
+      "type": "TEXT",
+      "required": false,
+      "default": "[Brand]",
+      "description": "Interpolated into statement",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "statement",
+      "fixtureKey": "statement",
+      "type": "TEXT",
+      "required": false,
+      "default": "built",
+      "description": "Affiliation sentence",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "copyrightYear",
+      "fixtureKey": "copyrightYear",
+      "type": "number",
+      "required": false,
+      "default": "current year",
+      "description": "Dynamic year",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "copyrightText",
+      "fixtureKey": "copyrightText",
+      "type": "TEXT",
+      "required": false,
+      "default": "built",
+      "description": "Full legal paragraph",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "links",
+      "fixtureKey": "links",
+      "type": "array",
+      "required": false,
+      "default": "default 10",
+      "description": "`{ label, href }[]` → menu-list rows",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "navLabel",
+      "fixtureKey": "navLabel",
+      "type": "TEXT",
+      "required": false,
+      "default": "Legal and company links",
+      "description": "`aria-label` on `<nav>`",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Theme",
+      "values": "light`, `dark"
+    },
+    {
+      "axis": "ShowLowerLinks",
+      "values": "true`, `false"
+    }
+  ],
+  "tokensConsumed": [
+    "--space-0",
+    "--space-2",
+    "--space-4",
+    "--space-7",
+    "--space-8",
+    "--opacity-50",
+    "--color-text-secondary",
+    "--color-text-inverse",
+    "--color-bg-inverse",
+    "--color-border-strong",
+    "--font-family-primary"
+  ],
+  "composes": [
+    "divider",
+    "logo-wrapper",
+    "content-body",
+    "menu-list"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "Root is `<footer>`.",
+    "Link group is `<nav aria-label=\"…\">` wrapping a `<ul role=\"list\">` of menu-list rows with `role=\"listitem\"`.",
+    "Logo uses a native `img` with descriptive `alt` (or empty when named nearby).",
+    "Copyright year is rendered dynamically — do not bake a static year into production copy."
+  ],
+  "storybookId": "blocks-lower-footer",
+  "generatedAt": "2026-08-05T20:59:13.518Z"
+}

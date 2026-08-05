@@ -1,0 +1,88 @@
+{{!--
+  Patterns/Sheet — BEM root .c-sheet (includes bottom Drawer)
+  Figma: page 539:28430 · Spec 4522:67 · Left/Right/Bottom boards
+
+  Props:
+    layout         left | right | bottom
+    mode           modal | non-modal
+    size           compact | medium | large
+    cta            two | one | none
+    buttonLayout   inline | stacked   (bottom only; ignored elsewhere)
+    title, body, supportingText
+    primaryLabel, secondaryLabel
+    showClose, open, id
+    showDragHandle boolean (bottom; default false)
+    className
+--}}
+<div
+  class="c-sheet c-sheet--{{#if layout}}{{lower layout}}{{else}}left{{/if}} c-sheet--{{#if mode}}{{lower mode}}{{else}}modal{{/if}} c-sheet--{{#if size}}{{lower size}}{{else}}compact{{/if}}{{#if (eq (lower layout) "bottom")}} c-sheet--buttons-{{#if buttonLayout}}{{lower buttonLayout}}{{else}}inline{{/if}}{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="sheet"
+  data-layout="{{#if layout}}{{lower layout}}{{else}}left{{/if}}"
+  data-mode="{{#if mode}}{{lower mode}}{{else}}modal{{/if}}"
+  role="dialog"
+  {{#if (eq (lower mode) "modal")}}aria-modal="true"{{/if}}
+  {{#if id}}id="{{id}}"{{/if}}
+  aria-labelledby="{{#if labelledById}}{{labelledById}}{{else}}{{#if id}}{{id}}-title{{else}}sheet-title{{/if}}{{/if}}"
+  {{#if body}}aria-describedby="{{#if describedById}}{{describedById}}{{else}}{{#if id}}{{id}}-body{{else}}sheet-body{{/if}}{{/if}}"{{/if}}
+  {{#unless open}}hidden{{/unless}}
+>
+  {{#unless (eq (lower mode) "non-modal")}}
+    <div class="c-sheet__backdrop" data-sheet-backdrop tabindex="-1"></div>
+  {{/unless}}
+
+  <div class="c-sheet__card" role="document" data-sheet-card>
+    {{#if showDragHandle}}
+      <div class="c-sheet__drag-handle-wrap" aria-hidden="true">
+        <span class="c-sheet__drag-handle"></span>
+      </div>
+    {{/if}}
+
+    <div class="c-sheet__header">
+      <h2 class="c-sheet__title" id="{{#if id}}{{id}}-title{{else}}sheet-title{{/if}}">
+        {{#if title}}{{title}}{{else}}Sheet title{{/if}}
+      </h2>
+      {{#unless (eq showClose false)}}
+        <button
+          type="button"
+          class="c-sheet__close"
+          data-sheet-close
+          aria-label="{{#if closeLabel}}{{closeLabel}}{{else}}Close{{/if}}"
+        >
+          {{> icon name="actions/simple-close" size="20" color="current" decorative=true}}
+        </button>
+      {{/unless}}
+    </div>
+
+    <div
+      class="c-sheet__body"
+      id="{{#if id}}{{id}}-body{{else}}sheet-body{{/if}}"
+    >
+      {{#if bodyHtml}}
+        {{{bodyHtml}}}
+      {{else}}
+        <p class="c-sheet__description">{{#if body}}{{body}}{{else}}Sheet body content.{{/if}}</p>
+      {{/if}}
+    </div>
+
+    {{#unless (eq (lower cta) "none")}}
+      <div class="c-sheet__footer">
+        {{#if (eq (lower cta) "two")}}
+          {{#if secondaryLabel}}
+            {{> button style="text" size="m" label=secondaryLabel className="c-sheet__action c-sheet__action--secondary"}}
+          {{else}}
+            {{> button style="text" size="m" label="Cancel" className="c-sheet__action c-sheet__action--secondary"}}
+          {{/if}}
+        {{/if}}
+        {{#if primaryLabel}}
+          {{> button style="primary" size="m" label=primaryLabel className="c-sheet__action c-sheet__action--primary"}}
+        {{else}}
+          {{> button style="primary" size="m" label="Apply" className="c-sheet__action c-sheet__action--primary"}}
+        {{/if}}
+      </div>
+    {{/unless}}
+
+    {{#if supportingText}}
+      <p class="c-sheet__supporting">{{supportingText}}</p>
+    {{/if}}
+  </div>
+</div>

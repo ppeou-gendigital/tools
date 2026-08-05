@@ -18,7 +18,7 @@
 5. Keep published BEM class names; call published `init*` factories.
 6. Do **not** invent markup/CSS/behavior from Docs prose or Show code alone.
 7. Absolute brand base (prefix for every relative `/api/...` path):
-   `https://ppeou-gendigital.github.io/tools/aics/avast/`
+   `http://localhost:4173/avast/`
 
 ## Registry
 
@@ -32,7 +32,7 @@
 
 ## Asset inventories
 
-- [Icons (407 assets)](/api/assets/icons.json)
+- [Icons (466 assets)](/api/assets/icons.json)
 
 ## Bulk download
 
@@ -41,4 +41,4 @@
 ## Source
 
 - Package: @aics/storybook-avast@0.1.0
-- Storybook: https://ppeou-gendigital.github.io/tools/aics/avast/
+- Storybook: http://localhost:4173/avast/

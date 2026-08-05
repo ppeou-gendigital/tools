@@ -158,3 +158,21 @@ Resolved norton theme values from themes/default/.
 | `--color-shadow-default` | `var(--color-neutral-50)` | |
 | `--gradient-horizontal` | `linear-gradient(90deg, var(--color-norton-yellow) 0%, var(--color-blue-01) 100%)` | |
 | `--gradient-vertical` | `linear-gradient(180deg, var(--color-norton-yellow) 0%, var(--color-blue-01) 100%)` | |
+| `--color-bg-input` | `var(--color-bg-default)` | |
+| `--color-bg-input-disabled` | `var(--color-disabled-bg)` | |
+| `--color-border-input-default` | `var(--color-neutral-30)` | |
+| `--color-border-input-hover` | `var(--color-neutral-50)` | |
+| `--color-border-input-focus` | `var(--color-border-focus)` | |
+| `--color-border-input-focus-glow` | `color-mix(
+    in srgb,
+    var(--color-border-focus) 24%,
+    transparent
+  )` | |
+| `--color-border-input-error` | `var(--color-signal-critical)` | |
+| `--color-border-input-error-glow` | `var(--color-signal-critical-subtle)` | |
+| `--color-border-input-disabled` | `var(--color-disabled-border)` | |
+| `--color-border-input-divider` | `var(--color-neutral-20)` | |
+| `--color-text-placeholder` | `var(--color-disabled-text)` | |
+| `--color-text-default` | `var(--color-text-primary)` | |
+| `--color-text-disabled` | `var(--color-disabled-text)` | |
+| `--color-text-error` | `var(--color-signal-critical)` | |

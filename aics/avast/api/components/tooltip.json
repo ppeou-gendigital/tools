@@ -1,0 +1,135 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "tooltip",
+  "status": "published",
+  "summary": "Floating non-actionable label for UI explanation. Mirrors [Pattern / Tooltip `539:28418`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28418&m=dev) and Spec Frame [`.Tooltip · spec` `4601:164`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4601-164&m=dev).",
+  "specUrl": "/api/components/tooltip/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/tooltip/spec.md",
+    "hbs": "/api/components/tooltip/source/tooltip.hbs",
+    "scss": "/api/components/tooltip/source/tooltip.scss",
+    "js": "/api/components/tooltip/source/tooltip.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "587:77893",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=587-77893&m=dev"
+  },
+  "rootClass": "c-tooltip",
+  "bemClasses": [
+    "c-tooltip"
+  ],
+  "properties": [
+    {
+      "name": "type",
+      "fixtureKey": "type",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"small\"",
+      "description": "",
+      "figmaLabel": "Type"
+    },
+    {
+      "name": "tint",
+      "fixtureKey": "tint",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"default\"",
+      "description": "",
+      "figmaLabel": "Tint"
+    },
+    {
+      "name": "pointer",
+      "fixtureKey": "pointer",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"top-center\"",
+      "description": "",
+      "figmaLabel": "Pointer direction"
+    },
+    {
+      "name": "title",
+      "fixtureKey": "title",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"\"",
+      "description": "Medium/Rich",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "body",
+      "fixtureKey": "body",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"Tooltip text\"",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "open",
+      "fixtureKey": "open",
+      "type": "boolean",
+      "required": false,
+      "default": "`true` in stories",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "id",
+      "fixtureKey": "id",
+      "type": "TEXT",
+      "required": false,
+      "default": "—",
+      "description": "For `aria-describedby`",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "type",
+      "values": "small`, `medium`, `rich"
+    },
+    {
+      "axis": "tint",
+      "values": "default`, `main`, `success`, `attention`, `critical"
+    },
+    {
+      "axis": "pointer",
+      "values": "top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right`, `left`, `right"
+    }
+  ],
+  "tokensConsumed": [
+    "--space-1",
+    "--space-2",
+    "--space-3",
+    "--space-4",
+    "--space-5",
+    "--border-width-xs",
+    "--border-radius-m",
+    "--shadow-default",
+    "--color-bg-default",
+    "--color-border-subtle",
+    "--color-text-primary",
+    "--color-signal-info-subtle",
+    "--color-signal-success-subtle",
+    "--color-signal-warning-subtle",
+    "--color-signal-critical-subtle",
+    "--font-family-primary",
+    "--font-size-body-sm",
+    "--font-size-body-base",
+    "--font-weight-regular",
+    "--font-weight-semibold"
+  ],
+  "composes": [],
+  "hasBehavior": true,
+  "accessibility": [
+    "Root `role=\"tooltip\"`",
+    "Trigger should set `aria-describedby` to the tooltip `id`",
+    "Dismissible with Escape"
+  ],
+  "storybookId": "molecules-tooltip",
+  "generatedAt": "2026-08-05T20:59:07.364Z"
+}

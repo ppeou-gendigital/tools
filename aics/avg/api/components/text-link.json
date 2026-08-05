@@ -1,0 +1,180 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "text-link",
+  "status": "published",
+  "summary": "Inline text-based interactive element for navigating from body copy. Figma: [Text link master](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1332-54878&m=dev) (`1332:54878`). Spec Frame [`1332:54773`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1332-54773&m=dev).",
+  "specUrl": "/api/components/text-link/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/text-link/spec.md",
+    "hbs": "/api/components/text-link/source/text-link.hbs",
+    "scss": "/api/components/text-link/source/text-link.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "1332:54878",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1332-54878&m=dev"
+  },
+  "rootClass": "c-text-link",
+  "bemClasses": [
+    "c-text-link",
+    "c-icon"
+  ],
+  "properties": [
+    {
+      "name": "label",
+      "fixtureKey": "label",
+      "type": "text",
+      "required": true,
+      "default": "—",
+      "description": "Plain text",
+      "figmaLabel": "Label"
+    },
+    {
+      "name": "background",
+      "fixtureKey": "background",
+      "type": "enum",
+      "required": false,
+      "default": "light",
+      "description": "",
+      "figmaLabel": "Background"
+    },
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "enum",
+      "required": false,
+      "default": "base",
+      "description": "Body typography ramp",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "weight",
+      "fixtureKey": "weight",
+      "type": "enum",
+      "required": false,
+      "default": "regular",
+      "description": "",
+      "figmaLabel": "Weight"
+    },
+    {
+      "name": "href",
+      "fixtureKey": "href",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Omitted when disabled",
+      "figmaLabel": "href"
+    },
+    {
+      "name": "target",
+      "fixtureKey": "target",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "`_blank` → noopener",
+      "figmaLabel": "target"
+    },
+    {
+      "name": "disabled",
+      "fixtureKey": "disabled",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "Disabled"
+    },
+    {
+      "name": "iconTreatment",
+      "fixtureKey": "iconTreatment",
+      "type": "enum",
+      "required": false,
+      "default": "none",
+      "description": "`none` \\",
+      "figmaLabel": "icon treatment"
+    },
+    {
+      "name": "iconName",
+      "fixtureKey": "iconName",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Catalog key",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "iconPosition",
+      "fixtureKey": "iconPosition",
+      "type": "enum",
+      "required": false,
+      "default": "trailing",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "ariaLabel",
+      "fixtureKey": "ariaLabel",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "",
+      "figmaLabel": "Aria label"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Background",
+      "values": "light`, `dark"
+    },
+    {
+      "axis": "Size",
+      "values": "xs`, `sm`, `base`, `lg`, `xl`, `2xl`, `3xl"
+    },
+    {
+      "axis": "Weight",
+      "values": "regular`, `medium`, `semibold`, `bold"
+    }
+  ],
+  "tokensConsumed": [
+    "--color-text-brand",
+    "--color-text-primary",
+    "--color-text-secondary",
+    "--color-text-inverse",
+    "--color-disabled-text",
+    "--color-border-focus",
+    "--font-family-primary",
+    "--font-weight-regular",
+    "--font-weight-medium",
+    "--font-weight-semibold",
+    "--font-weight-bold",
+    "--font-size-body-xs",
+    "--font-size-body-sm",
+    "--font-size-body-base",
+    "--font-size-body-lg",
+    "--font-size-body-xl",
+    "--font-size-body-2xl",
+    "--font-size-body-3xl",
+    "--lineheight-body-xs",
+    "--lineheight-body-sm",
+    "--lineheight-body-base",
+    "--lineheight-body-lg",
+    "--lineheight-body-xl",
+    "--lineheight-body-2xl",
+    "--lineheight-body-3xl",
+    "--border-width-default",
+    "--space-1"
+  ],
+  "composes": [
+    "icon"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "Always an `<a>`; disabled keeps `role=\"link\"` with `tabindex=\"-1\"`",
+    "Focus ring via `--color-border-focus`",
+    "Icon decorative (`aria-hidden`)"
+  ],
+  "storybookId": "molecules-text-link",
+  "generatedAt": "2026-08-05T20:59:13.518Z"
+}

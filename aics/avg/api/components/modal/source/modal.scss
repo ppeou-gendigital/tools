@@ -1,0 +1,147 @@
+/**
+ * Patterns/Modal — .c-modal
+ * Figma: 1344:18518 / Overview 1359:21341.
+ *
+ * Size card widths: sm 320 / md 440 / lg 480.
+ * Backdrop: --color-bg-primary at 70% opacity.
+ * Card radius: --border-radius-dialog.
+ * Card shadow: Spec 0 / 8px / 12px / 0.18 (component literal).
+ */
+
+.c-modal {
+  box-sizing: border-box;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+}
+
+.c-modal[hidden] {
+  display: none;
+}
+
+.c-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: color-mix(in srgb, var(--color-bg-primary) 70%, transparent);
+}
+
+.c-modal__card {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  inline-size: 100%;
+  max-inline-size: 440px;
+  max-block-size: min(90dvh, 100%);
+  padding: var(--space-7);
+  background-color: var(--color-bg-default);
+  border-radius: var(--border-radius-dialog);
+  box-shadow: 0 8px 12px 0 rgb(0 0 0 / 18%);
+  color: var(--color-text-primary);
+}
+
+.c-modal--sm .c-modal__card {
+  max-inline-size: 320px;
+}
+
+.c-modal--md .c-modal__card {
+  max-inline-size: 440px;
+}
+
+.c-modal--lg .c-modal__card {
+  max-inline-size: 480px;
+}
+
+.c-modal__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  inline-size: 100%;
+}
+
+.c-modal__title {
+  flex: 1 1 auto;
+  margin: 0;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-h6);
+  line-height: var(--lineheight-h6);
+  letter-spacing: var(--letterspacing-h6);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.c-modal__close {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--border-radius-s);
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.c-modal__close:focus-visible {
+  outline: var(--border-width-s) solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+.c-modal__body {
+  inline-size: 100%;
+}
+
+.c-modal__body--scroll {
+  overflow-y: auto;
+  max-block-size: 240px;
+}
+
+.c-modal__description {
+  margin: 0;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+  letter-spacing: var(--letterspacing-body-base);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
+}
+
+.c-modal__media {
+  inline-size: 100%;
+  overflow: clip;
+  border-radius: var(--border-radius-s);
+}
+
+.c-modal__media-placeholder {
+  block-size: 160px;
+  background-color: var(--color-bg-subtle);
+}
+
+.c-modal__media img,
+.c-modal__media video {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.c-modal__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  inline-size: 100%;
+}
+
+.c-modal--scrollable .c-modal__body--scroll {
+  max-block-size: 280px;
+}

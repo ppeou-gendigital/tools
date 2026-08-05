@@ -27,3 +27,4 @@ Resolved avg theme values from themes/default/.
 | `--shadow-default` | `0 6px 24px 0 rgb(0 0 0 / var(--opacity-10))` | |
 | `--shadow-hover` | `0 6px 24px 0 rgb(0 0 0 / var(--opacity-10))` | |
 | `--shadow-pressed` | `0 2px 6px 0 rgb(0 0 0 / var(--opacity-10))` | |
+| `--shadow-menu-block` | `0 4px 12px 0 rgb(0 0 0 / 8%)` | |

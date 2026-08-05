@@ -1,0 +1,17 @@
+{{!--
+  Molecules/Content title — BEM root .c-content-title
+  Figma: Web-ODS Shared Library set 3483:3436 (canvas 3598:7174, Spec 3637:48).
+
+  Axes:
+    style   h0 | h1 | h2 | h3 | h4 | h5 | h6 | h7  → .c-content-title--$style
+    weight  subtle | base | prominent | emphasis |
+            strong                                   → .c-content-title--weight-$weight
+              (default emphasis = SemiBold)
+
+  Content:
+    text → heading string
+    tag  → semantic element (h1–h6 | p); independent of Style
+--}}
+<{{#if tag}}{{tag}}{{else}}h2{{/if}}
+  class="c-content-title c-content-title--{{#if style}}{{style}}{{else}}h0{{/if}} c-content-title--weight-{{#if weight}}{{weight}}{{else}}emphasis{{/if}}{{#if className}} {{className}}{{/if}}"
+>{{#if text}}{{text}}{{else}}Heading{{/if}}</{{#if tag}}{{tag}}{{else}}h2{{/if}}>

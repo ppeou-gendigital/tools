@@ -1,0 +1,66 @@
+{{!--
+  Blocks/Lower footer — BEM root .c-lower-footer
+  Figma: Block / Lower Footer page 3598:2174 — set 2498:2022 — Spec 4278:466
+
+  Axes: theme (light | dark)
+  Props: showLowerLinks, logoSrc, logoAlt, brandName, statement, copyrightText, links[]
+  Composes: divider, logo-wrapper, content-body, menu-list
+--}}
+<footer
+  class="c-lower-footer c-lower-footer--theme-{{#if theme}}{{lower theme}}{{else}}light{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="lower-footer"
+  data-theme="{{#if theme}}{{lower theme}}{{else}}light{{/if}}"
+>
+  <div class="c-lower-footer__inner">
+    <div class="c-lower-footer__divider" aria-hidden="true">
+      {{> divider
+        layout="horizontal"
+        size="xs"
+        inverse=dividerInverse
+      }}
+    </div>
+
+    <div class="c-lower-footer__lockup">
+      {{> logo-wrapper
+        lockUp="horizontal"
+        src=logoSrc
+        alt=logoAlt
+        className="c-lower-footer__logo"
+      }}
+      {{> content-body
+        style="body-sm"
+        weight="base"
+        text=statement
+        className="c-lower-footer__statement"
+      }}
+    </div>
+
+    {{> content-body
+      style="body-xs"
+      weight="base"
+      text=copyrightText
+      className="c-lower-footer__copyright"
+    }}
+
+    {{#unless (eq showLowerLinks false)}}
+      <nav class="c-lower-footer__nav" aria-label="{{#if navLabel}}{{navLabel}}{{else}}Legal and company links{{/if}}">
+        <ul class="c-lower-footer__links" role="list">
+          {{#each links}}
+            {{> menu-list
+              type="row"
+              size="large"
+              text=text
+              href=href
+              role="listitem"
+              showRightBorder=showRightBorder
+              edgePadding=true
+              rightIcon=rightIcon
+              rightIconName=rightIconName
+              className="c-lower-footer__link"
+            }}
+          {{/each}}
+        </ul>
+      </nav>
+    {{/unless}}
+  </div>
+</footer>

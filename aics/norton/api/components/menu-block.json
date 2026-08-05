@@ -1,0 +1,167 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "menu-block",
+  "status": "published",
+  "summary": "Slot-based vertical menu chrome that stacks N `menu-list` rows with optional shadow and keyline. Mirrors [Web-ODS Shared Library MenuBlock](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1396-4886&m=dev) (Spec Frame `.Menu block · spec` `4647:135`).",
+  "specUrl": "/api/components/menu-block/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/menu-block/spec.md",
+    "hbs": "/api/components/menu-block/source/menu-block.hbs",
+    "scss": "/api/components/menu-block/source/menu-block.scss",
+    "js": "/api/components/menu-block/source/menu-block.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "1396:4886",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1396-4886&m=dev"
+  },
+  "rootClass": "c-menu-block",
+  "bemClasses": [
+    "c-menu-block"
+  ],
+  "properties": [
+    {
+      "name": "type",
+      "fixtureKey": "type",
+      "type": "enum",
+      "required": true,
+      "default": "simple",
+      "description": "`simple` \\",
+      "figmaLabel": "Type"
+    },
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "enum",
+      "required": true,
+      "default": "large",
+      "description": "Passed through to child menu-list items",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "items",
+      "fixtureKey": "items",
+      "type": "array",
+      "required": false,
+      "default": "—",
+      "description": "Array of menu-list args; each rendered via `{{> menu-list}}`",
+      "figmaLabel": "Menu items"
+    },
+    {
+      "name": "slotHtml",
+      "fixtureKey": "slotHtml",
+      "type": "html",
+      "required": false,
+      "default": "—",
+      "description": "Escape hatch raw HTML for the list body",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "showDropShadow",
+      "fixtureKey": "showDropShadow",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "Applies `--shadow-menu-block`",
+      "figmaLabel": "Show drop shadow"
+    },
+    {
+      "name": "showKeyline",
+      "fixtureKey": "showKeyline",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "1px border",
+      "figmaLabel": "Show keyline"
+    },
+    {
+      "name": "mode",
+      "fixtureKey": "mode",
+      "type": "enum",
+      "required": false,
+      "default": "static",
+      "description": "`static` \\",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "id",
+      "fixtureKey": "id",
+      "type": "string",
+      "required": false,
+      "default": "—",
+      "description": "Required for popup (`aria-controls` target)",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "hidden",
+      "fixtureKey": "hidden",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "Initial hidden for popup",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "listRole",
+      "fixtureKey": "listRole",
+      "type": "string",
+      "required": false,
+      "default": "list / menu",
+      "description": "`list` when static; `menu` when popup",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "className",
+      "fixtureKey": "className",
+      "type": "string",
+      "required": false,
+      "default": "—",
+      "description": "Extra classes on root",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Type",
+      "values": "Simple, With caption"
+    },
+    {
+      "axis": "Size",
+      "values": "Large, Small"
+    },
+    {
+      "axis": "Show drop shadow",
+      "values": "true, false (default true)"
+    },
+    {
+      "axis": "Show keyline",
+      "values": "true, false (default true)"
+    },
+    {
+      "axis": "Mode",
+      "values": "static, popup (code-only; drives JS + role guidance)"
+    }
+  ],
+  "tokensConsumed": [
+    "--border-radius-l",
+    "--color-bg-default",
+    "--color-border-subtle",
+    "--shadow-menu-block",
+    "--space-0"
+  ],
+  "composes": [
+    "menu-list"
+  ],
+  "hasBehavior": true,
+  "accessibility": [
+    "Static: root list uses `role=\"list\"` (or consumer override); rows use `role=\"listitem\"`.",
+    "Popup: root uses `role=\"menu\"`; rows use `role=\"menuitem\"`; trigger must expose `aria-controls`, `aria-haspopup=\"menu\"`, and `aria-expanded`.",
+    "Keyboard (popup): Arrow Up/Down, Home/End, Escape closes, Tab wraps within items; focus moves to first enabled row on open.",
+    "Focus management restores to the trigger on close."
+  ],
+  "storybookId": "patterns-menu-block",
+  "generatedAt": "2026-08-05T20:59:30.540Z"
+}

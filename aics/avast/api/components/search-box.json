@@ -1,0 +1,152 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "search-box",
+  "status": "published",
+  "summary": "A compact search-entry pattern built on a native `<input type=\"search\">`. Mirrors the [Web-ODS Shared Library → Search box](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=698-47669&m=dev) (`698:47669`) under the other brand mode pick. The native HTML intentionally diverges from the Figma div tree — visual + token fidelity is the bar.",
+  "specUrl": "/api/components/search-box/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/search-box/spec.md",
+    "hbs": "/api/components/search-box/source/search-box.hbs",
+    "scss": "/api/components/search-box/source/search-box.scss",
+    "js": "/api/components/search-box/source/search-box.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "698:47669",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=698-47669&m=dev"
+  },
+  "rootClass": "c-search-box",
+  "bemClasses": [
+    "c-search-box"
+  ],
+  "properties": [
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "Enum (`m` / `l`)",
+      "required": true,
+      "default": "\"m\"",
+      "description": "Drives the control min-block size + input text size. Mirrors the Figma `Size` property (M = 32, L = 40).",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "iconFirst",
+      "fixtureKey": "iconFirst",
+      "type": "Boolean",
+      "required": false,
+      "default": "true",
+      "description": "Lead with the search glyph + separator, or trail them after the input. Mirrors the Figma `Icon first` property.",
+      "figmaLabel": "Icon first"
+    },
+    {
+      "name": "placeholder",
+      "fixtureKey": "placeholder",
+      "type": "Text",
+      "required": false,
+      "default": "\"Search\"",
+      "description": "Native placeholder.",
+      "figmaLabel": "Placeholder"
+    },
+    {
+      "name": "value",
+      "fixtureKey": "value",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Initial value; a non-empty value reveals the clear button.",
+      "figmaLabel": "Value"
+    },
+    {
+      "name": "accessibleLabel",
+      "fixtureKey": "accessibleLabel",
+      "type": "Text",
+      "required": false,
+      "default": "\"Search\"",
+      "description": "Bound to the input `aria-label` (the search box has no visible `<label>`).",
+      "figmaLabel": "Accessible label"
+    },
+    {
+      "name": "clearLabel",
+      "fixtureKey": "clearLabel",
+      "type": "Text",
+      "required": false,
+      "default": "\"Clear search\"",
+      "description": "`aria-label` for the clear button.",
+      "figmaLabel": "Clear label"
+    },
+    {
+      "name": "disabled",
+      "fixtureKey": "disabled",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Disables the input + clear button and paints the disabled surface.",
+      "figmaLabel": "Disabled"
+    },
+    {
+      "name": "name",
+      "fixtureKey": "name",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Bound to the input `name` (form submission).",
+      "figmaLabel": "Name"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "size",
+      "values": "`m` (32px control, `body-sm` input text) / `l` (40px control, `body-base` input text)."
+    },
+    {
+      "axis": "iconFirst",
+      "values": "`true` (search glyph + separator lead the input) / `false` (they trail it, via the `--icon-last` modifier)."
+    },
+    {
+      "axis": "`state` (transient)",
+      "values": "`empty` / `hover` / `focused` / `typing` — pseudo-class driven (`:hover` / `:focus-within`) plus the `is-filled` modifier that reveals the clear button."
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-input",
+    "--color-bg-input-disabled",
+    "--color-border-input-default",
+    "--color-border-input-hover",
+    "--color-border-input-focus",
+    "--color-border-input-focus-glow",
+    "--color-border-input-disabled",
+    "--color-border-input-divider",
+    "--color-text-placeholder",
+    "--color-text-default",
+    "--color-text-disabled",
+    "--color-text-primary",
+    "--space-1",
+    "--space-2",
+    "--space-3",
+    "--border-radius-card",
+    "--border-radius-control",
+    "--border-width-hairline",
+    "--border-width-default",
+    "--font-family-primary",
+    "--font-size-body-sm",
+    "--lineheight-body-sm",
+    "--font-size-body-base",
+    "--lineheight-body-base"
+  ],
+  "composes": [
+    "icon"
+  ],
+  "hasBehavior": true,
+  "accessibility": [
+    "The input carries an `aria-label` (default \"Search\") since the search box ships no visible `<label>`.",
+    "The clear button is a real `<button type=\"button\">` with an `aria-label` (\"Clear search\"); pressing it empties the field and returns focus to the input.",
+    "The native UA search-cancel button (`::-webkit-search-cancel-button`) is suppressed; the styled clear button replaces it so the affordance exists and is reachable in Firefox too.",
+    "Focus ring uses `:focus-within` on the wrapper so the whole control reads as one focus target; `:focus-visible` keeps the clear-button ring keyboard-only.",
+    "WCAG: resting + focus borders meet AA non-text contrast against `--color-bg-input`; the glyph + separator are `aria-hidden`. Per the Figma guidance frame (`984:2201`), keep search boxes on the primary background where border contrast is guaranteed."
+  ],
+  "storybookId": "patterns-search-box",
+  "generatedAt": "2026-08-05T20:59:07.364Z"
+}

@@ -1,0 +1,133 @@
+{{!--
+  Components/Slider template — single BEM root (.c-slider) covering
+  the Figma master variant set on Web-ODS Shared Library `1336:2939`
+  (LifeLock theme mode), as published on the Sliders 🟢 canvas at
+  `539:28421`.
+
+  Variant axes (mirror Figma's master + spec.md `## Variant axes`):
+    variant   continuous | discrete                 [.c-slider--$variant]
+    selection single-value | range                  [.c-slider--$selection]
+
+  Interaction state (default / hover / focused / active) paints via
+  CSS pseudo-classes on the underlying `<input type="range">` and the
+  visible thumb — NEVER as a BEM modifier. `disabled` is the only
+  persistent state — sets `aria-disabled="true"` on the root and the
+  native `disabled` attribute on each input. A `data-state` hook on
+  the root lets the AllStyles gallery freeze each transient state for
+  visual regression.
+
+  Defaults:
+    variant         → "continuous"
+    selection       → "single-value"
+    min             → 0
+    max             → 100
+    step            → 1
+    value           → min            (single-value)
+    valueMin        → min            (range)
+    valueMax        → max            (range)
+    showValueLabel  → true
+
+  Required:
+    selection="range" → both valueMin and valueMax.
+    selection="single-value" → value.
+--}}
+{{#with this as |s|}}
+  {{!-- Defaults --}}
+  {{#unless s.variant}}{{!-- continuous default --}}{{/unless}}
+  {{!-- Compute thumb offsets as percentages of (max - min). --}}
+  {{!-- Pre-computed by the .stories.js render layer to keep the
+       Handlebars surface free of math helpers. --}}
+<div
+  class="c-slider c-slider--{{#if s.variant}}{{s.variant}}{{else}}continuous{{/if}} c-slider--{{#if s.selection}}{{s.selection}}{{else}}single-value{{/if}}{{#if s.disabled}} is-disabled{{/if}}"
+  data-component="slider"
+  data-variant="{{#if s.variant}}{{s.variant}}{{else}}continuous{{/if}}"
+  data-selection="{{#if s.selection}}{{s.selection}}{{else}}single-value{{/if}}"
+  {{#if s.state}}data-state="{{s.state}}"{{/if}}
+  role="group"
+  {{#if s.label}}aria-label="{{s.label}}"{{/if}}
+  {{#if s.disabled}}aria-disabled="true"{{/if}}
+  data-min="{{#if s.min}}{{s.min}}{{else}}0{{/if}}"
+  data-max="{{#if s.max}}{{s.max}}{{else}}100{{/if}}"
+  data-step="{{#if s.step}}{{s.step}}{{else}}1{{/if}}"
+>
+  {{#unless (eq s.showValueLabel false)}}
+    <div class="c-slider__value-label-area">
+      {{#if (eq s.selection "range")}}
+        <span class="c-slider__value-label c-slider__value-label--start" data-role="value-min" aria-live="polite">{{s.valueMin}}</span>
+        <span class="c-slider__value-label-separator" aria-hidden="true">–</span>
+        <span class="c-slider__value-label c-slider__value-label--end" data-role="value-max" aria-live="polite">{{s.valueMax}}</span>
+      {{else}}
+        <span class="c-slider__value-label" data-role="value" aria-live="polite">{{s.value}}</span>
+      {{/if}}
+    </div>
+  {{/unless}}
+
+  <div class="c-slider__track-area">
+    <div class="c-slider__track" aria-hidden="true"></div>
+
+    <div
+      class="c-slider__active-fill"
+      aria-hidden="true"
+      style="--slider-fill-start: {{#if s.fillStartPct}}{{s.fillStartPct}}{{else}}0{{/if}}%; --slider-fill-end: {{#if s.fillEndPct}}{{s.fillEndPct}}{{else}}{{s.valuePct}}{{/if}}%;"
+    ></div>
+
+    {{#if (eq s.variant "discrete")}}
+      {{#each s.tickOffsets as |offset|}}
+        <span class="c-slider__tick" aria-hidden="true" style="--slider-tick-offset: {{offset}}%;"></span>
+      {{/each}}
+    {{/if}}
+
+    {{#if (eq s.selection "range")}}
+      <input
+        type="range"
+        class="c-slider__input c-slider__input--start"
+        min="{{#if s.min}}{{s.min}}{{else}}0{{/if}}"
+        max="{{#if s.max}}{{s.max}}{{else}}100{{/if}}"
+        step="{{#if s.step}}{{s.step}}{{else}}1{{/if}}"
+        value="{{s.valueMin}}"
+        {{#if s.name}}name="{{s.name}}-min"{{/if}}
+        {{#if s.disabled}}disabled{{/if}}
+        aria-label="{{#if s.label}}{{s.label}} (minimum){{else}}Minimum{{/if}}"
+      >
+      <input
+        type="range"
+        class="c-slider__input c-slider__input--end"
+        min="{{#if s.min}}{{s.min}}{{else}}0{{/if}}"
+        max="{{#if s.max}}{{s.max}}{{else}}100{{/if}}"
+        step="{{#if s.step}}{{s.step}}{{else}}1{{/if}}"
+        value="{{s.valueMax}}"
+        {{#if s.name}}name="{{s.name}}-max"{{/if}}
+        {{#if s.disabled}}disabled{{/if}}
+        aria-label="{{#if s.label}}{{s.label}} (maximum){{else}}Maximum{{/if}}"
+      >
+      <span
+        class="c-slider__thumb c-slider__thumb--start"
+        aria-hidden="true"
+        style="--slider-thumb-offset: {{s.startPct}}%;"
+      ></span>
+      <span
+        class="c-slider__thumb c-slider__thumb--end"
+        aria-hidden="true"
+        style="--slider-thumb-offset: {{s.endPct}}%;"
+      ></span>
+    {{else}}
+      <input
+        type="range"
+        class="c-slider__input"
+        min="{{#if s.min}}{{s.min}}{{else}}0{{/if}}"
+        max="{{#if s.max}}{{s.max}}{{else}}100{{/if}}"
+        step="{{#if s.step}}{{s.step}}{{else}}1{{/if}}"
+        value="{{s.value}}"
+        {{#if s.name}}name="{{s.name}}"{{/if}}
+        {{#if s.disabled}}disabled{{/if}}
+        aria-label="{{#if s.label}}{{s.label}}{{else}}Value{{/if}}"
+      >
+      <span
+        class="c-slider__thumb"
+        aria-hidden="true"
+        style="--slider-thumb-offset: {{s.valuePct}}%;"
+      ></span>
+    {{/if}}
+  </div>
+</div>
+{{/with}}

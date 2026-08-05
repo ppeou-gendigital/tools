@@ -1,0 +1,178 @@
+/**
+ * Patterns/Toggle — BEM root (.c-toggle).
+ * Figma: Pattern / Toggle 539:28414 / Spec 4588:132.
+ *
+ * Types: link | segmented | pill
+ */
+
+@use '../discount-label/discount-label';
+
+.c-toggle {
+  box-sizing: border-box;
+  display: inline-flex;
+  font-family: var(--font-family-primary);
+}
+
+.c-toggle.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ── Link (labels + track) ─────────────────────────────────────── */
+
+.c-toggle__link {
+  align-items: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  gap: var(--space-5);
+  margin: 0;
+  padding: var(--space-3);
+}
+
+.c-toggle__label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-base);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--letterspacing-body-base);
+  line-height: var(--lineheight-body-base);
+}
+
+.c-toggle__label.is-active {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.c-toggle__track {
+  background-color: var(--color-border-subtle);
+  block-size: 24px;
+  border-radius: var(--border-radius-pill);
+  display: inline-flex;
+  flex: 0 0 auto;
+  inline-size: 44px;
+  padding: 2px;
+  position: relative;
+  transition: background-color 0.15s ease;
+}
+
+.c-toggle[data-selected='on'] .c-toggle__track {
+  background-color: var(--color-signal-info);
+}
+
+.c-toggle__knob {
+  background-color: var(--color-bg-default);
+  block-size: 20px;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 16%);
+  inline-size: 20px;
+  inset-inline-start: 2px;
+  position: absolute;
+  top: 2px;
+  transition: inset-inline-start 0.15s ease;
+}
+
+.c-toggle[data-selected='on'] .c-toggle__knob {
+  inset-inline-start: calc(100% - 22px);
+}
+
+.c-toggle__link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 var(--border-width-s) var(--color-border-focus);
+  border-radius: var(--border-radius-s);
+}
+
+/* ── Segmented ─────────────────────────────────────────────────── */
+
+.c-toggle__segmented {
+  align-items: center;
+  border: var(--border-width-xs) solid var(--color-border-strong);
+  border-radius: var(--border-radius-l);
+  display: inline-flex;
+  overflow: hidden;
+  padding: var(--space-2);
+}
+
+.c-toggle__seg {
+  background: transparent;
+  border: none;
+  border-radius: var(--border-radius-s);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--font-size-button-xl, var(--font-size-body-lg));
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--lineheight-button-xl, var(--lineheight-body-lg));
+  min-inline-size: 48px;
+  padding-block: var(--space-4);
+  padding-inline: var(--space-8);
+}
+
+.c-toggle__seg.is-selected {
+  background-color: var(--button-primary-bg-default, var(--color-bg-brand));
+  color: var(--button-primary-content-default, var(--color-text-inverse));
+}
+
+.c-toggle__seg:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 var(--border-width-s) var(--color-border-focus);
+}
+
+.c-toggle__seg:hover:not(.is-selected):not(:disabled) {
+  background-color: var(--color-bg-subtle);
+}
+
+/* ── Pill ──────────────────────────────────────────────────────── */
+
+.c-toggle__pill {
+  align-items: stretch;
+  background-color: var(--color-disabled-bg, var(--color-bg-subtle));
+  border-radius: var(--border-radius-pill);
+  display: inline-flex;
+  min-block-size: 42px;
+  overflow: hidden;
+}
+
+.c-toggle__pill-opt {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--border-radius-pill);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: inherit;
+  font-size: var(--font-size-body-base);
+  font-weight: var(--font-weight-medium);
+  gap: var(--space-3);
+  justify-content: center;
+  line-height: var(--lineheight-body-base);
+  padding-block: var(--space-3);
+  padding-inline: var(--space-7);
+}
+
+.c-toggle__pill-opt.is-selected {
+  background-color: var(--color-text-primary);
+  color: var(--color-text-inverse);
+  padding-inline-end: var(--space-3);
+}
+
+.c-toggle__pill-opt:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 var(--border-width-s) var(--color-border-focus);
+}
+
+.c-toggle__pill-chip {
+  display: inline-flex;
+}
+
+.c-toggle--state-hover .c-toggle__seg:not(.is-selected),
+.c-toggle--state-hover .c-toggle__pill-opt:not(.is-selected) {
+  background-color: var(--color-bg-subtle);
+}
+
+.c-toggle--state-pressed .c-toggle__seg.is-selected,
+.c-toggle--state-pressed .c-toggle__pill-opt.is-selected {
+  filter: brightness(0.92);
+}

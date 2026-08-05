@@ -1,0 +1,205 @@
+{{!--
+  Patterns/Pagination — BEM root .c-pagination
+  Figma: page 539:28422 / Overview 1332:53851
+    Nav 1332:52356 · Select 1332:52459 · Jump 1332:52580
+
+  Props:
+    type            nav | select | jump
+    currentPage     number
+    totalPages      number
+    pages           prebuilt nav items (kind page|ellipsis)
+    selectItems     menu-list args for select open list
+    showFirstLast   boolean (nav)
+    disabled        boolean
+    error           boolean
+    errorMessage    string
+    size            large | small (jump)
+    jumpType        labelled | icon-only (jump)
+    jumpLabel       string
+    jumpValue       string/number for input
+    selectLabel     string
+    open            boolean (select list open)
+    id
+    className
+--}}
+{{#if (eq (lower type) "select")}}
+<div
+  class="c-pagination c-pagination--select{{#if disabled}} is-disabled{{/if}}{{#if error}} is-error{{/if}}{{#if open}} is-open{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="pagination"
+  data-pagination-type="select"
+  {{#if id}}id="{{id}}"{{/if}}
+>
+  <button
+    type="button"
+    class="c-pagination__select-trigger"
+    data-pagination-select-trigger
+    aria-haspopup="listbox"
+    aria-expanded="{{#if open}}true{{else}}false{{/if}}"
+    {{#if disabled}}disabled{{/if}}
+  >
+    <span class="c-pagination__select-label">
+      {{#if selectLabel}}{{selectLabel}}{{else}}Page {{#if currentPage}}{{currentPage}}{{else}}1{{/if}}{{/if}}
+    </span>
+    {{> icon name="arrows-navigation/simple-down" size="16" color="current" decorative=true}}
+  </button>
+  {{#if open}}
+    {{> menu-block
+      type="simple"
+      size="large"
+      mode="static"
+      listRole="listbox"
+      showDropShadow=true
+      showKeyline=true
+      items=selectItems
+      className="c-pagination__select-menu"
+    }}
+  {{/if}}
+  {{#if error}}
+    {{#if errorMessage}}
+      <p class="c-pagination__error" role="alert">{{errorMessage}}</p>
+    {{/if}}
+  {{/if}}
+</div>
+{{else if (eq (lower type) "jump")}}
+<div
+  class="c-pagination c-pagination--jump c-pagination--size-{{#if size}}{{lower size}}{{else}}large{{/if}} c-pagination--jump-{{#if jumpType}}{{lower jumpType}}{{else}}labelled{{/if}}{{#if disabled}} is-disabled{{/if}}{{#if error}} is-error{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="pagination"
+  data-pagination-type="jump"
+  {{#if id}}id="{{id}}"{{/if}}
+>
+  <label class="c-pagination__jump-label" for="{{#if id}}{{id}}-input{{else}}pagination-jump{{/if}}">
+    {{#if jumpFieldLabel}}{{jumpFieldLabel}}{{else}}Go to page{{/if}}
+  </label>
+  <div class="c-pagination__jump-row">
+    <input
+      class="c-pagination__jump-input"
+      id="{{#if id}}{{id}}-input{{else}}pagination-jump{{/if}}"
+      type="number"
+      inputmode="numeric"
+      min="1"
+      max="{{#if totalPages}}{{totalPages}}{{else}}1{{/if}}"
+      value="{{jumpValue}}"
+      data-pagination-jump-input
+      {{#if disabled}}disabled{{/if}}
+      aria-invalid="{{#if error}}true{{else}}false{{/if}}"
+    />
+    {{#if (eq (lower jumpType) "icon-only")}}
+      <button
+        type="button"
+        class="btn btn--primary btn--m btn--icon-button c-pagination__jump-submit"
+        data-pagination-jump-submit
+        aria-label="{{#if jumpLabel}}{{jumpLabel}}{{else}}Go to page{{/if}}"
+        {{#if disabled}}disabled{{/if}}
+      >
+        {{> icon name="arrows-navigation/simple-chevron-right" size="16" color="current" decorative=true}}
+      </button>
+    {{else}}
+      <button
+        type="button"
+        class="btn btn--primary btn--m c-pagination__jump-submit"
+        data-pagination-jump-submit
+        {{#if disabled}}disabled{{/if}}
+      >
+        <span class="btn__label">{{#if jumpLabel}}{{jumpLabel}}{{else}}Go{{/if}}</span>
+      </button>
+    {{/if}}
+  </div>
+  {{#if error}}
+    {{#if errorMessage}}
+      <p class="c-pagination__error" role="alert">{{errorMessage}}</p>
+    {{/if}}
+  {{/if}}
+</div>
+{{else}}
+<nav
+  class="c-pagination c-pagination--nav{{#if disabled}} is-disabled{{/if}}{{#if error}} is-error{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="pagination"
+  data-pagination-type="nav"
+  aria-label="{{#if accessibleLabel}}{{accessibleLabel}}{{else}}Pagination{{/if}}"
+  {{#if id}}id="{{id}}"{{/if}}
+>
+  <ul class="c-pagination__list" role="list">
+    {{#if showFirstLast}}
+      <li class="c-pagination__item">
+        <button
+          type="button"
+          class="c-pagination__control c-pagination__control--first"
+          data-pagination-page="1"
+          aria-label="First page"
+          {{#if disabled}}disabled{{/if}}
+          {{#if (eq currentPage 1)}}disabled{{/if}}
+        >
+          <span class="c-pagination__double-chevron" aria-hidden="true">
+            {{> icon name="arrows-navigation/simple-chevron-left" size="20" color="current" decorative=true}}
+            {{> icon name="arrows-navigation/simple-chevron-left" size="20" color="current" decorative=true}}
+          </span>
+        </button>
+      </li>
+    {{/if}}
+    <li class="c-pagination__item">
+      <button
+        type="button"
+        class="c-pagination__control c-pagination__control--prev"
+        data-pagination-step="-1"
+        aria-label="Previous page"
+        {{#if disabled}}disabled{{/if}}
+        {{#if (eq currentPage 1)}}disabled{{/if}}
+      >
+        {{> icon name="arrows-navigation/simple-chevron-left" size="24" color="current" decorative=true}}
+      </button>
+    </li>
+    {{#each pages}}
+      {{#if (eq kind "ellipsis")}}
+        <li class="c-pagination__item c-pagination__item--ellipsis" aria-hidden="true">
+          <span class="c-pagination__ellipsis">…</span>
+        </li>
+      {{else}}
+        <li class="c-pagination__item">
+          <button
+            type="button"
+            class="c-pagination__control c-pagination__control--page{{#if current}} is-current{{/if}}"
+            data-pagination-page="{{page}}"
+            aria-label="Page {{page}}"
+            {{#if current}}aria-current="page"{{/if}}
+            {{#if ../disabled}}disabled{{/if}}
+          >{{page}}</button>
+        </li>
+      {{/if}}
+    {{/each}}
+    <li class="c-pagination__item">
+      <button
+        type="button"
+        class="c-pagination__control c-pagination__control--next"
+        data-pagination-step="1"
+        aria-label="Next page"
+        {{#if disabled}}disabled{{/if}}
+        {{#if (eq currentPage totalPages)}}disabled{{/if}}
+      >
+        {{> icon name="arrows-navigation/simple-chevron-right" size="24" color="current" decorative=true}}
+      </button>
+    </li>
+    {{#if showFirstLast}}
+      <li class="c-pagination__item">
+        <button
+          type="button"
+          class="c-pagination__control c-pagination__control--last"
+          data-pagination-page="{{totalPages}}"
+          aria-label="Last page"
+          {{#if disabled}}disabled{{/if}}
+          {{#if (eq currentPage totalPages)}}disabled{{/if}}
+        >
+          <span class="c-pagination__double-chevron" aria-hidden="true">
+            {{> icon name="arrows-navigation/simple-chevron-right" size="20" color="current" decorative=true}}
+            {{> icon name="arrows-navigation/simple-chevron-right" size="20" color="current" decorative=true}}
+          </span>
+        </button>
+      </li>
+    {{/if}}
+  </ul>
+  {{#if error}}
+    {{#if errorMessage}}
+      <p class="c-pagination__error" role="alert">{{errorMessage}}</p>
+    {{/if}}
+  {{/if}}
+</nav>
+{{/if}}

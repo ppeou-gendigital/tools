@@ -1,0 +1,181 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "modal",
+  "status": "published",
+  "summary": "Interruptive dialog that blocks the page behind a 70% primary backdrop. Mirrors [Web-ODS Shared Library Modal](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1344-18518&m=dev) (Overview `1359:21341`).",
+  "specUrl": "/api/components/modal/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/modal/spec.md",
+    "hbs": "/api/components/modal/source/modal.hbs",
+    "scss": "/api/components/modal/source/modal.scss",
+    "js": "/api/components/modal/source/modal.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "1344:18518",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1344-18518&m=dev"
+  },
+  "rootClass": "c-modal",
+  "bemClasses": [
+    "c-modal"
+  ],
+  "properties": [
+    {
+      "name": "variant",
+      "fixtureKey": "variant",
+      "type": "enum",
+      "required": true,
+      "default": "standard",
+      "description": "`standard` \\",
+      "figmaLabel": "Variant"
+    },
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "enum",
+      "required": true,
+      "default": "md",
+      "description": "Card max-width 320 / 440 / 480",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "title",
+      "fixtureKey": "title",
+      "type": "string",
+      "required": false,
+      "default": "Modal title",
+      "description": "Header heading",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "body",
+      "fixtureKey": "body",
+      "type": "string",
+      "required": false,
+      "default": "—",
+      "description": "Description paragraph",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "mediaHtml",
+      "fixtureKey": "mediaHtml",
+      "type": "html",
+      "required": false,
+      "default": "—",
+      "description": "Media variant slot",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "primaryLabel",
+      "fixtureKey": "primaryLabel",
+      "type": "string",
+      "required": false,
+      "default": "Continue",
+      "description": "Primary CTA",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "secondaryLabel",
+      "fixtureKey": "secondaryLabel",
+      "type": "string",
+      "required": false,
+      "default": "Cancel",
+      "description": "Text secondary",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "showSecondary",
+      "fixtureKey": "showSecondary",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "showClose",
+      "fixtureKey": "showClose",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "open",
+      "fixtureKey": "open",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "Omits `hidden` when true",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "id",
+      "fixtureKey": "id",
+      "type": "string",
+      "required": false,
+      "default": "—",
+      "description": "For `aria-controls`",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "className",
+      "fixtureKey": "className",
+      "type": "string",
+      "required": false,
+      "default": "—",
+      "description": "",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Variant",
+      "values": "Standard, Scrollable, Media"
+    },
+    {
+      "axis": "Size",
+      "values": "sm, md, lg"
+    }
+  ],
+  "tokensConsumed": [
+    "--border-radius-dialog",
+    "--border-radius-s",
+    "--border-width-s",
+    "--color-bg-default",
+    "--color-bg-primary",
+    "--color-bg-subtle",
+    "--color-border-focus",
+    "--color-text-primary",
+    "--color-text-secondary",
+    "--font-family-primary",
+    "--font-size-h6",
+    "--font-size-body-base",
+    "--lineheight-h6",
+    "--lineheight-body-base",
+    "--letterspacing-h6",
+    "--letterspacing-body-base",
+    "--font-weight-bold",
+    "--font-weight-regular",
+    "--space-1",
+    "--space-3",
+    "--space-5",
+    "--space-7"
+  ],
+  "composes": [
+    "button",
+    "icon"
+  ],
+  "hasBehavior": true,
+  "accessibility": [
+    "`role=\"dialog\"` + `aria-modal=\"true\"` + labelledby/describedby",
+    "Focus moves into the dialog on open; Tab wraps; Escape closes; focus returns to trigger",
+    "Close control has accessible name"
+  ],
+  "storybookId": "patterns-modal",
+  "generatedAt": "2026-08-05T20:59:07.364Z"
+}

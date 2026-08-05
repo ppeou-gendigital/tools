@@ -1,0 +1,110 @@
+/**
+ * Molecules/Table cell — BEM root (.c-table-cell).
+ * Figma: Table cell · content slot `5957:257` / Spec `5960:299`.
+ *
+ * Axes:
+ *   type   → .c-table-cell--type-header | --type-body
+ *   align  → .c-table-cell--align-left | --align-center | --align-right
+ *
+ * Optional paints:
+ *   background → .c-table-cell--background
+ *   borders    → .c-table-cell--borders (+ per-side border elements)
+ *
+ * Table block collapses shared borders via -1px margin on adjacent cells.
+ */
+
+.c-table-cell {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  gap: var(--space-3);
+  min-inline-size: 0;
+  padding: var(--space-3);
+  position: relative;
+}
+
+.c-table-cell--background.c-table-cell--type-header {
+  background-color: var(--color-bg-muted);
+}
+
+.c-table-cell--background.c-table-cell--type-body {
+  background-color: var(--color-bg-primary);
+}
+
+.c-table-cell__icon {
+  block-size: 24px;
+  color: var(--color-text-primary);
+  display: inline-flex;
+  flex: 0 0 auto;
+  inline-size: 24px;
+}
+
+.c-table-cell__content {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-inline-size: 0;
+  overflow: clip;
+}
+
+.c-table-cell--align-left .c-table-cell__content {
+  align-items: flex-start;
+  text-align: start;
+}
+
+.c-table-cell--align-center .c-table-cell__content {
+  align-items: center;
+  text-align: center;
+}
+
+.c-table-cell--align-right .c-table-cell__content {
+  align-items: flex-end;
+  text-align: end;
+}
+
+.c-table-cell__content .c-content-title,
+.c-table-cell__content .c-content-body {
+  margin: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
+.c-table-cell__borders {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+}
+
+.c-table-cell__border {
+  background-color: var(--color-border-subtle);
+  position: absolute;
+}
+
+.c-table-cell__border--top {
+  block-size: var(--border-width-xs);
+  inline-size: 100%;
+  inset-block-start: 0;
+  inset-inline: 0;
+}
+
+.c-table-cell__border--bottom {
+  block-size: var(--border-width-xs);
+  inline-size: 100%;
+  inset-block-end: 0;
+  inset-inline: 0;
+}
+
+.c-table-cell__border--left {
+  block-size: 100%;
+  inline-size: var(--border-width-xs);
+  inset-block: 0;
+  inset-inline-start: 0;
+}
+
+.c-table-cell__border--right {
+  block-size: 100%;
+  inline-size: var(--border-width-xs);
+  inset-block: 0;
+  inset-inline-end: 0;
+}

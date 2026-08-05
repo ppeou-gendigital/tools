@@ -1,0 +1,67 @@
+/**
+ * Media — core molecule (.c-media).
+ * Figma Web-ODS Shared Library page 3412:17329 / Spec 3443:11387.
+ *
+ * Fixed 16:9 surface; Type swaps img / video / iframe; Width is parent-relative.
+ */
+
+.c-media {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  overflow: clip;
+  aspect-ratio: 16 / 9;
+  background-color: var(--color-bg-subtle, #fafafc);
+  border-radius: var(--border-radius-l, 8px);
+  inline-size: 100%;
+  max-inline-size: 100%;
+}
+
+.c-media--width-full {
+  inline-size: 100%;
+}
+
+.c-media--width-half {
+  inline-size: 100%;
+
+  @media (min-width: 768px) {
+    inline-size: 50%;
+  }
+}
+
+.c-media__media {
+  position: absolute;
+  inset: 0;
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  border: 0;
+  object-position: center;
+}
+
+.c-media--fit-cover .c-media__media { object-fit: cover; }
+.c-media--fit-contain .c-media__media { object-fit: contain; }
+.c-media--fit-fill .c-media__media { object-fit: fill; }
+.c-media--fit-none .c-media__media { object-fit: none; }
+.c-media--fit-scale-down .c-media__media { object-fit: scale-down; }
+
+/* iframes ignore object-fit; keep absolute fill */
+.c-media--type-youtube .c-media__media {
+  object-fit: unset;
+}
+
+.c-media__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.c-media__placeholder-glyph {
+  display: block;
+  inline-size: 18%;
+  max-inline-size: 115px;
+  block-size: auto;
+}
