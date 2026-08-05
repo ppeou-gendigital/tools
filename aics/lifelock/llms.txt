@@ -18,7 +18,7 @@
 5. Keep published BEM class names; call published `init*` factories.
 6. Do **not** invent markup/CSS/behavior from Docs prose or Show code alone.
 7. Absolute brand base (prefix for every relative `/api/...` path):
-   `http://localhost:4173/lifelock/`
+   `https://ppeou-gendigital.github.io/tools/aics/lifelock/`
 
 ## Registry
 
@@ -41,4 +41,4 @@
 ## Source
 
 - Package: @aics/storybook-lifelock@0.1.0
-- Storybook: http://localhost:4173/lifelock/
+- Storybook: https://ppeou-gendigital.github.io/tools/aics/lifelock/

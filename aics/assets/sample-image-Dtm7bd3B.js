@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-DkW27tQK.js";import{$ as t,et as n}from"./pretty-source-CA3IhMc4.js";var r;function i(){return(i=e((()=>{n(),r=t(`assets/images/sample.jpg`)})))()}export{i as n,r as t};

@@ -134,5 +134,5 @@
     "WCAG: every (tone × state) combination meets AA non-text contrast against `--color-bg-default`. Disabled paint retains a visible outline per WCAG 2.2 § 1.4.11."
   ],
   "storybookId": "molecules-checkbox",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
