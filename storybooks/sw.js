@@ -1,10 +1,10 @@
-/* aics storybook service worker — build dcb63d2ba9094a41
+/* aics storybook service worker — build 4ce425bc3d3938fd
  *
  * Auto-update (Viaggio-style): skipWaiting + clientsClaim; page reloads
  * on controllerchange. Network-first for HTML/JSON so deploys show up
  * without a manual hard refresh; cache-first for hashed /assets/*.
  */
-const BUILD_ID = "dcb63d2ba9094a41";
+const BUILD_ID = "4ce425bc3d3938fd";
 const CACHE = 'aics-sb-' + BUILD_ID;
 
 self.addEventListener('install', (event) => {

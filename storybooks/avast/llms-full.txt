@@ -18,7 +18,7 @@
 5. Keep published BEM class names; call published `init*` factories.
 6. Do **not** invent markup/CSS/behavior from Docs prose or Show code alone.
 7. Absolute brand base (prefix for every relative `/api/...` path):
-   `http://localhost:4173/avast/`
+   `https://ppeou-gendigital.github.io/tools/aics/avast/`
 
 ## Registry
 
@@ -41,7 +41,7 @@
 ## Source
 
 - Package: @aics/storybook-avast@0.1.0
-- Storybook: http://localhost:4173/avast/
+- Storybook: https://ppeou-gendigital.github.io/tools/aics/avast/
 
 
 # Full dump
@@ -414,7 +414,7 @@ single-open, and custom events require `initAccordion` /
     "Disabled items keep a readable label; summary uses `tabindex=\"-1\"` when disabled."
   ],
   "storybookId": "patterns-accordion",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -813,7 +813,7 @@ Without JS the dismiss control remains visible; the host must wire click handlin
     "Never colour-only — icon + copy carry meaning"
   ],
   "storybookId": "patterns-alert",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -1095,7 +1095,7 @@ Display primitive for award logos + copy in trust rows and rating sections. Dele
     "Star icons `aria-hidden`; rating group `role=\"img\"` + `aria-label`"
   ],
   "storybookId": "patterns-award-item",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -1293,7 +1293,7 @@ Use to frame a single award logo at a fixed aspect ratio so a row of awards line
     "Placeholder label is documentation-only and not shipped to users."
   ],
   "storybookId": "molecules-award-wrapper",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -1569,7 +1569,7 @@ No size axis and no icon slot.
     "**Contrast:** `warning` / `high` carve-out; verify `inverse` / `low` on tinted hosts."
   ],
   "storybookId": "molecules-badge",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -1766,7 +1766,7 @@ Wayfinding only — not a menu. No expandable / popover collapsed crumbs.
     "Collapsed ellipsis exposes hidden labels via `title` / `aria-label`"
   ],
   "storybookId": "patterns-breadcrumb",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -2217,7 +2217,7 @@ Shared CTA primitive for all first-party brands. Brand themes supply
     "`aria-busy` when loading; honour `prefers-reduced-motion`"
   ],
   "storybookId": "molecules-button",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -2422,7 +2422,7 @@ Promotional / editorial teaser cards with photography — not a generic containe
     "`iconCompositionOptOut` — photo media is not mask-based"
   ],
   "storybookId": "patterns-card",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -2780,7 +2780,7 @@ property on the input — without JS, screen readers will announce
     "WCAG: every (tone × state) combination meets AA non-text contrast against `--color-bg-default`. Disabled paint retains a visible outline per WCAG 2.2 § 1.4.11."
   ],
   "storybookId": "molecules-checkbox",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -3134,7 +3134,7 @@ still works.
     "`autocomplete=\"one-time-code\"` on the first box lets the platform offer an SMS code for one-tap fill. WCAG: the active box pairs an info-blue border with a grey fill for a clearly visible focus state; resting box borders meet AA non-text contrast against `--color-bg-default`. Per the Figma guidance frame (`984:2201`), keep the field on the primary background where border contrast is guaranteed."
   ],
   "storybookId": "patterns-code-entry",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -3424,7 +3424,7 @@ Content block is the Web-ODS section container for titled content. Do not use fo
     "No motion on the container."
   ],
   "storybookId": "patterns-content-block",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -3663,7 +3663,7 @@ Presentational paragraph that maps Figma’s Style × Weight body typography mat
     "Meet WCAG contrast for `--color-text-primary` on the surrounding canvas."
   ],
   "storybookId": "molecules-content-body",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -3959,7 +3959,7 @@ Content list is the unranked / ranked / nested list pattern for Web-ODS section 
     "No motion."
   ],
   "storybookId": "patterns-content-list",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -4216,7 +4216,7 @@ Presentational heading that maps Figma’s Style × Weight heading matrix onto C
     "Meet WCAG contrast for `--color-text-primary` on the surrounding canvas."
   ],
   "storybookId": "molecules-content-title",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -4463,7 +4463,7 @@ Discount label tags pricing / promo context. Prefer Badge for signal statuses (i
     "Leading icon is `aria-hidden` / decorative."
   ],
   "storybookId": "molecules-discount-label",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -4787,7 +4787,7 @@ brand/signal color axis, dashed/dotted stroke.
     "Non-interactive — no focus ring."
   ],
   "storybookId": "molecules-divider",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -5068,7 +5068,7 @@ is asset-driven; the molecule stays axis-stable.
     "Authors verify contrast at the rendered size; the component does not"
   ],
   "storybookId": "molecules-icon",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -5270,7 +5270,7 @@ This unit legitimately bypasses the icon-mask-wrapper contract because still ima
     "Text over Cover imagery is the parent’s WCAG responsibility."
   ],
   "storybookId": "molecules-image-wrapper",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -5464,7 +5464,7 @@ This unit legitimately bypasses the icon-mask-wrapper contract because logos are
     "Placeholder label is documentation-only and not shipped to users."
   ],
   "storybookId": "molecules-logo-wrapper",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -5734,7 +5734,7 @@ Close every page with consistent legal, brand affiliation, and compliance links.
     "Copyright year is rendered dynamically — do not bake a static year into production copy."
   ],
   "storybookId": "blocks-lower-footer",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -6040,7 +6040,7 @@ This unit bypasses the icon-mask-wrapper contract because media is multi-color r
     "Autoplay is opt-in and should be muted."
   ],
   "storybookId": "molecules-media",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -6363,7 +6363,7 @@ Without JS, a popup block with `hidden` stays closed; static blocks render fully
     "Focus management restores to the trigger on close."
   ],
   "storybookId": "patterns-menu-block",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -6739,7 +6739,7 @@ Single-action menu row. Do not pack multi-action controls into one row — use C
     "RTL: leading/trailing icon slots flip with logical properties"
   ],
   "storybookId": "molecules-menu-list",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -7082,7 +7082,7 @@ Without JS, an initially `open` modal stays visible; triggers do not toggle. Pre
     "Close control has accessible name"
   ],
   "storybookId": "patterns-modal",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -7450,7 +7450,7 @@ Static markup shows the authored current page; without JS, controls do not updat
     "Touch targets 44×44 on nav controls"
   ],
   "storybookId": "patterns-pagination",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -7658,7 +7658,7 @@ counts use the canonical Pagination component (numbered).
     "WCAG: every (appearance × position) combination meets AA non-text contrast on its target surface."
   ],
   "storybookId": "molecules-pagination-dots",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -7957,7 +7957,7 @@ Merchandising price display for cards, plan cells, hero rails, comparison tables
     "Contrast: Default secondary text and Inverse inverse-primary meet WCAG AA on their surfaces."
   ],
   "storybookId": "molecules-pricing",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -8696,7 +8696,7 @@ The progress indicator is a form-adjacent molecule composed of bounded primitive
     "`prefers-reduced-motion: reduce` does not currently apply — both"
   ],
   "storybookId": "molecules-progress-indicator",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -9016,7 +9016,7 @@ dispatching the namespaced `other brand:radio:*` CustomEvents.
     "WCAG: every (tone × state) combination meets AA non-text contrast."
   ],
   "storybookId": "molecules-radio",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -9327,7 +9327,7 @@ not force those Types through the monochrome mask pipeline.
     "Touch targets for the count link follow Text link sizing."
   ],
   "storybookId": "molecules-rating",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -9697,7 +9697,7 @@ affordance and the namespaced events.
     "WCAG: resting + focus borders meet AA non-text contrast against `--color-bg-input`; the glyph + separator are `aria-hidden`. Per the Figma guidance frame (`984:2201`), keep search boxes on the primary background where border contrast is guaranteed."
   ],
   "storybookId": "patterns-search-box",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -10084,7 +10084,7 @@ toggle and focus trap does not run.
     "Close control labelled; title wired via `aria-labelledby`."
   ],
   "storybookId": "patterns-sheet",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -10686,7 +10686,7 @@ decision, not a code dial.
     "Honours `prefers-reduced-motion: reduce` — the JS thumb-position"
   ],
   "storybookId": "molecules-slider",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -11071,7 +11071,7 @@ validation, or click interactions.
     "Complete-state checkmark uses `decorative=true`."
   ],
   "storybookId": "molecules-stepper",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -11451,7 +11451,7 @@ both work. The JS layer's only jobs are to dispatch the namespaced
     "Reduced motion: the knob's slide transition is removed when `prefers-reduced-motion: reduce` is set."
   ],
   "storybookId": "molecules-switch",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -11619,7 +11619,7 @@ object model consumers pass for CMS / Handlebars composition.
     "Decorative icons remain decorative via `table-cell`."
   ],
   "storybookId": "patterns-table-block",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -11934,7 +11934,7 @@ frame with optional chrome. Pair with Table block for multi-cell demos.
     "Prefer meaningful text in `label` / `contentHtml`."
   ],
   "storybookId": "molecules-table-cell",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -12310,7 +12310,7 @@ Static markup shows the authored active tab; without JS, selection and mobile op
     "Touch target ≥ 44px on mobile trigger"
   ],
   "storybookId": "patterns-tabs",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -12553,7 +12553,7 @@ label (promo) by radius-s + body-base/prominent + default icon.
     "Leading icon is decorative (`decorative=true`)."
   ],
   "storybookId": "molecules-tag",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -13066,7 +13066,7 @@ stays a standard password input.
     "WCAG: resting + focus borders meet AA non-text contrast against `--color-bg-input`; disabled paint retains a visible outline per WCAG 2.2 § 1.4.11. Per the Figma guidance frame (`984:2201`), inputs should sit on the primary background — avoid placing them on accent / status surfaces where the border contrast is not guaranteed."
   ],
   "storybookId": "patterns-text-field",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -13359,7 +13359,7 @@ Low-emphasis navigation inside running text — not a Button substitute.
     "Icon decorative (`aria-hidden`)"
   ],
   "storybookId": "molecules-text-link",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -13649,7 +13649,7 @@ Static selected paint works without JS; clicks do not update without `initToggle
     "Segmented/Pill: `role=\"radiogroup\"` + `role=\"radio\"`; arrow keys move selection"
   ],
   "storybookId": "patterns-toggle",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -13934,7 +13934,7 @@ With `open` true, the tooltip renders visible; without JS, hover/focus show does
     "Dismissible with Escape"
   ],
   "storybookId": "molecules-tooltip",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -14167,7 +14167,7 @@ Surface individual Trustpilot-style testimonials; section teasers reuse Rating T
     "Verified label is text (not colour-only) — contrast follow-up exists on Figma Spec"
   ],
   "storybookId": "patterns-trustpilot",
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -14459,7 +14459,7 @@ Resolved avast theme values from themes/default/.
       "$value": "var(--border-width-m)"
     }
   ],
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -15534,7 +15534,7 @@ Resolved avast theme values from themes/default/.
       "$value": "20px"
     }
   ],
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -17388,7 +17388,7 @@ Resolved avast theme values from themes/default/.
       "$value": "var(--color-signal-critical)"
     }
   ],
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -17706,7 +17706,7 @@ Resolved avast theme values from themes/default/.
       "$value": "80px"
     }
   ],
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -17875,7 +17875,7 @@ Resolved avast theme values from themes/default/.
       "$value": "90%"
     }
   ],
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -18099,7 +18099,7 @@ Resolved avast theme values from themes/default/.
       "$value": "0 4px 12px 0 rgb(0 0 0 / 8%)"
     }
   ],
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -18348,7 +18348,7 @@ Resolved avast theme values from themes/default/.
       "$value": "120px"
     }
   ],
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```
@@ -19879,7 +19879,7 @@ Resolved avast theme values from themes/default/.
       "$value": "16px"
     }
   ],
-  "generatedAt": "2026-08-05T20:59:07.364Z"
+  "generatedAt": "2026-08-05T22:12:44.222Z"
 }
 
 ```

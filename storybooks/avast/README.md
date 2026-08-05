@@ -12,10 +12,10 @@ Start with **[AGENTS.md](./AGENTS.md)** (mandatory rules), then:
    (do not invent `.css` or `*.config.json` paths)
 4. [api/tokens.json](./api/tokens.json)
 
-Absolute brand base: `http://localhost:4173/avast/`
+Absolute brand base: `https://ppeou-gendigital.github.io/tools/aics/avast/`
 
 ## For humans
 
-- Open the Storybook UI: http://localhost:4173/avast/
+- Open the Storybook UI: https://ppeou-gendigital.github.io/tools/aics/avast/
 - Browse **Introduction**, **Design System**, and **Molecules / Patterns**.
 - Machine-readable sources stay under `/api/` and `/llms.txt`.

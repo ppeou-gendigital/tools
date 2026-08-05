@@ -1,11 +1,11 @@
 {
   "$schema": "https://design-system.aics.dev/schema/index.v2.json",
-  "generatedAt": "2026-08-05T20:59:20.192Z",
+  "generatedAt": "2026-08-05T22:13:02.156Z",
   "package": {
     "name": "@aics/storybook-lifelock",
     "version": "0.1.0",
     "brand": "lifelock",
-    "storybookUrl": "http://localhost:4173/lifelock/"
+    "storybookUrl": "https://ppeou-gendigital.github.io/tools/aics/lifelock/"
   },
   "counts": {
     "tokens": 10,
