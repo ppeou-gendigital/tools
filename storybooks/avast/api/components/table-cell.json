@@ -1,0 +1,194 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "table-cell",
+  "status": "published",
+  "summary": "Slot-driven table cell molecule for composed data tables. Mirrors [Table cell · content slot `5957:257`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=5957-257&m=dev) on Pattern / TableCell (`4339:13401`) and Spec Frame [`.Table cell · content slot · spec` `5960:299`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=5960-299&m=dev).",
+  "specUrl": "/api/components/table-cell/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/table-cell/spec.md",
+    "hbs": "/api/components/table-cell/source/table-cell.hbs",
+    "scss": "/api/components/table-cell/source/table-cell.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "5957:257",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=5957-257&m=dev"
+  },
+  "rootClass": "c-table-cell",
+  "bemClasses": [
+    "c-table-cell",
+    "c-content-title",
+    "c-content-body"
+  ],
+  "properties": [
+    {
+      "name": "type",
+      "fixtureKey": "type",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"body\"",
+      "description": "`header` or `body`.",
+      "figmaLabel": "Type"
+    },
+    {
+      "name": "align",
+      "fixtureKey": "align",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"left\"",
+      "description": "Content alignment.",
+      "figmaLabel": "Align"
+    },
+    {
+      "name": "background",
+      "fixtureKey": "background",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "true",
+      "description": "Header → `--color-bg-muted`; Body → `--color-bg-primary`.",
+      "figmaLabel": "Background"
+    },
+    {
+      "name": "borders",
+      "fixtureKey": "borders",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "true",
+      "description": "Master gate for per-side borders.",
+      "figmaLabel": "Borders"
+    },
+    {
+      "name": "topBorder",
+      "fixtureKey": "topBorder",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "true",
+      "description": "",
+      "figmaLabel": "Top border"
+    },
+    {
+      "name": "rightBorder",
+      "fixtureKey": "rightBorder",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "true",
+      "description": "",
+      "figmaLabel": "Right border"
+    },
+    {
+      "name": "bottomBorder",
+      "fixtureKey": "bottomBorder",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "true",
+      "description": "",
+      "figmaLabel": "Bottom border"
+    },
+    {
+      "name": "leftBorder",
+      "fixtureKey": "leftBorder",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "true",
+      "description": "",
+      "figmaLabel": "Left border"
+    },
+    {
+      "name": "leadingIcon",
+      "fixtureKey": "leadingIcon",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "false",
+      "description": "Demo default `true` to match Figma sticker.",
+      "figmaLabel": "Leading icon"
+    },
+    {
+      "name": "trailingIcon",
+      "fixtureKey": "trailingIcon",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "Trailing icon"
+    },
+    {
+      "name": "leadingIconName",
+      "fixtureKey": "leadingIconName",
+      "type": "TEXT",
+      "required": false,
+      "default": "objects/simple-device-vehicle",
+      "description": "Catalog key.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "trailingIconName",
+      "fixtureKey": "trailingIconName",
+      "type": "TEXT",
+      "required": false,
+      "default": "objects/simple-device-vehicle",
+      "description": "Catalog key.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "label",
+      "fixtureKey": "label",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"Header\"` / `\"Cell text\"",
+      "description": "Default plain-text slot.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "contentHtml",
+      "fixtureKey": "contentHtml",
+      "type": "TEXT",
+      "required": false,
+      "default": "—",
+      "description": "Escape hatch; skips default title/body.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "width",
+      "fixtureKey": "width",
+      "type": "TEXT",
+      "required": false,
+      "default": "—",
+      "description": "Optional demo width.",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "type",
+      "values": "header` / `body"
+    },
+    {
+      "axis": "align",
+      "values": "left` / `center` / `right"
+    }
+  ],
+  "tokensConsumed": [
+    "--space-3",
+    "--border-width-xs",
+    "--color-bg-muted",
+    "--color-bg-primary",
+    "--color-border-subtle",
+    "--color-text-primary"
+  ],
+  "composes": [
+    "icon",
+    "content-title",
+    "content-body"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "Cell root is a `<div>` for flexible composition inside table-block rows",
+    "Icons are decorative (`aria-hidden` + `decorative=true`).",
+    "Prefer meaningful text in `label` / `contentHtml`."
+  ],
+  "storybookId": "molecules-table-cell",
+  "generatedAt": "2026-08-05T20:59:07.364Z"
+}

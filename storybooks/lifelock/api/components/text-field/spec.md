@@ -5,7 +5,7 @@ subtype: pattern
 librarySource: brand
 figmaFileKey: 0o8SL5BEk8wHtgud00dRyg
 figmaNodeId: "698:47055"
-status: draft
+status: published
 behavior: true
 composes:
   - icon

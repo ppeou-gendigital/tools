@@ -168,7 +168,17 @@
       ],
       "$type": "dimension",
       "$value": "0 2px 6px 0 rgb(0 0 0 / var(--opacity-10))"
+    },
+    {
+      "family": "shadow",
+      "cssVar": "--shadow-menu-block",
+      "path": [
+        "menu",
+        "block"
+      ],
+      "$type": "dimension",
+      "$value": "0 4px 12px 0 rgb(0 0 0 / 8%)"
     }
   ],
-  "generatedAt": "2026-08-03T01:08:53.346Z"
+  "generatedAt": "2026-08-05T20:59:30.540Z"
 }

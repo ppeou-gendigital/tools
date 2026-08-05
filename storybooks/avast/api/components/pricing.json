@@ -1,0 +1,178 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "pricing",
+  "status": "published",
+  "summary": "Typography-only price triplet (currency glyph, amount, optional billing period). Figma: [Molecule / Pricing](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4070-2426&m=dev) (`4070:2426`). Spec Frame [`4313:48`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4313-48&m=dev). Board `4318:1788`.",
+  "specUrl": "/api/components/pricing/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/pricing/spec.md",
+    "hbs": "/api/components/pricing/source/pricing.hbs",
+    "scss": "/api/components/pricing/source/pricing.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "4070:2426",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=4070-2426&m=dev"
+  },
+  "rootClass": "c-pricing",
+  "bemClasses": [
+    "c-pricing"
+  ],
+  "properties": [
+    {
+      "name": "amount",
+      "fixtureKey": "amount",
+      "type": "text",
+      "required": true,
+      "default": "—",
+      "description": "Pre-formatted numeric string",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "currency",
+      "fixtureKey": "currency",
+      "type": "text",
+      "required": false,
+      "default": "$",
+      "description": "Glyph",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "currencyPosition",
+      "fixtureKey": "currencyPosition",
+      "type": "enum",
+      "required": false,
+      "default": "first",
+      "description": "`first` \\",
+      "figmaLabel": "Currency position"
+    },
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "enum",
+      "required": false,
+      "default": "l",
+      "description": "`l` \\",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "theme",
+      "fixtureKey": "theme",
+      "type": "enum",
+      "required": false,
+      "default": "default",
+      "description": "`default` \\",
+      "figmaLabel": "Theme"
+    },
+    {
+      "name": "period",
+      "fixtureKey": "period",
+      "type": "text",
+      "required": false,
+      "default": "/mo",
+      "description": "Billing suffix",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "showPeriod",
+      "fixtureKey": "showPeriod",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "Hide period when false",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "stackPeriod",
+      "fixtureKey": "stackPeriod",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "Stack period below amount",
+      "figmaLabel": "Stack period"
+    },
+    {
+      "name": "ariaLabel",
+      "fixtureKey": "ariaLabel",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Accessible phrase",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "className",
+      "fixtureKey": "className",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Outer root",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Size",
+      "values": "l`, `m`, `s`, `xs"
+    },
+    {
+      "axis": "Theme",
+      "values": "default`, `inverse"
+    },
+    {
+      "axis": "Currency position",
+      "values": "first`, `last"
+    },
+    {
+      "axis": "Stack period",
+      "values": "`false` (inline), `true` (stacked below)"
+    }
+  ],
+  "tokensConsumed": [
+    "--font-family-primary",
+    "--font-weight-regular",
+    "--font-weight-semibold",
+    "--font-size-h3",
+    "--lineheight-h3",
+    "--letterspacing-h3",
+    "--font-size-h4",
+    "--lineheight-h4",
+    "--letterspacing-h4",
+    "--font-size-h5",
+    "--lineheight-h5",
+    "--letterspacing-h5",
+    "--font-size-h6",
+    "--lineheight-h6",
+    "--letterspacing-h6",
+    "--font-size-body-2xl",
+    "--lineheight-body-2xl",
+    "--letterspacing-body-2xl",
+    "--font-size-body-xl",
+    "--lineheight-body-xl",
+    "--letterspacing-body-xl",
+    "--font-size-body-base",
+    "--lineheight-body-base",
+    "--letterspacing-body-base",
+    "--font-size-body-sm",
+    "--lineheight-body-sm",
+    "--letterspacing-body-sm",
+    "--color-text-secondary",
+    "--color-text-inverse",
+    "--color-bg-inverse",
+    "--space-0",
+    "--space-1",
+    "--space-2"
+  ],
+  "composes": [],
+  "hasBehavior": false,
+  "accessibility": [
+    "Root `role=\"text\"` so assistive tech reads one phrase.",
+    "Prefer `ariaLabel` spelling out the value (e.g. “16 dollars and 67 cents per month”).",
+    "Contrast: Default secondary text and Inverse inverse-primary meet WCAG AA on their surfaces."
+  ],
+  "storybookId": "molecules-pricing",
+  "generatedAt": "2026-08-05T20:59:07.364Z"
+}

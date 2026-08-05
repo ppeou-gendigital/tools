@@ -1,0 +1,190 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "tabs",
+  "status": "published",
+  "summary": "Horizontal tablist with Solid / Subtle styles and a mobile dropdown fallback. Mirrors [Pattern / Tabs `539:28424`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28424&m=dev) (`.Tab` `1396:6950`, wrapper `1396:6994`, mobile `1396:7051`) and Spec Frame [`.Tabs · spec` `4362:266`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4362-266&m=dev).",
+  "specUrl": "/api/components/tabs/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/tabs/spec.md",
+    "hbs": "/api/components/tabs/source/tabs.hbs",
+    "scss": "/api/components/tabs/source/tabs.scss",
+    "js": "/api/components/tabs/source/tabs.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "1396:6994",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1396-6994&m=dev"
+  },
+  "rootClass": "c-tabs",
+  "bemClasses": [
+    "c-tabs"
+  ],
+  "properties": [
+    {
+      "name": "style",
+      "fixtureKey": "style",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"solid\"",
+      "description": "",
+      "figmaLabel": "Style"
+    },
+    {
+      "name": "tabs",
+      "fixtureKey": "tabs",
+      "type": "array",
+      "required": true,
+      "default": "3 sample tabs",
+      "description": "`{ label, showIcon, iconName, disabled, panelId }`",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "activeIndex",
+      "fixtureKey": "activeIndex",
+      "type": "number",
+      "required": false,
+      "default": "0",
+      "description": "0-based initial selection",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "showMobileFallback",
+      "fixtureKey": "showMobileFallback",
+      "type": "boolean",
+      "required": false,
+      "default": "auto",
+      "description": "true when `tabs.length > 3`",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "forceMobile",
+      "fixtureKey": "forceMobile",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "Story / demo force dropdown",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "label",
+      "fixtureKey": "label",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"Section\"",
+      "description": "Mobile field title",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "ariaLabel",
+      "fixtureKey": "ariaLabel",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"Tabs\"",
+      "description": "tablist accessible name",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "tabs[].showIcon",
+      "fixtureKey": "tabs[].showIcon",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "tabs[].Show icon"
+    },
+    {
+      "name": "tabs[].iconName",
+      "fixtureKey": "tabs[].iconName",
+      "type": "TEXT",
+      "required": false,
+      "default": "objects/simple-device-vehicle",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "tabs[].label",
+      "fixtureKey": "tabs[].label",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"Tab N\"",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "tabs[].disabled",
+      "fixtureKey": "tabs[].disabled",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "tabs[].panelId",
+      "fixtureKey": "tabs[].panelId",
+      "type": "TEXT",
+      "required": false,
+      "default": "panel-N",
+      "description": "`aria-controls`",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "style",
+      "values": "solid`, `subtle"
+    },
+    {
+      "axis": "per-tab state",
+      "values": "`default`, `hover`, `focus`, `active`, `disabled` (presentational `data-state` for galleries; live selection via JS)"
+    }
+  ],
+  "tokensConsumed": [
+    "--space-1",
+    "--space-2",
+    "--space-3",
+    "--space-5",
+    "--border-radius-s",
+    "--border-width-s",
+    "--border-width-xs",
+    "--color-bg-primary",
+    "--color-bg-inverse-strong",
+    "--color-bg-subtle",
+    "--color-text-primary",
+    "--color-text-inverse",
+    "--color-text-accent",
+    "--color-border-strong",
+    "--color-border-accent",
+    "--color-border-focus",
+    "--color-border-subtle",
+    "--color-disabled-text",
+    "--font-family-primary",
+    "--font-weight-regular",
+    "--font-weight-medium",
+    "--font-weight-semibold",
+    "--font-size-body-lg",
+    "--lineheight-body-lg",
+    "--letterspacing-body-lg",
+    "--font-size-body-sm",
+    "--lineheight-body-sm",
+    "--letterspacing-body-sm",
+    "--font-size-label",
+    "--lineheight-label",
+    "--letterspacing-label"
+  ],
+  "composes": [
+    "icon"
+  ],
+  "hasBehavior": true,
+  "accessibility": [
+    "Root tablist uses `role=\"tablist\"`; items are `role=\"tab\"` with `aria-selected` and `aria-controls`",
+    "Roving tabindex; Arrow / Home / End move selection",
+    "Mobile trigger `aria-haspopup=\"listbox\"` + `aria-expanded`; options `role=\"option\"`",
+    "Touch target ≥ 44px on mobile trigger"
+  ],
+  "storybookId": "patterns-tabs",
+  "generatedAt": "2026-08-05T20:59:30.540Z"
+}

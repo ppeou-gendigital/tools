@@ -1,0 +1,176 @@
+/**
+ * Patterns/Pagination — .c-pagination
+ * Figma: Nav 1332:52356 / Select 1332:52459 / Jump 1332:52580
+ */
+
+.c-pagination {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-family: var(--font-family-primary);
+  color: var(--color-text-primary);
+}
+
+.c-pagination__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.c-pagination__control {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 44px;
+  block-size: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-s);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  letter-spacing: var(--letterspacing-body-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.c-pagination__control:hover:not(:disabled) {
+  background-color: var(--color-bg-subtle);
+}
+
+.c-pagination__control:focus-visible {
+  outline: var(--border-width-s) solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+.c-pagination__control.is-current {
+  background-color: var(--color-signal-info-subtle);
+  color: var(--color-signal-info);
+}
+
+.c-pagination__control:disabled,
+.c-pagination.is-disabled .c-pagination__control {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.c-pagination__ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 44px;
+  block-size: 44px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.c-pagination__double-chevron {
+  display: inline-flex;
+  align-items: center;
+  margin-inline: calc(var(--space-2) * -1);
+}
+
+.c-pagination__double-chevron .c-icon {
+  margin-inline: -6px;
+}
+
+.c-pagination.is-error .c-pagination__list {
+  outline: var(--border-width-xs) solid var(--color-signal-critical);
+  outline-offset: 4px;
+  border-radius: var(--border-radius-s);
+}
+
+.c-pagination__error {
+  margin: 0;
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  color: var(--color-signal-critical);
+}
+
+/* Select */
+.c-pagination--select {
+  position: relative;
+  min-inline-size: 200px;
+}
+
+.c-pagination__select-trigger {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-inline-size: 200px;
+  min-block-size: 44px;
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
+  border: var(--border-width-xs) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-s);
+  background-color: var(--color-bg-default);
+  color: inherit;
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.c-pagination__select-trigger:focus-visible {
+  outline: var(--border-width-s) solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+.c-pagination__select-menu {
+  position: absolute;
+  inset-block-start: calc(100% + var(--space-2));
+  inset-inline-start: 0;
+  z-index: 10;
+  min-inline-size: 100%;
+}
+
+/* Jump */
+.c-pagination__jump-label {
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.c-pagination__jump-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.c-pagination__jump-input {
+  box-sizing: border-box;
+  inline-size: 88px;
+  min-block-size: 44px;
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
+  border: var(--border-width-xs) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-s);
+  background-color: var(--color-bg-default);
+  color: inherit;
+  font: inherit;
+}
+
+.c-pagination__jump-input:focus-visible {
+  outline: var(--border-width-s) solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+.c-pagination--size-small .c-pagination__jump-input,
+.c-pagination--size-small .c-pagination__jump-submit {
+  min-block-size: 36px;
+}
+
+.c-pagination.is-error .c-pagination__jump-input,
+.c-pagination.is-error .c-pagination__select-trigger {
+  border-color: var(--color-signal-critical);
+}

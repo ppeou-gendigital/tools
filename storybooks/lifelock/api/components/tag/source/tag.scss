@@ -1,0 +1,137 @@
+/**
+ * Molecules/Tag — core (.c-tag).
+ * Figma: Web-ODS Shared Library 6114:53 / Spec 6328:54273.
+ *
+ * Squarer sibling of Discount label: radius-s, body-base/prominent,
+ * leading icon default on. Fill × Strength same mix model as discount-label.
+ */
+
+.c-tag {
+  --c-tag-bg: var(--color-bg-default);
+  --c-tag-content: var(--color-text-primary);
+  --c-tag-mix: 100%;
+  --c-tag-mix-with: transparent;
+
+  align-items: center;
+  background-color: color-mix(
+    in srgb,
+    var(--c-tag-bg) var(--c-tag-mix),
+    var(--c-tag-mix-with)
+  );
+  border-radius: var(--border-radius-s);
+  box-sizing: border-box;
+  color: var(--c-tag-content);
+  display: inline-flex;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body-base);
+  font-weight: var(--font-weight-medium);
+  gap: var(--space-1);
+  inline-size: fit-content;
+  justify-content: center;
+  letter-spacing: var(--letterspacing-body-base);
+  line-height: var(--lineheight-body-base);
+  padding-block: var(--space-1);
+  padding-inline: var(--space-3);
+}
+
+.c-tag__text {
+  display: inline-block;
+}
+
+.c-tag__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.c-tag--fill-solid {
+  --c-tag-mix-with: transparent;
+}
+
+.c-tag--fill-transparent {
+  --c-tag-mix-with: transparent;
+}
+
+.c-tag--fill-tint {
+  --c-tag-mix-with: var(--color-bg-default);
+}
+
+.c-tag--strength-base {
+  --c-tag-mix: 100%;
+}
+
+.c-tag--strength-30 {
+  --c-tag-mix: 30%;
+}
+
+.c-tag--strength-50 {
+  --c-tag-mix: 50%;
+}
+
+.c-tag--strength-80 {
+  --c-tag-mix: 80%;
+}
+
+.c-tag--primary {
+  --c-tag-bg: var(--color-bg-default);
+  --c-tag-content: var(--color-text-primary);
+}
+
+.c-tag--secondary {
+  --c-tag-bg: var(--color-bg-subtle);
+  --c-tag-content: var(--color-text-primary);
+}
+
+.c-tag--brand {
+  --c-tag-bg: var(--color-bg-brand);
+  --c-tag-content: var(--color-text-inverse);
+}
+
+.c-tag--brand-soft {
+  --c-tag-bg: var(--color-bg-brand-soft);
+  --c-tag-content: var(--color-text-primary);
+}
+
+.c-tag--accent {
+  --c-tag-bg: var(--color-bg-accent);
+  --c-tag-content: var(--color-text-primary);
+}
+
+.c-tag--alpha {
+  --c-tag-bg: var(--color-bg-alpha);
+  --c-tag-content: var(--color-text-primary);
+}
+
+.c-tag--beta {
+  --c-tag-bg: var(--color-bg-beta);
+  --c-tag-content: var(--color-text-primary);
+}
+
+.c-tag--gamma {
+  --c-tag-bg: var(--color-bg-gamma);
+  --c-tag-content: var(--color-text-primary);
+}
+
+.c-tag--delta {
+  --c-tag-bg: var(--color-bg-delta);
+  --c-tag-content: var(--color-text-primary);
+}
+
+.c-tag--inverse-primary {
+  --c-tag-bg: var(--color-bg-inverse-strong);
+  --c-tag-content: var(--color-text-inverse);
+}
+
+.c-tag--inverse-secondary {
+  --c-tag-bg: var(--color-bg-inverse);
+  --c-tag-content: var(--color-text-inverse);
+}
+
+/* Non-solid brand / inverse: keep readable ink on light washes */
+.c-tag--brand.c-tag--fill-transparent,
+.c-tag--brand.c-tag--fill-tint,
+.c-tag--inverse-primary.c-tag--fill-transparent,
+.c-tag--inverse-primary.c-tag--fill-tint,
+.c-tag--inverse-secondary.c-tag--fill-transparent,
+.c-tag--inverse-secondary.c-tag--fill-tint {
+  --c-tag-content: var(--color-text-primary);
+}

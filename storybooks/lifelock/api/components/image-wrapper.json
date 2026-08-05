@@ -1,0 +1,101 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "image-wrapper",
+  "status": "published",
+  "summary": "Aspect-locked viewport for a single still image with Contain / Cover fit. Figma: [Molecule / Image Wrapper](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=5428-53699&m=dev) (`5428:53699`). Spec Frame [`5653:1197`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=5653-1197&m=dev). Matrix board `5444:81`.",
+  "specUrl": "/api/components/image-wrapper/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/image-wrapper/spec.md",
+    "hbs": "/api/components/image-wrapper/source/image-wrapper.hbs",
+    "scss": "/api/components/image-wrapper/source/image-wrapper.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "5428:53699",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=5428-53699&m=dev"
+  },
+  "rootClass": "c-image-wrapper",
+  "bemClasses": [
+    "c-image-wrapper"
+  ],
+  "properties": [
+    {
+      "name": "ratio",
+      "fixtureKey": "ratio",
+      "type": "enum",
+      "required": true,
+      "default": "16-9",
+      "description": "See Variant axes",
+      "figmaLabel": "Ratio"
+    },
+    {
+      "name": "fit",
+      "fixtureKey": "fit",
+      "type": "enum",
+      "required": true,
+      "default": "cover",
+      "description": "`contain` \\",
+      "figmaLabel": "Fit"
+    },
+    {
+      "name": "src",
+      "fixtureKey": "src",
+      "type": "image-url",
+      "required": false,
+      "default": "\"\"",
+      "description": "Empty → docs placeholder",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "alt",
+      "fixtureKey": "alt",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Descriptive, or `\"\"` when decorative",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "className",
+      "fixtureKey": "className",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Outer viewport only",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Ratio",
+      "values": "2-1`, `16-9`, `4-3`, `1-1`, `3-4`, `landscape` (3:2), `portrait` (2:3), `1-2`, `9-16"
+    },
+    {
+      "axis": "Fit",
+      "values": "contain`, `cover"
+    }
+  ],
+  "tokensConsumed": [
+    "--border-radius-0",
+    "--space-0",
+    "--color-disabled-border",
+    "--color-text-inverse",
+    "--font-family-primary",
+    "--font-weight-regular",
+    "--font-size-label",
+    "--lineheight-label",
+    "--letterspacing-label"
+  ],
+  "composes": [],
+  "hasBehavior": false,
+  "accessibility": [
+    "Native `img` with meaningful `alt`, or `alt=\"\"` when decorative.",
+    "No custom roles. Never in the tab order; wrapping links own keyboard + focus.",
+    "Text over Cover imagery is the parent’s WCAG responsibility."
+  ],
+  "storybookId": "molecules-image-wrapper",
+  "generatedAt": "2026-08-05T20:59:20.192Z"
+}

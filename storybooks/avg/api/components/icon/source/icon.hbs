@@ -1,0 +1,10 @@
+<span
+  class="c-icon c-icon--{{size}} c-icon--{{color}}{{#if frame}}{{#unless (eq frame "none")}} c-icon--{{frame}}{{/unless}}{{/if}}"
+  style="--icon-source: url('{{iconUrl name}}');"
+  {{#if decorative}}
+    aria-hidden="true"
+  {{else}}
+    role="img"
+    aria-label="{{accessibleLabel}}"
+  {{/if}}
+></span>

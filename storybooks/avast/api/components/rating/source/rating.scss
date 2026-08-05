@@ -1,0 +1,105 @@
+/**
+ * Molecules/Rating — .c-rating
+ * Figma: 2355:19638 / Spec 4630:2285
+ *
+ * Trustpilot types opt out of the icon mask pipeline for brand art;
+ * here they recolour mask stars via --c-rating-trustpilot.
+ */
+
+.c-rating {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-primary);
+}
+
+.c-rating__stars {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.c-rating__star {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--color-text-primary);
+}
+
+/* Empty stars (non-zero ratings) use border-subtle per Figma caption. */
+.c-rating__star--empty {
+  color: var(--color-border-subtle);
+}
+
+/* Value=0: empty stars stay on content primary. */
+.c-rating[data-value='0'] .c-rating__star--empty,
+.c-rating[data-value='0.0'] .c-rating__star--empty {
+  color: var(--color-text-primary);
+}
+
+.c-rating__score {
+  font-size: var(--font-size-body-lg);
+  line-height: var(--lineheight-body-lg);
+  letter-spacing: var(--letterspacing-body-lg);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.c-rating--mobile .c-rating__score {
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+  letter-spacing: var(--letterspacing-body-base);
+}
+
+.c-rating__leading,
+.c-rating__trailing {
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.c-rating__count--static {
+  font-size: var(--font-size-body-lg);
+  line-height: var(--lineheight-body-lg);
+  color: var(--color-text-accent, var(--color-signal-info));
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.c-rating--mobile .c-rating__count--static {
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+}
+
+/* Inline: score + single star */
+.c-rating--inline {
+  gap: var(--space-2);
+}
+
+/* Text-led */
+.c-rating--text-led {
+  gap: var(--space-2);
+}
+
+/* Trustpilot — multi-color brand row (iconCompositionOptOut) */
+.c-rating--trustpilot .c-rating__star,
+.c-rating--trustpilot-teaser .c-rating__star {
+  color: var(--c-rating-trustpilot, #00b67a);
+}
+
+.c-rating--trustpilot .c-rating__star--empty,
+.c-rating--trustpilot-teaser .c-rating__star--empty {
+  color: color-mix(in srgb, var(--c-rating-trustpilot, #00b67a) 35%, transparent);
+}
+
+.c-rating--bg-dark {
+  color: var(--color-text-inverse);
+}
+
+.c-rating--bg-dark .c-rating__score {
+  color: var(--color-text-inverse);
+}

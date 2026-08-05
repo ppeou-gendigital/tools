@@ -1,0 +1,52 @@
+/**
+ * Patterns/Content block — core (.c-content-block).
+ * Figma: Web-ODS Shared Library Pattern / ContentBlock 3483:3418.
+ *
+ * Flat white section container — padding --space-7, gap --space-3.
+ * Composes Content title, Content body, Text link, Button.
+ */
+
+.c-content-block {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-block: 0;
+  margin-inline: 0;
+  padding-block: var(--space-7);
+  padding-inline: var(--space-7);
+  inline-size: 100%;
+  max-inline-size: 100%;
+  background-color: var(--color-bg-primary);
+}
+
+.c-content-block__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  inline-size: 100%;
+}
+
+.c-content-block__title {
+  flex: 1 1 0;
+  min-inline-size: 0;
+}
+
+.c-content-block__action {
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.c-content-block__body {
+  inline-size: 100%;
+}
+
+.c-content-block__slot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  inline-size: 100%;
+  min-block-size: 0;
+}

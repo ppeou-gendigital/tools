@@ -4,8 +4,8 @@
   "subtype": "molecule",
   "librarySource": "brand",
   "name": "text-link",
-  "status": "draft",
-  "summary": "Inline text-based interactive element used within body copy to navigate users to related content, pages, or actions. Mirrors the LifeLock-themed master variant set on [Web-ODS Shared Library / 1332:54878](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1332-54878&m=dev) — the master component set publishing 336 variants (2 `Background` x 6 `State` x 7 `Size` x 4 `Weight`) on the canonical [Text link canvas](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1332-54772&m=dev). The companion [Spec frame `1332:54773`](https://www.",
+  "status": "published",
+  "summary": "Inline text-based interactive element for navigating from body copy. Figma: [Text link master](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1332-54878&m=dev) (`1332:54878`). Spec Frame [`1332:54773`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1332-54773&m=dev).",
   "specUrl": "/api/components/text-link/spec.md",
   "sourceFiles": {
     "spec": "/api/components/text-link/spec.md",
@@ -26,155 +26,115 @@
     {
       "name": "label",
       "fixtureKey": "label",
-      "type": "Text",
+      "type": "text",
       "required": true,
       "default": "—",
-      "description": "The visible text the user reads. Renders inside the `<a>` element. Plain text only; HTML inside the label is forbidden.",
+      "description": "Plain text",
       "figmaLabel": "Label"
     },
     {
       "name": "background",
       "fixtureKey": "background",
-      "type": "Variant",
+      "type": "enum",
       "required": false,
       "default": "light",
-      "description": "Maps to `.c-text-link--background-<value>`. Use `dark` only when the link sits on `--color-bg-inverse-*` / `--color-bg-cta-*` surfaces.",
+      "description": "",
       "figmaLabel": "Background"
     },
     {
       "name": "size",
       "fixtureKey": "size",
-      "type": "Variant",
+      "type": "enum",
       "required": false,
       "default": "base",
-      "description": "Maps to `.c-text-link--size-<value>`. Inherits the unit's body typography ramp; pick the value that matches the surrounding copy.",
+      "description": "Body typography ramp",
       "figmaLabel": "Size"
     },
     {
       "name": "weight",
       "fixtureKey": "weight",
-      "type": "Variant",
+      "type": "enum",
       "required": false,
       "default": "regular",
-      "description": "Maps to `.c-text-link--weight-<value>`. Pick the value that matches the surrounding copy's weight; do not use weight to imply emphasis on its own.",
+      "description": "",
       "figmaLabel": "Weight"
     },
     {
       "name": "href",
       "fixtureKey": "href",
-      "type": "Text",
+      "type": "text",
       "required": false,
       "default": "—",
-      "description": "Standard `<a href>`. When `disabled: true` the attribute is omitted and `role=\"link\"` + `aria-disabled=\"true\"` are applied.",
+      "description": "Omitted when disabled",
       "figmaLabel": "href"
     },
     {
       "name": "target",
       "fixtureKey": "target",
-      "type": "Text",
+      "type": "text",
       "required": false,
       "default": "—",
-      "description": "Standard `<a target>`. When `target=\"_blank\"` the template auto-derives `rel=\"noopener noreferrer\"` and forces `iconTreatment: \"external\"` unless the consumer explicitly overrides it.",
+      "description": "`_blank` → noopener",
       "figmaLabel": "target"
-    },
-    {
-      "name": "rel",
-      "fixtureKey": "rel",
-      "type": "Text",
-      "required": false,
-      "default": "—",
-      "description": "Standard `<a rel>`. Consumer-supplied `rel` values are merged with the auto-derived `noopener noreferrer` for `target=\"_blank\"`.",
-      "figmaLabel": "rel"
     },
     {
       "name": "disabled",
       "fixtureKey": "disabled",
-      "type": "Boolean",
+      "type": "boolean",
       "required": false,
       "default": "false",
-      "description": "When `true` the link paints in `--color-disabled-text`, drops the `href`, sets `aria-disabled=\"true\"` + `tabindex=\"-1\"`, and keeps `role=\"link\"` so assistive tech still announces the role.",
+      "description": "",
       "figmaLabel": "Disabled"
     },
     {
       "name": "iconTreatment",
       "fixtureKey": "iconTreatment",
-      "type": "Variant",
+      "type": "enum",
       "required": false,
       "default": "none",
-      "description": "One of `none` / `external` / `inline`. `external` renders the canonical `arrows-navigation/simple-link-external` glyph trailing the label. `inline` requires `iconName` and accepts `iconPosition`.",
+      "description": "`none` \\",
       "figmaLabel": "icon treatment"
     },
     {
       "name": "iconName",
       "fixtureKey": "iconName",
-      "type": "Text",
+      "type": "text",
       "required": false,
       "default": "—",
-      "description": "Catalog key for `Components/Icon`. Resolved via the registered `icon` partial; the icon inherits `currentColor` so it tracks every state.",
-      "figmaLabel": "iconName"
+      "description": "Catalog key",
+      "figmaLabel": "—"
     },
     {
       "name": "iconPosition",
       "fixtureKey": "iconPosition",
-      "type": "Variant",
+      "type": "enum",
       "required": false,
       "default": "trailing",
-      "description": "One of `leading` / `trailing`. Only honoured when `iconTreatment: \"inline\"`; `external` always trails.",
-      "figmaLabel": "iconPosition"
-    },
-    {
-      "name": "visitedState",
-      "fixtureKey": "visitedState",
-      "type": "Variant",
-      "required": false,
-      "default": "auto",
-      "description": "Presentational-only — NOT exposed as a Storybook control. Mirrors the Spec Frame's `visited state: configurable` API surface. `auto` (default) lets the browser paint the visited treatment via `:visited` against the user's history; `force` paints the visited treatment unconditionally via the template's `forceVisited` boolean (story-only) → `is-visited` class — useful for SSR previews, Storybook galleries, and snapshot tests where the browser hasn't yet computed the visited match. The visible label is unchanged in either mode.",
-      "figmaLabel": "visited state"
-    },
-    {
-      "name": "forceVisited",
-      "fixtureKey": "forceVisited",
-      "type": "Boolean",
-      "required": false,
-      "default": "false",
-      "description": "Presentational-only (story / SSR hook). When `true`, the template adds `is-visited` to paint the visited treatment without browser history. Implements the `force` value of `visitedState`; never exposed as a Storybook control.",
+      "description": "",
       "figmaLabel": "—"
     },
     {
       "name": "ariaLabel",
       "fixtureKey": "ariaLabel",
-      "type": "Text",
+      "type": "text",
       "required": false,
       "default": "—",
-      "description": "Optional override of the accessible name. Required when the visible label is not self-describing (for example `Read more` adjacent to a card title). When omitted, screen readers use the visible label.",
+      "description": "",
       "figmaLabel": "Aria label"
-    },
-    {
-      "name": "id",
-      "fixtureKey": "id",
-      "type": "Text",
-      "required": false,
-      "default": "—",
-      "description": "Optional `id` attribute for in-page anchors and JS hooks.",
-      "figmaLabel": "id"
     }
   ],
   "variants": [
     {
-      "axis": "background",
-      "values": "`light` (default) / `dark`. Drives the `.c-text-link--background-<bg>` BEM modifier. Mirrors Figma's `Background` axis on `1332:54878`."
+      "axis": "Background",
+      "values": "light`, `dark"
     },
     {
-      "axis": "size",
-      "values": "`xs` / `sm` / `base` (default) / `lg` / `xl` / `2xl` / `3xl`. Drives the `.c-text-link--size-<size>` BEM modifier. Maps to the LifeLock body typography ramp `--font-size-body-{size}` + `--lineheight-body-{size}`. Mirrors Figma's `Size` axis."
+      "axis": "Size",
+      "values": "xs`, `sm`, `base`, `lg`, `xl`, `2xl`, `3xl"
     },
     {
-      "axis": "weight",
-      "values": "`regular` (default) / `medium` / `semibold` / `bold`. Drives the `.c-text-link--weight-<weight>` BEM modifier. Maps to `--font-weight-{weight}`. Mirrors Figma's `Weight` axis."
-    },
-    {
-      "axis": "state",
-      "values": "`default` / `hover` / `focus` / `pressed` / `disabled` / `visited` — Figma documentation only; code paints these via CSS pseudo-classes (`:hover`, `:focus-visible`, `:active`, `:visited`) and the `aria-disabled=\"true\"` attribute. The `disabled` boolean prop is the only persistent runtime state the markup carries."
+      "axis": "Weight",
+      "values": "regular`, `medium`, `semibold`, `bold"
     }
   ],
   "tokensConsumed": [
@@ -211,20 +171,10 @@
   ],
   "hasBehavior": false,
   "accessibility": [
-    "Ensure sufficient contrast between link text and surrounding",
-    "Preserve visible focus indicators for keyboard navigation.",
-    "Do not rely on color alone to communicate interactivity.",
-    "Provide accessible names for icon-only or external-link",
-    "Ensure touch targets meet minimum size requirements where links",
-    "**Semantic element** — always renders an `<a>` element. When",
-    "**Disabled handling** — `aria-disabled=\"true\"` + `tabindex=\"-1\"`",
-    "**Focus management** — `:focus-visible` only — the focus ring",
-    "**Contrast** — every paint listed in",
-    "**Underline as non-colour cue** — the underline is drawn in the",
-    "**Touch target** — the rendered `<a>` does not extend its hit",
-    "**Reduced motion** — the underline appears instantly with no",
-    "**`aria-label` policy** — when the visible label is not"
+    "Always an `<a>`; disabled keeps `role=\"link\"` with `tabindex=\"-1\"`",
+    "Focus ring via `--color-border-focus`",
+    "Icon decorative (`aria-hidden`)"
   ],
   "storybookId": "molecules-text-link",
-  "generatedAt": "2026-08-03T01:08:47.005Z"
+  "generatedAt": "2026-08-05T20:59:20.192Z"
 }

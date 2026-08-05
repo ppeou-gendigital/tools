@@ -1,0 +1,62 @@
+{{!--
+  Patterns/Content block — BEM root .c-content-block
+  Figma: Web-ODS Shared Library Pattern / ContentBlock 3483:3418
+  (Content Slot 3483:3468, Spec Frame 3869:73).
+
+  Props (defaults applied by story render / callers):
+    title, titleStyle (h3|h0), titleTag, bodyText, showBody,
+    showLink, linkLabel, linkHref,
+    showButton, buttonIcon, buttonAccessibleLabel,
+    slotHtml, className
+--}}
+<section
+  class="c-content-block{{#if className}} {{className}}{{/if}}"
+  data-component="content-block"
+>
+  <div class="c-content-block__title-row">
+    <div class="c-content-block__title">
+      {{> content-title
+        text=title
+        style=titleStyle
+        weight="emphasis"
+        tag=titleTag
+      }}
+    </div>
+    {{#if showLink}}
+      <div class="c-content-block__action">
+        {{> text-link
+          label=linkLabel
+          href=linkHref
+          background="light"
+          size="base"
+          weight="regular"
+          iconTreatment="none"
+        }}
+      </div>
+    {{else if showButton}}
+      <div class="c-content-block__action">
+        {{> button
+          style="tertiary"
+          size="s"
+          iconButton=true
+          leadingIcon=buttonIcon
+          accessibleLabel=buttonAccessibleLabel
+        }}
+      </div>
+    {{/if}}
+  </div>
+
+  {{#unless (eq showBody false)}}
+    {{#if bodyText}}
+      <div class="c-content-block__body">
+        {{> content-body text=bodyText style="body-3xl" weight="base"}}
+      </div>
+    {{/if}}
+  {{/unless}}
+
+  {{#if slotHtml}}
+    <div class="c-content-block__slot">
+      {{{slotHtml}}}
+    </div>
+  {{/if}}
+</section>

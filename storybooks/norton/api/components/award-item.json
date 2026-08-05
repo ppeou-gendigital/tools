@@ -1,0 +1,175 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "award-item",
+  "status": "published",
+  "summary": "Pairs a single award logo with supporting copy across six layouts. Figma: [Pattern / Awards](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=2355-19639&m=dev) (`2355:19639`). Spec Frame [`.Award item · spec`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3882-473&m=dev) (`3882:473`).",
+  "specUrl": "/api/components/award-item/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/award-item/spec.md",
+    "hbs": "/api/components/award-item/source/award-item.hbs",
+    "scss": "/api/components/award-item/source/award-item.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "2355:19639",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=2355-19639&m=dev"
+  },
+  "rootClass": "c-award-item",
+  "bemClasses": [
+    "c-award-item",
+    "c-award-wrapper"
+  ],
+  "properties": [
+    {
+      "name": "imageRatio",
+      "fixtureKey": "imageRatio",
+      "type": "enum",
+      "required": false,
+      "default": "1:1",
+      "description": "Passed to Award Wrapper",
+      "figmaLabel": "Image ratio"
+    },
+    {
+      "name": "layout",
+      "fixtureKey": "layout",
+      "type": "enum",
+      "required": false,
+      "default": "quote",
+      "description": "Content arrangement",
+      "figmaLabel": "Layout"
+    },
+    {
+      "name": "src",
+      "fixtureKey": "src",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Award logo URL",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "alt",
+      "fixtureKey": "alt",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Logo alt (empty when named nearby)",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "quoteText",
+      "fixtureKey": "quoteText",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Quote layout",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "source",
+      "fixtureKey": "source",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Quote / Title-rating attribution",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "year",
+      "fixtureKey": "year",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Title-rating",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "title",
+      "fixtureKey": "title",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Compact / Title-* layouts",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "description",
+      "fixtureKey": "description",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Title-description",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "showRating",
+      "fixtureKey": "showRating",
+      "type": "boolean",
+      "required": false,
+      "default": "true for quote/title-rating",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "ratingValue",
+      "fixtureKey": "ratingValue",
+      "type": "text",
+      "required": false,
+      "default": "5.0",
+      "description": "Rating-stacked score",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "className",
+      "fixtureKey": "className",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Outer card only",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Image ratio",
+      "values": "1:1`, `9:16`, `16:9"
+    },
+    {
+      "axis": "Layout",
+      "values": "quote`, `title-rating`, `compact`, `compact-stacked`, `rating-stacked`, `title-description"
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-primary",
+    "--color-text-primary",
+    "--color-text-secondary",
+    "--border-radius-s",
+    "--space-0",
+    "--space-1",
+    "--space-3",
+    "--font-family-primary",
+    "--font-size-body-base",
+    "--lineheight-body-base",
+    "--letterspacing-body-base",
+    "--font-size-body-sm",
+    "--lineheight-body-sm",
+    "--letterspacing-body-sm",
+    "--font-weight-regular",
+    "--font-weight-semibold"
+  ],
+  "composes": [
+    "award-wrapper",
+    "icon"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "Award Wrapper owns logo alt",
+    "Non-interactive container; wrap in `<a>` when navigable",
+    "Star icons `aria-hidden`; rating group `role=\"img\"` + `aria-label`"
+  ],
+  "storybookId": "patterns-award-item",
+  "generatedAt": "2026-08-05T20:59:30.540Z"
+}

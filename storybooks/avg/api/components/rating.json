@@ -1,0 +1,180 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "rating",
+  "status": "published",
+  "summary": "Display-only rating molecule with five Types (Teaser, Inline, Text-led, Trustpilot, Trustpilot Teaser). Mirrors [Pattern / Ratings](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=2355-19638&m=dev) (`2355:19638`) and Spec Frame [`.Rating · spec`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4630-2285&m=dev) (`4630:2285`). Distinct from Award item rating layouts.",
+  "specUrl": "/api/components/rating/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/rating/spec.md",
+    "hbs": "/api/components/rating/source/rating.hbs",
+    "scss": "/api/components/rating/source/rating.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "2355:19638",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=2355-19638&m=dev"
+  },
+  "rootClass": "c-rating",
+  "bemClasses": [
+    "c-rating"
+  ],
+  "properties": [
+    {
+      "name": "type",
+      "fixtureKey": "type",
+      "type": "Enum",
+      "required": true,
+      "default": "\"teaser\"",
+      "description": "",
+      "figmaLabel": "Type"
+    },
+    {
+      "name": "value",
+      "fixtureKey": "value",
+      "type": "Number",
+      "required": true,
+      "default": "4.5",
+      "description": "0–5 step 0.5",
+      "figmaLabel": "Value"
+    },
+    {
+      "name": "device",
+      "fixtureKey": "device",
+      "type": "Enum",
+      "required": false,
+      "default": "\"desktop\"",
+      "description": "",
+      "figmaLabel": "Device"
+    },
+    {
+      "name": "showScore",
+      "fixtureKey": "showScore",
+      "type": "Boolean",
+      "required": false,
+      "default": "true",
+      "description": "Teaser family",
+      "figmaLabel": "Show score"
+    },
+    {
+      "name": "showCount",
+      "fixtureKey": "showCount",
+      "type": "Boolean",
+      "required": false,
+      "default": "true",
+      "description": "Teaser family",
+      "figmaLabel": "Show count"
+    },
+    {
+      "name": "countLabel",
+      "fixtureKey": "countLabel",
+      "type": "String",
+      "required": false,
+      "default": "\"(2,486)\"",
+      "description": "",
+      "figmaLabel": "Count"
+    },
+    {
+      "name": "countHref",
+      "fixtureKey": "countHref",
+      "type": "String",
+      "required": false,
+      "default": "\"#\"",
+      "description": "Code-only",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "leadingText",
+      "fixtureKey": "leadingText",
+      "type": "String",
+      "required": false,
+      "default": "\"Rated\"",
+      "description": "Text-led",
+      "figmaLabel": "Leading"
+    },
+    {
+      "name": "trailing",
+      "fixtureKey": "trailing",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Text-led",
+      "figmaLabel": "Trailing"
+    },
+    {
+      "name": "trailingText",
+      "fixtureKey": "trailingText",
+      "type": "String",
+      "required": false,
+      "default": "\"\"",
+      "description": "",
+      "figmaLabel": "Trailing text"
+    },
+    {
+      "name": "background",
+      "fixtureKey": "background",
+      "type": "Enum",
+      "required": false,
+      "default": "\"light\"",
+      "description": "Trustpilot teaser",
+      "figmaLabel": "Background"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Type",
+      "values": "teaser` / `inline` / `text-led` / `trustpilot` / `trustpilot-teaser"
+    },
+    {
+      "axis": "Value",
+      "values": "0`–`5` step `0.5"
+    },
+    {
+      "axis": "Device",
+      "values": "`desktop` (24×24 stars) / `mobile` (16×16) — teaser + trustpilot*"
+    },
+    {
+      "axis": "Show score / Show count",
+      "values": "booleans — teaser + trustpilot-teaser"
+    },
+    {
+      "axis": "Trailing",
+      "values": "on/off — text-led"
+    },
+    {
+      "axis": "Background",
+      "values": "`light` / `dark` — trustpilot-teaser"
+    }
+  ],
+  "tokensConsumed": [
+    "--color-text-primary",
+    "--color-text-inverse",
+    "--color-text-accent",
+    "--color-border-subtle",
+    "--space-1",
+    "--space-2",
+    "--space-3",
+    "--font-family-primary",
+    "--font-size-body-base",
+    "--font-size-body-lg",
+    "--lineheight-body-base",
+    "--lineheight-body-lg",
+    "--letterspacing-body-base",
+    "--letterspacing-body-lg",
+    "--font-weight-regular"
+  ],
+  "composes": [
+    "icon",
+    "text-link"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "Root `role=\"img\"` with `aria-label` describing score out of 5.",
+    "Stars and score are `aria-hidden`; count link is a real `text-link` when `countHref` is set.",
+    "Touch targets for the count link follow Text link sizing."
+  ],
+  "storybookId": "molecules-rating",
+  "generatedAt": "2026-08-05T20:59:13.518Z"
+}

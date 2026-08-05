@@ -1,0 +1,138 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "code-entry",
+  "status": "published",
+  "summary": "A segmented one-time-code (OTP) pattern built from a row of native single-character `<input>` boxes. Mirrors the [Web-ODS Shared Library → Code entry](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=698-47604&m=dev) (`698:47604`) under the other brand mode pick. The native HTML intentionally diverges from the Figma div tree — visual + token fidelity is the bar.",
+  "specUrl": "/api/components/code-entry/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/code-entry/spec.md",
+    "hbs": "/api/components/code-entry/source/code-entry.hbs",
+    "scss": "/api/components/code-entry/source/code-entry.scss",
+    "js": "/api/components/code-entry/source/code-entry.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "698:47604",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=698-47604&m=dev"
+  },
+  "rootClass": "c-code-entry",
+  "bemClasses": [
+    "c-code-entry"
+  ],
+  "properties": [
+    {
+      "name": "length",
+      "fixtureKey": "length",
+      "type": "Number",
+      "required": false,
+      "default": "6",
+      "description": "Number of single-character boxes. Expanded by the `codeBoxes` helper.",
+      "figmaLabel": "Length"
+    },
+    {
+      "name": "label",
+      "fixtureKey": "label",
+      "type": "Text",
+      "required": false,
+      "default": "\"Verification code\"",
+      "description": "Group label rendered above the boxes; also the group `aria-label`.",
+      "figmaLabel": "Label"
+    },
+    {
+      "name": "helperText",
+      "fixtureKey": "helperText",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Instructional message below the boxes, wired via `aria-describedby`. Recolours to `--color-text-error` when `error` is set.",
+      "figmaLabel": "Helper text"
+    },
+    {
+      "name": "value",
+      "fixtureKey": "value",
+      "type": "Text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Initial code; distributed one character per box (left to right).",
+      "figmaLabel": "Value"
+    },
+    {
+      "name": "error",
+      "fixtureKey": "error",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Adds `is-error` + per-box `aria-invalid=\"true\"`, paints every box with the critical border.",
+      "figmaLabel": "Error"
+    },
+    {
+      "name": "disabled",
+      "fixtureKey": "disabled",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Disables every box and paints the disabled surface.",
+      "figmaLabel": "Disabled"
+    },
+    {
+      "name": "groupId",
+      "fixtureKey": "groupId",
+      "type": "Text",
+      "required": false,
+      "default": "\"code-entry\"",
+      "description": "Code-only. Wires the `role=\"group\"` wrapper `id` + the helper `aria-describedby` (`{groupId}-helper`). No Figma component-property counterpart — an accessibility id, not a designer-set value. Pass a unique value per page when multiple code-entry groups share a document.",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "length",
+      "values": "Integer count of boxes (default `6`; e.g. `4` for a PIN)."
+    },
+    {
+      "axis": "`state` (transient + persistent)",
+      "values": "per-box `default` / `hover` / `focused` / `filled`; group-level `error` and `disabled`. Per-box transient states are pseudo-class driven (`:hover` / `:focus-visible`); `filled` is the `is-filled` modifier; `error` / `disabled` are persistent props."
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-default",
+    "--color-bg-subtle",
+    "--color-bg-muted",
+    "--color-border-subtle",
+    "--color-signal-info",
+    "--color-signal-critical",
+    "--color-text-primary",
+    "--color-text-secondary",
+    "--color-text-disabled",
+    "--color-text-error",
+    "--space-2",
+    "--space-3",
+    "--space-5",
+    "--border-radius-card",
+    "--border-width-hairline",
+    "--font-family-primary",
+    "--font-size-h4",
+    "--lineheight-h4",
+    "--letterspacing-h4",
+    "--font-weight-semibold",
+    "--font-size-label",
+    "--lineheight-label",
+    "--letterspacing-label",
+    "--font-weight-regular"
+  ],
+  "composes": [],
+  "hasBehavior": true,
+  "accessibility": [
+    "The boxes are wrapped in a `role=\"group\"` with an `aria-label` (the label) so assistive tech announces the field as one unit; the helper is referenced via `aria-describedby`.",
+    "Each box carries a positional `aria-label` (\"Digit 1 of 6\", …) so a screen-reader user always knows which position has focus.",
+    "`error` sets `aria-invalid=\"true\"` on every box; the helper carries the human-readable reason.",
+    "The active box uses `:focus` (not `:focus-visible`) so the box you are on is always visibly highlighted — by keyboard, click, or the JS auto-advance focus move — which is the expected affordance for a segmented OTP field.",
+    "Keyboard model: typing a digit auto-advances; Backspace on an empty box steps back and clears the previous; ArrowLeft / ArrowRight move focus.",
+    "`autocomplete=\"one-time-code\"` on the first box lets the platform offer an SMS code for one-tap fill. WCAG: the active box pairs an info-blue border with a grey fill for a clearly visible focus state; resting box borders meet AA non-text contrast against `--color-bg-default`. Per the Figma guidance frame (`984:2201`), keep the field on the primary background where border contrast is guaranteed."
+  ],
+  "storybookId": "patterns-code-entry",
+  "generatedAt": "2026-08-05T20:59:30.540Z"
+}

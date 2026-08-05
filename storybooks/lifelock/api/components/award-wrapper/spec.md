@@ -10,7 +10,7 @@ composes: []
 tokensConsumed:
   - --border-radius-0
   - --space-0
-  - --color-disabled-bg
+  - --color-disabled-border
   - --color-text-inverse
   - --font-family-primary
   - --font-weight-regular
@@ -25,7 +25,7 @@ Fixed-aspect frame for a single award logo so a row of awards lines up cleanly. 
 
 ## Summary
 
-Ratio-locked presentational box (transparent surface, square corners, clipped overflow) with a native `img` slot. When no logo is supplied, a documentation-only placeholder paints disabled-bg + inverse label text.
+Ratio-locked presentational box (transparent surface, square corners, clipped overflow) with a native `img` slot. When no logo is supplied, a documentation-only placeholder paints Figma `Color/Disabled/secondary` (theme `--color-disabled-border`) + inverse label text.
 
 ## Composes
 
@@ -52,7 +52,7 @@ Fixed box sizes from Figma: `1:1` → 88×88 · `16:9` → 246×138 · `9:16` �
 
 **Structural** — `--border-radius-0`, `--space-0`.
 
-**Placeholder** — `--color-disabled-bg`, `--color-text-inverse`, `--font-family-primary`, `--font-weight-regular`, `--font-size-label`, `--lineheight-label`, `--letterspacing-label`.
+**Placeholder** — `--color-disabled-border` (Figma Disabled/secondary), `--color-text-inverse`, `--font-family-primary`, `--font-weight-regular`, `--font-size-label`, `--lineheight-label`, `--letterspacing-label`.
 
 See themes/default/ for resolved values.
 
@@ -63,7 +63,7 @@ Fixed pixel sizes per Image ratio; no breakpoint reflow. Parent layout owns spac
 ## States
 
 - Default (logo present) — transparent surface + `img` fill (`object-fit: contain`).
-- Placeholder (no `src`) — disabled-bg fill + centred inverse label (docs / Storybook only).
+- Placeholder (no `src`) — Disabled/secondary fill (`--color-disabled-border`) + centred inverse label (docs / Storybook only).
 - Non-interactive — no hover / focus / active paints; wrapping links own keyboard when linked.
 
 ## Accessibility
@@ -96,4 +96,4 @@ Use to frame a single award logo at a fixed aspect ratio so a row of awards line
 
 1. **Surface** — ratio-locked box; transparent background; square corners; overflow clipped.
 2. **Image slot** — award logo (`img`) filling the box.
-3. **Placeholder** — when no logo, `--color-disabled-bg` fill with centred “Placeholder award logo” label in inverse content color (Label type ramp).
+3. **Placeholder** — when no logo, `--color-disabled-border` (Figma Disabled/secondary) fill with centred “Placeholder award logo” label in inverse content color (Label type ramp).

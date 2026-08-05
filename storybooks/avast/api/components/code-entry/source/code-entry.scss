@@ -1,0 +1,103 @@
+// Patterns/Inputs/Code entry
+// A segmented one-time-code field: a row of fixed-size single-character
+// native <input> boxes under a label, with an optional helper message.
+// Geometry + paint mirror the Web-ODS Shared Library "Code entry" Figma
+// node (698:47604): each box is 40×56 with an 8px radius, the digit is
+// the H4/SemiBold heading style, and the active box takes a subtle grey
+// fill + info-blue border + info-blue caret. The `is-filled` modifier
+// (set in the template for SSR and kept in sync by the JS layer) marks a
+// box that holds a digit; filled boxes keep the resting border per Figma.
+
+@use '../../tokens/breakpoints/breakpoints' as bp;
+
+.c-code-entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-family: var(--font-family-primary);
+}
+
+.c-code-entry__label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--lineheight-label);
+  letter-spacing: var(--letterspacing-label);
+}
+
+// Active group → the label takes the info accent (Figma Focus / Typing).
+.c-code-entry:not(.is-error, .is-disabled):focus-within .c-code-entry__label {
+  color: var(--color-signal-info);
+}
+
+.c-code-entry__boxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+
+  // Tighten the inter-box gap on small devices per the Figma guidance
+  // ("On small devices make gap between fields just 8px").
+  @include bp.sm {
+    gap: var(--space-3);
+  }
+}
+
+.c-code-entry__box {
+  inline-size: 2.5rem; // 40px
+  block-size: 3.5rem; // 56px
+  padding: 0;
+  border: var(--border-width-hairline) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-card);
+  background-color: var(--color-bg-default);
+  color: var(--color-text-primary);
+  caret-color: var(--color-signal-info);
+  font-family: inherit;
+  font-size: var(--font-size-h4);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--lineheight-h4);
+  letter-spacing: var(--letterspacing-h4);
+  text-align: center;
+  appearance: none;
+}
+
+// Active box — subtle grey fill + info border (Figma Focus / Typing).
+.c-code-entry__box:focus {
+  outline: none;
+  border-color: var(--color-signal-info);
+  background-color: var(--color-bg-subtle);
+}
+
+// ── Error ────────────────────────────────────────────────────────────
+.c-code-entry.is-error .c-code-entry__box {
+  border-color: var(--color-signal-critical);
+}
+
+.c-code-entry.is-error .c-code-entry__box:focus {
+  border-color: var(--color-signal-critical);
+  background-color: var(--color-bg-subtle);
+}
+
+.c-code-entry.is-error .c-code-entry__helper {
+  color: var(--color-text-error);
+}
+
+// ── Disabled ─────────────────────────────────────────────────────────
+.c-code-entry.is-disabled .c-code-entry__label {
+  color: var(--color-text-disabled);
+}
+
+.c-code-entry__box:disabled {
+  border-color: var(--color-bg-muted);
+  background-color: var(--color-bg-muted);
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+// ── Helper message ───────────────────────────────────────────────────
+.c-code-entry__helper {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-label);
+  line-height: var(--lineheight-label);
+  letter-spacing: var(--letterspacing-label);
+}

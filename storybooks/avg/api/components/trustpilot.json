@@ -1,0 +1,132 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "trustpilot",
+  "status": "published",
+  "summary": "Quoted-review cell pattern composing Rating Trustpilot stars. Mirrors [Pattern / Trustpilot `2356:19641`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=2356-19641&m=dev) cell `2500:4244` and Spec [`.Trustpilot Pattern · spec` `3969:12883`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3969-12883&m=dev).",
+  "specUrl": "/api/components/trustpilot/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/trustpilot/spec.md",
+    "hbs": "/api/components/trustpilot/source/trustpilot.hbs",
+    "scss": "/api/components/trustpilot/source/trustpilot.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "2500:4244",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=2500-4244&m=dev"
+  },
+  "rootClass": "c-trustpilot",
+  "bemClasses": [
+    "c-trustpilot"
+  ],
+  "properties": [
+    {
+      "name": "title",
+      "fixtureKey": "title",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"Quote title\"",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "productLabel",
+      "fixtureKey": "productLabel",
+      "type": "TEXT",
+      "required": false,
+      "default": "—",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "quoteBody",
+      "fixtureKey": "quoteBody",
+      "type": "TEXT",
+      "required": false,
+      "default": "—",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "reviewerLine",
+      "fixtureKey": "reviewerLine",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"Reviewer · Date\"",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "verifiedLabel",
+      "fixtureKey": "verifiedLabel",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"Verified purchaser\"",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "value",
+      "fixtureKey": "value",
+      "type": "number",
+      "required": false,
+      "default": "5",
+      "description": "Nested rating",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "ratingArgs",
+      "fixtureKey": "ratingArgs",
+      "type": "object",
+      "required": true,
+      "default": "built by helper",
+      "description": "Passed to `{{> rating}}`",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "showProductLabel",
+      "values": "true / false"
+    },
+    {
+      "axis": "showVerified",
+      "values": "true / false"
+    },
+    {
+      "axis": "showQuote",
+      "values": "true / false"
+    },
+    {
+      "axis": "value",
+      "values": "0–5 (0.5 steps) via nested rating"
+    }
+  ],
+  "tokensConsumed": [
+    "--space-3",
+    "--space-8",
+    "--border-radius-s",
+    "--color-bg-default",
+    "--color-text-primary",
+    "--color-text-secondary",
+    "--color-text-accent",
+    "--font-family-primary",
+    "--font-size-body-lg",
+    "--font-size-body-base",
+    "--font-size-body-sm",
+    "--font-weight-semibold",
+    "--font-weight-regular"
+  ],
+  "composes": [
+    "rating"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "Nested rating supplies accessible name (`Rated X out of 5 on Trustpilot`)",
+    "Verified label is text (not colour-only) — contrast follow-up exists on Figma Spec"
+  ],
+  "storybookId": "patterns-trustpilot",
+  "generatedAt": "2026-08-05T20:59:13.518Z"
+}

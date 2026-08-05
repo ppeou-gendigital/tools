@@ -7,7 +7,7 @@ machine-readable `/api` surface linked below.
 
 ## Brand base URL
 
-Canonical absolute base for this library: `https://ppeou-gendigital.github.io/tools/aics/avg/`
+Canonical absolute base for this library: `http://localhost:4173/avg/`
 
 If you opened this file on a host, you may also derive the base by taking
 the URL of `AGENTS.md` and stripping the trailing `AGENTS.md`. Prefer the
@@ -17,10 +17,10 @@ canonical base above when they differ.
 
 1. Read this file (`AGENTS.md`).
 2. Fetch [`llms.txt`](./llms.txt)
-   Absolute: `https://ppeou-gendigital.github.io/tools/aics/avg/llms.txt`
+   Absolute: `http://localhost:4173/avg/llms.txt`
 3. Fetch [`/api/index.json`](./api/index.json), find the unit, then fetch
    `/api/<type>/<name>.json`
-   (example: `https://ppeou-gendigital.github.io/tools/aics/avg/api/components/accordion.json`).
+   (example: `http://localhost:4173/avg/api/components/accordion.json`).
 4. **Copy source URLs only from that JSON.** Use the exact strings in
    `sourceFiles` and `specUrl`. Prefix each relative path (starting with
    `/`) with the brand base. Do **not** invent paths or extensions.
@@ -30,13 +30,13 @@ canonical base above when they differ.
 
 ## Worked example — accordion `sourceFiles`
 
-After fetching `https://ppeou-gendigital.github.io/tools/aics/avg/api/components/accordion.json`, the manifest lists paths like
+After fetching `http://localhost:4173/avg/api/components/accordion.json`, the manifest lists paths like
 `/api/components/accordion/source/accordion.scss`. Absolute fetches:
 
-- https://ppeou-gendigital.github.io/tools/aics/avg/api/components/accordion/spec.md
-- https://ppeou-gendigital.github.io/tools/aics/avg/api/components/accordion/source/accordion.hbs
-- https://ppeou-gendigital.github.io/tools/aics/avg/api/components/accordion/source/accordion.scss
-- https://ppeou-gendigital.github.io/tools/aics/avg/api/components/accordion/source/accordion.js
+- http://localhost:4173/avg/api/components/accordion/spec.md
+- http://localhost:4173/avg/api/components/accordion/source/accordion.hbs
+- http://localhost:4173/avg/api/components/accordion/source/accordion.scss
+- http://localhost:4173/avg/api/components/accordion/source/accordion.js
 
 Props / options are fields on the unit JSON itself — there is **no**
 `source/*.config.json`.
@@ -66,4 +66,4 @@ Props / options are fields on the unit JSON itself — there is **no**
 - [api/index.json](./api/index.json)
 - [api/tokens.json](./api/tokens.json)
 - [llms-full.txt](./llms-full.txt)
-- Storybook UI: https://ppeou-gendigital.github.io/tools/aics/avg/
+- Storybook UI: http://localhost:4173/avg/

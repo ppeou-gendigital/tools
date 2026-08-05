@@ -4,8 +4,8 @@
   "subtype": "pattern",
   "librarySource": "brand",
   "name": "breadcrumb",
-  "status": "draft",
-  "summary": "Hierarchical trail that shows where a user is in a site's information architecture and lets them step back to any ancestor with a single click. Mirrors the master variant set on [Web-ODS Shared Library / 1260:8373](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1260-8373&m=dev) and the companion [Spec Frame `1427:3565`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1427-3565&m=dev).",
+  "status": "published",
+  "summary": "Semantic wayfinding trail. Spec Frame [`.Breadcrumb · spec`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4560-48&m=dev) (`4560:48`) on page [`539:28420`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28420&m=dev). Visual set [`1260:8373`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1260-8373&m=dev).",
   "specUrl": "/api/components/breadcrumb/spec.md",
   "sourceFiles": {
     "spec": "/api/components/breadcrumb/spec.md",
@@ -23,168 +23,70 @@
   ],
   "properties": [
     {
-      "name": "items",
-      "fixtureKey": "items",
-      "type": "array",
-      "required": true,
-      "default": "[]",
-      "description": "Ordered ancestors-to-current list. Each entry: `{ label: string, href?: string, ariaLabel?: string }`. The last entry becomes the `aria-current=\"page\"` text node. When `collapsed=true` AND `items.length >= 4`, every entry between index 1 and `length - 2` is omitted from the DOM and represented by a single ellipsis placeholder.",
-      "figmaLabel": "Items"
+      "name": "collapsed",
+      "fixtureKey": "collapsed",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "first + … + last",
+      "figmaLabel": "Collapsed"
     },
     {
       "name": "firstAsIcon",
       "fixtureKey": "firstAsIcon",
       "type": "boolean",
       "required": false,
-      "default": "false",
-      "description": "When `true`, the first item renders as an icon-only home anchor (label → `aria-label`). When `false` AND `collapsed=false`, the first crumb is a plain text-link (no icon). When `false` AND `collapsed=true`, the first crumb is a text-link with a leading home icon next to the label (matches Figma `1260:8406`).",
+      "default": "true",
+      "description": "Home via `objects/simple-home`",
       "figmaLabel": "First as icon"
     },
     {
-      "name": "collapsed",
-      "fixtureKey": "collapsed",
+      "name": "showCurrentPage",
+      "fixtureKey": "showCurrentPage",
       "type": "boolean",
       "required": false,
-      "default": "false",
-      "description": "When `true` AND `items.length >= 4`, hides every item between index 1 and `length - 2` from the DOM and inserts a single ellipsis placeholder directly before the parent-of-current crumb. The placeholder is static (no JS) — its tooltip + `aria-label` enumerate the hidden labels.",
-      "figmaLabel": "Collapsed"
+      "default": "true",
+      "description": "Terminal Bold `aria-current=\"page\"`",
+      "figmaLabel": "Show current page"
     },
     {
-      "name": "truncation",
-      "fixtureKey": "truncation",
-      "type": "boolean",
-      "required": false,
-      "default": "false",
-      "description": "When `true`, caps each label at `max-inline-size: 12ch` and ellipsizes overflow. Applies to intermediate links and the current page text alike.",
-      "figmaLabel": "Truncation"
+      "name": "items",
+      "fixtureKey": "items",
+      "type": "array",
+      "required": true,
+      "default": "—",
+      "description": "`{ label, href?, truncate?, ariaLabel? }[]`",
+      "figmaLabel": "Items"
     },
     {
       "name": "ariaLabel",
       "fixtureKey": "ariaLabel",
       "type": "text",
       "required": false,
-      "default": "\"Breadcrumb\"",
-      "description": "Bound to the root `<nav aria-label=\"…\">`. Localize when shipping.",
+      "default": "Breadcrumb",
+      "description": "On `<nav>`",
       "figmaLabel": "Aria label"
-    },
-    {
-      "name": "hiddenPagesLabel",
-      "fixtureKey": "hiddenPagesLabel",
-      "type": "text",
-      "required": false,
-      "default": "\"Hidden pages\"",
-      "description": "Code-only. Accessibility label string — the prefix for the ellipsis placeholder's `aria-label`, rendered as `\"<hiddenPagesLabel>: <comma-separated hidden labels>\"`. Only emitted when `collapsed=true`. No Figma component-property counterpart (an a11y string, not a designer-set value). Localize when shipping.",
-      "figmaLabel": "—"
-    },
-    {
-      "name": "iconType",
-      "fixtureKey": "iconType",
-      "type": "enum",
-      "required": false,
-      "default": "\"objects/simple-home\"",
-      "description": "Code-only. The icon catalog key used for BOTH the icon-only and leading-home shapes of the first crumb. No Figma component-property counterpart — in Figma the home glyph is an instance-swap of the Icon component, not an enum of catalog keys. Defaults to the canonical home glyph; override for category-specific anchors (e.g. `business/simple-storefront`).",
-      "figmaLabel": "—"
-    },
-    {
-      "name": "items[].kind",
-      "fixtureKey": "items[].kind",
-      "type": "text",
-      "required": false,
-      "default": "—",
-      "description": "Helper-derived. One of `link` / `current` / `separator` / `ellipsis`, assigned by `buildCrumbsFromItems` when it expands the consumer trail into the rendered sequence. Drives the per-crumb branch in `breadcrumb.hbs`.",
-      "figmaLabel": "—"
-    },
-    {
-      "name": "items[].label",
-      "fixtureKey": "items[].label",
-      "type": "text",
-      "required": false,
-      "default": "—",
-      "description": "Consumer-set on `link` / `current` entries; the visible crumb text.",
-      "figmaLabel": "—"
-    },
-    {
-      "name": "items[].href",
-      "fixtureKey": "items[].href",
-      "type": "text",
-      "required": false,
-      "default": "—",
-      "description": "Consumer-set on `link` entries; the crumb anchor target.",
-      "figmaLabel": "—"
-    },
-    {
-      "name": "items[].homeIconOnly",
-      "fixtureKey": "items[].homeIconOnly",
-      "type": "boolean",
-      "required": false,
-      "default": "—",
-      "description": "Helper-derived. Set on the first crumb when `firstAsIcon=true`; renders the icon-only home anchor (label → `aria-label`).",
-      "figmaLabel": "—"
-    },
-    {
-      "name": "items[].leadingHomeIcon",
-      "fixtureKey": "items[].leadingHomeIcon",
-      "type": "boolean",
-      "required": false,
-      "default": "—",
-      "description": "Helper-derived. Set on the first crumb when `collapsed=true` AND `firstAsIcon=false`; renders the leading home glyph beside the label.",
-      "figmaLabel": "—"
-    },
-    {
-      "name": "items[].ariaLabel",
-      "fixtureKey": "items[].ariaLabel",
-      "type": "text",
-      "required": false,
-      "default": "—",
-      "description": "Consumer-set (optional) on the first item; becomes the icon-only home anchor's accessible name when `homeIconOnly` is set.",
-      "figmaLabel": "—"
-    },
-    {
-      "name": "items[].hiddenLabels",
-      "fixtureKey": "items[].hiddenLabels",
-      "type": "text",
-      "required": false,
-      "default": "—",
-      "description": "Helper-derived. Comma-joined labels of the folded middle items; carried on the `ellipsis` entry for the placeholder's `title` + `aria-label`.",
-      "figmaLabel": "—"
-    },
-    {
-      "name": "items[].hiddenPagesLabel",
-      "fixtureKey": "items[].hiddenPagesLabel",
-      "type": "text",
-      "required": false,
-      "default": "—",
-      "description": "Helper-derived from the top-level `hiddenPagesLabel` prop; prefixes the ellipsis placeholder's `aria-label`.",
-      "figmaLabel": "—"
     }
   ],
   "variants": [
     {
-      "axis": "First as icon",
-      "values": "No, Yes"
-    },
-    {
       "axis": "Collapsed",
-      "values": "No, Yes"
-    },
-    {
-      "axis": "Truncation",
-      "values": "No, Yes"
+      "values": "`false` (default), `true` — middle crumbs → static `…`; SM dual-list forces compact below 768px"
     }
   ],
   "tokensConsumed": [
     "--space-1",
     "--space-2",
+    "--space-3",
+    "--color-text-brand",
+    "--color-text-primary",
+    "--color-disabled-text",
+    "--color-border-focus",
     "--font-family-primary",
     "--font-size-body-sm",
     "--lineheight-body-sm",
-    "--font-weight-regular",
-    "--font-weight-medium",
     "--letterspacing-body-sm",
-    "--color-text-primary",
-    "--color-text-brand",
-    "--color-disabled-text",
-    "--color-border-focus",
+    "--font-weight-bold",
     "--border-radius-control"
   ],
   "composes": [
@@ -193,17 +95,11 @@
   ],
   "hasBehavior": false,
   "accessibility": [
-    "Root is `<nav>` with `aria-label=\"Breadcrumb\"` (overridable via",
-    "Trail uses an ordered list (`<ol>` / `<li>`) so screen readers",
-    "The current page entry is a `<span aria-current=\"page\">` — never",
-    "Separator icons carry `aria-hidden=\"true\"` via the composed `icon`",
-    "When `firstAsIcon=true`, the icon-only `<a>` carries an",
-    "When `collapsed=true`, the ellipsis placeholder is a",
-    "`title=\"<comma-separated hidden labels>\"` — surfaces the",
-    "`aria-label=\"<hiddenPagesLabel>: <comma-separated hidden labels>\"` —",
-    "Touch targets: the home-icon anchor meets the WCAG 2.5.5 / Apple",
-    "BreadcrumbList schema.org markup is intentionally **not** baked"
+    "`<nav aria-label>` + ordered list",
+    "Current page: `<span aria-current=\"page\">` (never a link)",
+    "Separators `aria-hidden`; chevron flips in RTL",
+    "Collapsed ellipsis exposes hidden labels via `title` / `aria-label`"
   ],
   "storybookId": "patterns-breadcrumb",
-  "generatedAt": "2026-08-03T01:08:47.005Z"
+  "generatedAt": "2026-08-05T20:59:20.192Z"
 }

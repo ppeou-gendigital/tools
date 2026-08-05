@@ -4,7 +4,7 @@
   "subtype": "molecule",
   "librarySource": "brand",
   "name": "progress-indicator",
-  "status": "draft",
+  "status": "published",
   "summary": "Determinate progress affordance — a track or ring filled proportionally to the current value of a long-running operation. Three layouts share one BEM root (`.c-progress-indicator`): two **linear** layouts (`inline`, `stacked`) mirror the [Web-ODS Shared Library Linear master variant set](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1380-1255&m=dev) and its [`Progress indicator — Overview`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1380-1478&m=dev) Spec Frame at `1380:1478`; one **circular** layout mirrors the [LifeL",
   "specUrl": "/api/components/progress-indicator/spec.md",
   "sourceFiles": {
@@ -174,5 +174,5 @@
     "`prefers-reduced-motion: reduce` does not currently apply — both"
   ],
   "storybookId": "molecules-progress-indicator",
-  "generatedAt": "2026-08-03T01:08:47.005Z"
+  "generatedAt": "2026-08-05T20:59:20.192Z"
 }

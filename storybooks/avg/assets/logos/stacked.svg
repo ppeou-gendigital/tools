@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 265 237" role="img" aria-label="avg logo">
+  <rect width="265" height="237" fill="none"/>
+  <circle cx="132" cy="78" r="52" fill="none" stroke="#ffcc00" stroke-width="16"/>
+  <path d="M104 80 L128 104 L168 52" fill="none" stroke="#111" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="132" y="200" text-anchor="middle" font-family="system-ui,sans-serif" font-size="36" font-weight="700" fill="#111">avg</text>
+</svg>

@@ -1,0 +1,198 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "slider",
+  "status": "published",
+  "summary": "Continuous and discrete sliders for single-value and range selection. Mirrors the canonical [Web-ODS Shared Library → Sliders 🟢](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28421&m=dev) canvas and its master component `DS · Slider` ([`1336:2939`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1336-2939&m=dev)), with Spec Frame [`.Slider · spec`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4580-15595&m=dev) (`4580:15595`). Core default theme unit; brands inherit via theme token",
+  "specUrl": "/api/components/slider/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/slider/spec.md",
+    "hbs": "/api/components/slider/source/slider.hbs",
+    "scss": "/api/components/slider/source/slider.scss",
+    "js": "/api/components/slider/source/slider.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "539:28421",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=539-28421&m=dev"
+  },
+  "rootClass": "c-slider",
+  "bemClasses": [
+    "c-slider"
+  ],
+  "properties": [
+    {
+      "name": "variant",
+      "fixtureKey": "variant",
+      "type": "Enum (`continuous` / `discrete`)",
+      "required": true,
+      "default": "\"continuous\"",
+      "description": "Mirrors the Figma `Variant` property. `discrete` adds the tick layer + JS snap behaviour; `continuous` is a free-glide track.",
+      "figmaLabel": "Variant"
+    },
+    {
+      "name": "selection",
+      "fixtureKey": "selection",
+      "type": "Enum (`single-value` / `range`)",
+      "required": true,
+      "default": "\"single-value\"",
+      "description": "Mirrors the Figma `Selection` property. `range` doubles the input + thumb pair and constrains the active-fill to the interval.",
+      "figmaLabel": "Selection"
+    },
+    {
+      "name": "disabled",
+      "fixtureKey": "disabled",
+      "type": "Boolean",
+      "required": false,
+      "default": "false",
+      "description": "Persistent state — paints the `--button-disabled-*` token trio, sets `aria-disabled=\"true\"` on the root, and adds `disabled` on each underlying `<input type=\"range\">` (removes the input from the tab order).",
+      "figmaLabel": "Disabled"
+    },
+    {
+      "name": "min",
+      "fixtureKey": "min",
+      "type": "Number",
+      "required": false,
+      "default": "0",
+      "description": "Lower bound of the value domain. Bound to the native `<input type=\"range\">` `min` attribute.",
+      "figmaLabel": "Min"
+    },
+    {
+      "name": "max",
+      "fixtureKey": "max",
+      "type": "Number",
+      "required": false,
+      "default": "100",
+      "description": "Upper bound of the value domain. Bound to the native `<input type=\"range\">` `max` attribute.",
+      "figmaLabel": "Max"
+    },
+    {
+      "name": "step",
+      "fixtureKey": "step",
+      "type": "Number",
+      "required": false,
+      "default": "1` on `continuous`, derived from `(max-min)/10` on `discrete",
+      "description": "Resolution of the slider. Bound to the native `<input type=\"range\">` `step` attribute. On `discrete`, the JS layer additionally snaps to the nearest tick after pointer release.",
+      "figmaLabel": "Step"
+    },
+    {
+      "name": "value",
+      "fixtureKey": "value",
+      "type": "Number",
+      "required": false,
+      "default": "min",
+      "description": "Current value. Bound to the native `<input type=\"range\">` `value`. The visual thumb position is computed from `(value − min) / (max − min)` and surfaced as `--slider-thumb-offset` on the thumb.",
+      "figmaLabel": "Value"
+    },
+    {
+      "name": "valueMin",
+      "fixtureKey": "valueMin",
+      "type": "Number",
+      "required": false,
+      "default": "min",
+      "description": "Lower bound of the selected range. Drives the start thumb's `--slider-thumb-offset` and the active-fill's `--slider-fill-start`.",
+      "figmaLabel": "Value min"
+    },
+    {
+      "name": "valueMax",
+      "fixtureKey": "valueMax",
+      "type": "Number",
+      "required": false,
+      "default": "max",
+      "description": "Upper bound of the selected range. Drives the end thumb's `--slider-thumb-offset` and the active-fill's `--slider-fill-end`.",
+      "figmaLabel": "Value max"
+    },
+    {
+      "name": "showValueLabel",
+      "fixtureKey": "showValueLabel",
+      "type": "Boolean",
+      "required": false,
+      "default": "true",
+      "description": "Renders the value readout area above the track. When `false`, the value-label area collapses and the track sits flush to the container top. The value text uses `--font-family-primary` + `--font-weight-semibold` at `--font-size-body-base` / `--lineheight-body-base`.",
+      "figmaLabel": "Show value label"
+    },
+    {
+      "name": "label",
+      "fixtureKey": "label",
+      "type": "String",
+      "required": false,
+      "default": "\"\"",
+      "description": "Optional `aria-label` applied to the root `role=\"group\"` element so screen readers announce the slider's semantic purpose (\"Volume\", \"Price range\", …). When omitted, the root carries no `aria-label` — the consumer is responsible for labelling externally via `aria-labelledby`.",
+      "figmaLabel": "Label"
+    },
+    {
+      "name": "name",
+      "fixtureKey": "name",
+      "type": "String",
+      "required": false,
+      "default": "null",
+      "description": "Optional `name=` attribute applied to each underlying `<input type=\"range\">` so the slider participates in standard HTML form submission. On `range`, the JS layer suffixes `-min` and `-max` to the two inputs.",
+      "figmaLabel": "Name"
+    },
+    {
+      "name": "state",
+      "fixtureKey": "state",
+      "type": "Enum",
+      "required": false,
+      "default": "\"default\"",
+      "description": "Story-only — paints `hover` / `focused` / `active` freezes via `[data-state]` on the root. Not consumed by JS; runtime state is observable via the standard CSS pseudo-classes.",
+      "figmaLabel": "Presentational state"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "variant",
+      "values": "`continuous` (default — single gradient track with the thumb sliding freely) / `discrete` (track ships eleven evenly-spaced visible tick marks; the JS layer snaps the thumb to the nearest tick on commit)."
+    },
+    {
+      "axis": "selection",
+      "values": "`single-value` (default — one thumb) / `range` (two thumbs and the active-fill paints only between them)."
+    },
+    {
+      "axis": "state",
+      "values": "`default` / `hover` / `focused` / `active` / `disabled`. `default` / `hover` / `focused` / `active` paint via CSS pseudo-classes on the thumb (`:hover` / `:focus-visible` on the parent thumb container / `:active`); a `[data-state]` hook on the root lets the AllStyles gallery freeze each transient state for visual regression. `disabled` is the only persistent state — opt-in via the `disabled` prop, which sets `aria-disabled=\"true\"` on the root and `disabled` on each underlying `<input type=\"range\">`."
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-primary",
+    "--color-border-subtle",
+    "--color-border-focus",
+    "--color-signal-info",
+    "--color-text-primary",
+    "--button-primary-bg-default",
+    "--button-primary-bg-hover",
+    "--button-primary-bg-pressed",
+    "--button-disabled-border",
+    "--button-disabled-content",
+    "--space-2",
+    "--space-3",
+    "--space-6",
+    "--border-radius-pill",
+    "--border-width-s",
+    "--font-family-primary",
+    "--font-size-body-sm",
+    "--font-size-body-base",
+    "--lineheight-body-sm",
+    "--lineheight-body-base",
+    "--font-weight-regular",
+    "--font-weight-semibold"
+  ],
+  "composes": [],
+  "hasBehavior": true,
+  "accessibility": [
+    "Each thumb is backed by a native `<input type=\"range\">` — the",
+    "On `selection=\"range\"`, two `<input type=\"range\">` siblings handle",
+    "The root carries `role=\"group\"` and an optional `aria-label` /",
+    "`Tab` / `Shift+Tab` move focus between the thumb input(s) and",
+    "Focus is `:focus-visible` only — pointer drags do NOT paint the",
+    "The 2 px focus ring offset by 4 px from the 20 px thumb sits well",
+    "Touch targets — the visible thumb is 20 × 20, but the underlying",
+    "The disabled state preserves the visible thumb so a screen reader",
+    "The focus ring color (`--color-border-focus`, `#108389` ocean-teal",
+    "Honours `prefers-reduced-motion: reduce` — the JS thumb-position"
+  ],
+  "storybookId": "molecules-slider",
+  "generatedAt": "2026-08-05T20:59:30.540Z"
+}

@@ -1,0 +1,58 @@
+{{!--
+  Patterns/Menu block — BEM root .c-menu-block
+  Figma: Web-ODS Shared Library MenuBlock 1396:4886 (page 539:28419,
+  Spec Frame .Menu block · spec 4647:135).
+
+  Props:
+    type             simple | with-caption
+    size             large | small
+    showDropShadow   boolean (default true)
+    showKeyline      boolean (default true)
+    mode             static | popup (default static)
+    listRole         menu | list
+    items            array of menu-list args
+    slotHtml         raw HTML for the items slot (escape hatch)
+    id               optional root id
+    hidden           boolean — initial hidden for popup
+    className
+--}}
+<div
+  class="c-menu-block c-menu-block--{{#if type}}{{lower type}}{{else}}simple{{/if}} c-menu-block--size-{{#if size}}{{lower size}}{{else}}large{{/if}}{{#unless (eq showDropShadow false)}} c-menu-block--shadow{{/unless}}{{#unless (eq showKeyline false)}} c-menu-block--keyline{{/unless}}{{#if (eq mode "popup")}} c-menu-block--popup{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="menu-block"
+  data-mode="{{#if mode}}{{mode}}{{else}}static{{/if}}"
+  {{#if id}}id="{{id}}"{{/if}}
+  {{#if hidden}}hidden{{/if}}
+>
+  <ul
+    class="c-menu-block__items"
+    role="{{#if listRole}}{{listRole}}{{else}}{{#if (eq mode "popup")}}menu{{else}}list{{/if}}{{/if}}"
+  >
+    {{#if slotHtml}}
+      {{{slotHtml}}}
+    {{else}}
+      {{#each items}}
+        {{> menu-list
+          type=type
+          size=../size
+          text=text
+          selected=selected
+          leftIcon=leftIcon
+          rightIcon=rightIcon
+          loadingIcon=loadingIcon
+          showRightBorder=showRightBorder
+          showDividerAbove=showDividerAbove
+          edgePadding=edgePadding
+          disabled=disabled
+          href=href
+          leftIconName=leftIconName
+          rightIconName=rightIconName
+          loadingIconName=loadingIconName
+          selectionMode=selectionMode
+          role=role
+        }}
+      {{else}}
+        {{> menu-list type="row" size=size text="Menu item"}}
+      {{/each}}
+    {{/if}}
+  </ul>
+</div>

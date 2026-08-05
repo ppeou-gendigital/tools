@@ -1,0 +1,126 @@
+{{!--
+  Molecules/Menu list — BEM root .c-menu-list
+  Figma: Web-ODS Shared Library MenuList 1396:5517 (page 4298:1925,
+  Spec Frame .Menu list · spec 4646:265).
+
+  Axes / props:
+    type              row | divider | caption
+    size              large | small
+    selected          boolean (row only)
+    leftIcon          boolean
+    rightIcon         boolean
+    loadingIcon       boolean (overrides right icon visually)
+    showRightBorder   boolean
+    showDividerAbove  boolean
+    edgePadding       boolean (default true)
+    text              string
+    href              optional — renders as <a> when set (row)
+    leftIconName / rightIconName / loadingIconName  catalog keys
+    disabled          boolean
+    selectionMode     page | choice  → aria-current vs aria-selected
+    role              menuitem | listitem (default menuitem for row)
+    className
+
+  Callers should resolve icon sizes / default catalog keys before render
+  when convenient; defaults below match Spec (Large 24 / Small 16).
+--}}
+{{#if (eq (lower type) "divider")}}
+<li
+  class="c-menu-list c-menu-list--divider c-menu-list--size-{{#if size}}{{lower size}}{{else}}large{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="menu-list"
+  role="separator"
+  aria-hidden="true"
+>
+  <hr class="c-menu-list__rule" />
+</li>
+{{else if (eq (lower type) "caption")}}
+<li
+  class="c-menu-list c-menu-list--caption c-menu-list--size-{{#if size}}{{lower size}}{{else}}large{{/if}}{{#unless (eq edgePadding false)}} c-menu-list--edge-pad{{/unless}}{{#if showDividerAbove}} c-menu-list--divider-above{{/if}}{{#if showRightBorder}} c-menu-list--right-border{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="menu-list"
+  role="presentation"
+>
+  <span class="c-menu-list__caption">{{#if text}}{{text}}{{else}}Caption{{/if}}</span>
+</li>
+{{else}}
+<li
+  class="c-menu-list c-menu-list--row c-menu-list--size-{{#if size}}{{lower size}}{{else}}large{{/if}}{{#if selected}} is-selected{{/if}}{{#if disabled}} is-disabled{{/if}}{{#if loadingIcon}} is-loading{{/if}}{{#unless (eq edgePadding false)}} c-menu-list--edge-pad{{/unless}}{{#if showDividerAbove}} c-menu-list--divider-above{{/if}}{{#if showRightBorder}} c-menu-list--right-border{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="menu-list"
+  role="{{#if role}}{{role}}{{else}}menuitem{{/if}}"
+  {{#if selected}}
+    {{#if (eq selectionMode "page")}}aria-current="page"{{else}}aria-selected="true"{{/if}}
+  {{/if}}
+  {{#if loadingIcon}}aria-busy="true"{{/if}}
+  {{#if disabled}}aria-disabled="true"{{/if}}
+>
+  {{#if href}}
+  <a
+    class="c-menu-list__control"
+    href="{{href}}"
+    {{#if disabled}}tabindex="-1" aria-disabled="true"{{/if}}
+    {{#if target}}target="{{target}}"{{/if}}
+  >
+  {{else}}
+  <button
+    class="c-menu-list__control"
+    type="button"
+    {{#if disabled}}disabled{{/if}}
+  >
+  {{/if}}
+    {{#if leftIcon}}
+      <span class="c-menu-list__icon c-menu-list__icon--leading" aria-hidden="true">
+        {{#if (eq (lower size) "small")}}
+          {{#if leftIconName}}
+            {{> icon name=leftIconName size="16" color="current" decorative=true}}
+          {{else}}
+            {{> icon name="status/simple-checkmark" size="16" color="current" decorative=true}}
+          {{/if}}
+        {{else}}
+          {{#if leftIconName}}
+            {{> icon name=leftIconName size="24" color="current" decorative=true}}
+          {{else}}
+            {{> icon name="status/simple-checkmark" size="24" color="current" decorative=true}}
+          {{/if}}
+        {{/if}}
+      </span>
+    {{/if}}
+    <span class="c-menu-list__label">{{#if text}}{{text}}{{else}}Menu item{{/if}}</span>
+    {{#if loadingIcon}}
+      <span class="c-menu-list__icon c-menu-list__icon--trailing c-menu-list__icon--loading" aria-hidden="true">
+        {{#if (eq (lower size) "small")}}
+          {{#if loadingIconName}}
+            {{> icon name=loadingIconName size="16" color="current" decorative=true}}
+          {{else}}
+            {{> icon name="actions/simple-reload" size="16" color="current" decorative=true}}
+          {{/if}}
+        {{else}}
+          {{#if loadingIconName}}
+            {{> icon name=loadingIconName size="24" color="current" decorative=true}}
+          {{else}}
+            {{> icon name="actions/simple-reload" size="24" color="current" decorative=true}}
+          {{/if}}
+        {{/if}}
+      </span>
+    {{else if rightIcon}}
+      <span class="c-menu-list__icon c-menu-list__icon--trailing" aria-hidden="true">
+        {{#if (eq (lower size) "small")}}
+          {{#if rightIconName}}
+            {{> icon name=rightIconName size="16" color="current" decorative=true}}
+          {{else}}
+            {{> icon name="arrows-navigation/simple-chevron-right" size="16" color="current" decorative=true}}
+          {{/if}}
+        {{else}}
+          {{#if rightIconName}}
+            {{> icon name=rightIconName size="24" color="current" decorative=true}}
+          {{else}}
+            {{> icon name="arrows-navigation/simple-chevron-right" size="24" color="current" decorative=true}}
+          {{/if}}
+        {{/if}}
+      </span>
+    {{/if}}
+  {{#if href}}
+  </a>
+  {{else}}
+  </button>
+  {{/if}}
+</li>
+{{/if}}

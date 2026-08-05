@@ -1,0 +1,53 @@
+{{!--
+  Molecules/Table cell — BEM root .c-table-cell
+  Figma: Table cell · content slot `5957:257` (page `4339:13401`,
+  Spec `.Table cell · content slot · spec` `5960:299`).
+
+  Axes / props:
+    type            header | body
+    align           left | center | right
+    background      boolean (default true)
+    borders         boolean (default true) — master gate for per-side borders
+    topBorder / rightBorder / bottomBorder / leftBorder  booleans (default true)
+    leadingIcon / trailingIcon  booleans
+    leadingIconName / trailingIconName  catalog keys (stories supply defaults)
+    label           plain text
+    contentHtml     escape hatch for custom slot HTML (skips default text)
+    className
+    width           optional inline-size (e.g. "220px") for demos
+
+  Deprecated boards (.Table cell [DEPRECATED]) are out of scope.
+--}}
+<div
+  class="c-table-cell c-table-cell--type-{{#if type}}{{lower type}}{{else}}body{{/if}} c-table-cell--align-{{#if align}}{{lower align}}{{else}}left{{/if}}{{#unless (eq background false)}} c-table-cell--background{{/unless}}{{#unless (eq borders false)}} c-table-cell--borders{{/unless}}{{#if className}} {{className}}{{/if}}"
+  data-component="table-cell"
+  {{#if width}}style="inline-size: {{width}};"{{/if}}
+>
+  {{#if leadingIcon}}
+    <span class="c-table-cell__icon c-table-cell__icon--leading" aria-hidden="true">
+      {{> icon name=leadingIconName size="24" color="current" decorative=true}}
+    </span>
+  {{/if}}
+  <div class="c-table-cell__content">
+    {{#if contentHtml}}
+      {{{contentHtml}}}
+    {{else if (eq (lower type) "header")}}
+      {{> content-title style="h7" weight="emphasis" tag="p" text=label}}
+    {{else}}
+      {{> content-body style="body-base" weight="base" text=label}}
+    {{/if}}
+  </div>
+  {{#if trailingIcon}}
+    <span class="c-table-cell__icon c-table-cell__icon--trailing" aria-hidden="true">
+      {{> icon name=trailingIconName size="24" color="current" decorative=true}}
+    </span>
+  {{/if}}
+  {{#unless (eq borders false)}}
+  <span class="c-table-cell__borders" aria-hidden="true">
+    {{#unless (eq topBorder false)}}<span class="c-table-cell__border c-table-cell__border--top"></span>{{/unless}}
+    {{#unless (eq rightBorder false)}}<span class="c-table-cell__border c-table-cell__border--right"></span>{{/unless}}
+    {{#unless (eq bottomBorder false)}}<span class="c-table-cell__border c-table-cell__border--bottom"></span>{{/unless}}
+    {{#unless (eq leftBorder false)}}<span class="c-table-cell__border c-table-cell__border--left"></span>{{/unless}}
+  </span>
+  {{/unless}}
+</div>

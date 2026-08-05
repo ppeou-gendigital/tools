@@ -1,0 +1,16 @@
+{{!--
+  Molecules/Content body — BEM root .c-content-body
+  Figma: Web-ODS Shared Library component set 3483:3453 (canvas 3598:7414).
+
+  Axes:
+    style   body-3xl | body-2xl | body-xl | body-lg |
+            body-base | body-sm | body-xs           → .c-content-body--$style
+    weight  subtle | base | prominent | emphasis |
+            strong                                   → .c-content-body--weight-$weight
+
+  Content:
+    text → paragraph body
+--}}
+<p
+  class="c-content-body c-content-body--{{#if style}}{{style}}{{else}}body-3xl{{/if}} c-content-body--weight-{{#if weight}}{{weight}}{{else}}base{{/if}}{{#if className}} {{className}}{{/if}}"
+>{{#if text}}{{text}}{{else}}Body text{{/if}}</p>

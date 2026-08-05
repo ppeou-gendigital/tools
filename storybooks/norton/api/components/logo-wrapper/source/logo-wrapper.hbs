@@ -1,0 +1,28 @@
+{{!--
+  Molecules/Logo Wrapper — BEM root .c-logo-wrapper
+  Figma: Web-ODS Shared Library 3768:2718 (LockUp axis).
+
+  Axes:
+    lockUp  horizontal | stacked | checkmark  →  .c-logo-wrapper--{lockUp}
+
+  Slots:
+    src + alt  → native <img> filling the aspect-locked box
+    (no src)   → documentation placeholder (not shipped to users)
+--}}
+<div
+  class="c-logo-wrapper c-logo-wrapper--{{#if lockUp}}{{lockUp}}{{else}}horizontal{{/if}}{{#if className}} {{className}}{{/if}}"
+>
+  {{#if src}}
+    <img
+      class="c-logo-wrapper__image"
+      src="{{src}}"
+      alt="{{#if alt}}{{alt}}{{/if}}"
+    />
+  {{else}}
+    <div class="c-logo-wrapper__placeholder" aria-hidden="true">
+      <span class="c-logo-wrapper__placeholder-label">
+        Placeholder<br />logo {{#if lockUp}}{{lockUp}}{{else}}horizontal{{/if}}
+      </span>
+    </div>
+  {{/if}}
+</div>

@@ -1,0 +1,75 @@
+{{!--
+  Patterns/Content list — BEM root .c-content-list
+  Figma: Web-ODS Shared Library Pattern / ContentList 3483:3503
+  (item set 3483:3631).
+
+  Axes:
+    listType  unordered | ordered | nested  → tag + .c-content-list--$listType
+    marker    bullet | icon                 → .c-content-list--marker-$marker
+    surfaced  boolean                       → .c-content-list--surfaced
+
+  items[]:
+    text, type?, iconName?, checked?, name?, children?, childrenListType?
+--}}
+{{#with this as |list|}}
+{{#if (eq list.listType "ordered")}}
+<ol
+  class="c-content-list c-content-list--ordered{{#if list.surfaced}} c-content-list--surfaced{{/if}}{{#if list.className}} {{list.className}}{{/if}}"
+  data-component="content-list"
+>
+{{else}}
+<ul
+  class="c-content-list c-content-list--{{#if list.listType}}{{list.listType}}{{else}}unordered{{/if}} c-content-list--marker-{{#if list.marker}}{{list.marker}}{{else}}bullet{{/if}}{{#if list.surfaced}} c-content-list--surfaced{{/if}}{{#if list.className}} {{list.className}}{{/if}}"
+  data-component="content-list"
+>
+{{/if}}
+  {{#each list.items}}
+    <li
+      class="c-content-list__item{{#if type}} c-content-list__item--{{type}}{{else}} c-content-list__item--{{#if ../listType}}{{../listType}}{{else}}unordered{{/if}}{{/if}}"
+    >
+      {{#if (eq type "switch")}}
+        {{> switch label=text checked=checked accessibleLabel=text showIcon=true}}
+      {{else if (eq type "checkbox")}}
+        {{#if checked}}
+          {{> checkbox label=text selection="checked" accessibleLabel=text}}
+        {{else}}
+          {{> checkbox label=text selection="unchecked" accessibleLabel=text}}
+        {{/if}}
+      {{else if (eq type "radio")}}
+        {{> radio label=text checked=checked accessibleLabel=text name=name}}
+      {{else}}
+        {{#if (eq ../listType "ordered")}}
+          <span class="c-content-list__marker c-content-list__marker--text" aria-hidden="true">{{contentListOrderedMarker @index}}</span>
+        {{else if (eq ../marker "icon")}}
+          <span class="c-content-list__marker c-content-list__marker--icon" aria-hidden="true">
+            {{> icon
+              name=(contentListIconName iconName ../iconName)
+              size="20"
+              color="current"
+              decorative=true
+            }}
+          </span>
+        {{else}}
+          <span class="c-content-list__marker c-content-list__marker--text" aria-hidden="true">•</span>
+        {{/if}}
+        <span class="c-content-list__body">{{#if text}}{{text}}{{else}}List item body text{{/if}}</span>
+      {{/if}}
+
+      {{#if children.length}}
+        {{> content-list
+          listType=childrenListType
+          marker=../marker
+          iconName=../iconName
+          surfaced=false
+          items=children
+          className="c-content-list__child"
+        }}
+      {{/if}}
+    </li>
+  {{/each}}
+{{#if (eq list.listType "ordered")}}
+</ol>
+{{else}}
+</ul>
+{{/if}}
+{{/with}}

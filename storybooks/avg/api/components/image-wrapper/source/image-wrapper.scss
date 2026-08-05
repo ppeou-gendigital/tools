@@ -1,0 +1,68 @@
+/**
+ * Image Wrapper — core molecule (.c-image-wrapper).
+ * Figma Web-ODS Shared Library page 5428:53699 / Spec 5653:1197.
+ *
+ * Ratio pins viewport aspect-ratio; Fit maps to object-fit on the image.
+ * Default demo width matches sticker cell (220px); consumers override width.
+ */
+
+.c-image-wrapper {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  overflow: clip;
+  background-color: transparent;
+  border-radius: var(--border-radius-0, 0);
+  inline-size: var(--image-wrapper-width, 220px);
+  max-inline-size: 100%;
+  block-size: auto;
+}
+
+.c-image-wrapper--ratio-2-1 { aspect-ratio: 2 / 1; }
+.c-image-wrapper--ratio-16-9 { aspect-ratio: 16 / 9; }
+.c-image-wrapper--ratio-4-3 { aspect-ratio: 4 / 3; }
+.c-image-wrapper--ratio-1-1 { aspect-ratio: 1 / 1; }
+.c-image-wrapper--ratio-3-4 { aspect-ratio: 3 / 4; }
+.c-image-wrapper--ratio-landscape { aspect-ratio: 3 / 2; }
+.c-image-wrapper--ratio-portrait { aspect-ratio: 2 / 3; }
+.c-image-wrapper--ratio-1-2 { aspect-ratio: 1 / 2; }
+.c-image-wrapper--ratio-9-16 { aspect-ratio: 9 / 16; }
+
+.c-image-wrapper__image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-position: center;
+}
+
+.c-image-wrapper--fit-contain .c-image-wrapper__image {
+  object-fit: contain;
+}
+
+.c-image-wrapper--fit-cover .c-image-wrapper__image {
+  object-fit: cover;
+}
+
+.c-image-wrapper__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-disabled-border, #b3b3b3);
+  padding: var(--space-0, 0);
+}
+
+.c-image-wrapper__placeholder-label {
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-regular, 400);
+  font-size: var(--font-size-label, 12px);
+  line-height: var(--lineheight-label, 16px);
+  letter-spacing: var(--letterspacing-label, 0.24px);
+  color: var(--color-text-inverse, #fff);
+  text-align: center;
+  word-break: break-word;
+}

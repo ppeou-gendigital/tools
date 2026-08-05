@@ -1,0 +1,185 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "content-block",
+  "status": "published",
+  "summary": "Section container that pairs a heading with optional supporting text and a flexible content slot. Figma: [Pattern / ContentBlock](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3483-3418&m=dev) (page `3483:3418`; Content Slot `3483:3468`; Spec Frame `.Content block · spec` `3869:73`).",
+  "specUrl": "/api/components/content-block/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/content-block/spec.md",
+    "hbs": "/api/components/content-block/source/content-block.hbs",
+    "scss": "/api/components/content-block/source/content-block.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "3483:3418",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=3483-3418&m=dev"
+  },
+  "rootClass": "c-content-block",
+  "bemClasses": [
+    "c-content-block"
+  ],
+  "properties": [
+    {
+      "name": "title",
+      "fixtureKey": "title",
+      "type": "plain-text",
+      "required": true,
+      "default": "Section title",
+      "description": "Content title string",
+      "figmaLabel": "title"
+    },
+    {
+      "name": "titleStyle",
+      "fixtureKey": "titleStyle",
+      "type": "enum",
+      "required": false,
+      "default": "h3",
+      "description": "Content title Style step: `h3` \\",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "titleTag",
+      "fixtureKey": "titleTag",
+      "type": "enum",
+      "required": false,
+      "default": "h2",
+      "description": "Semantic heading tag (`h1`–`h6`)",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "bodyText",
+      "fixtureKey": "bodyText",
+      "type": "plain-text",
+      "required": false,
+      "default": "—",
+      "description": "Supporting Body 3xl paragraph",
+      "figmaLabel": "bodyText"
+    },
+    {
+      "name": "showLink",
+      "fixtureKey": "showLink",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "Title-row Text link",
+      "figmaLabel": "showLink"
+    },
+    {
+      "name": "linkLabel",
+      "fixtureKey": "linkLabel",
+      "type": "plain-text",
+      "required": false,
+      "default": "View all",
+      "description": "Text link label when `showLink`",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "linkHref",
+      "fixtureKey": "linkHref",
+      "type": "url",
+      "required": false,
+      "default": "#",
+      "description": "Text link href",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "showButton",
+      "fixtureKey": "showButton",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "Title-row icon Button",
+      "figmaLabel": "showButton"
+    },
+    {
+      "name": "buttonIcon",
+      "fixtureKey": "buttonIcon",
+      "type": "catalog-key",
+      "required": false,
+      "default": "arrows-navigation/simple-more",
+      "description": "Icon-only Button leading icon",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "buttonAccessibleLabel",
+      "fixtureKey": "buttonAccessibleLabel",
+      "type": "plain-text",
+      "required": false,
+      "default": "More options",
+      "description": "`aria-label` for icon-only Button",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "slotHtml",
+      "fixtureKey": "slotHtml",
+      "type": "rich-text",
+      "required": false,
+      "default": "—",
+      "description": "Flexible content slot (pre-rendered HTML)",
+      "figmaLabel": "children"
+    },
+    {
+      "name": "showBody",
+      "fixtureKey": "showBody",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "When false, omit body paragraph",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "className",
+      "fixtureKey": "className",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Outer escape hatch",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "titleStyle",
+      "values": "h3`, `h0"
+    },
+    {
+      "axis": "showLink",
+      "values": "true`, `false"
+    },
+    {
+      "axis": "showButton",
+      "values": "true`, `false"
+    },
+    {
+      "axis": "showBody",
+      "values": "true`, `false"
+    }
+  ],
+  "tokensConsumed": [
+    "--color-bg-primary",
+    "--color-text-primary",
+    "--space-3",
+    "--space-7"
+  ],
+  "composes": [
+    "content-title",
+    "content-body",
+    "text-link",
+    "button",
+    "content-list"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "Semantic order: title → body → slot.",
+    "Title is a real heading (`titleTag`); visual Style (H0/H3) is independent of level.",
+    "`showLink` renders a real `<a>` via Text link.",
+    "`showButton` renders a real `<button>` with `aria-label` (icon-only).",
+    "One affordance per title row keeps tab order predictable.",
+    "No motion on the container."
+  ],
+  "storybookId": "patterns-content-block",
+  "generatedAt": "2026-08-05T20:59:07.364Z"
+}

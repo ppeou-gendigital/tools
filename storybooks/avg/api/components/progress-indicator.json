@@ -1,0 +1,178 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "progress-indicator",
+  "status": "published",
+  "summary": "Determinate progress affordance — a track or ring filled proportionally to the current value of a long-running operation. Three layouts share one BEM root (`.c-progress-indicator`): two **linear** layouts (`inline`, `stacked`) mirror the [Web-ODS Shared Library Linear master variant set](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1380-1255&m=dev) and its [`Progress indicator — Overview`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1380-1478&m=dev) Spec Frame at `1380:1478`; one **circular** layout mirrors the [other",
+  "specUrl": "/api/components/progress-indicator/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/progress-indicator/spec.md",
+    "hbs": "/api/components/progress-indicator/source/progress-indicator.hbs",
+    "scss": "/api/components/progress-indicator/source/progress-indicator.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "1380:1255",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1380-1255&m=dev"
+  },
+  "rootClass": "c-progress-indicator",
+  "bemClasses": [
+    "c-progress-indicator"
+  ],
+  "properties": [
+    {
+      "name": "layout",
+      "fixtureKey": "layout",
+      "type": "variant",
+      "required": false,
+      "default": "stacked",
+      "description": "`inline` \\",
+      "figmaLabel": "Layout"
+    },
+    {
+      "name": "theme",
+      "fixtureKey": "theme",
+      "type": "variant",
+      "required": false,
+      "default": "light",
+      "description": "`light` \\",
+      "figmaLabel": "Theme"
+    },
+    {
+      "name": "value",
+      "fixtureKey": "value",
+      "type": "numeric",
+      "required": false,
+      "default": "50",
+      "description": "`0`-`100` inclusive. Clamped at render. Written into the inline CSS custom property `--progress-indicator-value` on the root; the linear SCSS sizes `.c-progress-indicator__fill` via `flex-basis: calc(var(--progress-indicator-value) * 1%)`. The circular SCSS feeds the same custom property into the SVG fill circle's `stroke-dasharray: var(--progress-indicator-value) 100` so the arc sweeps proportionally (the circle ships `pathLength=\"100\"` so the dash array reads as a percent).",
+      "figmaLabel": "Progress"
+    },
+    {
+      "name": "label",
+      "fixtureKey": "label",
+      "type": "text",
+      "required": false,
+      "default": "Label",
+      "description": "Linear layouts only — plain text rendered inside `.c-progress-indicator__label`, displayed uppercase via `text-transform: uppercase`. The circular layout ignores `label` and renders the numeric `value` (with optional `%`) inside the ring instead.",
+      "figmaLabel": "Label"
+    },
+    {
+      "name": "showLabel",
+      "fixtureKey": "showLabel",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "Linear — when `false` (or `label` is empty), the `.c-progress-indicator__label` slot is omitted entirely so the gap collapses. Circular — when `false`, the inner value text (`<n>%`) is omitted; the ring renders alone.",
+      "figmaLabel": "Show label"
+    },
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "variant",
+      "required": false,
+      "default": "md",
+      "description": "`xs` \\",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "accessibleLabel",
+      "fixtureKey": "accessibleLabel",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Code-only. Optional `aria-label` to attach to the root when no visible label is shown. The visible `label` text otherwise becomes the accessible name via `aria-labelledby`. Always recommended for the circular layout because the inner value text is rendered as plain digits (the consumer typically supplies a richer accessible name like `\"Setup progress, 50 percent complete\"`).",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "valueMin",
+      "fixtureKey": "valueMin",
+      "type": "numeric",
+      "required": false,
+      "default": "0",
+      "description": "Code-only. `aria-valuemin` value.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "valueMax",
+      "fixtureKey": "valueMax",
+      "type": "numeric",
+      "required": false,
+      "default": "100",
+      "description": "Code-only. `aria-valuemax` value.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "id",
+      "fixtureKey": "id",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Code-only. Suffixes the label node `id` + the root `aria-labelledby` (`progress-indicator-label-<id>`). Auto-falls back to `default` when omitted; pass a unique value per page when multiple linear indicators share a document.",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Layout",
+      "values": "inline, stacked, circular"
+    },
+    {
+      "axis": "Theme",
+      "values": "light, dark"
+    },
+    {
+      "axis": "Progress",
+      "values": "0–100 (continuous; Figma publishes 10 % stepped previews for linear, two stamps `25` / `75` for circular)"
+    },
+    {
+      "axis": "Show label",
+      "values": "true, false"
+    },
+    {
+      "axis": "Size *(circular only)*",
+      "values": "xs, sm, md, lg, xxl"
+    }
+  ],
+  "tokensConsumed": [
+    "--color-neutral-30",
+    "--color-off-black",
+    "--color-text-primary",
+    "--color-text-inverse",
+    "--font-family-primary",
+    "--font-size-body-sm",
+    "--font-size-body-xs",
+    "--font-size-body-base",
+    "--font-size-h6",
+    "--font-size-h4",
+    "--lineheight-body-sm",
+    "--lineheight-body-xs",
+    "--lineheight-body-base",
+    "--lineheight-h6",
+    "--lineheight-h4",
+    "--font-weight-semibold",
+    "--space-2",
+    "--space-4",
+    "--border-width-default",
+    "--border-width-emphasis",
+    "--progress-indicator-track-height",
+    "--progress-indicator-radius",
+    "--progress-indicator-label-letter-spacing",
+    "--progress-indicator-circular-size",
+    "--progress-indicator-circular-stroke"
+  ],
+  "composes": [],
+  "hasBehavior": false,
+  "accessibility": [
+    "Root carries `role=\"progressbar\"` to expose the determinate-progress",
+    "Root carries `aria-valuenow=\"<value>\"`, `aria-valuemin=\"0\"`, and",
+    "**Linear layouts** — when `showLabel=true` and `label` is non-empty,",
+    "**Circular layout** — `accessibleLabel` is the canonical accessible",
+    "Contrast — both linear `.c-progress-indicator__fill` and circular",
+    "The root does not receive focus; the component is a presentation",
+    "`prefers-reduced-motion: reduce` does not currently apply — both"
+  ],
+  "storybookId": "molecules-progress-indicator",
+  "generatedAt": "2026-08-05T20:59:13.518Z"
+}

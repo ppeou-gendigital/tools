@@ -5,7 +5,7 @@ subtype: molecule
 librarySource: brand
 figmaFileKey: 0o8SL5BEk8wHtgud00dRyg
 figmaNodeId: "1380:1255"
-status: draft
+status: published
 composes: []
 tokensConsumed:
   - --color-neutral-30

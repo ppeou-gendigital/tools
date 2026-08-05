@@ -1,0 +1,124 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "content-title",
+  "status": "published",
+  "summary": "Typography molecule for section and page headings. Figma: [Molecule / ContentTitle](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3598-7174&m=dev) (component set `3483:3436`, Spec Frame `3637:48`).",
+  "specUrl": "/api/components/content-title/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/content-title/spec.md",
+    "hbs": "/api/components/content-title/source/content-title.hbs",
+    "scss": "/api/components/content-title/source/content-title.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "3483:3436",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=3483-3436&m=dev"
+  },
+  "rootClass": "c-content-title",
+  "bemClasses": [
+    "c-content-title"
+  ],
+  "properties": [
+    {
+      "name": "style",
+      "fixtureKey": "style",
+      "type": "enum",
+      "required": true,
+      "default": "h0",
+      "description": "→ BEM `--h*`",
+      "figmaLabel": "Style"
+    },
+    {
+      "name": "weight",
+      "fixtureKey": "weight",
+      "type": "enum",
+      "required": true,
+      "default": "emphasis",
+      "description": "→ BEM `--weight-*`; SemiBold default",
+      "figmaLabel": "Weight"
+    },
+    {
+      "name": "text",
+      "fixtureKey": "text",
+      "type": "text",
+      "required": true,
+      "default": "Heading",
+      "description": "Heading string",
+      "figmaLabel": "Text"
+    },
+    {
+      "name": "tag",
+      "fixtureKey": "tag",
+      "type": "enum",
+      "required": false,
+      "default": "h2",
+      "description": "Semantic element `h1`–`h6` \\",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "className",
+      "fixtureKey": "className",
+      "type": "text",
+      "required": false,
+      "default": "\"\"",
+      "description": "Outer escape hatch",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Style",
+      "values": "h0`, `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `h7"
+    },
+    {
+      "axis": "Weight",
+      "values": "subtle`, `base`, `prominent`, `emphasis`, `strong"
+    }
+  ],
+  "tokensConsumed": [
+    "--font-family-primary",
+    "--color-text-primary",
+    "--font-weight-light",
+    "--font-weight-regular",
+    "--font-weight-medium",
+    "--font-weight-semibold",
+    "--font-weight-bold",
+    "--font-size-h0",
+    "--lineheight-h0",
+    "--letterspacing-h0",
+    "--font-size-h1",
+    "--lineheight-h1",
+    "--letterspacing-h1",
+    "--font-size-h2",
+    "--lineheight-h2",
+    "--letterspacing-h2",
+    "--font-size-h3",
+    "--lineheight-h3",
+    "--letterspacing-h3",
+    "--font-size-h4",
+    "--lineheight-h4",
+    "--letterspacing-h4",
+    "--font-size-h5",
+    "--lineheight-h5",
+    "--letterspacing-h5",
+    "--font-size-h6",
+    "--lineheight-h6",
+    "--letterspacing-h6",
+    "--font-size-h7",
+    "--lineheight-h7",
+    "--letterspacing-h7"
+  ],
+  "composes": [],
+  "hasBehavior": false,
+  "accessibility": [
+    "Render a real heading (`tag` → `<h1>`–`<h6>`) chosen by the document outline, not the visual Style step alone.",
+    "Visual step ≠ heading level — Style and `tag` are independent; an `h2`-sized title can be the page’s `<h1>`.",
+    "One `<h1>` per page; nest without skipping levels.",
+    "Meet WCAG contrast for `--color-text-primary` on the surrounding canvas."
+  ],
+  "storybookId": "molecules-content-title",
+  "generatedAt": "2026-08-05T20:59:13.518Z"
+}

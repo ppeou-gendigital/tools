@@ -4,7 +4,7 @@
   "subtype": "pattern",
   "librarySource": "brand",
   "name": "search-box",
-  "status": "draft",
+  "status": "published",
   "summary": "A compact search-entry pattern built on a native `<input type=\"search\">`. Mirrors the [Web-ODS Shared Library → Search box](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=698-47669&m=dev) (`698:47669`) under the LifeLock mode pick. The native HTML intentionally diverges from the Figma div tree — visual + token fidelity is the bar.",
   "specUrl": "/api/components/search-box/spec.md",
   "sourceFiles": {
@@ -148,5 +148,5 @@
     "WCAG: resting + focus borders meet AA non-text contrast against `--color-bg-input`; the glyph + separator are `aria-hidden`. Per the Figma guidance frame (`984:2201`), keep search boxes on the primary background where border contrast is guaranteed."
   ],
   "storybookId": "patterns-search-box",
-  "generatedAt": "2026-08-03T01:08:47.005Z"
+  "generatedAt": "2026-08-05T20:59:20.192Z"
 }

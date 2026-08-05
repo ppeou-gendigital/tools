@@ -9,10 +9,11 @@ status: published
 behavior: true
 composes: []
 tokensConsumed:
-  - --color-background-primary
-  - --color-border-tertiary
+  - --color-bg-primary
+  - --color-border-subtle
   - --color-border-focus
   - --color-signal-info
+  - --color-text-primary
   - --button-primary-bg-default
   - --button-primary-bg-hover
   - --button-primary-bg-pressed
@@ -22,7 +23,7 @@ tokensConsumed:
   - --space-3
   - --space-6
   - --border-radius-pill
-  - --border-width-default
+  - --border-width-s
   - --font-family-primary
   - --font-size-body-sm
   - --font-size-body-base
@@ -38,11 +39,9 @@ Continuous and discrete sliders for single-value and range selection.
 Mirrors the canonical
 [Web-ODS Shared Library → Sliders 🟢](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28421&m=dev)
 canvas and its master component `DS · Slider`
-([`1336:2939`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1336-2939&m=dev)).
-Twenty Figma variants distribute across four `Variant × Selection`
-combinations and five interaction states — every visual binds to
-LifeLock `THEME = LifeLock` + `PLATFORM = LifeLock / Desktop|Tablet|Mobile`
-Variable resolutions.
+([`1336:2939`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=1336-2939&m=dev)),
+with Spec Frame [`.Slider · spec`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4580-15595&m=dev)
+(`4580:15595`). Core default theme unit; brands inherit via theme tokens.
 
 ## Summary
 
@@ -121,38 +120,23 @@ modifier on this one.
 **Structural** — `--space-2` (4 px gap between value-label area and
 track area; track block-size), `--space-3` (8 px container inline +
 block padding), `--space-6` (20 px thumb diameter),
-`--border-radius-pill` (9999 px — pill rounding for track,
-active-fill, and thumbs),
-`--border-width-default` (2 px focus-visible outline on focused
-state).
+`--border-radius-pill` (pill rounding for track, active-fill, and
+thumbs), `--border-width-s` (focus-visible outline on focused state).
 
 **Typography** — `--font-family-primary`, `--font-weight-regular`,
 `--font-weight-semibold`, value-label pair `--font-size-body-base` /
-`--lineheight-body-base` (16 / 24), helper text pair
-`--font-size-body-sm` / `--lineheight-body-sm` (14 / 22).
+`--lineheight-body-base`, helper text pair `--font-size-body-sm` /
+`--lineheight-body-sm`.
 
-**Color** — `--color-background-primary` (container surface),
-`--color-border-tertiary` (track in default / hover / focused /
-active states), `--color-signal-info` (active-fill in default /
-hover / focused / active — the brand identity colour for the
-filled portion of the track; resolves to `#0009ec` indigo under
-LifeLock theme), `--color-border-focus` (focus-visible ring around
-the thumb — the canonical theme focus signal, resolves to
-`#108389` ocean-teal under LifeLock theme; consistent with the
-default theme Figma binding `Color/Border/focus` and with the
-sibling Accordion's focus-ring posture, so the focus cue reads
-uniformly across the component library regardless of which brand
-identity the unit's content paint expresses),
-`--button-primary-bg-default` (thumb in default — aliases to the
-same `#0009ec` resolution as `--color-signal-info`, kept distinct
-so a future button-token rebrand doesn't drift the thumb paint),
-`--button-primary-bg-hover` (thumb in hover state — `#505165`),
-`--button-primary-bg-pressed` (thumb in active state — `#2f303c`),
-`--button-disabled-border` (track in disabled — `#b3b3b3`),
-`--button-disabled-content` (active-fill + thumb in disabled —
-`#808080`).
+**Color** — `--color-bg-primary` (container surface),
+`--color-border-subtle` (track — remapped from Figma
+`Color/Border/tertiary`), `--color-signal-info` (active-fill),
+`--color-border-focus` (focus-visible ring), `--color-text-primary`
+(value labels), `--button-primary-bg-{default,hover,pressed}`
+(thumb paints), `--button-disabled-border` / `--button-disabled-content`
+(disabled track / fill / thumb).
 
-See this package's Design System token galleries and themes/default/ for resolved values.
+See themes/default/ for resolved values.
 
 ## Responsive behaviour
 
@@ -182,14 +166,14 @@ half-row at MD/LG/XL with stacked label sibling.
 
 ## States
 
-- **Default** — track painted with `--color-border-tertiary`,
+- **Default** — track painted with `--color-border-subtle`,
   active-fill + thumb both painted with `--color-signal-info`.
   Thumb cast carries no shadow. No focus indicator.
 - **Hover** — track + active-fill unchanged; thumb fill swaps to
   `--button-primary-bg-hover` (`#505165`). CSS pseudo-class `:hover`
   on the thumb element.
 - **Focused** — track + active-fill + thumb fill stay at default;
-  a 2 px `--border-width-default` outline in `--color-border-focus`
+  a 2 px `--border-width-s` outline in `--color-border-focus`
   draws around the thumb at `outline-offset: 4px` so the ring sits
   outside the thumb circle. CSS pseudo-class `:focus-visible` on the
   underlying `<input type="range">` — pointer focus does not paint;
@@ -246,9 +230,9 @@ half-row at MD/LG/XL with stacked label sibling.
   semantics — the input simply becomes non-interactive.
 - The focus ring color (`--color-border-focus`, `#108389` ocean-teal
   under LifeLock) meets the 3:1 non-text contrast bar against
-  `--color-background-primary` white. The active-fill
+  `--color-bg-primary` white. The active-fill
   (`--color-signal-info`, `#0009ec` indigo) meets the 3:1 non-text
-  contrast bar against the track surface (`--color-border-tertiary`,
+  contrast bar against the track surface (`--color-border-subtle`,
   `#d3d3dc`).
 - Honours `prefers-reduced-motion: reduce` — the JS thumb-position
   update is instantaneous regardless; no transition CSS animates

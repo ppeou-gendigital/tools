@@ -5,7 +5,7 @@
   "librarySource": "brand",
   "name": "icon",
   "status": "published",
-  "summary": "Reusable icon primitive that paints an SVG silhouette in `currentColor` via CSS `mask-image`. Mirrors the canonical [Web-ODS Shared Library → Icon mask wrapper](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=990-1808&m=dev) sticker sheet (LifeLock theme). The catalog of SVG assets the component paints is governed separately by the iconography token (`src/tokens/iconography/spec.md` → Web-ODS-Icons / `2:2583`) and is auto-discovered by `_icon-catalog.js` from every SVG under `storybook-lifelock/assets/icons/<category>/`, so the number of icons / categories gr",
+  "summary": "Reusable icon primitive that paints an SVG silhouette in `currentColor` via CSS `mask-image`. Mirrors the canonical [Web-ODS Shared Library → Molecule / Icon Wrapper](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=984-863&m=dev) (`984:863`) — sticker sheet [`984:2871`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=984-2871&m=dev), Spec Frame [`3057:523`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=3057-523&m=dev).",
   "specUrl": "/api/components/icon/spec.md",
   "sourceFiles": {
     "spec": "/api/components/icon/spec.md",
@@ -14,30 +14,89 @@
   },
   "figma": {
     "fileKey": "0o8SL5BEk8wHtgud00dRyg",
-    "nodeId": "990:1808",
-    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=990-1808&m=dev"
+    "nodeId": "984:863",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=984-863&m=dev"
   },
   "rootClass": "c-icon",
   "bemClasses": [
     "c-icon"
   ],
-  "properties": [],
+  "properties": [
+    {
+      "name": "name",
+      "fixtureKey": "name",
+      "type": "String",
+      "required": true,
+      "default": "—",
+      "description": "Catalog key.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"24\"",
+      "description": "One of the eleven px steps.",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "color",
+      "fixtureKey": "color",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"current\"",
+      "description": "Semantic paint or inherit.",
+      "figmaLabel": "Colour"
+    },
+    {
+      "name": "frame",
+      "fixtureKey": "frame",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"none\"",
+      "description": "Transparent positioning envelope.",
+      "figmaLabel": "Frame"
+    },
+    {
+      "name": "decorative",
+      "fixtureKey": "decorative",
+      "type": "Boolean",
+      "required": false,
+      "default": "true",
+      "description": "`aria-hidden` vs `role=\"img\"`.",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "accessibleLabel",
+      "fixtureKey": "accessibleLabel",
+      "type": "String",
+      "required": false,
+      "default": "\"\"",
+      "description": "`aria-label` when `decorative=false`.",
+      "figmaLabel": "—"
+    }
+  ],
   "variants": [
     {
       "axis": "name",
-      "values": "290 catalog keys of the form `\"<category>/<simple\\"
+      "values": "Catalog keys `\"<category>/<simple\\"
     },
     {
       "axis": "size",
-      "values": "`16` / `20` / `24` / `32` / `48` (designed for `simple-*` variants) and `40` / `48` / `64` / `72` / `80` / `96` / `144` (designed for `detailed-*` variants). `48` is shared between both bands. The eleven unique values yield eleven `.c-icon--size-*` modifiers."
+      "values": "`16` / `20` / `24` / `32` / `40` / `48` / `64` / `72` / `80` / `96` / `144` → `.c-icon--<size>`."
     },
     {
       "axis": "color",
-      "values": "current` (inherits `currentColor`) / `default` / `brand` / `accent` / `inverse` / `success` / `critical"
+      "values": "`current` / `default` / `brand` / `accent` / `inverse` / `success` / `critical` → `.c-icon--<color>`."
     },
     {
       "axis": "frame",
-      "values": "`none` (default — paints just the glyph) / `square` / `circle` / `vertical-rectangle` / `horizontal-rectangle`. Transparent positioning envelope that shrinks the painted glyph to a smaller inner shape via `mask-clip: content-box` + computed `padding-block` / `padding-inline`. No border, no fill."
+      "values": "`none` (default) / `square` / `circle` / `vertical-rectangle` / `horizontal-rectangle` → `.c-icon--<frame>`."
+    },
+    {
+      "axis": "decorative",
+      "values": "`true` (default) / `false`."
     }
   ],
   "tokensConsumed": [
@@ -53,11 +112,10 @@
   "composes": [],
   "hasBehavior": false,
   "accessibility": [
-    "Decorative icons (`decorative=true`, the default) emit `aria-hidden=\"true\"`",
-    "Meaningful icons (`decorative=false`) emit `role=\"img\"` and require an",
-    "Icons inherit color from their parent context unless overridden via",
-    "The mask pipeline preserves SVG aspect ratio via `mask-size: contain`;"
+    "`decorative=true` (default) → `aria-hidden=\"true\"`.",
+    "`decorative=false` → `role=\"img\"` + required `accessibleLabel`.",
+    "Authors verify contrast at the rendered size; the component does not"
   ],
   "storybookId": "molecules-icon",
-  "generatedAt": "2026-08-03T01:08:47.005Z"
+  "generatedAt": "2026-08-05T20:59:20.192Z"
 }

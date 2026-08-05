@@ -1,0 +1,30 @@
+{{!--
+  Molecules/Image Wrapper — BEM root .c-image-wrapper
+  Figma: Web-ODS Shared Library 5428:53699 (Ratio × Fit).
+
+  Axes:
+    ratio  2-1 | 16-9 | 4-3 | 1-1 | 3-4 | landscape | portrait | 1-2 | 9-16
+           →  .c-image-wrapper--ratio-{ratio}
+    fit    contain | cover  →  .c-image-wrapper--fit-{fit}
+
+  Slots:
+    src + alt  → native <img> filling the aspect-locked viewport
+    (no src)   → documentation placeholder (not shipped to users)
+--}}
+<div
+  class="c-image-wrapper c-image-wrapper--ratio-{{#if ratio}}{{ratio}}{{else}}16-9{{/if}} c-image-wrapper--fit-{{#if fit}}{{fit}}{{else}}cover{{/if}}{{#if className}} {{className}}{{/if}}"
+>
+  {{#if src}}
+    <img
+      class="c-image-wrapper__image"
+      src="{{src}}"
+      alt="{{#if alt}}{{alt}}{{/if}}"
+    />
+  {{else}}
+    <div class="c-image-wrapper__placeholder" aria-hidden="true">
+      <span class="c-image-wrapper__placeholder-label">
+        Placeholder image<br />{{#if ratio}}{{ratio}}{{else}}16-9{{/if}} · {{#if fit}}{{fit}}{{else}}cover{{/if}}
+      </span>
+    </div>
+  {{/if}}
+</div>

@@ -4,7 +4,7 @@
   "subtype": "pattern",
   "librarySource": "brand",
   "name": "code-entry",
-  "status": "draft",
+  "status": "published",
   "summary": "A segmented one-time-code (OTP) pattern built from a row of native single-character `<input>` boxes. Mirrors the [Web-ODS Shared Library → Code entry](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=698-47604&m=dev) (`698:47604`) under the LifeLock mode pick. The native HTML intentionally diverges from the Figma div tree — visual + token fidelity is the bar.",
   "specUrl": "/api/components/code-entry/spec.md",
   "sourceFiles": {
@@ -134,5 +134,5 @@
     "`autocomplete=\"one-time-code\"` on the first box lets the platform offer an SMS code for one-tap fill. WCAG: the active box pairs an info-blue border with a grey fill for a clearly visible focus state; resting box borders meet AA non-text contrast against `--color-bg-default`. Per the Figma guidance frame (`984:2201`), keep the field on the primary background where border contrast is guaranteed."
   ],
   "storybookId": "patterns-code-entry",
-  "generatedAt": "2026-08-03T01:08:47.005Z"
+  "generatedAt": "2026-08-05T20:59:20.192Z"
 }

@@ -1,0 +1,138 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "divider",
+  "status": "published",
+  "summary": "Visual rule molecule for separating sections of content. Mirrors the master variant sets on [Web-ODS-Shared-Library / 539:28432](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28432&m=dev) — the Dividers page hosts three sibling published variant sets (`Divider / Horizontal`, `Divider / Vertical`, `Divider / Label`) totalling 80 buildable variants. The three Figma sibling sets fold onto **one** `.c-divider` BEM block via a single orthogonal `layout` axis.",
+  "specUrl": "/api/components/divider/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/divider/spec.md",
+    "hbs": "/api/components/divider/source/divider.hbs",
+    "scss": "/api/components/divider/source/divider.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "539:28432",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=539-28432&m=dev"
+  },
+  "rootClass": "c-divider",
+  "bemClasses": [
+    "c-divider"
+  ],
+  "properties": [
+    {
+      "name": "layout",
+      "fixtureKey": "layout",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"horizontal\"",
+      "description": "One of `horizontal` / `vertical` / `label`.",
+      "figmaLabel": "Layout"
+    },
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"s\"",
+      "description": "One of `xs` / `s` / `m` / `l`. `m` uses literal `3px`.",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "inverse",
+      "fixtureKey": "inverse",
+      "type": "VARIANT",
+      "required": false,
+      "default": "false",
+      "description": "Boolean.",
+      "figmaLabel": "Inverse"
+    },
+    {
+      "name": "typography",
+      "fixtureKey": "typography",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"body-sm-regular\"",
+      "description": "Figma `body-sm-bold` maps to `--font-weight-bold` (700). Combinatorial only for `layout=label`.",
+      "figmaLabel": "Typography"
+    },
+    {
+      "name": "label",
+      "fixtureKey": "label",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"Or\"",
+      "description": "Text inside `.c-divider__label`.",
+      "figmaLabel": "Label"
+    },
+    {
+      "name": "accessibleLabel",
+      "fixtureKey": "accessibleLabel",
+      "type": "String",
+      "required": false,
+      "default": "\"\"",
+      "description": "Optional `aria-label` on the root.",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "layout",
+      "values": "`horizontal` (default) / `vertical` / `label`. Drives `.c-divider--<layout>`. Folds Figma's three sibling sets onto one axis."
+    },
+    {
+      "axis": "size",
+      "values": "`xs` (1 px → `--border-width-xs`) / `s` (default, 2 px → `--border-width-s`) / `m` (3 px literal — no contract step) / `l` (4 px → `--border-width-m`, not `--border-width-l` = 6 px). Drives `.c-divider--<size>`."
+    },
+    {
+      "axis": "inverse",
+      "values": "`false` (default — `--color-border-strong` / `--color-text-secondary`) / `true` (`--color-border-inverse` / `--color-text-inverse`). Drives `.c-divider--inverse`."
+    },
+    {
+      "axis": "typography",
+      "values": "`body-sm-regular` (default) / `body-sm-bold` / `body-base-regular` / `body-base-semibold` / `body-lg-regular` / `body-lg-bold` / `h6-medium` / `h5-bold`. Drives `.c-divider--<typography>`. Combinatorial only when `layout=label`."
+    }
+  ],
+  "tokensConsumed": [
+    "--color-border-strong",
+    "--color-border-inverse",
+    "--color-text-secondary",
+    "--color-text-inverse",
+    "--border-width-xs",
+    "--border-width-s",
+    "--border-width-m",
+    "--space-3",
+    "--font-family-primary",
+    "--font-weight-regular",
+    "--font-weight-medium",
+    "--font-weight-semibold",
+    "--font-weight-bold",
+    "--font-size-body-sm",
+    "--font-size-body-base",
+    "--font-size-body-lg",
+    "--font-size-h5",
+    "--font-size-h6",
+    "--lineheight-body-sm",
+    "--lineheight-body-base",
+    "--lineheight-body-lg",
+    "--lineheight-h5",
+    "--lineheight-h6",
+    "--letterspacing-body-sm",
+    "--letterspacing-body-base",
+    "--letterspacing-body-lg",
+    "--letterspacing-h5",
+    "--letterspacing-h6"
+  ],
+  "composes": [],
+  "hasBehavior": false,
+  "accessibility": [
+    "Root carries `role=\"separator\"` and `aria-orientation` matching",
+    "`layout=label` — visible label text is the accessible name; optional",
+    "Contrast: default rule (`--color-border-strong` `#2f303c`) clears",
+    "Non-interactive — no focus ring."
+  ],
+  "storybookId": "molecules-divider",
+  "generatedAt": "2026-08-05T20:59:30.540Z"
+}

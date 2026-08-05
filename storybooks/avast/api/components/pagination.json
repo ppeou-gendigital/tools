@@ -1,0 +1,198 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "pagination",
+  "status": "published",
+  "summary": "Numbered result-set navigation with three sibling types. Mirrors [Pattern / Pagination](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=539-28422&m=dev) (Overview `1332:53851`). Distinct from `pagination-dots`.",
+  "specUrl": "/api/components/pagination/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/pagination/spec.md",
+    "hbs": "/api/components/pagination/source/pagination.hbs",
+    "scss": "/api/components/pagination/source/pagination.scss",
+    "js": "/api/components/pagination/source/pagination.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "1332:52356",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1332-52356&m=dev"
+  },
+  "rootClass": "c-pagination",
+  "bemClasses": [
+    "c-pagination",
+    "c-icon"
+  ],
+  "properties": [
+    {
+      "name": "type",
+      "fixtureKey": "type",
+      "type": "enum",
+      "required": true,
+      "default": "nav",
+      "description": "`nav` \\",
+      "figmaLabel": "Variant"
+    },
+    {
+      "name": "currentPage",
+      "fixtureKey": "currentPage",
+      "type": "number",
+      "required": false,
+      "default": "1",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "totalPages",
+      "fixtureKey": "totalPages",
+      "type": "number",
+      "required": false,
+      "default": "5",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "showFirstLast",
+      "fixtureKey": "showFirstLast",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "Nav only",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "truncate",
+      "fixtureKey": "truncate",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "Nav only",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "siblingCount",
+      "fixtureKey": "siblingCount",
+      "type": "number",
+      "required": false,
+      "default": "1",
+      "description": "Nav truncation window",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "disabled",
+      "fixtureKey": "disabled",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "error",
+      "fixtureKey": "error",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "enum",
+      "required": false,
+      "default": "large",
+      "description": "Jump",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "jumpType",
+      "fixtureKey": "jumpType",
+      "type": "enum",
+      "required": false,
+      "default": "labelled",
+      "description": "Jump `labelled` \\",
+      "figmaLabel": "Type"
+    },
+    {
+      "name": "open",
+      "fixtureKey": "open",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "Select menu open",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "pages",
+      "fixtureKey": "pages",
+      "type": "array",
+      "required": false,
+      "default": "built",
+      "description": "Nav items model",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "selectItems",
+      "fixtureKey": "selectItems",
+      "type": "array",
+      "required": false,
+      "default": "built",
+      "description": "menu-list args",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Type",
+      "values": "nav, select, jump"
+    },
+    {
+      "axis": "State",
+      "values": "Default, Hover, Focus, Current/Selected/Filled, Disabled, Error (CSS + props)"
+    },
+    {
+      "axis": "Size",
+      "values": "large, small (jump only)"
+    },
+    {
+      "axis": "Jump type",
+      "values": "labelled, icon-only (jump only)"
+    }
+  ],
+  "tokensConsumed": [
+    "--border-radius-s",
+    "--border-width-xs",
+    "--border-width-s",
+    "--color-bg-default",
+    "--color-bg-subtle",
+    "--color-border-focus",
+    "--color-border-subtle",
+    "--color-signal-info",
+    "--color-signal-info-subtle",
+    "--color-text-primary",
+    "--font-family-primary",
+    "--font-size-body-sm",
+    "--lineheight-body-sm",
+    "--letterspacing-body-sm",
+    "--font-weight-semibold",
+    "--space-2",
+    "--space-3",
+    "--space-4"
+  ],
+  "composes": [
+    "icon",
+    "button",
+    "menu-list",
+    "menu-block"
+  ],
+  "hasBehavior": true,
+  "accessibility": [
+    "Nav uses `<nav>` + labelled controls; current page `aria-current=\"page\"`",
+    "Select trigger `aria-haspopup=\"listbox\"` + `aria-expanded`",
+    "Jump: labelled input; submit on Enter or Go",
+    "Touch targets 44×44 on nav controls"
+  ],
+  "storybookId": "patterns-pagination",
+  "generatedAt": "2026-08-05T20:59:07.364Z"
+}

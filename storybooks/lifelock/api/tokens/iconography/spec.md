@@ -15,7 +15,7 @@ gallery renders the canonical Web-ODS-Icons page (LifeLock theme
 variant of each icon). This unit documents the *catalog as a design
 token*; the consumable primitive that paints any catalog entry on a
 surface is `Components/Icon` (governed by
-`storybook-lifelock/src/components/icon/spec.md`).
+`component sources.md`).
 
 ## Summary
 
@@ -25,12 +25,20 @@ The icon catalog ships 415 SVGs grouped into 15 categories (`actions`,
 `help-support`, `objects`, `product-features`, `security`, `status`,
 `users`). Every asset under `storybook-lifelock/assets/icons/<category>/`
 is auto-discovered at build time by
-[`_icon-catalog.js`](../../components/icon/_icon-catalog.js); there is
+[`_icon-catalog.js`](../../tokens/iconography/_icon-catalog.js); there is
 no per-icon registry to update by hand — landing a new SVG at the right
 path is enough to make it appear in the catalog and the gallery.
 
-Linked Figma node:
-[Web-ODS-Icons → `2:2583`](https://www.figma.com/design/7NjgRv0ac9SNpgwEO7wmfe/Web-ODS-Icons?node-id=2-2583&m=dev).
+Linked Figma nodes:
+
+- Iconography (THEME columns):
+  [Web-ODS-Icons → `2:2583`](https://www.figma.com/design/7NjgRv0ac9SNpgwEO7wmfe/Web-ODS-Icons?node-id=2-2583&m=dev)
+- Other Brands and apps (full-color, no THEME):
+  [Web-ODS-Icons → `2:2094`](https://www.figma.com/design/7NjgRv0ac9SNpgwEO7wmfe/Web-ODS-Icons?node-id=2-2094&m=dev)
+  → `other-brands/`, `other-apps/`, `social/`, `payment/`. Prefer
+  `<img src="{{iconUrl 'payment/visa-large'}}">` — do **not** paint
+  through `.c-icon` mask. Monochrome `external-brands/*` stay
+  mask-friendly.
 
 ## Layered model
 
@@ -97,7 +105,7 @@ exposed for code consumers but not pictured in the sticker sheet.
 Catalog membership is auto-discovered at build time:
 
 ```js
-// storybook-lifelock/src/components/icon/_icon-catalog.js
+// storybook-lifelock/src/tokens/iconography/_icon-catalog.js
 import.meta.glob('../../../assets/icons/**/*.svg')
 ```
 
@@ -235,4 +243,4 @@ inner glyph will visibly drift by one device pixel between renders.
   ratios, frame envelopes. Mirrored in `## Authoring guidelines` above.
 - [Web-ODS Shared Library → `990:1808` (Icon mask wrapper sticker sheet)](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=990-1808&m=dev)
   — canonical sticker sheet for the *consumable* Icon primitive (the
-  `Components/Icon` Sheet, governed by `src/components/icon/spec.md`).
+  `Components/Icon` Sheet, governed by `component sources.md`).

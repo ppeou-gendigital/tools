@@ -1,0 +1,237 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "molecule",
+  "librarySource": "brand",
+  "name": "menu-list",
+  "status": "published",
+  "summary": "Atomic menu row primitive. Figma: [Pattern / MenuList](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=4298-1925&m=dev) (set `1396:5517`; Spec Frame `.Menu list · spec` `4646:265`).",
+  "specUrl": "/api/components/menu-list/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/menu-list/spec.md",
+    "hbs": "/api/components/menu-list/source/menu-list.hbs",
+    "scss": "/api/components/menu-list/source/menu-list.scss"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "1396:5517",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=1396-5517&m=dev"
+  },
+  "rootClass": "c-menu-list",
+  "bemClasses": [
+    "c-menu-list"
+  ],
+  "properties": [
+    {
+      "name": "type",
+      "fixtureKey": "type",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"row\"",
+      "description": "`row` \\",
+      "figmaLabel": "Type"
+    },
+    {
+      "name": "size",
+      "fixtureKey": "size",
+      "type": "VARIANT",
+      "required": false,
+      "default": "\"large\"",
+      "description": "Large 40px / Small 38px",
+      "figmaLabel": "Size"
+    },
+    {
+      "name": "selected",
+      "fixtureKey": "selected",
+      "type": "VARIANT",
+      "required": false,
+      "default": "false",
+      "description": "Row-only",
+      "figmaLabel": "State"
+    },
+    {
+      "name": "leftIcon",
+      "fixtureKey": "leftIcon",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "Left icon"
+    },
+    {
+      "name": "rightIcon",
+      "fixtureKey": "rightIcon",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "Right icon"
+    },
+    {
+      "name": "loadingIcon",
+      "fixtureKey": "loadingIcon",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "false",
+      "description": "Sets `aria-busy`; uses `actions/simple-reload`",
+      "figmaLabel": "Loading icon"
+    },
+    {
+      "name": "showRightBorder",
+      "fixtureKey": "showRightBorder",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "false",
+      "description": "Horizontal-strip chrome",
+      "figmaLabel": "Show right border"
+    },
+    {
+      "name": "showDividerAbove",
+      "fixtureKey": "showDividerAbove",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "Show divider above"
+    },
+    {
+      "name": "edgePadding",
+      "fixtureKey": "edgePadding",
+      "type": "BOOLEAN",
+      "required": false,
+      "default": "true",
+      "description": "`--space-4` inline",
+      "figmaLabel": "Edge padding"
+    },
+    {
+      "name": "text",
+      "fixtureKey": "text",
+      "type": "TEXT",
+      "required": false,
+      "default": "\"Menu item\"",
+      "description": "Ignored for Divider",
+      "figmaLabel": "Text"
+    },
+    {
+      "name": "leftIconName",
+      "fixtureKey": "leftIconName",
+      "type": "catalog-key",
+      "required": false,
+      "default": "status/simple-checkmark",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "rightIconName",
+      "fixtureKey": "rightIconName",
+      "type": "catalog-key",
+      "required": false,
+      "default": "arrows-navigation/simple-chevron-right",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "disabled",
+      "fixtureKey": "disabled",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "selectionMode",
+      "fixtureKey": "selectionMode",
+      "type": "enum",
+      "required": false,
+      "default": "\"choice\"",
+      "description": "`choice` → `aria-selected`; `page` → `aria-current=\"page\"`",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "href",
+      "fixtureKey": "href",
+      "type": "url",
+      "required": false,
+      "default": "\"\"",
+      "description": "When set, control is `<a>`",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Type",
+      "values": "row`, `divider`, `caption"
+    },
+    {
+      "axis": "Size",
+      "values": "large`, `small"
+    },
+    {
+      "axis": "State",
+      "values": "`default`, `selected` (row only)"
+    },
+    {
+      "axis": "Left icon",
+      "values": "true`, `false"
+    },
+    {
+      "axis": "Right icon",
+      "values": "true`, `false"
+    },
+    {
+      "axis": "Loading icon",
+      "values": "`true`, `false` (overrides right icon visually)"
+    },
+    {
+      "axis": "Show right border",
+      "values": "true`, `false"
+    },
+    {
+      "axis": "Show divider above",
+      "values": "true`, `false"
+    },
+    {
+      "axis": "Edge padding",
+      "values": "`true`, `false` (default `true`)"
+    }
+  ],
+  "tokensConsumed": [
+    "--color-text-primary",
+    "--color-text-disabled",
+    "--color-bg-subtle",
+    "--color-bg-muted",
+    "--color-bg-default",
+    "--color-border-subtle",
+    "--color-border-strong-alt",
+    "--color-border-focus",
+    "--color-neutral-60",
+    "--font-family-primary",
+    "--font-size-body-base",
+    "--font-size-body-sm",
+    "--lineheight-body-base",
+    "--lineheight-body-sm",
+    "--letterspacing-body-base",
+    "--letterspacing-body-sm",
+    "--font-weight-regular",
+    "--font-weight-semibold",
+    "--space-2",
+    "--space-3",
+    "--space-4",
+    "--border-width-xs",
+    "--border-width-s"
+  ],
+  "composes": [
+    "icon"
+  ],
+  "hasBehavior": false,
+  "accessibility": [
+    "Role inherits from container guidance: default row `role=\"menuitem\"`; Caption `role=\"presentation\"`; Divider `role=\"separator\"` + `aria-hidden`",
+    "Keyboard navigation is owned by the containing menu-block (popup mode)",
+    "Contrast: label vs surface ≥ 4.5:1",
+    "Reduced motion pauses loading spinner rotation",
+    "RTL: leading/trailing icon slots flip with logical properties"
+  ],
+  "storybookId": "molecules-menu-list",
+  "generatedAt": "2026-08-05T20:59:30.540Z"
+}

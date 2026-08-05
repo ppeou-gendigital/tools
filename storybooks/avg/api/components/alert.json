@@ -1,0 +1,228 @@
+{
+  "$schema": "https://design-system.aics.dev/schema/component.v2.json",
+  "type": "component",
+  "subtype": "pattern",
+  "librarySource": "brand",
+  "name": "alert",
+  "status": "published",
+  "summary": "Unified account- or page-level status surface. Figma: [Pattern / Alerts](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=537-28056&m=dev) (`537:28056`). Spec Frame [`.Alert · spec`](https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/Web-ODS-Shared-Library?node-id=5399-1816&m=dev) (`5399:1816`). Board `5358:1619`.",
+  "specUrl": "/api/components/alert/spec.md",
+  "sourceFiles": {
+    "spec": "/api/components/alert/spec.md",
+    "hbs": "/api/components/alert/source/alert.hbs",
+    "scss": "/api/components/alert/source/alert.scss",
+    "js": "/api/components/alert/source/alert.js"
+  },
+  "figma": {
+    "fileKey": "0o8SL5BEk8wHtgud00dRyg",
+    "nodeId": "537:28056",
+    "url": "https://www.figma.com/design/0o8SL5BEk8wHtgud00dRyg/?node-id=537-28056&m=dev"
+  },
+  "rootClass": "c-alert",
+  "bemClasses": [
+    "c-alert",
+    "btn"
+  ],
+  "properties": [
+    {
+      "name": "tone",
+      "fixtureKey": "tone",
+      "type": "enum",
+      "required": false,
+      "default": "info",
+      "description": "Drives surface + default icon",
+      "figmaLabel": "Tone"
+    },
+    {
+      "name": "hierarchy",
+      "fixtureKey": "hierarchy",
+      "type": "enum",
+      "required": false,
+      "default": "low",
+      "description": "Low = subtle; High = solid",
+      "figmaLabel": "Hierarchy"
+    },
+    {
+      "name": "width",
+      "fixtureKey": "width",
+      "type": "enum",
+      "required": false,
+      "default": "in-grid",
+      "description": "In-grid radius-l; full-bleed radius-0 + responsive pad",
+      "figmaLabel": "Width"
+    },
+    {
+      "name": "showIcon",
+      "fixtureKey": "showIcon",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "",
+      "figmaLabel": "Show icon"
+    },
+    {
+      "name": "showBody",
+      "fixtureKey": "showBody",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "",
+      "figmaLabel": "Show body text"
+    },
+    {
+      "name": "showButton",
+      "fixtureKey": "showButton",
+      "type": "boolean",
+      "required": false,
+      "default": "true",
+      "description": "Size S Button; style via hierarchy",
+      "figmaLabel": "Show button"
+    },
+    {
+      "name": "dismissible",
+      "fixtureKey": "dismissible",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "",
+      "figmaLabel": "Dismissible"
+    },
+    {
+      "name": "elevation",
+      "fixtureKey": "elevation",
+      "type": "boolean",
+      "required": false,
+      "default": "false",
+      "description": "`--shadow-default`",
+      "figmaLabel": "Elevation"
+    },
+    {
+      "name": "title",
+      "fixtureKey": "title",
+      "type": "text",
+      "required": true,
+      "default": "—",
+      "description": "Body-base/SemiBold",
+      "figmaLabel": "Title"
+    },
+    {
+      "name": "description",
+      "fixtureKey": "description",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Body-sm; gated by `showBody`",
+      "figmaLabel": "Description"
+    },
+    {
+      "name": "ctaLabel",
+      "fixtureKey": "ctaLabel",
+      "type": "text",
+      "required": false,
+      "default": "Action",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "ctaHref",
+      "fixtureKey": "ctaHref",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "When set, CTA is `<a class=\"btn\">`",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "icon",
+      "fixtureKey": "icon",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Catalog key override",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "dismissLabel",
+      "fixtureKey": "dismissLabel",
+      "type": "text",
+      "required": false,
+      "default": "Dismiss",
+      "description": "",
+      "figmaLabel": "—"
+    },
+    {
+      "name": "className",
+      "fixtureKey": "className",
+      "type": "text",
+      "required": false,
+      "default": "—",
+      "description": "Outer escape hatch",
+      "figmaLabel": "—"
+    }
+  ],
+  "variants": [
+    {
+      "axis": "Tone",
+      "values": "info`, `critical`, `attention`, `success`, `dark`, `brand"
+    },
+    {
+      "axis": "Hierarchy",
+      "values": "low`, `high"
+    },
+    {
+      "axis": "Width",
+      "values": "in-grid`, `full-bleed"
+    }
+  ],
+  "tokensConsumed": [
+    "--space-4",
+    "--space-5",
+    "--space-7",
+    "--space-8",
+    "--space-10",
+    "--space-13",
+    "--border-radius-0",
+    "--border-radius-l",
+    "--border-radius-control",
+    "--border-width-default",
+    "--color-border-focus",
+    "--font-family-primary",
+    "--font-size-body-base",
+    "--lineheight-body-base",
+    "--letterspacing-body-base",
+    "--font-weight-semibold",
+    "--font-size-body-sm",
+    "--lineheight-body-sm",
+    "--letterspacing-body-sm",
+    "--font-weight-regular",
+    "--color-text-primary",
+    "--color-text-inverse",
+    "--color-signal-info",
+    "--color-signal-info-subtle",
+    "--color-signal-critical",
+    "--color-signal-critical-subtle",
+    "--color-signal-warning",
+    "--color-signal-warning-subtle",
+    "--color-signal-success",
+    "--color-signal-success-subtle",
+    "--color-bg-muted",
+    "--color-bg-inverse-strong",
+    "--color-bg-brand",
+    "--color-bg-brand-soft",
+    "--shadow-default"
+  ],
+  "composes": [
+    "icon",
+    "button"
+  ],
+  "hasBehavior": true,
+  "accessibility": [
+    "Icon is decorative (`aria-hidden`)",
+    "Dismiss is a real `<button>` with accessible label",
+    "Focus ring on interactive controls via `--color-border-focus`",
+    "Attention High keeps primary text for contrast",
+    "Never colour-only — icon + copy carry meaning"
+  ],
+  "storybookId": "patterns-alert",
+  "generatedAt": "2026-08-05T20:59:13.518Z"
+}

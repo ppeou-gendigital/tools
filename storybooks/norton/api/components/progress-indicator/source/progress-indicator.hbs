@@ -1,0 +1,114 @@
+{{!--
+  Components/Progress indicator template — single BEM root
+  (.c-progress-indicator) covering the Figma Linear master variant set
+  on Web-ODS Shared Library `1380:1255` and the `Progress indicator —
+  Overview` Spec Frame at `1380:1478`, plus the LifeLock-mode Circular
+  sticker sheet at `615:80630`.
+
+  Variant axes (mirror Figma's master + spec.md § "Variant axes"):
+    layout      inline | stacked | circular  [.c-progress-indicator--$layout]
+    theme       light | dark                 [.c-progress-indicator--$theme]
+    value       0..100 (continuous)          [--progress-indicator-value inline custom-prop]
+    label       <string>                     [text content of .c-progress-indicator__label, linear only]
+    showLabel   true | false                 [linear: label slot present | omitted;
+                                              circular: inner value text present | omitted]
+    size        xs | sm | md | lg | xxl      [.c-progress-indicator--$size; circular only]
+
+  Stateless — no `:hover` / `:focus-visible` / `:active` paints and no
+  JavaScript. The component reflects the application's progress value
+  to the user but does not accept input. Root carries
+  `role="progressbar"` + `aria-valuenow/min/max` so assistive tech
+  announces live updates.
+
+  Accessibility:
+    - Linear — when `showLabel=true` and `label` non-empty, the label
+      node carries an `id` and the root carries `aria-labelledby`.
+      When `showLabel=false`, the consumer supplies `accessibleLabel`
+      and the root carries `aria-label`.
+    - Circular — the inner value text is decorative (wrapped in
+      `aria-hidden="true"` to avoid double-announcement against
+      `aria-valuenow`). The consumer always supplies
+      `accessibleLabel` so the root carries `aria-label` (e.g.
+      "Setup progress, 50 percent complete").
+
+  Defaults:
+    layout    → "stacked"
+    theme     → "light"
+    value     → "50"
+    label     → "Label"
+    showLabel → true
+    size      → "md"  (circular layout only)
+--}}
+{{!--
+  Resolve the variant once so the rendered BEM modifier always
+  matches a real published Figma variant value.
+--}}
+<div
+  class="c-progress-indicator c-progress-indicator--{{#if layout}}{{lower layout}}{{else}}stacked{{/if}} c-progress-indicator--{{#if theme}}{{lower theme}}{{else}}light{{/if}}{{#if (eq layout "circular")}} c-progress-indicator--{{#if size}}{{lower size}}{{else}}md{{/if}}{{/if}}"
+  role="progressbar"
+  aria-valuenow="{{#if value}}{{value}}{{else}}50{{/if}}"
+  aria-valuemin="{{#if valueMin}}{{valueMin}}{{else}}0{{/if}}"
+  aria-valuemax="{{#if valueMax}}{{valueMax}}{{else}}100{{/if}}"
+  {{#if (eq layout "circular")}}
+    {{#if accessibleLabel}}aria-label="{{accessibleLabel}}"{{/if}}
+  {{else}}
+    {{#if (eq showLabel false)}}
+      {{#if accessibleLabel}}aria-label="{{accessibleLabel}}"{{/if}}
+    {{else}}
+      {{#if label}}aria-labelledby="progress-indicator-label-{{#if id}}{{id}}{{else}}default{{/if}}"{{else}}{{#if accessibleLabel}}aria-label="{{accessibleLabel}}"{{/if}}{{/if}}
+    {{/if}}
+  {{/if}}
+  style="--progress-indicator-value: {{#if value}}{{value}}{{else}}50{{/if}};"
+>
+  {{#if (eq layout "circular")}}
+    {{!--
+      Circular layout — two SVG circles (track + fill) overlaid on a
+      square container. `pathLength="100"` lets `stroke-dasharray:
+      var(--progress-indicator-value) 100` read as a percent of the
+      circumference regardless of radius, so no JS circumference math
+      is needed. `vector-effect="non-scaling-stroke"` keeps the stroke
+      width literally in CSS px (driven by `--progress-indicator-circular-stroke`)
+      no matter how the SVG is sized. The SVG is rotated -90° via SCSS
+      so the dash array starts at 12 o'clock.
+    --}}
+    <svg
+      class="c-progress-indicator__ring"
+      viewBox="0 0 100 100"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle
+        class="c-progress-indicator__ring-track"
+        cx="50"
+        cy="50"
+        r="45"
+        pathLength="100"
+      />
+      <circle
+        class="c-progress-indicator__ring-fill"
+        cx="50"
+        cy="50"
+        r="45"
+        pathLength="100"
+      />
+    </svg>
+    {{#unless (eq showLabel false)}}
+      <span class="c-progress-indicator__value" aria-hidden="true">
+        <span class="c-progress-indicator__value-num">{{#if value}}{{value}}{{else}}50{{/if}}</span><span class="c-progress-indicator__value-unit">%</span>
+      </span>
+    {{/unless}}
+  {{else}}
+    {{#unless (eq showLabel false)}}
+      {{#if label}}
+        <span
+          class="c-progress-indicator__label"
+          id="progress-indicator-label-{{#if id}}{{id}}{{else}}default{{/if}}"
+        >{{label}}</span>
+      {{/if}}
+    {{/unless}}
+    <span class="c-progress-indicator__track" aria-hidden="true">
+      <span class="c-progress-indicator__fill"></span>
+      <span class="c-progress-indicator__spacer"></span>
+    </span>
+  {{/if}}
+</div>

@@ -1,0 +1,145 @@
+/**
+ * Patterns/Award item — .c-award-item
+ * Figma Web-ODS Shared Library 2355:19639 / Spec 3882:473.
+ *
+ * Card: --color-bg-primary, --border-radius-s, --space-3 pad/gap.
+ * Image slot sizes are hard-coded per Spec (override Award Wrapper box).
+ */
+
+.c-award-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  box-sizing: border-box;
+  padding: var(--space-3);
+  background-color: var(--color-bg-primary);
+  border-radius: var(--border-radius-s);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-primary);
+}
+
+.c-award-item__media {
+  flex: 0 0 auto;
+}
+
+/* Default slot sizes (non title-description) */
+.c-award-item--ratio-1-1 .c-award-item__media .c-award-wrapper {
+  inline-size: 56px;
+  block-size: 56px;
+}
+
+.c-award-item--ratio-9-16 .c-award-item__media .c-award-wrapper {
+  inline-size: 37px;
+  block-size: 66px;
+}
+
+.c-award-item--ratio-16-9 .c-award-item__media .c-award-wrapper {
+  inline-size: 88px;
+  block-size: 50px;
+}
+
+/* Title-description featured slot */
+.c-award-item--layout-title-description.c-award-item--ratio-1-1 .c-award-item__media .c-award-wrapper {
+  inline-size: 136px;
+  block-size: 136px;
+}
+
+.c-award-item--layout-title-description.c-award-item--ratio-9-16 .c-award-item__media .c-award-wrapper {
+  inline-size: 77px;
+  block-size: 136px;
+}
+
+.c-award-item--layout-title-description.c-award-item--ratio-16-9 .c-award-item__media .c-award-wrapper {
+  inline-size: 136px;
+  block-size: 77px;
+}
+
+.c-award-item--ratio-9-16 .c-award-wrapper__placeholder-label {
+  font-size: 10px;
+  line-height: 11px;
+}
+
+.c-award-item__content {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.c-award-item--layout-title-description .c-award-item__content {
+  inline-size: 220px;
+  flex: 0 0 220px;
+}
+
+.c-award-item__quote,
+.c-award-item__source,
+.c-award-item__year,
+.c-award-item__title,
+.c-award-item__description,
+.c-award-item__score {
+  margin: 0;
+}
+
+.c-award-item__quote,
+.c-award-item__title {
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letterspacing-body-sm);
+  color: var(--color-text-primary);
+}
+
+.c-award-item--layout-title-description .c-award-item__title {
+  font-size: var(--font-size-body-base);
+  line-height: var(--lineheight-body-base);
+  letter-spacing: var(--letterspacing-body-base);
+}
+
+.c-award-item__source,
+.c-award-item__year,
+.c-award-item__description {
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--letterspacing-body-sm);
+  color: var(--color-text-secondary);
+}
+
+.c-award-item__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-0);
+  color: var(--color-text-primary);
+}
+
+.c-award-item__rating--inline {
+  gap: var(--space-1);
+}
+
+.c-award-item__score {
+  font-size: var(--font-size-body-sm);
+  line-height: var(--lineheight-body-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Layout direction */
+.c-award-item--layout-compact-stacked,
+.c-award-item--layout-rating-stacked {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.c-award-item--layout-compact-stacked .c-award-item__content,
+.c-award-item--layout-rating-stacked .c-award-item__rating {
+  align-items: center;
+}
+
+.c-award-item--layout-quote,
+.c-award-item--layout-title-rating,
+.c-award-item--layout-compact,
+.c-award-item--layout-title-description {
+  flex-direction: row;
+  align-items: flex-start;
+}

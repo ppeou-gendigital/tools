@@ -1,0 +1,88 @@
+/**
+ * Patterns/Content list — core (.c-content-list).
+ * Figma: Web-ODS Shared Library Pattern / ContentList 3483:3503.
+ *
+ * Axes → BEM:
+ *   listType → .c-content-list--unordered | --ordered | --nested
+ *   marker   → .c-content-list--marker-bullet | --marker-icon
+ *   surfaced → .c-content-list--surfaced
+ */
+
+.c-content-list {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-block: 0;
+  margin-inline: 0;
+  padding-block: 0;
+  padding-inline: 0;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  list-style: none;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--lineheight-body-sm);
+  letter-spacing: var(--letterspacing-body-sm);
+  color: var(--color-text-primary);
+}
+
+.c-content-list--surfaced {
+  padding-block: var(--space-7);
+  padding-inline: var(--space-7);
+  background-color: var(--color-bg-subtle);
+  border-radius: var(--border-radius-l);
+}
+
+.c-content-list__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-block: 0;
+  margin-inline: 0;
+  padding-block: 0;
+  padding-inline: 0;
+}
+
+.c-content-list__marker {
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.c-content-list__marker--text {
+  min-inline-size: 1em;
+  color: var(--color-text-primary);
+}
+
+.c-content-list__marker--icon {
+  inline-size: 20px;
+  block-size: 20px;
+  color: var(--color-text-primary);
+}
+
+.c-content-list__body {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  overflow-wrap: break-word;
+}
+
+.c-content-list__child {
+  flex: 1 0 100%;
+  margin-block-start: 0;
+  padding-inline-start: var(--space-7);
+}
+
+.c-content-list__item--switch,
+.c-content-list__item--checkbox,
+.c-content-list__item--radio {
+  align-items: center;
+}
+
+.c-content-list__item--switch .c-switch,
+.c-content-list__item--checkbox .c-checkbox,
+.c-content-list__item--radio .c-radio {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}

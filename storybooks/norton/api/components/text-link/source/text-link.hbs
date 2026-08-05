@@ -1,0 +1,68 @@
+{{!--
+  Components/Text link template — single BEM root (.c-text-link)
+  covering the Figma master variant set on Web-ODS Shared Library
+  `1332:54878` (LifeLock theme mode).
+
+  Variant axes (mirror Figma's master + spec.md § "Variant axes"):
+    background  light | dark                       [.c-text-link--$bg]
+    size        xs | sm | base | lg | xl |
+                2xl | 3xl                          [.c-text-link--$size]
+    weight      regular | medium | semibold |
+                bold                               [.c-text-link--$weight]
+    state       default | hover | focus | pressed |
+                disabled | visited                  pseudo-classes only
+
+  Persistent runtime states the markup carries:
+    disabled    → aria-disabled="true" + tabindex="-1" + drops `href`
+    visited     → :visited pseudo-class (browser-managed); the
+                   `forceVisited` arg paints `is-visited` for the
+                   AllStyles gallery only.
+
+  Composes (per spec.md § "Composes"):
+    icon partial — when `iconTreatment="external"` the canonical
+    `arrows-navigation/simple-link-external` glyph trails the label;
+    when `iconTreatment="inline"` a consumer-supplied `iconName`
+    catalog key resolves through the partial. Icon paints in
+    `currentColor` so it tracks every state without per-state
+    overrides.
+
+  Defaults (mirror spec.md § "Properties"):
+    background    → "light"
+    size          → "base"
+    weight        → "regular"
+    iconTreatment → "none"
+    iconPosition  → "trailing"
+    disabled      → false
+--}}
+<a
+  class="c-text-link c-text-link--{{#if background}}{{lower background}}{{else}}light{{/if}} c-text-link--{{#if size}}{{lower size}}{{else}}base{{/if}} c-text-link--{{#if weight}}{{lower weight}}{{else}}regular{{/if}}{{#if (eq (lower iconTreatment) "external")}} c-text-link--has-icon c-text-link--has-icon-{{#if iconPosition}}{{lower iconPosition}}{{else}}trailing{{/if}}{{/if}}{{#if (eq (lower iconTreatment) "inline")}} c-text-link--has-icon c-text-link--has-icon-{{#if iconPosition}}{{lower iconPosition}}{{else}}trailing{{/if}}{{/if}}{{#if forceVisited}} is-visited{{/if}}"
+  {{#if disabled}}
+    role="link"
+    aria-disabled="true"
+    tabindex="-1"
+  {{else}}
+    href="{{href}}"
+    {{#if target}}target="{{target}}"{{/if}}
+    {{#if (eq target "_blank")}}rel="noopener noreferrer{{#if rel}} {{rel}}{{/if}}"{{else}}{{#if rel}}rel="{{rel}}"{{/if}}{{/if}}
+  {{/if}}
+  {{#if id}}id="{{id}}"{{/if}}
+  {{#if ariaLabel}}aria-label="{{ariaLabel}}"{{/if}}
+>
+  {{#if (eq (lower iconPosition) "leading")}}
+    {{#if (eq (lower iconTreatment) "external")}}
+      {{> icon name="arrows-navigation/simple-link-external" size="20" color="current" decorative=true}}
+    {{/if}}
+    {{#if (eq (lower iconTreatment) "inline")}}
+      {{#if iconName}}{{> icon name=iconName size="20" color="current" decorative=true}}{{/if}}
+    {{/if}}
+  {{/if}}
+  <span class="c-text-link__label">{{label}}</span>
+  {{#unless (eq (lower iconPosition) "leading")}}
+    {{#if (eq (lower iconTreatment) "external")}}
+      {{> icon name="arrows-navigation/simple-link-external" size="20" color="current" decorative=true}}
+    {{/if}}
+    {{#if (eq (lower iconTreatment) "inline")}}
+      {{#if iconName}}{{> icon name=iconName size="20" color="current" decorative=true}}{{/if}}
+    {{/if}}
+  {{/unless}}
+</a>

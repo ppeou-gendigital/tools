@@ -1,0 +1,28 @@
+{{!--
+  Molecules/Pricing — BEM root .c-pricing
+  Figma: Web-ODS Shared Library 4070:2426 / Spec 4313:48.
+
+  Axes:
+    size              l | m | s | xs     → .c-pricing--size-{…}
+    theme             default | inverse  → .c-pricing--theme-{…}
+    currencyPosition  first | last       → .c-pricing--currency-{…}
+    stackPeriod       true | false       → .c-pricing--stack-period
+--}}
+<span
+  class="c-pricing c-pricing--size-{{#if size}}{{lower size}}{{else}}l{{/if}} c-pricing--theme-{{#if theme}}{{lower theme}}{{else}}default{{/if}} c-pricing--currency-{{#if currencyPosition}}{{lower currencyPosition}}{{else}}first{{/if}}{{#if stackPeriod}} c-pricing--stack-period{{/if}}{{#if className}} {{className}}{{/if}}"
+  role="text"
+  {{#if ariaLabel}}aria-label="{{ariaLabel}}"{{/if}}
+>
+  <span class="c-pricing__value">
+    {{#unless (eq (lower currencyPosition) "last")}}
+      <span class="c-pricing__currency">{{#if currency}}{{currency}}{{else}}${{/if}}</span>
+    {{/unless}}
+    <span class="c-pricing__amount">{{#if amount}}{{amount}}{{else}}0{{/if}}</span>
+    {{#if (eq (lower currencyPosition) "last")}}
+      <span class="c-pricing__currency">{{#if currency}}{{currency}}{{else}}${{/if}}</span>
+    {{/if}}
+  </span>
+  {{#unless (eq showPeriod false)}}
+    <span class="c-pricing__period">{{#if period}}{{period}}{{else}}/mo{{/if}}</span>
+  {{/unless}}
+</span>

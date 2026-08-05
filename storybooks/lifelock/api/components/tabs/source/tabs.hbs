@@ -1,0 +1,88 @@
+{{!--
+  Patterns/Tabs — BEM root .c-tabs
+  Figma: Pattern / Tabs 539:28424 — .Tab 1396:6950, wrapper 1396:6994,
+  mobile dropdown 1396:7051, Spec .Tabs · spec 4362:266.
+
+  Props:
+    style           solid | subtle
+    tabs            array of { label, showIcon, iconName, disabled, panelId, id, isActive, index, state }
+    activeIndex     number (0-based)
+    showMobileFallback  boolean — when true, include mobile dropdown markup
+    forceMobile     boolean — force mobile dropdown UI (stories)
+    label           field title above mobile trigger (default "Section")
+    ariaLabel       tablist accessible name
+    id              optional root id
+    className
+--}}
+<div
+  class="c-tabs c-tabs--style-{{#if style}}{{lower style}}{{else}}solid{{/if}}{{#if forceMobile}} c-tabs--force-mobile{{/if}}{{#if className}} {{className}}{{/if}}"
+  data-component="tabs"
+  data-style="{{#if style}}{{lower style}}{{else}}solid{{/if}}"
+  data-active-index="{{activeIndex}}"
+  {{#if id}}id="{{id}}"{{/if}}
+>
+  <div class="c-tabs__list-wrap" data-tabs-list-wrap>
+    <div
+      class="c-tabs__list"
+      role="tablist"
+      aria-label="{{#if ariaLabel}}{{ariaLabel}}{{else}}Tabs{{/if}}"
+    >
+      {{#each tabs}}
+        <button
+          type="button"
+          class="c-tabs__tab{{#if disabled}} is-disabled{{/if}}{{#if isActive}} is-active{{/if}}"
+          role="tab"
+          id="{{#if id}}{{id}}{{else}}tab-{{index}}{{/if}}"
+          data-tabs-index="{{index}}"
+          aria-selected="{{#if isActive}}true{{else}}false{{/if}}"
+          tabindex="{{#if isActive}}0{{else}}-1{{/if}}"
+          {{#if disabled}}disabled aria-disabled="true"{{/if}}
+          {{#if panelId}}aria-controls="{{panelId}}"{{/if}}
+          {{#if state}}data-state="{{lower state}}"{{/if}}
+        >
+          {{#if showIcon}}
+            <span class="c-tabs__icon" aria-hidden="true">
+              {{> icon name=iconName size="24" color="current" decorative=true}}
+            </span>
+          {{/if}}
+          <span class="c-tabs__label">{{#if label}}{{label}}{{else}}Tab label{{/if}}</span>
+        </button>
+      {{/each}}
+    </div>
+  </div>
+
+  {{#if showMobileFallback}}
+  <div class="c-tabs__mobile" data-tabs-mobile>
+    <div class="c-tabs__mobile-field">
+      <span class="c-tabs__mobile-title" id="{{#if id}}{{id}}{{else}}tabs{{/if}}-mobile-label">{{#if label}}{{label}}{{else}}Section{{/if}}</span>
+      <button
+        type="button"
+        class="c-tabs__mobile-trigger"
+        data-tabs-mobile-trigger
+        aria-haspopup="listbox"
+        aria-expanded="false"
+        aria-labelledby="{{#if id}}{{id}}{{else}}tabs{{/if}}-mobile-label"
+      >
+        <span class="c-tabs__mobile-value" data-tabs-mobile-value></span>
+        <span class="c-tabs__mobile-chevron" aria-hidden="true">
+          {{> icon name="arrows-navigation/simple-expand-more" size="20" color="current" decorative=true}}
+        </span>
+      </button>
+      <ul class="c-tabs__mobile-menu" role="listbox" data-tabs-mobile-menu hidden>
+        {{#each tabs}}
+          <li role="presentation">
+            <button
+              type="button"
+              class="c-tabs__mobile-option{{#if isActive}} is-active{{/if}}{{#if disabled}} is-disabled{{/if}}"
+              role="option"
+              data-tabs-index="{{index}}"
+              {{#if disabled}}disabled{{/if}}
+              aria-selected="{{#if isActive}}true{{else}}false{{/if}}"
+            >{{#if label}}{{label}}{{else}}Tab label{{/if}}</button>
+          </li>
+        {{/each}}
+      </ul>
+    </div>
+  </div>
+  {{/if}}
+</div>
