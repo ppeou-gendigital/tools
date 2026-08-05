@@ -9,6 +9,7 @@
 #
 # Refresh content: rebuild in aics-spike with
 #   STORYBOOK_SITE_BASE=/tools/aics/ npm run build:storybooks
+# (compose injects Viaggio-style auto-updating sw.js per hub/brand root)
 # then copy dist/storybooks → this branch’s storybooks/ and push.
 
 name: Deploy Storybooks to GitHub Pages
