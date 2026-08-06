@@ -1,0 +1,189 @@
+.root {
+  container-type: inline-size;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.search {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+/* Match .ui-input height (36px). size=sm uses 44px touch min-height. */
+:global(.ui-btn).searchBtn {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.pane {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'availLabel . destLabel'
+    'availList actions destList';
+  gap: var(--space-2) var(--space-3);
+  align-items: stretch;
+}
+
+.availLabel {
+  grid-area: availLabel;
+}
+
+.destLabel {
+  grid-area: destLabel;
+}
+
+.availList {
+  grid-area: availList;
+  min-width: 0;
+}
+
+.destList {
+  grid-area: destList;
+  min-width: 0;
+}
+
+.availLabel,
+.destLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: var(--radius-sm);
+  background: var(--muted);
+  color: var(--muted-fg);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 12rem;
+  max-height: 18rem;
+  overflow-y: auto;
+  padding: var(--space-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.option {
+  appearance: none;
+  /* overflow:hidden (ellipsis) lowers flex min-size — keep rows from crushing. */
+  flex: 0 0 auto;
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+}
+
+.optionSelected {
+  background: color-mix(in srgb, var(--fab-bg) 18%, transparent);
+  color: var(--fg);
+
+  &:hover {
+    background: color-mix(in srgb, var(--fab-bg) 28%, transparent);
+  }
+}
+
+.emptyState {
+  margin: auto;
+  padding: var(--space-4);
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+  line-height: 1.4;
+}
+
+.actions {
+  grid-area: actions;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+/* Beat .ui-btn--icon touch sizing so the glyph isn’t padded/crushed. */
+:global(.ui-btn).xferBtn {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  flex-shrink: 0;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+/* Deck slides (~LG/XL) are too narrow for dual panes — stack for readable labels. */
+@container (max-width: 420px) {
+  .pane {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+      'availLabel'
+      'availList'
+      'actions'
+      'destLabel'
+      'destList';
+  }
+
+  .list {
+    min-height: 8rem;
+    max-height: 12rem;
+  }
+
+  .actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  /* Stacked: Available above Selected — point chevrons down/up. */
+  :global(.ui-btn).xferBtn svg {
+    transform: rotate(90deg);
+  }
+}

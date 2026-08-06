@@ -1,21 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
   <!--
-    Template placeholder icon.
+    Jira Capacity brand mark.
 
-    Filled violet rounded square (Tailwind Violet 500, matching the fab-bg
-    token in src/tokens/_tokens.scss) with the lucide Wrench glyph in white
-    on top. The glyph is rendered inside a nested 24-unit coordinate space
-    via transform="translate scale" so the original lucide path data stays
-    verbatim and easy to swap for another icon later.
+    Ocean rounded square (#0F766E, matching fab-bg token) with the lucide
+    Summary glyph in white. The glyph uses a nested 24-unit coordinate space
+    via transform so the original lucide path data stays verbatim.
 
-    Replace this file with your tool's own SVG (any 128x128, transparent
-    background, prefer a rounded square mark) and re-run:
+    Regenerate PNGs after edits:
       npm run icons
-
-    IMPORTANT: Keep this comment free of consecutive hyphens. XML forbids
-    them inside comments.
   -->
-  <rect x="4" y="4" width="120" height="120" rx="28" ry="28" fill="#8b5cf6" />
+  <rect x="4" y="4" width="120" height="120" rx="28" ry="28" fill="#0F766E" />
   <g
     transform="translate(25.6 25.6) scale(3.2)"
     fill="none"
@@ -24,6 +18,10 @@
     stroke-linecap="round"
     stroke-linejoin="round"
   >
-    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+    <path d="M15 4H7" />
+    <path d="m18 16 3 3-3 3" />
+    <path d="M3 4v13a2 2 0 0 0 2 2h16" />
+    <path d="M7 14h7" />
+    <path d="M7 9h12" />
   </g>
 </svg>

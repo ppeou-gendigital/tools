@@ -1,32 +1,27 @@
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
-import { AuthProvider } from '@/providers/AuthProvider'
 import { FabCornerProvider } from '@/providers/FabCornerProvider'
 import { FontSizeProvider } from '@/providers/FontSizeProvider'
 import { NavigationProvider, useNavigation } from '@/providers/NavigationProvider'
-import { PrefsSync } from '@/providers/PrefsSync'
 import { ThemeProvider } from '@/providers/ThemeProvider'
+import { ProfileProvider } from '@/providers/ProfileProvider'
+import { JiraConfigProvider } from '@/providers/JiraConfigProvider'
+import { JiraBridgeProvider } from '@/providers/JiraBridgeProvider'
 import { AppShell } from '@/templates/AppShell'
-import { AuthGate } from '@/blocks/AuthGate'
-import { AcceptInvite } from '@/pages/AcceptInvite'
-import { Home } from '@/pages/Home'
-import { Profile } from '@/pages/Profile'
-import { DeckDemo } from '@/pages/DeckDemo'
-import { RichTextDemo } from '@/pages/RichTextDemo'
+import { ProfileGate } from '@/blocks/ProfileGate'
+import { Profiles } from '@/pages/Profiles'
+import { JiraWorkspace } from '@/pages/JiraWorkspace'
 import { Settings } from '@/pages/Settings'
-import { Workspace } from '@/pages/Workspace'
+import { isJiraSlideRoute } from '@/lib/jira/slides'
 import { APP_VERSION } from '@/env'
 import { queryClient } from '@/lib/queryClient'
 import { queryPersister } from '@/lib/queryPersister'
 
 function Router() {
   const { route } = useNavigation()
-  if (route === 'accept-invite') return <AcceptInvite />
-  if (route === 'workspace') return <Workspace />
-  if (route === 'profile') return <Profile />
-  if (route === 'deck-demo') return <DeckDemo />
-  if (route === 'rich-text-demo') return <RichTextDemo />
+  if (route === 'profiles') return <Profiles />
+  if (isJiraSlideRoute(route)) return <JiraWorkspace />
   if (route === 'settings') return <Settings />
-  return <Home />
+  return <Profiles />
 }
 
 export function App() {
@@ -39,24 +34,25 @@ export function App() {
         buster: APP_VERSION,
       }}
     >
-      {/* AuthProvider is hoisted so prefs providers can call useAuth() and
-          push each mutation through supabaseSync with the current userId. */}
-      <AuthProvider>
-        <ThemeProvider>
-          <FontSizeProvider>
-            <FabCornerProvider>
-              <PrefsSync />
-              <NavigationProvider>
-                <AppShell>
-                  <AuthGate>
-                    <Router />
-                  </AuthGate>
-                </AppShell>
-              </NavigationProvider>
-            </FabCornerProvider>
-          </FontSizeProvider>
-        </ThemeProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <FontSizeProvider>
+          <FabCornerProvider>
+            <ProfileProvider>
+              <JiraConfigProvider>
+                <JiraBridgeProvider>
+                  <NavigationProvider>
+                    <AppShell>
+                      <ProfileGate>
+                        <Router />
+                      </ProfileGate>
+                    </AppShell>
+                  </NavigationProvider>
+                </JiraBridgeProvider>
+              </JiraConfigProvider>
+            </ProfileProvider>
+          </FabCornerProvider>
+        </FontSizeProvider>
+      </ThemeProvider>
     </PersistQueryClientProvider>
   )
 }

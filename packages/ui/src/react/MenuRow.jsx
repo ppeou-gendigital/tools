@@ -8,12 +8,14 @@ export function MenuRow({
   keepOpen = false,
   onClose,
   className,
+  active = false,
 }) {
   return (
     <button
       type="button"
       role="menuitem"
-      className={cx('ui-menu-row', className)}
+      aria-current={active ? 'page' : undefined}
+      className={cx('ui-menu-row', active && 'ui-menu-row--active', className)}
       onClick={() => {
         onClick?.()
         if (!keepOpen) onClose?.()

@@ -1,0 +1,80 @@
+@use 'tokens/mixins' as m;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--space-4) 0;
+  gap: var(--space-3);
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Beat package `.is-fluid-width { max-width: 1440px }` on workspace chrome. */
+.fullWidth {
+  width: 100%;
+  max-width: none;
+}
+
+.deckWrap {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+  padding-inline: var(--layout-pad);
+}
+
+.deck {
+  height: 100%;
+  /* Keep endPad in sync with Slide span / spanMd / spanLg / spanXl. */
+  --jira-slide-span: #{12 / 1.2};
+
+  @include m.md {
+    --jira-slide-span: #{12 / 2.2};
+  }
+
+  @include m.lg {
+    --jira-slide-span: #{12 / 3.2};
+  }
+
+  @include m.xl {
+    --jira-slide-span: #{12 / 4.2};
+  }
+}
+
+.slideBody {
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  overflow-x: hidden;
+  overflow-y: auto;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+$slide-ids: report, sprints, columns, users, issue-type, issue-status,
+  resolutions, projects;
+
+@each $id in $slide-ids {
+  .page[data-active-slide='#{$id}'] [data-slide='#{$id}'] .slideBody {
+    border-color: var(--fab-bg);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--fab-bg) 35%, transparent);
+  }
+}
+
+/* Trailing space so the last slide can scroll flush to the deck start. */
+.endPad {
+  flex: 0 0 calc(
+    100cqi -
+      (
+        var(--jira-slide-span) * (100cqi + var(--gutter)) / 12 - var(--gutter)
+      )
+  );
+  pointer-events: none;
+  scroll-snap-align: none;
+}

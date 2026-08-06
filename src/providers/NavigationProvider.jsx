@@ -4,48 +4,66 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react'
 import { asyncStorage } from '@/lib/storage'
-import { useAuth } from '@/providers/AuthProvider'
 
 const NavigationContext = createContext(null)
 
 const ROUTES = [
-  'home',
-  'profile',
-  'deck-demo',
-  'rich-text-demo',
+  'profiles',
+  'report',
+  'sprints',
+  'columns',
+  'users',
+  'issue-type',
+  'issue-status',
+  'resolutions',
+  'projects',
   'settings',
-  'workspace',
-  'accept-invite',
 ]
-const DEFAULT_ROUTE = 'home'
-// init-tool renames `toolname` → your kebab id (e.g. docto:lastRoute).
-const LAST_ROUTE_KEY = 'toolname:lastRoute'
+const DEFAULT_ROUTE = 'profiles'
+const LAST_ROUTE_KEY = 'jira-capacity:lastRoute'
 
 const ROUTE_LABELS = {
-  home: 'Home',
-  profile: 'Profile',
-  'deck-demo': 'Deck demo',
-  'rich-text-demo': 'Rich text demo',
+  profiles: 'Profiles',
+  report: 'Report',
+  sprints: 'Sprints',
+  columns: 'Columns',
+  users: 'Users',
+  'issue-type': 'Type',
+  'issue-status': 'Status',
+  resolutions: 'Resolutions',
+  projects: 'Projects',
   settings: 'Settings',
-  workspace: 'Workspace',
-  'accept-invite': 'Join',
 }
 
 const PARENT_ROUTE = {
-  home: null,
-  profile: 'home',
-  'deck-demo': 'home',
-  'rich-text-demo': 'home',
-  settings: 'home',
-  workspace: 'home',
-  'accept-invite': 'home',
+  profiles: null,
+  report: 'profiles',
+  sprints: 'profiles',
+  columns: 'profiles',
+  users: 'profiles',
+  'issue-type': 'profiles',
+  'issue-status': 'profiles',
+  resolutions: 'profiles',
+  projects: 'profiles',
+  settings: 'profiles',
 }
 
 const HISTORY_LIMIT = 10
+
+/** Routes that require a selected profile. */
+export const PROFILE_GATED_ROUTES = new Set([
+  'report',
+  'sprints',
+  'columns',
+  'users',
+  'issue-type',
+  'issue-status',
+  'resolutions',
+  'projects',
+])
 
 function normalizeFrame(raw) {
   if (typeof raw === 'string') {
@@ -85,29 +103,11 @@ function readLastRouteSync() {
   }
 }
 
-function readInviteFromUrl() {
-  try {
-    const url = new URL(window.location.href)
-    const token = url.searchParams.get('invite')
-    if (!token) return null
-    url.searchParams.delete('invite')
-    window.history.replaceState({}, '', url.pathname + url.search + url.hash)
-    return { route: 'accept-invite', params: { inviteToken: token } }
-  } catch {
-    return null
-  }
-}
-
 export function NavigationProvider({ children, initial }) {
-  const { user, loading: authLoading } = useAuth()
-  const userId = user?.id ?? null
-  const prevUserIdRef = useRef(undefined)
   const hasExplicitInitial =
     typeof initial === 'string' && ROUTES.includes(initial)
 
   const [stack, setStack] = useState(() => {
-    const inviteFrame = readInviteFromUrl()
-    if (inviteFrame) return [inviteFrame]
     if (hasExplicitInitial) return [{ route: initial, params: {} }]
     return [readLastRouteSync()]
   })
@@ -122,14 +122,12 @@ export function NavigationProvider({ children, initial }) {
         const frame = normalizeFrame(JSON.parse(stored))
         setStack((prev) => {
           if (prev.length !== 1 || framesEqual(prev[0], frame)) return prev
-          if (prev[0]?.route === 'accept-invite') return prev
           return [frame]
         })
       } catch {
         const frame = normalizeFrame(stored)
         setStack((prev) => {
           if (prev.length !== 1 || framesEqual(prev[0], frame)) return prev
-          if (prev[0]?.route === 'accept-invite') return prev
           return [frame]
         })
       }
@@ -139,28 +137,10 @@ export function NavigationProvider({ children, initial }) {
     }
   }, [hasExplicitInitial])
 
-  // Skip the first resolved session so a refresh still restores lastRoute.
-  useEffect(() => {
-    if (authLoading) return
-    const prev = prevUserIdRef.current
-    prevUserIdRef.current = userId
-    if (prev === undefined) return
-    if (prev === userId) return
-    setStack((prevStack) => {
-      if (prevStack[0]?.route === 'accept-invite') return prevStack
-      return [{ route: DEFAULT_ROUTE, params: {} }]
-    })
-  }, [authLoading, userId])
-
   useEffect(() => {
     const frame = stack[stack.length - 1]
     if (!frame?.route || !ROUTES.includes(frame.route)) return
-    // Don't persist invite tokens
-    const toStore =
-      frame.route === 'accept-invite'
-        ? { route: 'home', params: {} }
-        : frame
-    asyncStorage.setItem(LAST_ROUTE_KEY, JSON.stringify(toStore))
+    asyncStorage.setItem(LAST_ROUTE_KEY, JSON.stringify(frame))
   }, [stack])
 
   const navigate = useCallback((next, params = {}) => {
@@ -222,14 +202,16 @@ export function NavigationProvider({ children, initial }) {
       navigate,
       replace,
       goBack,
-      goHome: () => navigate('home'),
-      goProfile: () => navigate('profile'),
-      goDeckDemo: () => navigate('deck-demo'),
-      goRichTextDemo: () => navigate('rich-text-demo'),
+      goProfiles: () => navigate('profiles'),
+      goReport: () => navigate('report'),
+      goSprints: () => navigate('sprints'),
+      goColumns: () => navigate('columns'),
+      goUsers: () => navigate('users'),
+      goIssueType: () => navigate('issue-type'),
+      goIssueStatus: () => navigate('issue-status'),
+      goResolutions: () => navigate('resolutions'),
+      goProjects: () => navigate('projects'),
       goSettings: () => navigate('settings'),
-      goWorkspace: (workspaceId) => navigate('workspace', { workspaceId }),
-      goAcceptInvite: (inviteToken) =>
-        navigate('accept-invite', { inviteToken }),
     }
   }, [stack, navigate, replace, goBack])
 

@@ -1,3 +1,24 @@
+/* Theme + font size + settings share one compact toolbar strip. */
+.toolsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  min-width: 0;
+
+  :global(.bh-appearance-row) {
+    flex: 1;
+    min-width: 0;
+    padding-inline-end: 0;
+  }
+
+  :global(.bh-account-row) {
+    flex-shrink: 0;
+    padding: var(--space-1);
+    justify-items: end;
+  }
+}
+
 .brand {
   display: flex;
   align-items: center;

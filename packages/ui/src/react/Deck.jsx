@@ -1,8 +1,14 @@
 import { cx } from './cx.js'
 
-export function Deck({ className, children, ...rest }) {
+/** Horizontal scroll-snap deck. Accepts `ref` (React 19 prop) for scroll control. */
+export function Deck({ className, children, ref, ...rest }) {
   return (
-    <div className={cx('ui-deck', className)} tabIndex={0} {...rest}>
+    <div
+      ref={ref}
+      className={cx('ui-deck', className)}
+      tabIndex={0}
+      {...rest}
+    >
       {children}
     </div>
   )

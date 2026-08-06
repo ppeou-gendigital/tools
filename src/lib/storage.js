@@ -1,6 +1,5 @@
 // Unified async storage that works in both the extension (chrome.storage.local)
-// and the web build (localStorage). Shaped to satisfy supabase-js's
-// `SupportedStorage` interface — all methods return Promises so the same
+// and the web build (localStorage). All methods return Promises so the same
 // adapter can be used everywhere.
 
 import { isExtension } from '@/env'

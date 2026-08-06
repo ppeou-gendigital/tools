@@ -72,7 +72,7 @@ temp/
 logs/
 *.log
 
-# Local extension zips produced by `cd dist && zip -r ../TOOLNAME-*.zip .`
+# Local extension zips produced by `cd dist && zip -r ../jira-capacity-*.zip .`
 # outside of CI — never commit these.
 *-v*.zip
 

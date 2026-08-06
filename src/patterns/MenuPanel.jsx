@@ -1,17 +1,15 @@
 import { Divider } from '@tools/ui'
 import {
   AppearanceRow,
-  DevBadgeItem,
   MenuPanel as ToolsMenuPanel,
-  MenuSectionLabel,
 } from '@tools/behavioral'
-import { useAuth } from '@tools/service'
-import { Wrench } from 'lucide-react'
-import { APP_VERSION, devAutoLoginConfig } from '@/env'
+import { Summary } from 'lucide-react'
+import { APP_VERSION } from '@/env'
 import { AccountRow } from '@/patterns/AccountRow'
 import { AppNavItems } from '@/patterns/AppNavItems'
+import styles from './MenuPanel.module.scss'
 
-const TOOL_NAME = 'TOOLNAME'
+const TOOL_NAME = 'Jira Capacity'
 
 export function MenuPanel({
   corner,
@@ -21,10 +19,6 @@ export function MenuPanel({
   fabTop,
   onClose,
 }) {
-  const { user } = useAuth()
-  const signedIn = !!user
-  const dev = devAutoLoginConfig()
-
   return (
     <ToolsMenuPanel
       corner={corner}
@@ -33,20 +27,15 @@ export function MenuPanel({
       fabLeft={fabLeft}
       fabTop={fabTop}
       onClose={onClose}
-      brandConfig={{ name: TOOL_NAME, icon: Wrench, logoAlt: TOOL_NAME }}
+      brandConfig={{ name: TOOL_NAME, icon: Summary, logoAlt: TOOL_NAME }}
       version={APP_VERSION}
-      footer={<DevBadgeItem email={dev?.email} />}
     >
-      <AppearanceRow onClose={onClose} />
-      {signedIn && <Divider />}
-      {signedIn && <AccountRow onClose={onClose} />}
-      {signedIn && (
-        <>
-          <Divider />
-          <MenuSectionLabel>App</MenuSectionLabel>
-          <AppNavItems onClose={onClose} />
-        </>
-      )}
+      <div className={styles.toolsRow}>
+        <AppearanceRow onClose={onClose} />
+        <AccountRow onClose={onClose} />
+      </div>
+      <Divider />
+      <AppNavItems onClose={onClose} />
     </ToolsMenuPanel>
   )
 }

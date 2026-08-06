@@ -75,28 +75,16 @@ const TEXT_FILES = [
   'TEMPLATE.md',
   'src/App.jsx',
   'src/env.js',
-  'src/lib/supabase.js',
   'src/lib/queryPersister.js',
   'src/lib/richBody.js',
-  'src/lib/attachmentsApi.js',
   'src/pages/RichTextDemo.jsx',
-  'src/providers/AuthProvider.jsx',
   'src/providers/ThemeProvider.jsx',
   'src/providers/FontSizeProvider.jsx',
   'src/providers/FabCornerProvider.jsx',
-  'src/providers/PrefsSync.jsx',
-  'src/blocks/SignInForm.jsx',
   'src/blocks/FloatingMenu.jsx',
   'src/patterns/MenuPanel.jsx',
-  'supabase/template_attachments.sql',
-  'supabase/template_invites.sql',
-  'src/lib/invitesApi.js',
-  'src/lib/inviteShare.js',
-  'src/pages/AcceptInvite.jsx',
-  'src/pages/Workspace.jsx',
   'src/pages/Home.jsx',
   'src/providers/NavigationProvider.jsx',
-  'src/blocks/AuthGate.jsx',
   '.gitignore',
 ]
 
@@ -128,15 +116,14 @@ function applyReplacements(src) {
   return src.replaceAll('TOOLNAME', kebab).replaceAll('toolname', kebab)
 }
 
-// The About row, sign-in headline, manifest name and HTML <title> should
-// use the display name, not the kebab identifier. We do a second pass
-// over user-visible strings that were left as the kebab value after the
-// primary sweep. `package.json` is intentionally NOT touched here — npm
-// package names must be lowercase, so its `"name"` field stays as `kebab`.
+// The About row, manifest name and HTML <title> should use the display
+// name, not the kebab identifier. We do a second pass over user-visible
+// strings that were left as the kebab value after the primary sweep.
+// `package.json` is intentionally NOT touched here — npm package names
+// must be lowercase, so its `"name"` field stays as `kebab`.
 function applyDisplayNamePolish(src, relPath) {
   let out = src
     .replaceAll(`${kebab} menu`, `${pascal} menu`)
-    .replaceAll(`Sign in to ${kebab}`, `Sign in to ${pascal}`)
     .replaceAll(`<title>${kebab}</title>`, `<title>${pascal}</title>`)
     .replaceAll(`const TOOL_NAME = '${kebab}'`, `const TOOL_NAME = '${pascal}'`)
 
@@ -186,7 +173,5 @@ console.log(`Done. ${changed} file(s) rewritten.`)
 console.log('')
 console.log('Next steps:')
 console.log('  1. Replace icons/tool.svg with your own SVG, then run `npm run icons` (writes transparent icons/ + opaque public/icons/).')
-console.log('  2. Copy .env.example -> .env and fill in Supabase URL + anon key.')
-console.log('  3. Run the SQL from README.md (Supabase setup) to create profiles + user_data.')
-console.log('  4. `npm install` and `npm run dev` (or `npm run dev:ext`).')
-console.log('  5. Commit the rename and push `tool/' + kebab + '` to deploy.')
+console.log('  2. `npm install` and `npm run dev` (or `npm run dev:ext`).')
+console.log('  3. Commit the rename and push `tool/' + kebab + '` to deploy.')

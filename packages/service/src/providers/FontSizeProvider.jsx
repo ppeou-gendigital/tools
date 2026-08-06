@@ -4,11 +4,9 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react'
 import { asyncStorage } from '../lib/storage.js'
-import { useAuth } from './AuthProvider.jsx'
 
 const FontSizeContext = createContext(null)
 const MIN = 12
@@ -28,15 +26,10 @@ function applyFontSize(size) {
   document.documentElement.style.fontSize = `${size}px`
 }
 
-export function FontSizeProvider({ children, appId, pushRemote }) {
+export function FontSizeProvider({ children, appId }) {
   const storageKey = `${appId}.fontSize`
-  const { user } = useAuth()
-  const userId = user?.id ?? null
   const [size, setSizeState] = useState(DEFAULT)
   const [ready, setReady] = useState(false)
-  const skipSyncRef = useRef(false)
-  const hydratedRef = useRef(false)
-  const lastSyncedSizeRef = useRef(null)
 
   useEffect(() => {
     let mounted = true
@@ -55,26 +48,9 @@ export function FontSizeProvider({ children, appId, pushRemote }) {
     if (!ready) return
     applyFontSize(size)
     asyncStorage.setItem(storageKey, String(size))
-    if (!hydratedRef.current) {
-      hydratedRef.current = true
-      lastSyncedSizeRef.current = size
-      return
-    }
-    if (skipSyncRef.current) {
-      skipSyncRef.current = false
-      lastSyncedSizeRef.current = size
-      return
-    }
-    if (lastSyncedSizeRef.current === size) return
-    lastSyncedSizeRef.current = size
-    if (!userId || !pushRemote) return
-    pushRemote(userId, size).catch((err) => {
-      console.warn(`[${appId}] fontSize sync failed:`, err?.message ?? err)
-    })
-  }, [size, ready, userId, storageKey, pushRemote, appId])
+  }, [size, ready, storageKey])
 
-  const setSize = useCallback((n, { fromRemote = false } = {}) => {
-    if (fromRemote) skipSyncRef.current = true
+  const setSize = useCallback((n) => {
     setSizeState(clamp(n))
   }, [])
 

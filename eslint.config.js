@@ -4,7 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import globals from 'globals'
 
 export default [
-  { ignores: ['dist', 'dist-web', 'node_modules'] },
+  { ignores: ['dist', 'dist-web', 'node_modules', 'src/jira-runner.js'] },
   js.configs.recommended,
   {
     files: ['src/**/*.{js,jsx}', 'packages/*/src/**/*.{js,jsx}'],

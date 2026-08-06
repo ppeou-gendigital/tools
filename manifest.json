@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "TOOLNAME",
+  "name": "Jira Capacity",
   "version": "0.1.0",
-  "description": "TOOLNAME — React + Supabase Chrome extension",
+  "description": "Jira capacity report and ticket export for WebExp",
   "action": {
-    "default_title": "TOOLNAME",
+    "default_title": "Jira Capacity",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",
@@ -23,6 +23,12 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "permissions": ["storage"],
-  "host_permissions": ["https://*.supabase.co/*"]
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "clipboardWrite",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": ["https://jira.corp.nortonlifelock.com/*"]
 }

@@ -8,7 +8,6 @@ import {
 } from 'react'
 import { asyncStorage } from '../lib/storage.js'
 import { isClockDaylight, msUntilNextClockBoundary } from '../lib/clockDaylight.js'
-import { useAuth } from './AuthProvider.jsx'
 
 const ThemeContext = createContext(null)
 
@@ -38,8 +37,7 @@ function applyTheme(resolved) {
  * @param {string} props.appId
  * @param {string} [props.defaultTheme]
  * @param {boolean} [props.enableDaynight]
- * @param {() => 'light'|'dark'} [props.resolveDaynight] — viaggio solar/geo hook
- * @param {(userId: string, theme: string) => Promise<void>} [props.pushRemote]
+ * @param {() => 'light'|'dark'} [props.resolveDaynight]
  */
 export function ThemeProvider({
   children,
@@ -47,15 +45,12 @@ export function ThemeProvider({
   defaultTheme = 'system',
   enableDaynight = false,
   resolveDaynight,
-  pushRemote,
 }) {
   const themes = useMemo(
     () => (enableDaynight ? [...BASE_THEMES, 'daynight'] : BASE_THEMES),
     [enableDaynight],
   )
   const storageKey = `${appId}.theme`
-  const { user } = useAuth()
-  const userId = user?.id ?? null
 
   const [pref, setPref] = useState(defaultTheme)
   const [ready, setReady] = useState(false)
@@ -97,18 +92,12 @@ export function ThemeProvider({
   }, [ready, pref, tick, resolveDaynight])
 
   const setTheme = useCallback(
-    async (next, { fromRemote = false } = {}) => {
+    async (next) => {
       if (!themes.includes(next)) return
       setPref(next)
       await asyncStorage.setItem(storageKey, next)
-      if (fromRemote || !userId || !pushRemote) return
-      try {
-        await pushRemote(userId, next)
-      } catch (err) {
-        console.warn(`[${appId}] theme sync failed:`, err?.message ?? err)
-      }
     },
-    [themes, storageKey, userId, pushRemote, appId],
+    [themes, storageKey],
   )
 
   const value = useMemo(

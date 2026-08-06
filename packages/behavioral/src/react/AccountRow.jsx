@@ -1,41 +1,14 @@
-import { CircleUserRound, LogOut, Settings } from 'lucide-react'
+import { Settings } from 'lucide-react'
 import { IconButton } from '@tools/ui'
 
-export function AccountRow({
-  onClose,
-  onProfile,
-  onSettings,
-  onSignOut,
-  showSettings = true,
-}) {
-  const cols = showSettings ? 3 : 2
+export function AccountRow({ onClose, onSettings }) {
   return (
-    <div className="bh-account-row" style={{ '--bh-account-cols': cols }}>
+    <div className="bh-account-row" style={{ '--bh-account-cols': 1 }}>
       <IconButton
-        icon={CircleUserRound}
-        label="Profile"
+        icon={Settings}
+        label="Settings"
         onClose={onClose}
-        onClick={onProfile}
-      />
-      {showSettings && (
-        <IconButton
-          icon={Settings}
-          label="Settings"
-          onClose={onClose}
-          onClick={onSettings}
-        />
-      )}
-      <IconButton
-        icon={LogOut}
-        label="Sign out"
-        onClose={onClose}
-        onClick={async () => {
-          try {
-            await onSignOut?.()
-          } catch (err) {
-            console.error('sign out failed', err)
-          }
-        }}
+        onClick={onSettings}
       />
     </div>
   )

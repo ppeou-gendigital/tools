@@ -7,6 +7,6 @@ import { asyncStorage } from './storage'
 // subsequent open shows the cached data immediately, then background-refetches.
 export const queryPersister = createAsyncStoragePersister({
   storage: asyncStorage,
-  key: 'toolname.queries',
+  key: 'jira-capacity.queries',
   throttleTime: 1000,
 })

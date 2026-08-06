@@ -1,3 +1,3 @@
 # @tools/service
 
-Auth + prefs providers parameterized by `appId`, with injectable sync adapters.
+Local prefs providers parameterized by `appId` (theme, font size, FAB corners). Values persist via `asyncStorage` (`chrome.storage.local` or `localStorage`).

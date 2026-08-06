@@ -32,7 +32,7 @@ function buildAppVersion() {
 export default defineConfig(({ command, mode }) => {
   const isExtension = mode === 'extension'
   const isBuild = command === 'build'
-  const webBase = '/tools/TOOLNAME/'
+  const webBase = '/tools/jira-capacity/'
   const appVersion = buildAppVersion()
 
   return {
@@ -40,7 +40,7 @@ export default defineConfig(({ command, mode }) => {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
     },
     // Web PROD build is intended to be served from
-    // https://<user>.github.io/tools/TOOLNAME/, so every asset URL must
+    // https://<user>.github.io/tools/jira-capacity/, so every asset URL must
     // be prefixed with the repo-and-tool subpath. Dev server (`npm run
     // dev`) keeps '/' so http://localhost:5173/ works, and the extension
     // build always resolves at the extension root.
@@ -64,9 +64,9 @@ export default defineConfig(({ command, mode }) => {
                 'icons/icon-512.png',
               ],
               manifest: {
-                name: 'TOOLNAME',
-                short_name: 'TOOLNAME',
-                description: 'TOOLNAME — React + Supabase web app',
+                name: 'Jira Capacity',
+                short_name: 'Jira Capacity',
+                description: 'Jira capacity report and ticket export',
                 theme_color: '#0a0a0a',
                 background_color: '#0a0a0a',
                 display: 'standalone',
@@ -92,8 +92,7 @@ export default defineConfig(({ command, mode }) => {
                 ],
               },
               workbox: {
-                // Precache the app shell only. No runtimeCaching for
-                // Supabase / API — cloud data stays network-fetched.
+                // Precache the app shell only.
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
                 navigateFallback: 'index.html',
                 cleanupOutdatedCaches: true,
@@ -108,6 +107,13 @@ export default defineConfig(({ command, mode }) => {
     ],
     resolve: {
       alias: {
+        // CRXJS `?script` import only works in the extension build.
+        'jira-runner-script': resolve(
+          __dirname,
+          isExtension
+            ? 'src/lib/jira/runnerScript.extension.js'
+            : 'src/lib/jira/runnerScript.js',
+        ),
         '@': resolve(__dirname, 'src'),
       },
     },
@@ -137,9 +143,9 @@ export default defineConfig(({ command, mode }) => {
         }
       : {
           // Nested so the uploaded Pages artifact serves at
-          // /tools/TOOLNAME/ (matching `base` above). The workflow uploads
+          // /tools/jira-capacity/ (matching `base` above). The workflow uploads
           // the parent `dist-web/` folder as the site.
-          outDir: 'dist-web/TOOLNAME',
+          outDir: 'dist-web/jira-capacity',
           emptyOutDir: true,
           rollupOptions: {
             input: {

@@ -1,4 +1,4 @@
-// TOOLNAME service worker (Manifest V3).
+// jira-capacity service worker (Manifest V3).
 //
 // Service workers are event-driven and can be terminated any time Chrome
 // isn't running an event handler. Do NOT rely on globals surviving between
@@ -6,15 +6,14 @@
 //
 // This is a minimal starter. Layer your own listeners
 // (chrome.webNavigation, chrome.tabs, chrome.alarms, etc.) on top as your
-// tool grows. See the loopy branch for a full-featured example that adds
-// URL capture and a debounced Supabase sync.
+// tool grows.
 
-console.log('[toolname] service worker booted')
+console.log('[jira-capacity] service worker booted')
 
 // Fires once per install/update. Handy for one-shot migrations or
 // setting default chrome.storage values.
 chrome.runtime.onInstalled.addListener((details) => {
-  console.log('[toolname] onInstalled:', details.reason)
+  console.log('[jira-capacity] onInstalled:', details.reason)
 })
 
 // Simple message router. The popup can `chrome.runtime.sendMessage(...)`
@@ -25,7 +24,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!message || typeof message !== 'object') return false
 
   switch (message.type) {
-    case 'toolname:ping':
+    case 'jira-capacity:ping':
       sendResponse({ ok: true, at: new Date().toISOString() })
       return false
 

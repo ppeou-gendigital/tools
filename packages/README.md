@@ -5,8 +5,8 @@ Source of truth for the tools family UI framework. Authored on `template/base`, 
 | Package | Role |
 |---------|------|
 | [`@tools/ui`](./ui) | Tokens, `ui-*` CSS classes, presentational React (Button, Card, Modal, …) |
-| [`@tools/behavioral`](./behavioral) | Slot/config shells (AppShell, FloatingMenu, MenuPanel, AuthGate, …) |
-| [`@tools/service`](./service) | Auth + prefs providers (`appId`, injectable sync) |
+| [`@tools/behavioral`](./behavioral) | Slot/config shells (AppShell, FloatingMenu, MenuPanel, …) |
+| [`@tools/service`](./service) | Local prefs providers (`appId`) |
 
 ## App usage
 
@@ -15,7 +15,7 @@ import '@tools/ui/css'
 import '@tools/behavioral/css'
 import { Button, Logo } from '@tools/ui'
 import { AppShell, FloatingMenu, MenuPanel } from '@tools/behavioral'
-import { ThemeProvider, AuthProvider } from '@tools/service'
+import { ThemeProvider } from '@tools/service'
 ```
 
 Each tool depends via:

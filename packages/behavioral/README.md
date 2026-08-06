@@ -1,45 +1,6 @@
 # @tools/behavioral
 
-Config/slot interaction shells: AppShell, FloatingMenu, MenuPanel, nav, auth gate/form.
-
-## SignInForm (passwordless OTP)
-
-One form for every tool: **email → 6-digit code → session**. No Sign in / Sign up tabs. New users are created implicitly (`shouldCreateUser: true`).
-
-```jsx
-<SignInForm appName="TOOLNAME" logoIcon={Wrench} />
-// Invite / pre-auth context (see supabase/template_invites.sql + AcceptInvite):
-<SignInForm
-  appName="TOOLNAME"
-  logoIcon={Wrench}
-  contextMessage="Sign in to join the workspace."
-  onBack={() => goHome()}
-/>
-```
-
-Wire `AuthGate` with `renderPreAuth` so `accept-invite` renders while logged out:
-
-```jsx
-<AuthGate
-  route={route}
-  renderPreAuth={(r) => (r === 'accept-invite' ? <AcceptInvite /> : null)}
-  signIn={<SignInForm … />}
->
-```
-
-### Supabase email templates (required)
-
-`signInWithOtp` + `verifyOtp({ type: 'email' })` need a **6-digit code**, not a magic-link confirm URL.
-
-Dashboard → **Authentication** → **Email Templates**:
-
-- **Magic Link** and **Confirm sign up** bodies must include `{{ .Token }}` (the code).
-- Do not rely on `{{ .ConfirmationURL }}` as the primary path — that produces `type=signup` links (often with `redirect_to=localhost`).
-
-Also set **URL Configuration**:
-
-- **Site URL** → your production host (e.g. `https://project-viaggio.web.app`), not `http://localhost:3000`.
-- **Redirect URLs** → allowlist Firebase hosts + local Vite origins.
+Config/slot interaction shells: AppShell, FloatingMenu, MenuPanel, nav.
 
 ## FloatingMenu grid
 

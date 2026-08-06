@@ -1,7 +1,6 @@
 import { QueryClient } from '@tanstack/react-query'
 
-// Module-level singleton. App.jsx wires it into <PersistQueryClientProvider>
-// and AuthProvider imports it to clear on SIGNED_OUT.
+// Module-level singleton. App.jsx wires it into <PersistQueryClientProvider>.
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
