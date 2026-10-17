@@ -1,0 +1,11 @@
+.vscode/
+.gitignore
+.git/
+*.md
+!README.md
+!CHANGELOG.md
+!QUICK_REFERENCE.md
+test/
+.vscodeignore
+.eslintrc.js
+*.vsix

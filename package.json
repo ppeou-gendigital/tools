@@ -1,0 +1,529 @@
+{
+  "name": "notas",
+  "displayName": "Notas - Git Worktree Manager",
+  "description": "Manage Git worktrees, compare files, and auto-sync with remote repositories",
+  "version": "0.1.0",
+  "publisher": "Notas",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "SCM Providers",
+    "Other"
+  ],
+  "keywords": [
+    "git",
+    "worktree",
+    "format",
+    "minify",
+    "compare",
+    "sync",
+    "commands",
+    "terminal"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "notas.initWorkspace",
+        "title": "Notas: Initialize Workspace",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "notas.syncWorktrees",
+        "title": "Notas: Sync Worktrees",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "notas.refreshWorktrees",
+        "title": "Notas: Refresh Worktree View",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "notas.openWorktree",
+        "title": "Notas: Open Worktree"
+      },
+      {
+        "command": "notas.removeWorktree",
+        "title": "Notas: Remove Worktree"
+      },
+      {
+        "command": "notas.createBranch",
+        "title": "Notas: Create New Branch",
+        "icon": "$(add)"
+      },
+      {
+        "command": "notas.cleanupWorktrees",
+        "title": "Notas: Clean Up Worktrees",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "notas.compareFiles",
+        "title": "Notas: Compare Two Files"
+      },
+      {
+        "command": "notas.compareURLs",
+        "title": "Notas: Compare Two URLs"
+      },
+      {
+        "command": "notas.compareURLsFromSelection",
+        "title": "Notas: Compare 2 URLs from Selection"
+      },
+      {
+        "command": "notas.formatFile",
+        "title": "Notas: Format/Pretty Print"
+      },
+      {
+        "command": "notas.minifyFile",
+        "title": "Notas: Minify"
+      },
+      {
+        "command": "notas.jsToJson",
+        "title": "Notas: Convert JS Object to JSON"
+      },
+      {
+        "command": "notas.jsonToJs",
+        "title": "Notas: Convert JSON to JS Object"
+      },
+      {
+        "command": "notas.openFromUrl",
+        "title": "Notas: Open from URL"
+      },
+      {
+        "command": "notas.openScheduleSettings",
+        "title": "Notas: Manage Auto-Sync Schedule",
+        "icon": "$(calendar)"
+      },
+      {
+        "command": "notas.manualSync",
+        "title": "Notas: Sync All Worktrees Now",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "notas.openFileToolsSettings",
+        "title": "Notas: File Tools Settings",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "notas.lockFile",
+        "title": "Notas: Lock File (Encrypt)",
+        "icon": "$(lock)"
+      },
+      {
+        "command": "notas.unlockFile",
+        "title": "Notas: Unlock File (Decrypt)",
+        "icon": "$(unlock)"
+      },
+      {
+        "command": "notas.runCommandFile",
+        "title": "Notas: Run File",
+        "shortTitle": "Run File",
+        "icon": "$(play)"
+      },
+      {
+        "command": "notas.refreshCommands",
+        "title": "Notas: Refresh Commands",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "notas.openCommandsFile",
+        "title": "Notas: Open Commands File",
+        "icon": "$(file)"
+      },
+      {
+        "command": "notas.openCommandsPathSetting",
+        "title": "Notas: Open Commands File Path Setting",
+        "icon": "$(settings-gear)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "notas",
+          "title": "Notas",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "notas": [
+        {
+          "id": "notas.worktrees",
+          "name": "Worktrees",
+          "visibility": "visible"
+        },
+        {
+          "id": "notas.sync",
+          "name": "Sync",
+          "type": "webview",
+          "visibility": "visible"
+        },
+        {
+          "id": "notas.compareURLs",
+          "name": "Compare URLs",
+          "type": "webview",
+          "visibility": "visible"
+        },
+        {
+          "id": "notas.commands",
+          "name": "Commands",
+          "type": "webview",
+          "visibility": "visible"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "notas.refreshWorktrees",
+          "when": "view == notas.sidebar",
+          "group": "navigation"
+        },
+        {
+          "command": "notas.createBranch",
+          "when": "view == notas.worktrees",
+          "group": "navigation@0"
+        },
+        {
+          "command": "notas.syncWorktrees",
+          "when": "view == notas.worktrees",
+          "group": "navigation@1"
+        },
+        {
+          "command": "notas.cleanupWorktrees",
+          "when": "view == notas.worktrees",
+          "group": "navigation@2"
+        },
+        {
+          "command": "notas.refreshWorktrees",
+          "when": "view == notas.worktrees",
+          "group": "navigation@3"
+        },
+        {
+          "command": "notas.refreshCommands",
+          "when": "view == notas.commands",
+          "group": "navigation"
+        },
+        {
+          "command": "notas.openCommandsFile",
+          "when": "view == notas.commands",
+          "group": "navigation@1"
+        },
+        {
+          "command": "notas.openCommandsPathSetting",
+          "when": "view == notas.commands",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "notas.openWorktree",
+          "when": "view == notas.worktrees && viewItem == worktree",
+          "group": "inline"
+        },
+        {
+          "command": "notas.removeWorktree",
+          "when": "view == notas.worktrees && viewItem == worktree"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "notas.openFromUrl",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@1"
+        },
+        {
+          "command": "notas.lockFile",
+          "when": "explorerResourceIsFolder == false && !explorerResourceIsRoot",
+          "group": "notas@1"
+        },
+        {
+          "command": "notas.unlockFile",
+          "when": "explorerResourceIsFolder == false && !explorerResourceIsRoot",
+          "group": "notas@2"
+        },
+        {
+          "command": "notas.compareFiles",
+          "when": "explorerResourceIsFolder == false && !explorerResourceIsRoot",
+          "group": "3_compare@1"
+        },
+        {
+          "command": "notas.formatFile",
+          "when": "explorerResourceIsFolder == false && !explorerResourceIsRoot && resourceExtname =~ /\\.(js|jsx|ts|tsx|json|html|css|scss|less|md|yml|yaml)$/",
+          "group": "1_modification@1"
+        },
+        {
+          "command": "notas.minifyFile",
+          "when": "explorerResourceIsFolder == false && !explorerResourceIsRoot && resourceExtname =~ /\\.(js|jsx|ts|tsx|css|scss|less|html|htm|json|xml|svg|yml|yaml|md)$/",
+          "group": "1_modification@2"
+        },
+        {
+          "command": "notas.runCommandFile",
+          "when": "explorerResourceIsFolder == false && !explorerResourceIsRoot && resourceExtname == '.command'",
+          "group": "navigation@2"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "notas.formatFile",
+          "group": "notas@1"
+        },
+        {
+          "command": "notas.minifyFile",
+          "group": "notas@2"
+        },
+        {
+          "command": "notas.jsToJson",
+          "group": "notas@3"
+        },
+        {
+          "command": "notas.jsonToJs",
+          "group": "notas@4"
+        },
+        {
+          "command": "notas.compareURLsFromSelection",
+          "when": "editorHasSelection",
+          "group": "notas@5"
+        },
+        {
+          "command": "notas.runCommandFile",
+          "when": "resourceExtname == '.command'",
+          "group": "notas@6"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "notas.openWorktree",
+          "when": "false"
+        },
+        {
+          "command": "notas.removeWorktree",
+          "when": "false"
+        },
+        {
+          "command": "notas.runCommandFile",
+          "when": "editorTextFocus && resourceExtname == '.command'"
+        }
+      ]
+    },
+    "configuration": [
+      {
+        "title": "Notas",
+        "properties": {
+        "notas.autoSync.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable automatic Git synchronization"
+        },
+        "notas.autoSync.showNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show notifications for auto-sync results"
+        },
+        "notas.autoSync.conflictStrategy": {
+          "type": "string",
+          "default": "keep_local",
+          "enum": ["keep_local", "keep_remote"],
+          "enumDescriptions": [
+            "Keep local changes when conflicts occur",
+            "Keep remote changes when conflicts occur"
+          ],
+          "description": "Strategy for handling merge conflicts during auto-sync"
+        },
+        "notas.autoSync.autoCommit": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically commit changes before syncing"
+        },
+        "notas.format.indentType": {
+          "type": "string",
+          "default": "spaces",
+          "enum": ["spaces", "tabs"],
+          "description": "Use spaces or tabs for indentation when formatting"
+        },
+        "notas.format.indentSize": {
+          "type": "number",
+          "default": 2,
+          "minimum": 1,
+          "maximum": 8,
+          "description": "Number of spaces per indentation level"
+        },
+        "notas.format.lineWidth": {
+          "type": "number",
+          "default": 120,
+          "minimum": 40,
+          "maximum": 200,
+          "description": "Maximum line width for code formatting"
+        },
+        "notas.format.quoteStyle": {
+          "type": "string",
+          "default": "single",
+          "enum": ["single", "double"],
+          "enumDescriptions": [
+            "Use single quotes (')",
+            "Use double quotes (\")"
+          ],
+          "description": "Quote style for strings"
+        },
+        "notas.format.semicolons": {
+          "type": "boolean",
+          "default": true,
+          "description": "Add semicolons at the end of statements"
+        },
+        "notas.format.trailingCommas": {
+          "type": "boolean",
+          "default": true,
+          "description": "Add trailing commas in multi-line structures"
+        },
+        "notas.format.bracketSpacing": {
+          "type": "boolean",
+          "default": true,
+          "description": "Add spaces between brackets in object literals"
+        },
+        "notas.format.arrowParens": {
+          "type": "string",
+          "default": "avoid",
+          "enum": ["avoid", "always"],
+          "enumDescriptions": [
+            "Omit parens when possible (x => x)",
+            "Always include parens ((x) => x)"
+          ],
+          "description": "Include parentheses around arrow function parameters"
+        },
+        "notas.format.endOfLine": {
+          "type": "string",
+          "default": "lf",
+          "enum": ["lf", "crlf", "auto"],
+          "enumDescriptions": [
+            "Line Feed only (\\n) - Unix/Mac",
+            "Carriage Return + Line Feed (\\r\\n) - Windows",
+            "Maintain existing line endings"
+          ],
+          "description": "Line ending style"
+        },
+        "notas.format.sameLineTags": {
+          "type": "boolean",
+          "default": false,
+          "description": "Put closing tags on the same line"
+        },
+        "notas.format.selfCloseTags": {
+          "type": "boolean",
+          "default": true,
+          "description": "Self-close tags when possible"
+        },
+        "notas.format.preserveNewlines": {
+          "type": "boolean",
+          "default": false,
+          "description": "Preserve empty lines in formatted code"
+        },
+        "notas.format.wrapAttributes": {
+          "type": "string",
+          "default": "auto",
+          "enum": ["auto", "force", "force-aligned", "force-expand-multiline", "aligned-multiple", "preserve"],
+          "description": "How to wrap HTML attributes"
+        },
+        "notas.format.onePropertyPerLine": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enforce one property per line in objects"
+        },
+        "notas.minify.removeComments": {
+          "type": "boolean",
+          "default": true,
+          "description": "Remove comments when minifying code"
+        },
+        "notas.minify.removeWhitespace": {
+          "type": "boolean",
+          "default": true,
+          "description": "Remove unnecessary whitespace when minifying"
+        },
+        "notas.minify.removeConsole": {
+          "type": "boolean",
+          "default": false,
+          "description": "Remove console statements when minifying"
+        },
+        "notas.minify.removeDebugger": {
+          "type": "boolean",
+          "default": true,
+          "description": "Remove debugger statements when minifying"
+        },
+        "notas.minify.shortenNames": {
+          "type": "boolean",
+          "default": false,
+          "description": "Shorten variable names when minifying"
+        },
+        "notas.minify.keepFunctionNames": {
+          "type": "boolean",
+          "default": true,
+          "description": "Preserve function names when minifying"
+        },
+        "notas.minify.keepClassNames": {
+          "type": "boolean",
+          "default": true,
+          "description": "Preserve class names when minifying"
+        },
+        "notas.minify.advancedCompress": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use advanced compression techniques (may increase processing time)"
+        },
+        "notas.minify.deadCodeElimination": {
+          "type": "boolean",
+          "default": false,
+          "description": "Remove unused code when minifying"
+        },
+        "notas.encryption.publicKeyPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to your RSA public key file (.pem)"
+        },
+        "notas.encryption.privateKeyPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to your RSA private key file (.pem)"
+        }
+      }
+    },
+    {
+      "title": "Notas: Commands",
+      "properties": {
+        "notas.commands.file": {
+          "type": "string",
+          "default": "notas-commands.json",
+          "scope": "resource",
+          "description": "Path to the JSON file listing saved terminal commands (array of name + script). Relative to the Notas workspace root or the open folder; or use an absolute path.",
+          "markdownDescription": "Path to the JSON file for the **Commands** sidebar (array of `{ \"name\", \"script\" }`).\n\n- Relative paths use the Notas workspace root when loaded, otherwise the first open folder.\n- Set this under **Workspace** to commit a repo-local file (e.g. `notas-commands.json`).\n- Search settings for **Notas Commands** or the id `notas.commands.file`."
+        }
+      }
+    }
+  ]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "test": "node ./test/runTest.js",
+    "package": "vsce package",
+    "build-install": "npm run package && code --install-extension notas-0.1.0.vsix --force && codium --install-extension notas-0.1.0.vsix --force"
+  },
+  "dependencies": {
+    "simple-git": "^3.30.0",
+    "prettier": "^3.8.1",
+    "terser": "^5.46.0",
+    "cssnano": "^7.1.2",
+    "postcss": "^8.5.6",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "20.x",
+    "@vscode/test-electron": "^2.3.8",
+    "eslint": "^8.56.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/notas/notas-vscode"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Center connection point -->
+  <circle cx="12" cy="12" r="2.5"/>
+  
+  <!-- Branch 1 - Top right -->
+  <path d="M 12 12 L 12 9 Q 12 7, 14 7 L 17 7"/>
+  <circle cx="19" cy="7" r="2.5"/>
+  
+  <!-- Branch 2 - Bottom left -->
+  <path d="M 12 12 L 12 15 Q 12 17, 10 17 L 7 17"/>
+  <circle cx="5" cy="17" r="2.5"/>
+  
+  <!-- Branch 3 - Top left -->
+  <path d="M 12 12 L 9 9"/>
+  <circle cx="7" cy="7" r="2.5"/>
+</svg>
