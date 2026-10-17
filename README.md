@@ -1,142 +1,70 @@
-# Tools
+# Getting Started with Create React App
 
-A personal collection of small, useful daily tools, apps, and proofs of concept.
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-Instead of creating a new GitHub repo for every little project, this repo keeps them all together — but not in the usual monorepo way. **Each project lives on its own branch**, and `main` stays almost empty on purpose.
+## Available Scripts
 
----
+In the project directory, you can run:
 
-## The convention
+### `npm start`
 
-Every project branch is named `<category>/<name>`.
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-| Category   | Meaning                                                       | Example                    |
-| ---------- | ------------------------------------------------------------- | -------------------------- |
-| `poc/`     | Proof of concept — throwaway experiments                      | `poc/myReactApp1`          |
-| `tool/`    | Reusable tools / CLI utilities                                | `tool/xyz`                 |
-| `web/`     | Websites, landing pages, small web apps                       | `web/MyBio`                |
-| `script/`  | One-off scripts (bash, python, node)                          | `script/rename-photos`     |
-| `lib/`     | Reusable libraries / modules meant to be copied or vendored   | `lib/date-utils`           |
-| `doc/`     | Notes, cheatsheets, writeups                                  | `doc/kubernetes-cheatsheet`|
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
 
-Feel free to invent more categories — the only constraint enforced by `scripts/new-project.sh` is `^[a-z]+/[A-Za-z0-9._-]+$`.
+### `npm test`
 
-### Web tools from `template/base` → GitHub Pages
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-For Chrome-extension + web app tools scaffolded from [`template/base`](../../tree/template/base), the live Pages path uses the **repo name** + the **branch name suffix** (not the category):
+### `npm run build`
 
-| Branch | Vite `base` (after init) | Live URL |
-| ------ | ------------------------ | -------- |
-| `tool/loopy` | `/tools/loopy/` | `https://ppeou-gendigital.github.io/tools/loopy/` |
-| `tool/foo` | `/tools/foo/` | `https://ppeou-gendigital.github.io/tools/foo/` |
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-Workflow: branch off `template/base` → `npm run init -- --name <suffix>` → push to `tool/<suffix>`. That sets `base` / `outDir`, the Pages workflow trigger, and PWA metadata. Full checklist: [`TEMPLATE.md` on `template/base`](../../blob/template/base/TEMPLATE.md).
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
----
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-## Quick start
+### `npm run eject`
 
-Create a new project branch from `main`:
+**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-```bash
-scripts/new-project.sh tool/my-new-tool
-```
+If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-Create it in a separate directory so `main` stays checked out here:
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
-```bash
-scripts/new-project.sh tool/my-new-tool --worktree
-# -> creates ../my-new-tool/ with the branch tool/my-new-tool checked out
-```
+You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-Create it and push to `origin` in one shot:
+## Learn More
 
-```bash
-scripts/new-project.sh tool/my-new-tool --worktree --push
-```
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
-List everything you have:
+To learn React, check out the [React documentation](https://reactjs.org/).
 
-```bash
-scripts/list-projects.sh
-```
+### Code Splitting
 
-Work on an existing project without leaving `main`:
+This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
 
-```bash
-git worktree add ../my-new-tool tool/my-new-tool
-```
+### Analyzing the Bundle Size
 
-See [`docs/WORKTREES.md`](docs/WORKTREES.md) for more on worktrees.
+This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
 
----
+### Making a Progressive Web App
 
-## Project Index
+This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
 
-Add a row here every time you create a new project. Replace `<user>/<repo>` with the actual GitHub path once the remote is set up.
+### Advanced Configuration
 
-### `tool/`
+This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
 
-| Name | Description | Branch |
-| ---- | ----------- | ------ |
-| loopy | Chrome browser extension (Manifest V3) | [`tool/loopy`](../../tree/tool/loopy) |
+### Deployment
 
-### `poc/`
+This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
 
-| Name | Description | Branch |
-| ---- | ----------- | ------ |
-| _(none yet)_ | | |
+### `npm run build` fails to minify
 
-### `web/`
-
-| Name | Description | Branch |
-| ---- | ----------- | ------ |
-| _(none yet)_ | | |
-
-### `script/`
-
-| Name | Description | Branch |
-| ---- | ----------- | ------ |
-| _(none yet)_ | | |
-
-### `lib/`
-
-| Name | Description | Branch |
-| ---- | ----------- | ------ |
-| _(none yet)_ | | |
-
-### `doc/`
-
-| Name | Description | Branch |
-| ---- | ----------- | ------ |
-| _(none yet)_ | | |
-
-> Tip: `scripts/list-projects.sh` prints branches grouped by category if you ever want to regenerate this index.
-
----
-
-## Rules (read these before you shoot yourself in the foot)
-
-Because each project branch has its own, unrelated file tree, this repo does not behave like a normal one. Follow these rules:
-
-1. **Never `git merge` one project branch into another** (or into `main`). Doing so will fuse two unrelated projects into an unrecoverable mess. If you need code from one project in another, copy the files by hand or extract them into a `lib/<name>` branch that you vendor.
-2. **Pull Requests stay within a single project.** A feature branch like `tool/xyz-feature` should target `tool/xyz`, never `main`.
-3. **`main` only holds scaffolding** — this README, `.gitignore`, `LICENSE`, and `scripts/`. Nothing else lands here.
-4. **Scaffolding changes do not auto-propagate.** If you update `.gitignore` on `main`, existing project branches keep the old one. Cherry-pick if you want the update everywhere.
-5. **CI belongs on the project branch**, not on `main`. `main` has no code to build or test.
-
----
-
-## Layout of `main`
-
-```
-.
-├── README.md              # this file
-├── LICENSE                # MIT
-├── .gitignore             # common ignores (OS, editors, Node, Python, builds)
-├── scripts/
-│   ├── new-project.sh     # create a new <category>/<name> branch
-│   └── list-projects.sh   # list local + remote branches grouped by category
-└── docs/
-    └── WORKTREES.md       # how to use git worktree with this repo
-```
+This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)

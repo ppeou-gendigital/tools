@@ -1,0 +1,141 @@
+import React, { createContext, useContext, useReducer } from 'react';
+
+// Define context
+const AppContext = createContext();
+
+// Initial state
+const initialState = {
+  data: [],
+  loading: false,
+  error: null,
+};
+
+// Reducer function
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'FETCH_DATA_START':
+      return { ...state, loading: true, error: null };
+    case 'FETCH_DATA_SUCCESS':
+      return { ...state, loading: false, data: action.payload };
+    case 'FETCH_DATA_ERROR':
+      return { ...state, loading: false, error: action.payload };
+    default:
+      return state;
+  }
+};
+
+// Middleware function
+const loggerMiddleware = (dispatch) => (action) => {
+  console.log('Action:', action);
+  dispatch(action);
+};
+
+const asyncMiddleware = (dispatch) => (action) => {
+    if (typeof action === 'function') {
+      action(dispatch);
+      return;
+    }
+    dispatch(action);
+  };
+
+
+// Utility to apply middleware
+const applyMiddleware = (dispatch, middlewares) => {
+  return middlewares.reduce((prevDispatch, middleware) => middleware(prevDispatch), dispatch);
+};
+
+// Context provider component
+const AppProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  // Apply middleware
+  const enhancedDispatch = applyMiddleware(dispatch, [loggerMiddleware, asyncMiddleware]);
+
+  return (
+    <AppContext.Provider value={{ state, dispatch: enhancedDispatch }}>
+      {children}
+    </AppContext.Provider>
+  );
+};
+
+// Custom hook to consume context
+const useAppContext = () => {
+  return useContext(AppContext);
+};
+
+export { AppProvider, useAppContext };
+
+
+/////////////////////
+import React, { useReducer } from 'react';
+
+// Define initial states
+const initialUserState = { name: '', age: null };
+const initialSettingsState = { theme: 'light', notificationsEnabled: true };
+
+// Define sub-reducers
+const userReducer = (state, action) => {
+  switch (action.type) {
+    case 'UPDATE_NAME':
+      return { ...state, name: action.payload };
+    case 'UPDATE_AGE':
+      return { ...state, age: action.payload };
+    default:
+      return state;
+  }
+};
+
+const settingsReducer = (state, action) => {
+  switch (action.type) {
+    case 'TOGGLE_THEME':
+      return { ...state, theme: state.theme === 'light' ? 'dark' : 'light' };
+    case 'TOGGLE_NOTIFICATIONS':
+      return { ...state, notificationsEnabled: !state.notificationsEnabled };
+    default:
+      return state;
+  }
+};
+
+// Combine reducers
+const mainReducer = (state, action) => ({
+  user: userReducer(state.user, action),
+  settings: settingsReducer(state.settings, action),
+});
+
+// Initial combined state
+const initialCombinedState = {
+  user: initialUserState,
+  settings: initialSettingsState,
+};
+
+const MyComponent = () => {
+  const [state, dispatch] = useReducer(mainReducer, initialCombinedState);
+
+  return (
+    <div>
+      {/* User Section */}
+      <h2>User Profile</h2>
+      <p>Name: {state.user.name}</p>
+      <p>Age: {state.user.age}</p>
+      <button onClick={() => dispatch({ type: 'UPDATE_NAME', payload: 'John Doe' })}>
+        Update Name
+      </button>
+      <button onClick={() => dispatch({ type: 'UPDATE_AGE', payload: 30 })}>
+        Update Age
+      </button>
+
+      {/* Settings Section */}
+      <h2>Settings</h2>
+      <p>Theme: {state.settings.theme}</p>
+      <p>Notifications: {state.settings.notificationsEnabled ? 'Enabled' : 'Disabled'}</p>
+      <button onClick={() => dispatch({ type: 'TOGGLE_THEME' })}>
+        Toggle Theme
+      </button>
+      <button onClick={() => dispatch({ type: 'TOGGLE_NOTIFICATIONS' })}>
+        Toggle Notifications
+      </button>
+    </div>
+  );
+};
+
+export default MyComponent;

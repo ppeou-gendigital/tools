@@ -1,0 +1,27 @@
+.sortable-list {
+  outline: solid 1px hsla(var(--bulma-scheme-h),var(--bulma-scheme-s),var(--bulma-scheme-invert-l));
+  border-radius: var(--bulma-input-radius);
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.25rem;
+  padding: 0.25rem;
+  ul {margin-inline-start: 0.5rem}
+}
+.sortable-list__controls {
+  display: flex;
+  flex-direction: row;
+  column-gap: 0.25rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.sortable-list {
+  .select select:not([multiple]) {
+    width: 100%;
+    height: auto;
+    padding: 0;
+  }
+  option {
+    padding: .25rem;
+  }
+}

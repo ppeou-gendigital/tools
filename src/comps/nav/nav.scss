@@ -1,0 +1,5 @@
+.tabs.is-boxed li a.active {
+    background-color: var(--bulma-tabs-boxed-link-active-background-color);
+    border-color: var(--bulma-tabs-boxed-link-active-border-color);
+    border-bottom-color: var(--bulma-tabs-boxed-link-active-border-bottom-color) !important;
+}

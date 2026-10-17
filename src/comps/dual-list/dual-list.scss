@@ -1,0 +1,22 @@
+.dual-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  outline: solid 1px hsla(var(--bulma-scheme-h),var(--bulma-scheme-s),var(--bulma-scheme-invert-l));
+  border-radius: var(--bulma-input-radius);
+  column-gap: 0.75rem;
+}
+
+.dual-list > div:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.75rem;
+  align-items: stretch;
+  justify-content: center;
+  padding: 0.75rem;
+}
+.dual-list {
+  select {width: 100%;}
+  option {
+    padding: .25rem;
+  }
+}
