@@ -1,6 +1,10 @@
 const vscode = require('vscode');
 const path = require('path');
 
+async function openEncryptionSettings() {
+  await vscode.commands.executeCommand('workbench.action.openSettings', 'notas.encryption');
+}
+
 /**
  * Lock (encrypt) a file
  * @param {Object} services - Services object
@@ -21,16 +25,14 @@ async function lockFile(services, providers, fileUri) {
       );
       
       if (choice === 'Open Settings') {
-        // Focus on encryption view
-        vscode.commands.executeCommand('notas.encryption.focus');
+        await openEncryptionSettings();
       }
       return;
     }
     
     // Save any open editors for this file (including decrypted views) but don't close
-    const openEditors = vscode.window.visibleTextEditors;
-    for (const editor of openEditors) {
-      const editorPath = editor.document.uri.scheme === 'decrypted' 
+    for (const editor of vscode.window.visibleTextEditors) {
+      const editorPath = editor.document.uri.scheme === 'decrypted'
         ? editor.document.uri.path 
         : editor.document.uri.fsPath;
       
@@ -99,7 +101,7 @@ async function unlockFile(services, providers, fileUri) {
       );
       
       if (choice === 'Open Settings') {
-        vscode.commands.executeCommand('notas.encryption.focus');
+        await openEncryptionSettings();
       }
       return;
     }
@@ -124,7 +126,7 @@ async function unlockFile(services, providers, fileUri) {
       
       // Open in editor with explicit edit mode
       const doc = await vscode.workspace.openTextDocument(decryptedUri);
-      const editor = await vscode.window.showTextDocument(doc, {
+      await vscode.window.showTextDocument(doc, {
         preview: false,
         viewColumn: vscode.ViewColumn.Active,
         preserveFocus: false

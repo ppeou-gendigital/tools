@@ -99,7 +99,9 @@ All persistent configuration is now in the Settings UI (searchable, typed, valid
 - `src/providers/formatSettingsWebviewProvider.js`
 - `src/providers/compareSettingsWebviewProvider.js`
 - Parts of `src/providers/configWebviewProvider.js` (Config section can be removed)
-- `src/providers/encryptionWebviewProvider.js` (Settings moved to Settings page)
+
+### Removed
+- `src/providers/encryptionWebviewProvider.js` (Encryption key paths now live in VS Code Settings)
 
 ## Migration Notes
 

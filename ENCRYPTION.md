@@ -54,14 +54,12 @@ openssl rsa -in private.pem -pubout -out public.pem
 
 ### 2. Configure Key Paths in VS Code
 
-1. Open the Notas sidebar
-2. Go to the **Encryption** panel
-3. Click **Browse...** next to "Public Key Path"
-4. Select your `public.pem` file
-5. Click **Browse...** next to "Private Key Path"
-6. Select your `private.pem` file
+1. Open VS Code Settings
+2. Search for `notas encryption`
+3. Set **Notas › Encryption: Public Key Path** to your `public.pem` file
+4. Set **Notas › Encryption: Private Key Path** to your `private.pem` file
 
-**Note**: Paths are securely stored using VS Code's Secrets API.
+**Note**: Key paths are stored in VS Code settings. Existing paths previously stored via the extension's secret storage are migrated automatically the first time they are read.
 
 ### 3. Using Existing SSH Keys (Optional)
 
@@ -159,7 +157,7 @@ git push
 ## Troubleshooting
 
 ### "Encryption keys not configured"
-- Make sure you've set both public and private key paths in the Encryption panel
+- Make sure you've set both public and private key paths in VS Code Settings (`notas.encryption.publicKeyPath` and `notas.encryption.privateKeyPath`)
 
 ### "Failed to read public/private key"
 - Check that the key files exist at the configured paths
@@ -183,7 +181,7 @@ git push
 openssl genpkey -algorithm RSA -out ~/keys/notas-private.pem -pkeyopt rsa_keygen_bits:2048
 openssl rsa -in ~/keys/notas-private.pem -pubout -out ~/keys/notas-public.pem
 
-# 2. Configure in VS Code (Encryption panel)
+# 2. Configure in VS Code Settings
 # Public key: /Users/you/keys/notas-public.pem
 # Private key: /Users/you/keys/notas-private.pem
 

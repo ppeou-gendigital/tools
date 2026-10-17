@@ -10,7 +10,6 @@ const ConfigWebviewProvider = require('./src/providers/configWebviewProvider');
 const SyncPanelProvider = require('./src/providers/syncPanelProvider');
 const CompareURLsPanelProvider = require('./src/providers/compareURLsPanelProvider');
 const CommandsPanelProvider = require('./src/providers/commandsPanelProvider');
-const EncryptionWebviewProvider = require('./src/providers/encryptionWebviewProvider');
 const DecryptedFileSystemProvider = require('./src/providers/decryptedFileSystemProvider');
 const EncryptedFileDecorationProvider = require('./src/providers/encryptedFileDecorationProvider');
 
@@ -49,7 +48,6 @@ async function activate(context) {
   providers.syncPanel = new SyncPanelProvider(services.workspace, services.scheduler);
   providers.compareURLsPanel = new CompareURLsPanelProvider();
   providers.commandsPanel = new CommandsPanelProvider(services.workspace);
-  providers.encryption = new EncryptionWebviewProvider(services.encryption);
   providers.decryptedFileSystem = new DecryptedFileSystemProvider(services.encryption);
   providers.encryptedFileDecoration = new EncryptedFileDecorationProvider(services.encryption);
   

@@ -1,5 +1,8 @@
+const vscode = require('vscode');
 const crypto = require('crypto');
 const fs = require('fs').promises;
+const path = require('path');
+const os = require('os');
 
 /**
  * Encryption Service
@@ -9,13 +12,70 @@ class EncryptionService {
   constructor(context) {
     this.context = context;
   }
-  
+
+  _getConfig() {
+    return vscode.workspace.getConfiguration('notas');
+  }
+
+  _normalizeKeyPath(filePath) {
+    if (typeof filePath !== 'string') {
+      return '';
+    }
+
+    const trimmedPath = filePath.trim();
+    if (!trimmedPath) {
+      return '';
+    }
+
+    if (trimmedPath === '~') {
+      return os.homedir();
+    }
+
+    if (trimmedPath.startsWith('~/') || trimmedPath.startsWith('~\\')) {
+      return path.join(os.homedir(), trimmedPath.slice(2));
+    }
+
+    return trimmedPath;
+  }
+
+  async _setKeyPath(settingKey, legacySecretKey, filePath) {
+    const normalizedPath = this._normalizeKeyPath(filePath);
+    const config = this._getConfig();
+
+    await config.update(settingKey, normalizedPath, vscode.ConfigurationTarget.Global);
+
+    if (this.context?.secrets?.delete) {
+      await this.context.secrets.delete(legacySecretKey);
+    }
+  }
+
+  async _getKeyPath(settingKey, legacySecretKey) {
+    const config = this._getConfig();
+    const configuredPath = this._normalizeKeyPath(config.get(settingKey));
+    if (configuredPath) {
+      return configuredPath;
+    }
+
+    const legacyPath = this._normalizeKeyPath(await this.context.secrets.get(legacySecretKey));
+    if (!legacyPath) {
+      return undefined;
+    }
+
+    await config.update(settingKey, legacyPath, vscode.ConfigurationTarget.Global);
+
+    if (this.context?.secrets?.delete) {
+      await this.context.secrets.delete(legacySecretKey);
+    }
+
+    return legacyPath;
+  }
+
   /**
    * Set public key path
    * @param {string} path - Path to public key file
    */
   async setPublicKeyPath(path) {
-    await this.context.secrets.store('notas.encryption.publicKeyPath', path);
+    await this._setKeyPath('encryption.publicKeyPath', 'notas.encryption.publicKeyPath', path);
   }
   
   /**
@@ -23,7 +83,7 @@ class EncryptionService {
    * @param {string} path - Path to private key file
    */
   async setPrivateKeyPath(path) {
-    await this.context.secrets.store('notas.encryption.privateKeyPath', path);
+    await this._setKeyPath('encryption.privateKeyPath', 'notas.encryption.privateKeyPath', path);
   }
   
   /**
@@ -31,7 +91,7 @@ class EncryptionService {
    * @returns {Promise<string|undefined>}
    */
   async getPublicKeyPath() {
-    return await this.context.secrets.get('notas.encryption.publicKeyPath');
+    return await this._getKeyPath('encryption.publicKeyPath', 'notas.encryption.publicKeyPath');
   }
   
   /**
@@ -39,7 +99,7 @@ class EncryptionService {
    * @returns {Promise<string|undefined>}
    */
   async getPrivateKeyPath() {
-    return await this.context.secrets.get('notas.encryption.privateKeyPath');
+    return await this._getKeyPath('encryption.privateKeyPath', 'notas.encryption.privateKeyPath');
   }
   
   /**
@@ -171,12 +231,10 @@ class EncryptionService {
     const decipher = crypto.createDecipheriv('aes-256-gcm', aesKey, iv);
     decipher.setAuthTag(authTag);
     
-    const decrypted = Buffer.concat([
+    return Buffer.concat([
       decipher.update(encrypted),
       decipher.final()
     ]);
-    
-    return decrypted;
   }
   
   /**

@@ -4,6 +4,7 @@ node_modules/
 # Build outputs
 *.vsix
 out/
+.vscode-test/
 
 # Environment variables
 .env
