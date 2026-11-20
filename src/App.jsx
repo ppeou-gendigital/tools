@@ -373,7 +373,7 @@ export default function App({
       </Box>
 
       <Box className="content">
-        <ScrollArea h="100%" type="auto" offsetScrollbars scrollbarSize={8}>
+        <ScrollArea h="100%" type="auto" scrollbarSize={8}>
           <Box
             px="md"
             className="groups-wrap"
