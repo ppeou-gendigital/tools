@@ -8,7 +8,7 @@ import {
   DEFAULT_REPORT_FIELD_IDS,
   resolveFields,
 } from './fields.js'
-import { emptyFilters, FILTER_KEYS, normalizeItems } from './filters.js'
+import { emptyFilters, FILTER_KEYS, idsOf, itemsForIds, normalizeItems } from './filters.js'
 
 export const EMPTY_AVAILABLE = {
   projects: [],
@@ -50,10 +50,12 @@ export function normalizeAvailable(available = {}) {
   }
 }
 
-function normalizeFilters(filters = {}) {
+// Pools only supply display names for ids that were stored bare; anything the
+// selection already carries keeps its own name.
+function normalizeFilters(filters = {}, pools = {}) {
   const base = emptyFilters()
   for (const key of FILTER_KEYS) {
-    base[key] = normalizeItems(filters[key])
+    base[key] = itemsForIds(idsOf(filters[key]), filters[key], pools[key])
   }
   return base
 }
@@ -116,11 +118,15 @@ function fromLegacy(raw, fallbackName) {
 
   // lookupList.fields was the "columns to fetch" set; columns was the ordered
   // subset that ended up in the export.
-  const fetchFields = resolveFields(
-    normalizeItems(lookup.fields ?? legacy.columns).map((item) => item.id),
+  const fetchFields = itemsForIds(
+    idsOf(lookup.fields ?? legacy.columns),
+    lookup.fields ?? legacy.columns,
+    available.fields,
   )
-  const reportFields = resolveFields(
-    normalizeItems(legacy.columns).map((item) => item.id),
+  const reportFields = itemsForIds(
+    idsOf(legacy.columns),
+    legacy.columns,
+    available.fields,
   )
 
   return createProfile({
@@ -128,13 +134,16 @@ function fromLegacy(raw, fallbackName) {
     origin: JIRA_ORIGIN,
     available,
     selection: createSelection({
-      filters: normalizeFilters({
-        projects: legacy.projects,
-        resolutions: legacy.resolutions,
-        sprints: legacy.sprints,
-        types: legacy.types,
-        statuses: legacy.status,
-      }),
+      filters: normalizeFilters(
+        {
+          projects: legacy.projects,
+          resolutions: legacy.resolutions,
+          sprints: legacy.sprints,
+          types: legacy.types,
+          statuses: legacy.status,
+        },
+        available,
+      ),
       fetchFields,
       reportFields,
       resources: normalizeResources(legacy.users),
@@ -152,12 +161,16 @@ export function normalizeProfile(raw) {
     origin: String(raw.origin ?? raw.jiraOrigin ?? JIRA_ORIGIN),
     available,
     selection: createSelection({
-      filters: normalizeFilters(selection.filters),
-      fetchFields: resolveFields(
-        normalizeItems(selection.fetchFields).map((item) => item.id),
+      filters: normalizeFilters(selection.filters, available),
+      fetchFields: itemsForIds(
+        idsOf(selection.fetchFields),
+        selection.fetchFields,
+        available.fields,
       ),
-      reportFields: resolveFields(
-        normalizeItems(selection.reportFields).map((item) => item.id),
+      reportFields: itemsForIds(
+        idsOf(selection.reportFields),
+        selection.reportFields,
+        available.fields,
       ),
       resources: normalizeResources(selection.resources),
       orderBy: normalizeOrderBy(selection.orderBy),
