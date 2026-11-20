@@ -1,0 +1,92 @@
+{
+  "total": 4,
+  "issues": [
+    {
+      "key": "WEBEXP-95583",
+      "fields": {
+        "issuetype": { "name": "Sub-task" },
+        "status": { "name": "In Progress" },
+        "priority": { "name": "P2" },
+        "summary": "Update the dictionary values",
+        "assignee": { "name": "mkaplan", "displayName": "Michael Kaplan" },
+        "timeoriginalestimate": null,
+        "timeestimate": 7200,
+        "comment": { "comments": [], "total": 0 },
+        "subtasks": []
+      }
+    },
+    {
+      "key": "WEBEXP-95471",
+      "fields": {
+        "issuetype": { "name": "User Story" },
+        "status": { "name": "In Progress" },
+        "priority": { "name": "P1" },
+        "summary": "LL.N.com | Enhance Product tile component",
+        "assignee": { "name": "mkaplan", "displayName": "Michael Kaplan" },
+        "customfield_16064": { "displayName": "Sridhar Udayakumar" },
+        "customfield_20600": null,
+        "customfield_10008": 1,
+        "customfield_10006": [],
+        "timeoriginalestimate": null,
+        "timeestimate": 14400,
+        "comment": {
+          "total": 2,
+          "comments": [
+            {
+              "id": "10001",
+              "author": { "displayName": "Michael Kaplan" },
+              "updateAuthor": { "displayName": "Michael Kaplan" },
+              "body": "Daily standup notes &amp; <b>follow up</b>",
+              "created": "2025-05-28T15:45:00.000+0000",
+              "updated": "2025-05-28T15:45:00.000+0000"
+            },
+            {
+              "id": "10002",
+              "author": { "displayName": "Sridhar Udayakumar" },
+              "updateAuthor": { "displayName": "Sridhar Udayakumar" },
+              "body": "QA validated on staging",
+              "created": "2025-05-29T09:00:00.000+0000",
+              "updated": "2025-05-29T10:30:00.000+0000"
+            }
+          ]
+        },
+        "subtasks": [{ "key": "WEBEXP-95583" }]
+      }
+    },
+    {
+      "key": "WEBEXP-95523",
+      "fields": {
+        "issuetype": { "name": "Bug" },
+        "status": { "name": "Open" },
+        "priority": { "name": "P0" },
+        "summary": "Meridian pricing copy <broken>",
+        "assignee": null,
+        "customfield_16064": null,
+        "customfield_20600": "2025-06-02",
+        "customfield_10008": 3,
+        "customfield_10006": [{ "value": "Impediment", "disable": false }],
+        "timeoriginalestimate": 28800,
+        "timeestimate": 3600,
+        "comment": { "comments": [], "total": 0 },
+        "subtasks": [
+          { "key": "WEBEXP-95608" },
+          { "key": "WEBEXP-99999" }
+        ]
+      }
+    },
+    {
+      "key": "WEBEXP-95608",
+      "fields": {
+        "issuetype": { "name": "Sub-task" },
+        "status": { "name": "Open" },
+        "priority": { "name": "P1" },
+        "summary": "misc tasks",
+        "assignee": { "name": "rbommadi", "displayName": "Rajashekar Bommadi" },
+        "timeoriginalestimate": null,
+        "timeestimate": 28800,
+        "comment": { "comments": [], "total": 0 },
+        "subtasks": []
+      }
+    }
+  ]
+}
