@@ -186,7 +186,7 @@ test('A/B testing link keeps disabled mode', () => {
 
   assert.equal(
     hrefFor(result, 'abTesting'),
-    'https://author.example.com/content/mysite/us/en/page.html?mboxDisable=1&wcmmode=disabled',
+    'https://author.example.com/content/mysite/us/en/page.html?wcmmode=disabled&mboxDisable=1',
   )
 })
 
@@ -232,11 +232,54 @@ test('cache-bust works on DAM assets and replaces an existing param', () => {
   )
 })
 
-test('cache-bust is disabled for non-AEM URLs', () => {
+test('param-only links still work on non-AEM URLs', () => {
   const result = buildAemLinkGroups('https://example.com/foo', { now: NOW })
 
   assert.ok(linkIds(result, 'page').includes('cacheBust'))
-  assert.equal(hrefFor(result, 'cacheBust'), null)
+  assert.equal(
+    hrefFor(result, 'cacheBust'),
+    'https://example.com/foo?_random_=1730000000000',
+  )
+  assert.equal(
+    hrefFor(result, 'abTesting'),
+    'https://example.com/foo?mboxDisable=1',
+  )
+  assert.equal(
+    hrefFor(result, 'disabled'),
+    'https://example.com/foo?wcmmode=disabled',
+  )
+  // Path-based destinations stay disabled.
+  assert.equal(hrefFor(result, 'edit'), null)
+  assert.equal(hrefFor(result, 'properties'), null)
+  assert.equal(hrefFor(result, 'crx'), null)
+})
+
+test('param-only links work on vanity and rewritten URLs', () => {
+  const vanity = buildAemLinkGroups('https://us.mysite.com/page.html', {
+    now: NOW,
+  })
+  assert.equal(vanity.parsed.isAem, false)
+  assert.equal(
+    hrefFor(vanity, 'cacheBust'),
+    'https://us.mysite.com/page.html?_random_=1730000000000',
+  )
+  assert.equal(
+    hrefFor(vanity, 'abTesting'),
+    'https://us.mysite.com/page.html?mboxDisable=1',
+  )
+
+  const rewritten = buildAemLinkGroups(
+    'https://mysite.com/en-us/page.html?utm_source=newsletter',
+    { now: NOW },
+  )
+  assert.equal(
+    hrefFor(rewritten, 'abTesting'),
+    'https://mysite.com/en-us/page.html?utm_source=newsletter&mboxDisable=1',
+  )
+  assert.equal(
+    hrefFor(rewritten, 'disabled'),
+    'https://mysite.com/en-us/page.html?utm_source=newsletter&wcmmode=disabled',
+  )
 })
 
 test('cloud shell URLs get /ui#/aem prefixes', () => {
@@ -302,8 +345,10 @@ test('site roots do not become page edit links', () => {
   )
 })
 
-test('non-AEM URLs keep every group and disable every link', () => {
-  const result = buildAemLinkGroups('https://example.com/foo?bar=1')
+test('non-AEM URLs keep every group and only enable param-only links', () => {
+  const result = buildAemLinkGroups('https://example.com/foo?bar=1', {
+    now: NOW,
+  })
 
   assert.equal(result.parsed.isAem, false)
   assert.deepEqual(
@@ -311,9 +356,13 @@ test('non-AEM URLs keep every group and disable every link', () => {
     ['page', 'manage', 'developer', 'consoles', 'components'],
   )
 
-  const links = result.groups.flatMap((group) => group.links)
-  assert.ok(links.length > 0)
-  assert.ok(links.every((link) => link.href === null))
+  const enabled = result.groups
+    .flatMap((group) => group.links)
+    .filter((link) => link.href !== null)
+    .map((link) => link.id)
+    .sort()
+  assert.deepEqual(enabled, ['abTesting', 'cacheBust', 'disabled'])
+
   const pageGroup = result.groups.find((group) => group.id === 'page')
   assert.equal(
     pageGroup.links.find((link) => link.id === 'edit').disabledReason,

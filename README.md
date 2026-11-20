@@ -19,6 +19,10 @@ the document scrolls):
 - pinnable links, persisted in `chrome.storage.local`
 - Tabler icons and tooltips for every destination
 - disabled destinations stay in place with a reason on hover
+- query-param actions ("Disabled mode", "Disable A/B testing", "Bust page
+  cache") have no AEM guard, so they also work on vanity and rewritten URLs;
+  they target the rendered page when the URL has a `/content` path and the
+  current URL otherwise
 - single-key shortcuts for common destinations (`E` edit, `P` properties,
   `D` disabled, `C` CRX/DE, `S` sites, `A` assets, and more in tooltips)
 - paste an AEM author URL when the current tab is a publish, preview, or

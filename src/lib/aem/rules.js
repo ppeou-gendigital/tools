@@ -16,6 +16,19 @@ import {
 } from './guards.js'
 import { withParam } from './context.js'
 
+// Query-param actions have no URL guard: they target the rendered page when the
+// URL carries a /content path, and the current URL otherwise (vanity, rewritten
+// or publish URLs). AEM resolves vanity/rewrite URLs server-side, so appending
+// a param is still meaningful there.
+function renderedTarget(ctx) {
+  if (!pageOnly(ctx)) return ctx.url
+
+  const params = new URLSearchParams(ctx.params)
+  if (ctx.mode === 'disabled') params.set('wcmmode', 'disabled')
+  const q = params.toString()
+  return `${ctx.origin}${ctx.path}.html${q ? `?${q}` : ''}${ctx.h}`
+}
+
 export default [
   /* ------------------------------- Page ------------------------------- */
   {
@@ -62,7 +75,9 @@ export default [
     shortcut: 'd',
     description: 'Rendered page with wcmmode=disabled',
     build: (ctx) =>
-      pageOnly(ctx) ? `${ctx.origin}${ctx.path}.html${ctx.disableQ}${ctx.h}` : null,
+      ctx.isDam
+        ? null
+        : withParam(renderedTarget(ctx), 'wcmmode', 'disabled'),
   },
   {
     id: 'abTesting',
@@ -70,15 +85,8 @@ export default [
     label: 'Disable A/B testing',
     icon: 'flask',
     description: 'Add mboxDisable=1 to the rendered page',
-    build: (ctx) => {
-      if (!pageOnly(ctx)) return null
-
-      const params = new URLSearchParams(ctx.params)
-      params.set('mboxDisable', '1')
-      if (ctx.mode === 'disabled') params.set('wcmmode', 'disabled')
-
-      return `${ctx.origin}${ctx.path}.html?${params.toString()}${ctx.h}`
-    },
+    build: (ctx) =>
+      ctx.isDam ? null : withParam(renderedTarget(ctx), 'mboxDisable', '1'),
   },
   {
     id: 'cacheBust',
@@ -86,10 +94,7 @@ export default [
     label: 'Bust page cache',
     icon: 'refresh',
     description: 'Append a _random_ param to the current URL',
-    build: (ctx) =>
-      aemOnly(ctx)
-        ? withParam(ctx.url, '_random_', String(ctx.now))
-        : null,
+    build: (ctx) => withParam(ctx.url, '_random_', String(ctx.now)),
   },
   {
     id: 'pageJson',

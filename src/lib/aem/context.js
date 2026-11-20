@@ -3,8 +3,6 @@ import { parseAemUrl } from './parse.js'
 // Derive the fields every rule template needs, so rules stay one-liners.
 export function enrichContext(parsed, { now = Date.now() } = {}) {
   const params = new URLSearchParams(parsed.params)
-  const disabled = new URLSearchParams(params)
-  disabled.set('wcmmode', 'disabled')
 
   return {
     ...parsed,
@@ -14,7 +12,6 @@ export function enrichContext(parsed, { now = Date.now() } = {}) {
     item: parsed.resourcePath ? encodeURIComponent(parsed.resourcePath) : '',
     q: params.toString() ? `?${params.toString()}` : '',
     h: parsed.hash ? `#${parsed.hash}` : '',
-    disableQ: `?${disabled.toString()}`,
   }
 }
 
