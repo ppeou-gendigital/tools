@@ -1,0 +1,18 @@
+html {
+  width: 460px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mantine-color-default-border) transparent;
+}
+
+body {
+  width: 100%;
+  margin: 0;
+  overflow-x: clip;
+  background: var(--mantine-color-body);
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 120px;
+}
