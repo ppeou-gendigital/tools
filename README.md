@@ -1,32 +1,173 @@
 # Jira Capacity
 
-Chrome extension (Manifest V3) that exports Jira capacity reports and ticket
-comments as formatted HTML for pasting into Excel.
+Chrome extension (Manifest V3) that exports two spreadsheets from Jira as
+formatted HTML on the clipboard, which Excel pastes as a real table:
 
-Built with React (plain JavaScript), Mantine, and Vite via
+- **Generate Capacity Report** — one row per issue, plus a column per person
+  holding the remaining estimate of that person's subtasks.
+- **Export Tickets and Comments** — one row per issue, its subtasks nested
+  beneath it, with the full comment thread in the last column.
+
+Built with React (plain JavaScript), Mantine, and Vite through
 `@crxjs/vite-plugin`.
 
-> This extension only works when the popup is opened on a logged-in Jira tab.
-> Every Jira request is executed by the content script running on that tab, so
-> the corporate SSO session is the only credential involved.
+## The one hard constraint
+
+**The popup only works when it is opened on a logged-in Jira tab.**
+
+Every Jira request is executed by a content script running on that tab, so the
+corporate SSO session in the browser is the only credential involved. There is
+no manual-URL field, no cross-origin fallback, and no background worker holding
+cookies. If the active tab is not `https://jira.corp.nortonlifelock.com/*`, the
+popup refuses to export and explains why.
 
 ## Develop
 
 ```bash
-npm install
-npm run dev     # Vite dev server with extension HMR
+npm install     # .npmrc sets legacy-peer-deps=true, see below
+npm run dev     # Vite dev server (popup renders in a normal tab)
 npm test        # node:test suite for the pure report engine
 npm run build   # production build into dist/
 ```
 
-Load `dist/` via **chrome://extensions → Developer mode → Load unpacked**.
+Load `dist/` via **chrome://extensions → Developer mode → Load unpacked**, then
+open the popup while a Jira tab is focused.
+
+`.npmrc` disables peer resolution because `@vitejs/plugin-react` declares
+optional Babel and React Compiler peers that npm 11 resolves to conflicting
+majors. Neither transform is used here.
 
 ## Layout
 
 ```
-src/lib/jira/       pure engine: JQL, field catalog, parsers, table builder
-src/runtime/        chrome messaging, tab gate, clipboard, injected runner
-src/state/          chrome.storage backed profiles and working config
-src/components/     popup UI pieces
-src/App.jsx         popup shell
+src/lib/jira/          pure engine — no Chrome APIs, no network, tested
+  config.js            host, endpoints, storage keys
+  fields.js            field catalog + `kind`, default/comment column sets
+  jql.js               one JQL builder for both exports
+  filters.js           ordered { id, name } selection helpers
+  profiles.js          profile parsing, legacy migration, resource keys
+  order.js             move/remove for ordered lists
+  export/
+    parse-issueview.js  issue-view HTML table → rows + per-assignee seconds
+    parse-issues.js     REST search payload → parent rows with children
+    cells.js            one renderer per field kind, HTML escaping
+    rows.js             resource hour rollup, row counting
+    table.js            the HTML table copied to the clipboard
+    fixtures/           trimmed real issue-view page + a search payload
+
+src/runtime/           Chrome-facing glue
+  protocol.js          message types shared by popup and runner
+  http.js              same-origin fetch with signed-out detection
+  runner/index.js      content-script entry (message server)
+  runner/handlers.js   issue-view, search, and picker requests
+  chrome/tab.js        active-tab gate
+  chrome/messaging.js  request/response, timeout, inject-on-retry
+  storage.js           chrome.storage.local + localStorage fallback
+  clipboard.js         text/html clipboard write
+  download.js          profile JSON download
+
+src/state/             useProfiles + per-profile working config
+src/components/        popup pieces
+src/App.jsx            popup shell
 ```
+
+The runner is a content script, so `@crxjs/vite-plugin` bundles it (with a
+loader chunk) and adds it to `web_accessible_resources`. When the popup finds
+no listener — typically a Jira tab that predates the extension install — it
+re-injects the manifest's first content-script file once and retries.
+
+## Profiles
+
+A profile is one importable JSON document:
+
+```json
+{
+  "schemaVersion": 1,
+  "name": "WebExp",
+  "origin": "https://jira.corp.nortonlifelock.com",
+  "available": {
+    "projects": [{ "id": "WEBEXP", "name": "WEBEXP" }],
+    "types": [], "statuses": [], "resolutions": [],
+    "fields": [{ "id": "customfield_10008", "name": "Story Points" }]
+  },
+  "selection": {
+    "filters": {
+      "projects": [], "resolutions": [], "sprints": [],
+      "types": [], "statuses": []
+    },
+    "fetchFields": [{ "id": "summary", "name": "Summary" }],
+    "reportFields": [{ "id": "summary", "name": "Summary" }],
+    "resources": [{ "id": "resource:mkaplan", "name": "Michael Kaplan" }],
+    "orderBy": [{ "id": "priority", "direction": "DESC" }]
+  }
+}
+```
+
+- `available` is the option catalog shown in the dropdowns; `selection` is what
+  is currently picked. Keeping them apart means an exported profile stays
+  editable without losing choices that are not selected right now.
+- Edits live in `chrome.storage.local` under one key per profile entry, so the
+  imported document is never mutated. Export writes the current working copy.
+- Import accepts the JSON produced by the previous CRA build
+  (`{ jira: { ..., lookupList: { ... } } }`) and migrates it: `lookupList.fields`
+  becomes `fetchFields`, `jira.columns` becomes `reportFields`, `jira.users`
+  becomes resources, and `jira.status` becomes `statuses`.
+- Resources are stored as `resource:<login>` so a person can never collide with
+  a field id in the same row. Resource columns are matched to subtasks by
+  **display name**, which is exactly what the issue-view assignee cell contains.
+- "Reload field list from Jira" in the profile menu fetches
+  `/rest/gadget/1.0/availableColumns` and merges it into `available.fields`.
+
+## Field kinds
+
+`fields.js` describes every column once. `kind` drives both parsers and the
+renderer, replacing the three duplicated column maps in the old build:
+
+| kind       | Renderer                                        |
+| ---------- | ----------------------------------------------- |
+| `key`      | `<a data-issue-key href="{origin}/browse/…">`    |
+| `user`     | `displayName`, else `name`                      |
+| `seconds`  | seconds → hours, rounded to two decimals        |
+| `flag`     | first enabled flagged value                     |
+| `comments` | every comment, with Excel same-cell line breaks |
+| `text`     | escaped text                                    |
+
+To add a field: add one entry to `ISSUE_FIELDS` with its Jira id, label, and
+kind, then include the id in `DEFAULT_*` / `COMMENT_EXPORT_FIELD_IDS` if it
+should be on by default. Ids the catalog does not know still work — they render
+as escaped text — which is what lets profile-provided custom fields through.
+
+## Exports
+
+Both exports share `buildJql`, `applyResourceHours`, and `buildTableHtml`.
+
+**Capacity report**
+
+1. `GET /rest/api/2/user/columns` saves the user's current column layout.
+2. `PUT` the profile's `fetchFields` as the layout.
+3. `GET /sr/jira.views…/SearchRequest.html?jqlQuery=…`.
+4. `PUT` the original layout back — in a `finally`, so a failed report still
+   restores the user's Jira UI.
+5. Parse the `#issuetable` rows; subtask remaining estimates are summed per
+   assignee (in seconds).
+6. Convert to hours, drop zeros, append one column per resource, copy HTML.
+
+**Tickets and comments**
+
+1. `GET /rest/api/2/search` with `maxResults=1` to read `total`.
+2. Page through the search 100 issues at a time with
+   `fields=<comment set>,subtasks`.
+3. Nest each subtask under its parent; subtask rows repeat the parent key and
+   carry their own key in the Sub Task column.
+4. Render the fixed `COMMENT_EXPORT_FIELDS` set and copy HTML.
+
+Both flows require at least one filter; an empty filter set is rejected rather
+than exporting the whole instance.
+
+## Tests
+
+`npm test` runs `node --test "src/lib/**/*.test.js"`. DOM parsing is tested
+with `linkedom` against a real trimmed issue-view page in
+`src/lib/jira/export/fixtures/`. The parsers deliberately use
+`querySelector`/`children`/`getAttribute` rather than `tBodies`/`rows`/`cells`,
+because linkedom does not implement those table extensions.
