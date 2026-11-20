@@ -1,0 +1,28 @@
+{
+  "name": "aem-browser-ext",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Chrome extension that reads the current AEM author URL and jumps to editors, consoles, and tools.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "test": "node --test src/lib/aem/*.test.js",
+    "icons": "node scripts/generate-icons.mjs"
+  },
+  "dependencies": {
+    "@mantine/core": "^9.8.1",
+    "@mantine/hooks": "^9.8.1",
+    "@tabler/icons-react": "^3.52.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.7.1",
+    "@vitejs/plugin-react": "^6.0.3",
+    "postcss-preset-mantine": "^1.18.0",
+    "postcss-simple-vars": "^7.0.1",
+    "vite": "^8.1.3"
+  }
+}
