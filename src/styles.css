@@ -16,3 +16,12 @@ body {
   flex-direction: column;
   min-height: 120px;
 }
+
+.ordered-row {
+  padding: 2px 4px;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.ordered-row:hover {
+  background: var(--mantine-color-default-hover);
+}
