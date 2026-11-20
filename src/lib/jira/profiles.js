@@ -6,6 +6,7 @@ import { JIRA_ORIGIN, SCHEMA_VERSION } from './config.js'
 import {
   DEFAULT_FETCH_FIELD_IDS,
   DEFAULT_REPORT_FIELD_IDS,
+  ISSUE_FIELDS,
   resolveFields,
 } from './fields.js'
 import { emptyFilters, FILTER_KEYS, idsOf, itemsForIds, normalizeItems } from './filters.js'
@@ -19,13 +20,14 @@ export const EMPTY_AVAILABLE = {
 }
 
 export function createSelection(overrides = {}) {
+  const { filters, ...rest } = overrides
   return {
-    filters: emptyFilters(),
+    filters: { ...emptyFilters(), ...(filters ?? {}) },
     fetchFields: resolveFields(DEFAULT_FETCH_FIELD_IDS),
     reportFields: resolveFields(DEFAULT_REPORT_FIELD_IDS),
     resources: [],
     orderBy: [],
-    ...overrides,
+    ...rest,
   }
 }
 
@@ -96,6 +98,29 @@ export function normalizeResources(resources = []) {
   return result
 }
 
+// Normalizes a selection against an option catalog. Imported profiles already
+// pass through this, but working configs live in storage on their own, so the
+// same function is used when they are read back.
+export function normalizeSelection(selection = {}, available = EMPTY_AVAILABLE) {
+  return createSelection({
+    filters: normalizeFilters(selection.filters, available),
+    fetchFields: itemsForIds(
+      idsOf(selection.fetchFields),
+      ISSUE_FIELDS,
+      selection.fetchFields,
+      available.fields,
+    ),
+    reportFields: itemsForIds(
+      idsOf(selection.reportFields),
+      ISSUE_FIELDS,
+      selection.reportFields,
+      available.fields,
+    ),
+    resources: normalizeResources(selection.resources),
+    orderBy: normalizeOrderBy(selection.orderBy),
+  })
+}
+
 export function isLegacyProfile(raw) {
   return Boolean(raw && typeof raw === 'object' && raw.jira && !raw.selection)
 }
@@ -120,11 +145,13 @@ function fromLegacy(raw, fallbackName) {
   // subset that ended up in the export.
   const fetchFields = itemsForIds(
     idsOf(lookup.fields ?? legacy.columns),
+    ISSUE_FIELDS,
     lookup.fields ?? legacy.columns,
     available.fields,
   )
   const reportFields = itemsForIds(
     idsOf(legacy.columns),
+    ISSUE_FIELDS,
     legacy.columns,
     available.fields,
   )
@@ -160,21 +187,7 @@ export function normalizeProfile(raw) {
     name: String(raw.name ?? 'Default'),
     origin: String(raw.origin ?? raw.jiraOrigin ?? JIRA_ORIGIN),
     available,
-    selection: createSelection({
-      filters: normalizeFilters(selection.filters, available),
-      fetchFields: itemsForIds(
-        idsOf(selection.fetchFields),
-        selection.fetchFields,
-        available.fields,
-      ),
-      reportFields: itemsForIds(
-        idsOf(selection.reportFields),
-        selection.reportFields,
-        available.fields,
-      ),
-      resources: normalizeResources(selection.resources),
-      orderBy: normalizeOrderBy(selection.orderBy),
-    }),
+    selection: normalizeSelection(selection, available),
   })
 }
 

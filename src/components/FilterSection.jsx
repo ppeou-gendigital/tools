@@ -44,7 +44,7 @@ export function FilterSection({ call, available, filters, onChange }) {
         placeholder="Search sprints"
         description="Results come from the Jira sprint picker."
         value={idsOf(filters.sprints)}
-        selectedOptions={filters.sprints.map(toOption)}
+        selectedOptions={(filters.sprints ?? []).map(toOption)}
         onChange={(values, pool) =>
           onChange(
             setFilterValues(

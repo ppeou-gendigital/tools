@@ -112,9 +112,16 @@ export default function App() {
     }
   }
 
+  function requireFetchFields() {
+    if (config.fetchFields.length === 0) {
+      throw new Error('Pick at least one fetch field before exporting.')
+    }
+  }
+
   function generateReport() {
     return runExport('report', async () => {
       requireFilters()
+      requireFetchFields()
 
       const { html } = await call(MESSAGE.REPORT_ISSUE_VIEW, {
         jql: buildJql(config),
@@ -202,16 +209,18 @@ export default function App() {
           <Title order={5}>Jira Capacity</Title>
         </Group>
 
-        <ProfileBar
-          items={profiles.items}
-          activeId={profiles.activeId}
-          activeProfile={activeProfile}
-          onSelect={profiles.selectProfile}
-          onImport={importProfile}
-          onRemove={profiles.removeProfile}
-          onRefreshFields={refreshFields}
-          refreshingFields={refreshingFields}
-        />
+        {profiles.ready ? (
+          <ProfileBar
+            items={profiles.items}
+            activeId={profiles.activeId}
+            activeProfile={activeProfile}
+            onSelect={profiles.selectProfile}
+            onImport={importProfile}
+            onRemove={profiles.removeProfile}
+            onRefreshFields={refreshFields}
+            refreshingFields={refreshingFields}
+          />
+        ) : null}
 
         {!profiles.ready || checking ? (
           <Center py="md">
