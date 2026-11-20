@@ -7,7 +7,6 @@ import {
   Group,
   Kbd,
   Menu,
-  ScrollArea,
   Switch,
   Text,
   TextInput,
@@ -319,157 +318,161 @@ export default function App({
 
   return (
     <div className="app">
-      {showManualForm ? (
-        <Box px="md" pt={10} pb={8}>
-          <form onSubmit={applyManualUrl}>
-            <Group gap={6} wrap="nowrap" align="flex-start">
-              <TextInput
-                style={{ flex: 1 }}
-                size="xs"
-                value={manualValue}
-                onChange={(event) => {
-                  setManualValue(event.currentTarget.value)
-                  if (manualError) setManualError('')
-                }}
-                placeholder="Paste an AEM author URL…"
-                aria-label="AEM author URL"
-                leftSection={<IconLink size={14} />}
-                error={manualError || undefined}
-              />
-              <Button type="submit" size="xs" variant="light" color="orange">
-                Use URL
-              </Button>
-            </Group>
-          </form>
-          <Text size="xs" c="dimmed" mt={4}>
-            Fallback for publish, preview, or non-AEM tabs.
-          </Text>
-        </Box>
-      ) : null}
-
-      <Box px="md" pt={showManualForm ? 0 : 10} pb={8}>
-        <TextInput
-          ref={searchRef}
-          value={search}
-          onChange={(event) => setSearch(event.currentTarget.value)}
-          placeholder="Filter links…"
-          leftSection={<IconSearch size={14} />}
-          rightSectionPointerEvents={search ? 'all' : 'none'}
-          rightSection={
-            search ? (
-              <ActionIcon
-                size="xs"
-                color="gray"
-                onClick={() => setSearch('')}
-                aria-label="Clear filter"
-              >
-                <IconX size={12} />
-              </ActionIcon>
-            ) : (
-              <Kbd>/</Kbd>
-            )
-          }
-        />
-      </Box>
-
-      <Box className="content">
-        <ScrollArea h="100%" type="auto" scrollbarSize={8}>
-          <Box
-            px="md"
-            className="groups-wrap"
-            onKeyDown={handleGridKeyDown}
-          >
-            {error ? (
-              <Alert color="red" variant="light" mb="sm">
-                {error}
-              </Alert>
-            ) : null}
-
-            {!error && result?.error ? (
-              <Alert color="red" variant="light" mb="sm">
-                {result.error}
-              </Alert>
-            ) : null}
-
-            {!error &&
-            currentUrl &&
-            result &&
-            !result.error &&
-            parsed &&
-            !parsed.isAem ? (
-              <Alert color="gray" variant="light" mb="sm" py={6}>
-                <Text size="xs">
-                  Not an AEM author URL — every destination is shown, but none
-                  apply to this page.
-                </Text>
-              </Alert>
-            ) : null}
-
-            {visiblePinned ? (
-              <Box className="groups pinned-group">
-                {renderGroupCard(visiblePinned)}
-              </Box>
-            ) : null}
-
-            {visibleGroups.length > 0 ? (
-              isSearching ? (
-                // Reordering a filtered subset would make the stored order
-                // ambiguous, so the handles are omitted while filtering.
-                <Box className="groups">
-                  {visibleGroups.map((group) => (
-                    <div key={group.id} className="group-drag">
-                      {renderGroupCard(group)}
-                    </div>
-                  ))}
-                </Box>
-              ) : (
-                <DragDropContext onDragEnd={handleGroupDragEnd}>
-                  <Droppable droppableId="aem-groups">
-                    {(provided) => (
-                      <Box
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className="groups"
-                      >
-                        {visibleGroups.map((group, index) => (
-                          <Draggable
-                            key={group.id}
-                            draggableId={group.id}
-                            index={index}
-                            disableInteractiveElementBlocking
-                          >
-                            {(draggable, snapshot) => (
-                              <div
-                                ref={draggable.innerRef}
-                                {...draggable.draggableProps}
-                                className={`group-drag${snapshot.isDragging ? ' is-dragging' : ''}`}
-                              >
-                                {renderGroupCard(group, {
-                                  dragHandleProps: draggable.dragHandleProps,
-                                })}
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </Box>
-                    )}
-                  </Droppable>
-                </DragDropContext>
-              )
-            ) : null}
-
-            {!error &&
-            currentUrl &&
-            visibleGroups.length === 0 &&
-            !visiblePinned &&
-            !result?.error ? (
-              <Text size="xs" c="dimmed" ta="center" py="md">
-                No links match “{search}”.
-              </Text>
-            ) : null}
+      <div className="toolbar">
+        {showManualForm ? (
+          <Box px="md" pt={10} pb={8}>
+            <form onSubmit={applyManualUrl}>
+              <Group gap={6} wrap="nowrap" align="flex-start">
+                <TextInput
+                  style={{ flex: 1 }}
+                  size="xs"
+                  value={manualValue}
+                  onChange={(event) => {
+                    setManualValue(event.currentTarget.value)
+                    if (manualError) setManualError('')
+                  }}
+                  placeholder="Paste an AEM author URL…"
+                  aria-label="AEM author URL"
+                  leftSection={<IconLink size={14} />}
+                  error={manualError || undefined}
+                />
+                <Button
+                  type="submit"
+                  size="xs"
+                  variant="light"
+                  color="orange"
+                >
+                  Use URL
+                </Button>
+              </Group>
+            </form>
+            <Text size="xs" c="dimmed" mt={4}>
+              Fallback for publish, preview, or non-AEM tabs.
+            </Text>
           </Box>
-        </ScrollArea>
+        ) : null}
+
+        <Box px="md" pt={showManualForm ? 0 : 10} pb={8}>
+          <TextInput
+            ref={searchRef}
+            value={search}
+            onChange={(event) => setSearch(event.currentTarget.value)}
+            placeholder="Filter links…"
+            leftSection={<IconSearch size={14} />}
+            rightSectionPointerEvents={search ? 'all' : 'none'}
+            rightSection={
+              search ? (
+                <ActionIcon
+                  size="xs"
+                  color="gray"
+                  onClick={() => setSearch('')}
+                  aria-label="Clear filter"
+                >
+                  <IconX size={12} />
+                </ActionIcon>
+              ) : (
+                <Kbd>/</Kbd>
+              )
+            }
+          />
+        </Box>
+      </div>
+
+      <Box
+        px="md"
+        pb={8}
+        className="groups-wrap"
+        onKeyDown={handleGridKeyDown}
+      >
+        {error ? (
+          <Alert color="red" variant="light" mb="sm">
+            {error}
+          </Alert>
+        ) : null}
+
+        {!error && result?.error ? (
+          <Alert color="red" variant="light" mb="sm">
+            {result.error}
+          </Alert>
+        ) : null}
+
+        {!error &&
+        currentUrl &&
+        result &&
+        !result.error &&
+        parsed &&
+        !parsed.isAem ? (
+          <Alert color="gray" variant="light" mb="sm" py={6}>
+            <Text size="xs">
+              Not an AEM author URL — every destination is shown, but none
+              apply to this page.
+            </Text>
+          </Alert>
+        ) : null}
+
+        {visiblePinned ? (
+          <Box className="groups pinned-group">
+            {renderGroupCard(visiblePinned)}
+          </Box>
+        ) : null}
+
+        {visibleGroups.length > 0 ? (
+          isSearching ? (
+            // Reordering a filtered subset would make the stored order
+            // ambiguous, so the handles are omitted while filtering.
+            <Box className="groups">
+              {visibleGroups.map((group) => (
+                <div key={group.id} className="group-drag">
+                  {renderGroupCard(group)}
+                </div>
+              ))}
+            </Box>
+          ) : (
+            <DragDropContext onDragEnd={handleGroupDragEnd}>
+              <Droppable droppableId="aem-groups">
+                {(provided) => (
+                  <Box
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="groups"
+                  >
+                    {visibleGroups.map((group, index) => (
+                      <Draggable
+                        key={group.id}
+                        draggableId={group.id}
+                        index={index}
+                        disableInteractiveElementBlocking
+                      >
+                        {(draggable, snapshot) => (
+                          <div
+                            ref={draggable.innerRef}
+                            {...draggable.draggableProps}
+                            className={`group-drag${snapshot.isDragging ? ' is-dragging' : ''}`}
+                          >
+                            {renderGroupCard(group, {
+                              dragHandleProps: draggable.dragHandleProps,
+                            })}
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </Box>
+                )}
+              </Droppable>
+            </DragDropContext>
+          )
+        ) : null}
+
+        {!error &&
+        currentUrl &&
+        visibleGroups.length === 0 &&
+        !visiblePinned &&
+        !result?.error ? (
+          <Text size="xs" c="dimmed" ta="center" py="md">
+            No links match “{search}”.
+          </Text>
+        ) : null}
       </Box>
 
       <Group className="footer" justify="space-between" wrap="nowrap">

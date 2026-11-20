@@ -1,29 +1,28 @@
 html,
 body {
   width: 300px;
-  height: 600px;
   margin: 0;
-  overflow: hidden;
+  overflow-x: clip;
 }
 
 body {
   background: var(--mantine-color-body);
 }
 
-#root,
-.app {
-  height: 100%;
-}
-
+/* The popup sizes itself from the content: Chrome caps it at 600px and
+   scrolls the document. The toolbar and footer stick so the search field and
+   controls stay reachable while scrolling. */
 .app {
   display: flex;
   flex-direction: column;
   background: var(--mantine-color-body);
 }
 
-.content {
-  flex: 1;
-  min-height: 0;
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--mantine-color-body);
 }
 
 .groups {
@@ -170,6 +169,9 @@ body {
 }
 
 .footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   flex: none;
   flex-direction: row;
   align-items: center;
@@ -177,6 +179,7 @@ body {
   gap: 6px;
   border-top: 1px solid var(--mantine-color-default-border);
   padding: 5px 10px;
+  background: var(--mantine-color-body);
 }
 
 .footer-switch {

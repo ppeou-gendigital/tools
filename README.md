@@ -7,7 +7,9 @@ page management, components/templates, and developer tools.
 Built with React (plain JavaScript), Mantine, and Vite via
 `@crxjs/vite-plugin`.
 
-The popup uses a tight single-column layout at 300×600:
+The popup uses a tight single-column layout: 300px wide and sized to its
+content up to Chrome's 600px popup maximum (the toolbar and footer stick while
+the document scrolls):
 
 - search/filter (`/` to focus, `Esc` to clear)
 - collapsible groups, persisted in `chrome.storage.local`
