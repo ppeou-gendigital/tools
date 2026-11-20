@@ -12,6 +12,7 @@
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
     "@mantine/core": "^9.8.1",
     "@mantine/hooks": "^9.8.1",
     "@tabler/icons-react": "^3.52.0",

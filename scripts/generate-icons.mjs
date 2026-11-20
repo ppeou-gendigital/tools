@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const outDir = resolve(here, '../public/icons')
 
-const BG = [17, 24, 39]
-const FG = [249, 115, 22]
+const CIRCLE = [34, 197, 94]
+const GLYPH = [255, 255, 255]
 const SIZES = [16, 32, 48, 128]
 
 function crc32(buf) {
@@ -40,36 +40,133 @@ function distanceToSegment(px, py, ax, ay, bx, by) {
   return Math.hypot(px - cx, py - cy)
 }
 
-// Sample function in 0..1 space; returns [r, g, b, a].
+// Tabler Icons "link-code" (MIT) path data.
+const LINK_CODE_PATHS = [
+  'M9 15l6 -6',
+  'M11 6l.463 -.536c1.953 -1.953 5.119 -1.952 7.072 .001c1.783 1.783 1.938 4.577 .465 6.535',
+  'M9.126 19.998c-1.317 .022 -2.64 -.466 -3.65 -1.464c-.945 -.934 -1.476 -2.207 -1.476 -3.536c0 -1.328 .532 -2.602 1.476 -3.535l.524 -.463',
+  'M20 21l2 -2l-2 -2',
+  'M17 17l-2 2l2 2',
+]
+
+// Flatten the small subset of SVG path commands used by the icon into
+// line segments in the icon's 24x24 coordinate space.
+function flattenPath(d) {
+  const tokens = d.match(/[MmLlHhVvCcZz]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi) ?? []
+  const segments = []
+  let index = 0
+  let command = 'M'
+  let x = 0
+  let y = 0
+  let startX = 0
+  let startY = 0
+
+  const number = () => Number(tokens[index++])
+  const pushLine = (nx, ny) => {
+    segments.push([x, y, nx, ny])
+    x = nx
+    y = ny
+  }
+  const pushCurve = (x1, y1, x2, y2, x3, y3) => {
+    const steps = 24
+    for (let step = 1; step <= steps; step += 1) {
+      const t = step / steps
+      const mt = 1 - t
+      const nx =
+        mt * mt * mt * x +
+        3 * mt * mt * t * x1 +
+        3 * mt * t * t * x2 +
+        t * t * t * x3
+      const ny =
+        mt * mt * mt * y +
+        3 * mt * mt * t * y1 +
+        3 * mt * t * t * y2 +
+        t * t * t * y3
+      segments.push([x, y, nx, ny])
+      x = nx
+      y = ny
+    }
+  }
+
+  while (index < tokens.length) {
+    if (/[a-z]/i.test(tokens[index])) {
+      command = tokens[index++]
+    }
+
+    if (command === 'M' || command === 'm') {
+      const nx = number() + (command === 'm' ? x : 0)
+      const ny = number() + (command === 'm' ? y : 0)
+      x = nx
+      y = ny
+      startX = nx
+      startY = ny
+      command = command === 'm' ? 'l' : 'L'
+    } else if (command === 'L' || command === 'l') {
+      pushLine(number() + (command === 'l' ? x : 0), number() + (command === 'l' ? y : 0))
+    } else if (command === 'H' || command === 'h') {
+      pushLine(number() + (command === 'h' ? x : 0), y)
+    } else if (command === 'V' || command === 'v') {
+      pushLine(x, number() + (command === 'v' ? y : 0))
+    } else if (command === 'C' || command === 'c') {
+      const values = Array.from({ length: 6 }, number)
+      const relative = command === 'c'
+      pushCurve(
+        values[0] + (relative ? x : 0),
+        values[1] + (relative ? y : 0),
+        values[2] + (relative ? x : 0),
+        values[3] + (relative ? y : 0),
+        values[4] + (relative ? x : 0),
+        values[5] + (relative ? y : 0),
+      )
+    } else if (command === 'Z' || command === 'z') {
+      pushLine(startX, startY)
+      command = 'M'
+    } else {
+      index += 1
+    }
+  }
+
+  return segments
+}
+
+const GLYPH_SEGMENTS = LINK_CODE_PATHS.flatMap(flattenPath)
+const GLYPH_SPAN = 0.62
+const GLYPH_STROKE = 1.8
+
+const glyphBox = GLYPH_SEGMENTS.reduce(
+  (box, [ax, ay, bx, by]) => ({
+    minX: Math.min(box.minX, ax, bx),
+    minY: Math.min(box.minY, ay, by),
+    maxX: Math.max(box.maxX, ax, bx),
+    maxY: Math.max(box.maxY, ay, by),
+  }),
+  { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity },
+)
+
+const glyphScale =
+  GLYPH_SPAN / Math.max(glyphBox.maxX - glyphBox.minX, glyphBox.maxY - glyphBox.minY)
+const glyphCenterX = (glyphBox.minX + glyphBox.maxX) / 2
+const glyphCenterY = (glyphBox.minY + glyphBox.maxY) / 2
+const strokeWidth = GLYPH_STROKE * glyphScale
+
+const glyphLines = GLYPH_SEGMENTS.map(([ax, ay, bx, by]) => [
+  0.5 + (ax - glyphCenterX) * glyphScale,
+  0.5 + (ay - glyphCenterY) * glyphScale,
+  0.5 + (bx - glyphCenterX) * glyphScale,
+  0.5 + (by - glyphCenterY) * glyphScale,
+])
+
+// Circular green mark with a white link-code glyph.
 function sample(x, y) {
-  const radius = 0.2
-  const inRounded =
-    x >= radius && x <= 1 - radius
-      ? y >= 0 && y <= 1
-      : y >= radius && y <= 1 - radius
-        ? x >= 0 && x <= 1
-        : Math.hypot(
-            Math.max(radius - x, 0, x - (1 - radius)),
-            Math.max(radius - y, 0, y - (1 - radius)),
-          ) <= radius
+  const inCircle = Math.hypot(x - 0.5, y - 0.5) <= 0.49
 
-  if (!inRounded) return [0, 0, 0, 0]
+  if (!inCircle) return [0, 0, 0, 0]
 
-  const stroke = 0.085
-  const apex = [0.5, 0.25]
-  const left = [0.29, 0.76]
-  const right = [0.71, 0.76]
-  const barY = 0.585
-  const dx = (right[0] - apex[0]) * ((barY - apex[1]) / (right[1] - apex[1]))
-  const leftX = apex[0] - dx
-  const rightX = apex[0] + dx
+  const onGlyph = glyphLines.some(
+    ([ax, ay, bx, by]) => distanceToSegment(x, y, ax, ay, bx, by) <= strokeWidth / 2,
+  )
 
-  const onShape =
-    distanceToSegment(x, y, apex[0], apex[1], left[0], left[1]) <= stroke / 2 ||
-    distanceToSegment(x, y, apex[0], apex[1], right[0], right[1]) <= stroke / 2 ||
-    distanceToSegment(x, y, leftX, barY, rightX, barY) <= stroke / 2
-
-  return onShape ? [...FG, 255] : [...BG, 255]
+  return onGlyph ? [...GLYPH, 255] : [...CIRCLE, 255]
 }
 
 function render(size) {

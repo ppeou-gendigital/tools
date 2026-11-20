@@ -1,6 +1,6 @@
 html,
 body {
-  width: 800px;
+  width: 300px;
   height: 600px;
   margin: 0;
   overflow: hidden;
@@ -21,35 +21,19 @@ body {
   background: var(--mantine-color-body);
 }
 
-.header {
-  flex: none;
-  padding: 10px 16px 6px;
-}
-
-.url-bar {
-  border: 1px solid var(--mantine-color-default-border);
-  border-radius: var(--mantine-radius-md);
-  padding: 3px 6px 3px 10px;
-  background: var(--mantine-color-default);
-}
-
-.path-chip {
-  max-width: 100%;
-  padding: 1px 8px;
-  border: 1px solid var(--mantine-color-default-border);
-  border-radius: 999px;
-}
-
 .content {
   flex: 1;
   min-height: 0;
 }
 
 .groups {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 10px;
-  align-items: start;
+}
+
+.pinned-group {
+  margin-bottom: 10px;
 }
 
 .group-card {
@@ -59,15 +43,51 @@ body {
 .group-head {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
   width: 100%;
-  padding: 6px 8px;
+  padding: 3px 6px;
   background: var(--mantine-color-default-hover);
 }
 
 .group-head:hover {
   background: var(--mantine-color-default-hover);
   filter: brightness(0.98);
+}
+
+.group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 3px 4px;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.group-toggle:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+.group-handle {
+  flex: none;
+  cursor: grab;
+  color: var(--mantine-color-dimmed);
+}
+
+.group-handle:active {
+  cursor: grabbing;
+}
+
+.group-handle-empty {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+.group-drag.is-dragging .group-card {
+  box-shadow: var(--mantine-shadow-lg);
+  border-color: var(--mantine-primary-color-filled);
 }
 
 .group-title {
@@ -151,14 +171,17 @@ body {
 
 .footer {
   flex: none;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
   border-top: 1px solid var(--mantine-color-default-border);
-  padding: 5px 16px;
+  padding: 5px 10px;
 }
 
-.theme-option {
-  display: flex;
+.footer-switch {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
 }
 
 /* Mantine 9 inverts tooltips in dark mode; keep them on the app surface. */

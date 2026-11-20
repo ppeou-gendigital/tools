@@ -7,10 +7,13 @@ page management, components/templates, and developer tools.
 Built with React (plain JavaScript), Mantine, and Vite via
 `@crxjs/vite-plugin`.
 
-The popup uses a dense three-column tool layout:
+The popup uses a tight single-column layout at 300×600:
 
 - search/filter (`/` to focus, `Esc` to clear)
 - collapsible groups, persisted in `chrome.storage.local`
+- drag groups by the handle in each header to reorder them; the order is
+  persisted in `chrome.storage.local` as `aemJump.groupOrder` and reordering
+  is paused while a filter is active
 - pinnable links, persisted in `chrome.storage.local`
 - Tabler icons and tooltips for every destination
 - disabled destinations stay in place with a reason on hover
@@ -84,6 +87,7 @@ src/lib/aem/
   groups.js     ordered groups
   rules.js      ordered rule registry (label, icon, shortcut, reason)
   icons.js      rule icon name -> Tabler component
+  order.js      pure group reorder helpers (drag result -> stored order)
   registry.js   pure buildAemLinkGroups(url) -> { parsed, groups }
 src/components/
   GroupCard.jsx collapsible group card

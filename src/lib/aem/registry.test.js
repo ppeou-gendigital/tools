@@ -78,7 +78,7 @@ test('groups and links keep declaration order', () => {
 
   assert.deepEqual(
     result.groups.map((group) => group.id),
-    ['page', 'manage', 'consoles', 'developer', 'components'],
+    ['page', 'manage', 'developer', 'consoles', 'components'],
   )
   assert.deepEqual(linkIds(result, 'page'), [
     'edit',
@@ -308,7 +308,7 @@ test('non-AEM URLs keep every group and disable every link', () => {
   assert.equal(result.parsed.isAem, false)
   assert.deepEqual(
     result.groups.map((group) => group.id),
-    ['page', 'manage', 'consoles', 'developer', 'components'],
+    ['page', 'manage', 'developer', 'consoles', 'components'],
   )
 
   const links = result.groups.flatMap((group) => group.links)

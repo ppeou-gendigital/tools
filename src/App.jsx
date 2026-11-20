@@ -2,55 +2,34 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActionIcon,
   Alert,
-  Badge,
   Box,
   Button,
-  CopyButton,
   Group,
   Kbd,
+  Menu,
   ScrollArea,
-  SegmentedControl,
   Switch,
   Text,
   TextInput,
   ThemeIcon,
-  Title,
   Tooltip,
-  VisuallyHidden,
 } from '@mantine/core'
 import {
-  IconBolt,
   IconCheck,
-  IconCopy,
   IconDeviceDesktop,
   IconLink,
+  IconLinkCode,
   IconMoon,
   IconSearch,
   IconSun,
   IconSunrise,
   IconX,
 } from '@tabler/icons-react'
+import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { buildAemLinkGroups } from './lib/aem/registry.js'
+import { applyGroupOrder, moveItem } from './lib/aem/order.js'
 import { useChromeStorage } from './hooks/useChromeStorage.js'
 import { GroupCard } from './components/GroupCard.jsx'
-
-const MODE_LABEL = {
-  edit: 'Edit mode',
-  preview: 'Preview',
-  disabled: 'Disabled',
-}
-
-const MODE_COLOR = {
-  edit: 'orange',
-  preview: 'gray',
-  disabled: 'gray',
-}
-
-const FLAVOR_LABEL = {
-  traditional: 'AEM 6.5 / AMS',
-  cloud: 'AEM Cloud',
-  ue: 'Universal Editor',
-}
 
 const THEMES = [
   { value: 'light', label: 'Light', Icon: IconSun },
@@ -85,6 +64,10 @@ export default function App({
     [],
   )
   const [favorites, setFavorites] = useChromeStorage('aemJump.favorites', [])
+  const [groupOrder, setGroupOrder] = useChromeStorage(
+    'aemJump.groupOrder',
+    null,
+  )
 
   useEffect(() => {
     if (!extensionAvailable()) {
@@ -151,12 +134,34 @@ export default function App({
   )
 
   const sourceGroups = useMemo(
+    () => applyGroupOrder(groups, groupOrder),
+    [groups, groupOrder],
+  )
+
+  const pinnedGroup = useMemo(
     () =>
       pinnedLinks.length > 0
-        ? [{ id: 'pinned', label: 'Pinned', links: pinnedLinks }, ...groups]
-        : groups,
-    [pinnedLinks, groups],
+        ? { id: 'pinned', label: 'Pinned', links: pinnedLinks }
+        : null,
+    [pinnedLinks],
   )
+
+  const isSearching = Boolean(search.trim())
+
+  function matchesSearch(link, query) {
+    return (
+      link.label.toLowerCase().includes(query) ||
+      (link.description ?? '').toLowerCase().includes(query)
+    )
+  }
+
+  const visiblePinned = useMemo(() => {
+    if (!pinnedGroup) return null
+    const query = search.trim().toLowerCase()
+    if (!query) return pinnedGroup
+    const links = pinnedGroup.links.filter((link) => matchesSearch(link, query))
+    return links.length > 0 ? { ...pinnedGroup, links } : null
+  }, [pinnedGroup, search])
 
   const visibleGroups = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -165,24 +170,10 @@ export default function App({
     return sourceGroups
       .map((group) => ({
         ...group,
-        links: group.links.filter(
-          (link) =>
-            link.label.toLowerCase().includes(query) ||
-            (link.description ?? '').toLowerCase().includes(query),
-        ),
+        links: group.links.filter((link) => matchesSearch(link, query)),
       }))
       .filter((group) => group.links.length > 0)
   }, [sourceGroups, search])
-
-  const linkCount = groups.reduce(
-    (total, group) => total + group.links.length,
-    0,
-  )
-  const availableCount = groups.reduce(
-    (total, group) =>
-      total + group.links.filter((link) => Boolean(link.href)).length,
-    0,
-  )
 
   function openLink(href) {
     if (!extensionAvailable()) return
@@ -285,6 +276,27 @@ export default function App({
     )
   }
 
+  function handleGroupDragEnd({ source, destination }) {
+    if (!destination || destination.index === source.index) return
+
+    const ids = sourceGroups.map((group) => group.id)
+    setGroupOrder(moveItem(ids, source.index, destination.index))
+  }
+
+  function renderGroupCard(group, options = {}) {
+    return (
+      <GroupCard
+        group={group}
+        collapsed={!search && collapsedGroups.includes(group.id)}
+        onToggle={() => toggleGroup(group.id)}
+        favorites={favorites}
+        onOpen={openLink}
+        onToggleFavorite={toggleFavorite}
+        dragHandleProps={options.dragHandleProps}
+      />
+    )
+  }
+
   function handleGridKeyDown(event) {
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
 
@@ -303,105 +315,12 @@ export default function App({
     rows[(index + offset + rows.length) % rows.length]?.focus()
   }
 
+  const activeTheme = THEMES.find((theme) => theme.value === colorScheme) ?? THEMES[2]
+
   return (
     <div className="app">
-      <Group className="header" justify="space-between" wrap="nowrap">
-        <Group gap="xs" wrap="nowrap">
-          <ThemeIcon variant="filled" color="orange" size={30} radius="md">
-            <IconBolt size={17} />
-          </ThemeIcon>
-          <Box>
-            <Title order={1} size="h5" fw={700}>
-              AEM Jump
-            </Title>
-            <Text size="xs" c="dimmed">
-              Open the current URL anywhere in AEM
-            </Text>
-          </Box>
-        </Group>
-
-        {parsed?.isAem && parsed?.mode ? (
-          <Badge variant="light" color={MODE_COLOR[parsed.mode] ?? 'gray'}>
-            {MODE_LABEL[parsed.mode] ?? parsed.mode}
-          </Badge>
-        ) : null}
-      </Group>
-
-      <Box px="md" pb={6}>
-        <Group className="url-bar" gap={6} wrap="nowrap">
-          <Text
-            size="xs"
-            ff="monospace"
-            c="dimmed"
-            truncate
-            style={{ flex: 1 }}
-            title={currentUrl}
-          >
-            {currentUrl || 'Reading current tab…'}
-          </Text>
-
-          <CopyButton value={currentUrl || ''} timeout={1200}>
-            {({ copied, copy }) => (
-              <Tooltip label={copied ? 'Copied' : 'Copy URL'}>
-                <ActionIcon
-                  color={copied ? 'teal' : 'gray'}
-                  onClick={copy}
-                  disabled={!currentUrl}
-                  aria-label="Copy current URL"
-                >
-                  {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
-                </ActionIcon>
-              </Tooltip>
-            )}
-          </CopyButton>
-
-          {overrideUrl ? (
-            <Tooltip label="Use current tab">
-              <ActionIcon
-                variant="light"
-                color="orange"
-                onClick={useCurrentTab}
-                aria-label="Use current tab URL"
-              >
-                <IconX size={14} />
-              </ActionIcon>
-            </Tooltip>
-          ) : null}
-        </Group>
-
-        <Group gap={4} mt={6} wrap="wrap">
-          {overrideUrl ? (
-            <Badge variant="light" color="orange">
-              manual
-            </Badge>
-          ) : null}
-          {parsed?.isAem ? (
-            <Badge variant="default" color="gray">
-              {FLAVOR_LABEL[parsed.flavor] ?? parsed.flavor}
-            </Badge>
-          ) : null}
-          {parsed?.siteName ? (
-            <Badge variant="default" color="gray">
-              site: {parsed.siteName}
-            </Badge>
-          ) : null}
-          {parsed?.resourcePath ? (
-            <Text
-              className="path-chip"
-              size="xs"
-              ff="monospace"
-              c="dimmed"
-              truncate
-              title={parsed.resourcePath}
-            >
-              {parsed.resourcePath}
-            </Text>
-          ) : null}
-        </Group>
-      </Box>
-
       {showManualForm ? (
-        <Box px="md" pb={8}>
+        <Box px="md" pt={10} pb={8}>
           <form onSubmit={applyManualUrl}>
             <Group gap={6} wrap="nowrap" align="flex-start">
               <TextInput
@@ -428,7 +347,7 @@ export default function App({
         </Box>
       ) : null}
 
-      <Box px="md" pb={8}>
+      <Box px="md" pt={showManualForm ? 0 : 10} pb={8}>
         <TextInput
           ref={searchRef}
           value={search}
@@ -486,27 +405,64 @@ export default function App({
               </Alert>
             ) : null}
 
-            {visibleGroups.length > 0 ? (
-              <Box className="groups">
-                {visibleGroups.map((group) => (
-                  <GroupCard
-                    key={group.id}
-                    group={group}
-                    collapsed={
-                      !search && collapsedGroups.includes(group.id)
-                    }
-                    onToggle={() => toggleGroup(group.id)}
-                    favorites={favorites}
-                    onOpen={openLink}
-                    onToggleFavorite={toggleFavorite}
-                  />
-                ))}
+            {visiblePinned ? (
+              <Box className="groups pinned-group">
+                {renderGroupCard(visiblePinned)}
               </Box>
+            ) : null}
+
+            {visibleGroups.length > 0 ? (
+              isSearching ? (
+                // Reordering a filtered subset would make the stored order
+                // ambiguous, so the handles are omitted while filtering.
+                <Box className="groups">
+                  {visibleGroups.map((group) => (
+                    <div key={group.id} className="group-drag">
+                      {renderGroupCard(group)}
+                    </div>
+                  ))}
+                </Box>
+              ) : (
+                <DragDropContext onDragEnd={handleGroupDragEnd}>
+                  <Droppable droppableId="aem-groups">
+                    {(provided) => (
+                      <Box
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className="groups"
+                      >
+                        {visibleGroups.map((group, index) => (
+                          <Draggable
+                            key={group.id}
+                            draggableId={group.id}
+                            index={index}
+                            disableInteractiveElementBlocking
+                          >
+                            {(draggable, snapshot) => (
+                              <div
+                                ref={draggable.innerRef}
+                                {...draggable.draggableProps}
+                                className={`group-drag${snapshot.isDragging ? ' is-dragging' : ''}`}
+                              >
+                                {renderGroupCard(group, {
+                                  dragHandleProps: draggable.dragHandleProps,
+                                })}
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </Box>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              )
             ) : null}
 
             {!error &&
             currentUrl &&
             visibleGroups.length === 0 &&
+            !visiblePinned &&
             !result?.error ? (
               <Text size="xs" c="dimmed" ta="center" py="md">
                 No links match “{search}”.
@@ -517,39 +473,73 @@ export default function App({
       </Box>
 
       <Group className="footer" justify="space-between" wrap="nowrap">
-        <Group gap="md" wrap="nowrap">
-          <Switch
-            label="Open in new tab"
-            checked={Boolean(openInNewTab)}
-            onChange={(event) => setOpenInNewTab(event.currentTarget.checked)}
-          />
-          <SegmentedControl
-            aria-label="Theme"
-            size="xs"
-            radius="md"
-            value={colorScheme}
-            onChange={onColorSchemeChange}
-            data={THEMES.map(({ value, label, Icon }) => ({
-              value,
-              label: (
-                <Tooltip label={label} openDelay={200}>
-                  <span className="theme-option">
-                    <Icon size={13} stroke={1.8} />
-                    <VisuallyHidden>{label}</VisuallyHidden>
-                  </span>
-                </Tooltip>
-              ),
-            }))}
-          />
+        <Group gap={5} wrap="nowrap" title="AEM Jump">
+          <ThemeIcon
+            variant="filled"
+            size={18}
+            radius="xl"
+            style={{ backgroundColor: '#22c55e', color: '#ffffff' }}
+          >
+            <IconLinkCode size={11} stroke={2.2} />
+          </ThemeIcon>
+          <Text size="xs" fw={600} lh={1}>
+            AEM Jump
+          </Text>
         </Group>
-        <Group gap="xs" wrap="nowrap">
-          <Text size="xs" c="dimmed">
-            {availableCount}/{linkCount} available
-          </Text>
-          <Kbd>/</Kbd>
-          <Text size="xs" c="dimmed">
-            search
-          </Text>
+
+        <Group gap={4} wrap="nowrap">
+          <Tooltip label="Open in new tab" openDelay={200}>
+            <span className="footer-switch">
+              <Switch
+                aria-label="Open in new tab"
+                checked={Boolean(openInNewTab)}
+                onChange={(event) => setOpenInNewTab(event.currentTarget.checked)}
+              />
+            </span>
+          </Tooltip>
+
+          <Menu position="top-end" width={170} withinPortal shadow="md">
+            <Menu.Target>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="md"
+                aria-label="Change theme"
+              >
+                <activeTheme.Icon size={16} stroke={1.8} />
+              </ActionIcon>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Label>Theme</Menu.Label>
+              {THEMES.map(({ value, label, Icon }) => (
+                <Menu.Item
+                  key={value}
+                  leftSection={<Icon size={14} stroke={1.8} />}
+                  rightSection={
+                    colorScheme === value ? <IconCheck size={14} /> : null
+                  }
+                  onClick={() => onColorSchemeChange(value)}
+                >
+                  {label}
+                </Menu.Item>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
+
+          {overrideUrl ? (
+            <Tooltip label="Use current tab" openDelay={200}>
+              <ActionIcon
+                variant="light"
+                color="orange"
+                size="md"
+                onClick={useCurrentTab}
+                aria-label="Use current tab URL"
+              >
+                <IconX size={14} />
+              </ActionIcon>
+            </Tooltip>
+          ) : null}
         </Group>
       </Group>
     </div>
