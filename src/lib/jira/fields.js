@@ -1,9 +1,8 @@
 // Issue field catalog. `kind` is the contract between the two parsers and the
 // table renderer, so a field is described once instead of in three places.
 //
-// Custom field ids are instance-specific, which is why profiles can carry a
-// wider `available.fields` catalog fetched from Jira; unknown ids fall back to
-// plain text via getField().
+// Custom field ids are instance-specific. They are searched live from Jira by
+// the fetch-field picker; unknown ids fall back to plain text via getField().
 
 export const FIELD_KIND = {
   TEXT: 'text',

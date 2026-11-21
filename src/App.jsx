@@ -3,10 +3,10 @@ import {
   Alert,
   Box,
   Center,
+  Divider,
   Group,
   Loader,
   Stack,
-  Tabs,
   Text,
   ThemeIcon,
   Title,
@@ -31,7 +31,9 @@ import { useProfiles } from './state/useProfiles.js'
 import { ExportBar } from './components/ExportBar.jsx'
 import { FieldSection } from './components/FieldSection.jsx'
 import { FilterSection } from './components/FilterSection.jsx'
+import { Panels } from './components/Panels.jsx'
 import { ProfileBar } from './components/ProfileBar.jsx'
+import { ResourceSection } from './components/ResourceSection.jsx'
 import { TabGate } from './components/TabGate.jsx'
 
 function profileLabel(raw, fileName) {
@@ -48,7 +50,6 @@ export default function App() {
   const [checking, setChecking] = useState(true)
   const [busy, setBusy] = useState('')
   const [notice, setNotice] = useState(null)
-  const [refreshingFields, setRefreshingFields] = useState(false)
 
   const checkTab = useCallback(async () => {
     setChecking(true)
@@ -171,27 +172,6 @@ export default function App() {
     })
   }
 
-  async function refreshFields() {
-    if (!profiles.activeEntry) return
-
-    setRefreshingFields(true)
-    setNotice(null)
-    try {
-      const fields = await call(MESSAGE.PICKER_FIELDS, { query: '' })
-      profiles.updateProfile(profiles.activeEntry.id, {
-        available: { ...activeProfile.available, fields },
-      })
-      setNotice({
-        color: 'green',
-        text: `Loaded ${fields.length} fields from Jira.`,
-      })
-    } catch (error) {
-      setNotice({ color: 'red', text: error?.message ?? 'Could not load fields.' })
-    } finally {
-      setRefreshingFields(false)
-    }
-  }
-
   function importProfile(raw, fileName) {
     const entry = profiles.importProfile(raw, {
       name: profileLabel(raw, fileName),
@@ -200,8 +180,8 @@ export default function App() {
   }
 
   return (
-    <Box className="app" p="sm">
-      <Stack gap="sm">
+    <Box className="app" p="sm" py={8}>
+      <Stack gap="xs">
         <Group gap={6} wrap="nowrap">
           <ThemeIcon size={22} radius="md" variant="light">
             <IconLinkCode size={14} />
@@ -217,8 +197,6 @@ export default function App() {
             onSelect={profiles.selectProfile}
             onImport={importProfile}
             onRemove={profiles.removeProfile}
-            onRefreshFields={refreshFields}
-            refreshingFields={refreshingFields}
           />
         ) : null}
 
@@ -238,40 +216,42 @@ export default function App() {
           <TabGate gate={gate} onRetry={checkTab} />
         ) : (
           <>
-            <Tabs defaultValue="filters" keepMounted={false}>
-              <Tabs.List grow>
-                <Tabs.Tab value="filters">Filters</Tabs.Tab>
-                <Tabs.Tab value="fields">Fields &amp; resources</Tabs.Tab>
-              </Tabs.List>
-
-              <Tabs.Panel value="filters" pt="sm">
+            <Panels>
+              <Stack gap="xs">
+                <Divider label="Filters" labelPosition="left" />
                 <FilterSection
                   call={call}
                   available={available}
                   filters={config.filters}
                   onChange={(filters) => update({ filters })}
                 />
-              </Tabs.Panel>
+                <ExportBar
+                  onReport={generateReport}
+                  onComments={exportComments}
+                  busy={busy}
+                  disabled={Boolean(busy) || !configReady}
+                  notice={notice}
+                />
+              </Stack>
 
-              <Tabs.Panel value="fields" pt="sm">
+              <Stack gap="xs">
+                <Divider label="Fields" labelPosition="left" />
                 <FieldSection
                   call={call}
-                  available={available}
                   config={config}
                   onChange={update}
-                  onRefreshFields={refreshFields}
-                  refreshingFields={refreshingFields}
                 />
-              </Tabs.Panel>
-            </Tabs>
+              </Stack>
 
-            <ExportBar
-              onReport={generateReport}
-              onComments={exportComments}
-              busy={busy}
-              disabled={Boolean(busy) || !configReady}
-              notice={notice}
-            />
+              <Stack gap="xs">
+                <Divider label="Resources" labelPosition="left" />
+                <ResourceSection
+                  call={call}
+                  resources={config.resources}
+                  onChange={(resources) => update({ resources })}
+                />
+              </Stack>
+            </Panels>
           </>
         )}
       </Stack>

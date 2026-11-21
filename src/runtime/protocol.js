@@ -9,5 +9,9 @@ export const MESSAGE = {
   ISSUES_WITH_COMMENTS: 'issues.withComments',
   PICKER_SPRINT: 'picker.sprint',
   PICKER_USER: 'picker.user',
+  PICKER_PROJECT: 'picker.project',
+  PICKER_TYPES: 'picker.types',
+  PICKER_STATUSES: 'picker.statuses',
+  PICKER_RESOLUTIONS: 'picker.resolutions',
   PICKER_FIELDS: 'picker.fields',
 }

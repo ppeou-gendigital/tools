@@ -20,9 +20,16 @@
     "128": "icons/icon-128.png"
   },
   "permissions": ["tabs", "storage", "clipboardWrite", "scripting"],
+  "host_permissions": [
+    "https://jira.corp.nortonlifelock.com/*",
+    "http://jira.corp.nortonlifelock.com/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://jira.corp.nortonlifelock.com/*"],
+      "matches": [
+        "https://jira.corp.nortonlifelock.com/*",
+        "http://jira.corp.nortonlifelock.com/*"
+      ],
       "js": ["src/runtime/runner/index.js"],
       "run_at": "document_idle"
     }

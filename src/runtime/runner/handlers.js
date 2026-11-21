@@ -2,6 +2,9 @@
 // the popup owns rendering, parsing, and the clipboard.
 
 import { ENDPOINTS } from '../../lib/jira/config.js'
+import { searchColumns } from '../../lib/jira/columnSearch.js'
+import { parseSuggestions } from '../../lib/jira/suggestions.js'
+import { parseProjectPicker, normalizeProjectQuery } from '../../lib/jira/projects.js'
 import {
   requestJson,
   requestOk,
@@ -155,21 +158,81 @@ export async function userPicker({ query = '' } = {}) {
 }
 
 let availableColumnsCache = null
+let availableColumnsRequest = null
 
-export async function fieldsPicker({ query = '' } = {}) {
-  if (!availableColumnsCache) {
-    const data = await requestJson(ENDPOINTS.availableColumns)
-    availableColumnsCache = data?.availableColumns ?? []
+// One fetch per Jira tab, shared by the idle prefetch and the picker so a
+// keystroke that lands mid-prefetch joins the in-flight request instead of
+// starting a second one.
+function loadAvailableColumns() {
+  if (availableColumnsCache) return Promise.resolve(availableColumnsCache)
+
+  if (!availableColumnsRequest) {
+    availableColumnsRequest = requestJson(ENDPOINTS.availableColumns)
+      .then((data) => {
+        availableColumnsCache = Array.isArray(data?.availableColumns)
+          ? data.availableColumns
+          : []
+        return availableColumnsCache
+      })
+      .finally(() => {
+        // Dropped on success too: the cache above is the fast path, and a
+        // failed attempt should be retried rather than remembered.
+        availableColumnsRequest = null
+      })
   }
 
-  const token = new RegExp(
-    String(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-    'i',
+  return availableColumnsRequest
+}
+
+// Called from the content-script bootstrap while the tab is idle. On a real
+// instance the catalog is ~90 KB, so paying for it up front keeps the first
+// keystroke in the field picker local.
+export function warmFieldCache() {
+  return loadAvailableColumns().catch(() => {
+    // Nobody asked for this fetch, so a failure is silent; the picker will
+    // surface the error (and retry) when the user actually searches.
+  })
+}
+
+export async function projectPicker({ query = '' } = {}) {
+  const data = await requestJson(
+    urlFor(ENDPOINTS.projectPicker, {
+      query: normalizeProjectQuery(query),
+      maxResults: 50,
+    }),
   )
 
-  return availableColumnsCache
-    .filter(({ label, value }) => token.test(label ?? '') || token.test(value ?? ''))
-    .map(({ label, value }) => ({ id: String(value), name: String(label ?? value) }))
+  return parseProjectPicker(data)
+}
+
+// Issue types, statuses, and resolutions use Jira's JQL autocomplete instead of
+// their catalog endpoints: those ignore `?query=` and return 240–380 entries,
+// while autocomplete filters server-side and answers in ~80 ms with a few
+// hundred bytes. Nothing is preloaded or cached, so every search hits Jira.
+// The trade-off is prefix matching and Jira's 15-value cap.
+function suggestionPicker(fieldName) {
+  return async function suggestionsPicker({ query = '' } = {}) {
+    const text = String(query ?? '').trim()
+    if (!text) return []
+
+    const data = await requestJson(
+      urlFor(ENDPOINTS.jqlSuggestions, {
+        fieldName,
+        fieldValue: text,
+      }),
+    )
+
+    return parseSuggestions(data)
+  }
+}
+
+export const typesPicker = suggestionPicker('issuetype')
+export const statusesPicker = suggestionPicker('status')
+export const resolutionsPicker = suggestionPicker('resolution')
+
+export async function fieldsPicker({ query = '' } = {}) {
+  const columns = await loadAvailableColumns()
+  return searchColumns(columns, query)
 }
 
 export const handlers = {
@@ -177,6 +240,10 @@ export const handlers = {
   'issues.withComments': issuesWithComments,
   'picker.sprint': sprintPicker,
   'picker.user': userPicker,
+  'picker.project': projectPicker,
+  'picker.types': typesPicker,
+  'picker.statuses': statusesPicker,
+  'picker.resolutions': resolutionsPicker,
   'picker.fields': fieldsPicker,
 }
 

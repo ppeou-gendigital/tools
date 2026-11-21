@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Loader, MultiSelect } from '@mantine/core'
+import { dedupeOptions, filterOptions } from '../lib/jira/options.js'
 
 // MultiSelect whose options can come from the Jira tab on demand. The caller
 // decides how the option values are keyed (`mapResults`), which keeps resource
@@ -60,17 +61,14 @@ export function RemoteMultiSelect({
   }
 
   const pool = dedupeOptions([...options, ...selectedOptions, ...remote])
-  const data = pool.map(({ value: id, label: text }) => ({
-    value: id,
-    label: text,
-  }))
 
   return (
     <MultiSelect
       label={label}
       description={description}
       placeholder={placeholder}
-      data={data}
+      data={pool}
+      filter={filterOptions}
       value={value}
       onChange={(values) => onChange(values, pool)}
       searchable
@@ -81,15 +79,4 @@ export function RemoteMultiSelect({
       error={error || undefined}
     />
   )
-}
-
-function dedupeOptions(list) {
-  const seen = new Set()
-  const result = []
-  for (const option of list) {
-    if (!option?.value || seen.has(option.value)) continue
-    seen.add(option.value)
-    result.push({ value: option.value, label: option.label ?? option.value })
-  }
-  return result
 }

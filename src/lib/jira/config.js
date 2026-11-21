@@ -17,6 +17,8 @@ export const STORAGE_KEYS = {
 export const ENDPOINTS = {
   sprintPicker: '/rest/greenhopper/1.0/sprint/picker',
   userPicker: '/rest/api/latest/groupuserpicker',
+  projectPicker: '/rest/api/2/projects/picker',
+  jqlSuggestions: '/rest/api/2/jql/autocompletedata/suggestions',
   availableColumns: '/rest/gadget/1.0/availableColumns',
   userColumns: '/rest/api/2/user/columns',
   issueSearch: '/rest/api/2/search',

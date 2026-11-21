@@ -3,7 +3,7 @@
 // messaging.
 
 import { MESSAGE, RUNNER_SOURCE } from '../protocol.js'
-import { handle } from './handlers.js'
+import { handle, warmFieldCache } from './handlers.js'
 
 // The popup can re-inject this file when it finds no listener, so guard
 // against registering the same listener twice.
@@ -39,4 +39,14 @@ if (!globalThis[GUARD]) {
     // Keeps the message channel open for the async response.
     return true
   })
+
+  // Issue types, statuses, and resolutions are searched live through JQL
+  // autocomplete, so only the field catalog needs warming. It cannot be
+  // searched server-side (~1,600 columns, ~90 KB), so pull it while the tab is
+  // idle and the first keystroke in the field picker does not pay for it.
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(() => warmFieldCache(), { timeout: 10_000 })
+  } else {
+    setTimeout(() => warmFieldCache(), 2_000)
+  }
 }

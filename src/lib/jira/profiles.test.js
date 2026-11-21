@@ -87,6 +87,20 @@ test('normalizes a modern profile and survives a round trip', () => {
   assert.deepEqual(parseProfile(exported), profile)
 })
 
+test('drops the preloaded field catalog after resolving labels', () => {
+  const profile = parseProfile(LEGACY_EXPORT)
+
+  assert.deepEqual(profile.available.fields, [])
+  assert.deepEqual(
+    profile.selection.fetchFields.find((field) => field.id === 'timeestimate'),
+    { id: 'timeestimate', name: 'Remaining Estimate' },
+  )
+
+  const roundTripped = parseProfile(toExport(profile))
+  assert.deepEqual(roundTripped.available.fields, [])
+  assert.deepEqual(roundTripped.selection.fetchFields, profile.selection.fetchFields)
+})
+
 test('rejects junk and future schemas', () => {
   assert.throws(() => parseProfile(null), /JSON object/)
   assert.throws(() => parseProfile([]), /JSON object/)

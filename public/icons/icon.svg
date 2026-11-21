@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 24 24" role="img" aria-label="Jira Capacity">
+  <rect width="24" height="24" rx="5" fill="#5F3DC4"/>
+  <g transform="translate(3.1 2.75) scale(0.733)" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M13.539 21h-8.539c-1.105 0 -2 -.895 -2 -2v-14c0 -1.105 .895 -2 2 -2h14c1.105 0 2 .895 2 2v7.536"/>
+    <path d="M3 10h18"/>
+    <path d="M10 3v18"/>
+    <path d="M19 16l-2 3h4l-2 3"/>
+  </g>
+</svg>

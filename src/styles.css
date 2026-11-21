@@ -1,5 +1,5 @@
 html {
-  width: 460px;
+  width: 800px;
   scrollbar-width: thin;
   scrollbar-color: var(--mantine-color-default-border) transparent;
 }
@@ -15,6 +15,40 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 120px;
+}
+
+/* Three panels side by side in normal flow. The popup is 800px wide, so two
+   columns fit and the horizontal scrollbar (or a trackpad swipe) reaches the
+   third. The page itself scrolls vertically as usual. */
+.panels {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  /* Keep the standard properties at `auto` so Chrome uses the visible
+     ::-webkit-scrollbar below instead of the auto-hiding overlay scrollbar. */
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+  padding-bottom: 4px;
+}
+
+.panels > * {
+  flex: 0 0 calc(50% - 8px);
+  min-width: 0;
+}
+
+.panels::-webkit-scrollbar {
+  height: 8px;
+}
+
+.panels::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.panels::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: var(--mantine-color-default-border);
 }
 
 .ordered-row {

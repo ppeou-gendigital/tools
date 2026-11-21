@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "watch": "vite build --watch",
-    "test": "node --test \"src/lib/**/*.test.js\""
+    "test": "node --test \"src/lib/**/*.test.js\"",
+    "icons": "node scripts/make-icons.mjs"
   },
   "dependencies": {
     "@mantine/core": "^9.8.1",

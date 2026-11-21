@@ -37,6 +37,18 @@ open the popup while a Jira tab is focused.
 optional Babel and React Compiler peers that npm 11 resolves to conflicting
 majors. Neither transform is used here.
 
+## Icons
+
+The toolbar icon is Tabler's `table-bolt` in white on a violet `#5F3DC4` tile,
+drawn on a 24-unit grid with `rx=5` and transparent corners:
+`public/icons/icon.svg`. `npm run icons` rasterises it into the 16/32/48/128
+PNGs referenced by `manifest.json`. The script drives headless Chrome and
+`sips`, so it only runs on macOS.
+
+The 16 px raster is an optical variant — same paths, but the glyph is enlarged
+and its stroke thickened. Scaled straight down, the 2 px stroke collapses and
+the table grid merges into a blob in the toolbar.
+
 ## Layout
 
 ```
@@ -87,8 +99,7 @@ A profile is one importable JSON document:
   "origin": "https://jira.corp.nortonlifelock.com",
   "available": {
     "projects": [{ "id": "WEBEXP", "name": "WEBEXP" }],
-    "types": [], "statuses": [], "resolutions": [],
-    "fields": [{ "id": "customfield_10008", "name": "Story Points" }]
+    "types": [], "statuses": [], "resolutions": []
   },
   "selection": {
     "filters": {
@@ -103,9 +114,11 @@ A profile is one importable JSON document:
 }
 ```
 
-- `available` is the option catalog shown in the dropdowns; `selection` is what
-  is currently picked. Keeping them apart means an exported profile stays
-  editable without losing choices that are not selected right now.
+- `available` seeds the filter dropdowns (projects, types, statuses,
+  resolutions) so imported selections keep their labels; each dropdown then
+  searches Jira live. `selection` is what is currently picked. Keeping them
+  apart means an exported profile stays editable without losing choices that
+  are not selected right now.
 - Edits live in `chrome.storage.local` under one key per profile entry, so the
   imported document is never mutated. Export writes the current working copy.
 - Import accepts the JSON produced by the previous CRA build
@@ -115,8 +128,41 @@ A profile is one importable JSON document:
 - Resources are stored as `resource:<login>` so a person can never collide with
   a field id in the same row. Resource columns are matched to subtasks by
   **display name**, which is exactly what the issue-view assignee cell contains.
-- "Reload field list from Jira" in the profile menu fetches
-  `/rest/gadget/1.0/availableColumns` and merges it into `available.fields`.
+- Every filter picker is searched live, one request per search, not preloaded:
+  projects, issue types, statuses, resolutions, field columns, people, and
+  sprints. The popup sends the typed query to the runner on the Jira tab.
+  Projects query `/rest/api/2/projects/picker` (server-side, `maxResults=50`,
+  hard-capped by Jira at 100). Issue types, statuses, and resolutions query JQL
+  autocomplete (`/rest/api/2/jql/autocompletedata/suggestions`, ~0.1–0.3 KB and
+  ~80 ms per search). Columns (`/rest/gadget/1.0/availableColumns`) and people
+  query the group/user picker; sprints the sprint picker. This keeps instances
+  with hundreds or thousands of entries out of the popup and out of the saved
+  profile.
+- JQL autocomplete matches by **prefix** and Jira caps it at 15 values, so
+  "in prog" finds "In Progress" but "prog" finds nothing; the catalog endpoints
+  would have allowed substring matching but ignore `?query=` and return 240–380
+  entries (~70–140 KB). Values arrive as JQL literals, quoted when they contain
+  spaces, and are unquoted before use. Issue type, status, and resolution ids
+  are stored as their **names** because that is what the JQL builder quotes and
+  what imported profiles already contain.
+- The catalogs are not small on a mature instance (measured: 242 issue types,
+  380 statuses, 89 resolutions, 1,635 columns), which is why the profile-local
+  copies went stale. Nothing is cached per tab anymore except the column list,
+  which is warmed on idle because it cannot be searched server-side.
+- The project picker returns real `key`, `id`, and `name` fields, so the key is
+  stored as the project id — that is what the JQL builder quotes. The unfiltered
+  list endpoint (`/rest/api/2/project`) ignores `query` and returns every
+  project in a 340 KB array, so it is only useful for a full sync, never for
+  typeahead. Searching by key works because the remote picker filters options
+  on the value as well as the label; an issue key or browse URL
+  (`WEBAVAST-26648`) is reduced to its project key before the request.
+- `availableColumns` accepts no query parameter (checked against a live
+  instance: `?query=`, `?search=`, `?q=` and five other spellings all return
+  the full list), so the runner fetches the catalog once per Jira tab while the
+  tab is idle, caches it, and ranks matches locally — exact, then prefix, then
+  word-start, then substring — before returning the best 50.
+- `available.fields` from older profiles is used once to resolve the imported
+  selection's labels, then dropped; selected fields carry their own labels.
 
 ## Field kinds
 

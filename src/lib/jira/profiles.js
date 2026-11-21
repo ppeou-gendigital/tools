@@ -52,6 +52,13 @@ export function normalizeAvailable(available = {}) {
   }
 }
 
+// Old profiles stored every Jira column in `available.fields`. That catalog is
+// no longer preloaded (fields are searched live), so keep it only long enough
+// to resolve the imported selection's labels, then drop it before persisting.
+function withoutFieldCatalog(available) {
+  return { ...available, fields: [] }
+}
+
 // Pools only supply display names for ids that were stored bare; anything the
 // selection already carries keeps its own name.
 function normalizeFilters(filters = {}, pools = {}) {
@@ -159,7 +166,7 @@ function fromLegacy(raw, fallbackName) {
   return createProfile({
     name: raw.name ?? fallbackName ?? 'Imported profile',
     origin: JIRA_ORIGIN,
-    available,
+    available: withoutFieldCatalog(available),
     selection: createSelection({
       filters: normalizeFilters(
         {
@@ -186,7 +193,7 @@ export function normalizeProfile(raw) {
   return createProfile({
     name: String(raw.name ?? 'Default'),
     origin: String(raw.origin ?? raw.jiraOrigin ?? JIRA_ORIGIN),
-    available,
+    available: withoutFieldCatalog(available),
     selection: normalizeSelection(selection, available),
   })
 }

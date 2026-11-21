@@ -73,7 +73,27 @@ async function injectRunner(tabId) {
     )
   }
 
-  await chrome.scripting.executeScript({ target: { tabId }, files })
+  try {
+    await chrome.scripting.executeScript({ target: { tabId }, files })
+  } catch (error) {
+    // Chrome refuses to inject outside the manifest's host permissions. Say
+    // which origin was blocked instead of surfacing the raw API wording, since
+    // the usual cause is a tab on a scheme/host the manifest does not list.
+    if (/must request permission|Cannot access contents/i.test(error?.message ?? '')) {
+      const tab = await chrome.tabs.get(tabId).catch(() => null)
+      let origin = 'that tab'
+      try {
+        origin = new URL(tab?.url ?? '').origin
+      } catch {
+        // keep the generic label
+      }
+      throw new RunnerError(
+        `Chrome blocked the Jira helper on ${origin}. Reload that tab and try again.`,
+        'no-permission',
+      )
+    }
+    throw error
+  }
 }
 
 export async function callRunner(

@@ -4,7 +4,6 @@ import {
   Alert,
   Button,
   Group,
-  Loader,
   Menu,
   Select,
   Stack,
@@ -15,7 +14,6 @@ import {
   IconDots,
   IconDownload,
   IconFileImport,
-  IconRefresh,
   IconTrash,
 } from '@tabler/icons-react'
 import { toExport } from '../lib/jira/profiles.js'
@@ -34,8 +32,6 @@ export function ProfileBar({
   onSelect,
   onImport,
   onRemove,
-  onRefreshFields,
-  refreshingFields,
 }) {
   const fileRef = useRef(null)
   const [error, setError] = useState('')
@@ -111,16 +107,6 @@ export function ProfileBar({
               disabled={!activeProfile}
             >
               Export profile
-            </Menu.Item>
-            <Menu.Item
-              leftSection={<IconRefresh size={14} />}
-              onClick={onRefreshFields}
-              disabled={!activeProfile}
-              rightSection={
-                refreshingFields ? <Loader size={12} /> : null
-              }
-            >
-              Reload field list from Jira
             </Menu.Item>
             <Menu.Divider />
             <Menu.Item
