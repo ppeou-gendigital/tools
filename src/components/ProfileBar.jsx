@@ -1,7 +1,6 @@
-import { useRef, useState } from 'react'
 import {
   ActionIcon,
-  Alert,
+  Badge,
   Button,
   Group,
   Menu,
@@ -11,52 +10,58 @@ import {
   Tooltip,
 } from '@mantine/core'
 import {
+  IconCloudDownload,
+  IconCloudUpload,
   IconDots,
   IconDownload,
-  IconFileImport,
   IconTrash,
 } from '@tabler/icons-react'
-import { toExport } from '../lib/jira/profiles.js'
-import { downloadText } from '../runtime/download.js'
+import { sourceLabel } from '../lib/jira/remote.js'
 
-function safeName(value) {
-  return String(value ?? '')
-    .replace(/[^\w.-]+/g, '_')
-    .replace(/^_+|_+$/g, '') || 'profile'
+const BADGES = {
+  checking: {
+    color: 'gray',
+    label: 'Checking…',
+    tip: 'Checking the attached file on Jira.',
+  },
+  current: {
+    color: 'green',
+    label: 'Up to date',
+    tip: 'The attachment on Jira matches this profile.',
+  },
+  changed: {
+    color: 'yellow',
+    label: 'Jira changed',
+    tip: 'The attachment on Jira changed since this profile was imported.',
+  },
+  missing: {
+    color: 'red',
+    label: 'Removed',
+    tip: 'The attachment is no longer on the ticket.',
+  },
+  error: {
+    color: 'gray',
+    label: "Can't check",
+    tip: 'The Jira attachment could not be checked.',
+  },
 }
 
 export function ProfileBar({
   items,
   activeId,
   activeProfile,
+  activeEntry,
+  remoteStatus,
   onSelect,
   onImport,
+  onExport,
   onRemove,
+  onSync,
+  onRefreshStatus,
+  canImport,
 }) {
-  const fileRef = useRef(null)
-  const [error, setError] = useState('')
-
-  async function handleFile(event) {
-    const file = event.currentTarget.files?.[0]
-    event.currentTarget.value = ''
-    if (!file) return
-
-    setError('')
-    try {
-      const raw = JSON.parse(await file.text())
-      onImport(raw, file.name)
-    } catch (readError) {
-      setError(readError.message || 'Could not read that profile.')
-    }
-  }
-
-  function exportProfile() {
-    if (!activeProfile) return
-    downloadText(
-      `${safeName(activeProfile.name)}.json`,
-      JSON.stringify(toExport(activeProfile), null, 2),
-    )
-  }
+  const source = activeEntry?.source
+  const badge = BADGES[remoteStatus?.status]
 
   function removeProfile() {
     if (!activeProfile) return
@@ -64,12 +69,53 @@ export function ProfileBar({
     onRemove(activeId)
   }
 
+  const badgeTip = badge
+    ? [
+        sourceLabel(source),
+        badge.tip,
+        remoteStatus?.message,
+        onRefreshStatus ? 'Click to check again.' : '',
+      ]
+        .filter(Boolean)
+        .join('\n')
+    : ''
+
   return (
     <Stack gap={4}>
       <Group gap={4} align="flex-end" wrap="nowrap">
         <Select
           style={{ flex: 1 }}
-          label="Profile"
+          label={
+            <Group gap={6} justify="space-between" wrap="nowrap" w="100%">
+              <Text size="sm" fw={500}>
+                Profile
+              </Text>
+              {badge ? (
+                <Tooltip
+                  label={badgeTip}
+                  multiline
+                  w={260}
+                  withArrow
+                  position="bottom-end"
+                >
+                  <Badge
+                    color={badge.color}
+                    variant="light"
+                    size="sm"
+                    style={onRefreshStatus ? { cursor: 'pointer' } : undefined}
+                    onClick={onRefreshStatus}
+                  >
+                    {badge.label}
+                  </Badge>
+                </Tooltip>
+              ) : null}
+            </Group>
+          }
+          description={
+            source
+              ? sourceLabel(source)
+              : 'Profiles are imported from a Jira ticket attachment.'
+          }
           placeholder={
             items.length === 0 ? 'No profiles yet' : 'Select a profile'
           }
@@ -96,14 +142,22 @@ export function ProfileBar({
 
           <Menu.Dropdown>
             <Menu.Item
-              leftSection={<IconFileImport size={14} />}
-              onClick={() => fileRef.current?.click()}
+              leftSection={<IconCloudDownload size={14} />}
+              onClick={onImport}
+              disabled={!canImport}
             >
-              Import profile…
+              Import from Jira…
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<IconCloudUpload size={14} />}
+              onClick={onSync}
+              disabled={!source || !canImport}
+            >
+              Sync to Jira…
             </Menu.Item>
             <Menu.Item
               leftSection={<IconDownload size={14} />}
-              onClick={exportProfile}
+              onClick={onExport}
               disabled={!activeProfile}
             >
               Export profile
@@ -123,27 +177,15 @@ export function ProfileBar({
         {items.length === 0 ? (
           <Button
             variant="light"
-            leftSection={<IconFileImport size={14} />}
-            onClick={() => fileRef.current?.click()}
+            leftSection={<IconCloudDownload size={14} />}
+            onClick={onImport}
+            disabled={!canImport}
+            title={!canImport ? 'Open the extension on a Jira tab' : undefined}
           >
-            Import
+            Import from Jira
           </Button>
         ) : null}
       </Group>
-
-      {error ? (
-        <Alert color="red" variant="light" py={4}>
-          <Text size="xs">{error}</Text>
-        </Alert>
-      ) : null}
-
-      <input
-        ref={fileRef}
-        type="file"
-        accept="application/json,.json"
-        hidden
-        onChange={handleFile}
-      />
     </Stack>
   )
 }

@@ -30,24 +30,24 @@ import { parseIssues } from './lib/jira/export/parse-issues.js'
 import { parseIssueView } from './lib/jira/export/parse-issueview.js'
 import { applyResourceHours, countRows } from './lib/jira/export/rows.js'
 import { buildTableHtml } from './lib/jira/export/table.js'
+import { buildSnapshot, uploadFileName } from './lib/jira/remote.js'
 import { callRunner } from './runtime/chrome/messaging.js'
 import { resolveJiraTab } from './runtime/chrome/tab.js'
 import { copyHtml } from './runtime/clipboard.js'
+import { downloadText } from './runtime/download.js'
 import { MESSAGE } from './runtime/protocol.js'
 import { useConfig } from './state/useConfig.js'
 import { useProfiles } from './state/useProfiles.js'
+import { useRemoteStatus } from './state/useRemoteStatus.js'
 import { ExportBar } from './components/ExportBar.jsx'
 import { FieldSection } from './components/FieldSection.jsx'
 import { FilterSection } from './components/FilterSection.jsx'
 import { Panels } from './components/Panels.jsx'
 import { ProfileBar } from './components/ProfileBar.jsx'
+import { RemoteImportModal } from './components/RemoteImportModal.jsx'
 import { ResourceSection } from './components/ResourceSection.jsx'
+import { SyncToJiraModal } from './components/SyncToJiraModal.jsx'
 import { TabGate } from './components/TabGate.jsx'
-
-function profileLabel(raw, fileName) {
-  const name = typeof raw?.name === 'string' ? raw.name.trim() : ''
-  return name || fileName
-}
 
 const THEMES = [
   { value: 'light', label: 'Light', Icon: IconSun },
@@ -68,6 +68,8 @@ export default function App({
   const [checking, setChecking] = useState(true)
   const [busy, setBusy] = useState('')
   const [notice, setNotice] = useState(null)
+  const [importOpen, setImportOpen] = useState(false)
+  const [syncOpen, setSyncOpen] = useState(false)
 
   const checkTab = useCallback(async () => {
     setChecking(true)
@@ -96,21 +98,27 @@ export default function App({
   }, [checkTab])
 
   const call = useCallback(
-    (type, payload = {}) => {
+    (type, payload = {}, options) => {
       const tabId = tabState?.tab?.id
       if (tabId == null) {
         return Promise.reject(
           new Error('Open the extension on a Jira tab first.'),
         )
       }
-      return callRunner(tabId, type, payload)
+      return callRunner(tabId, type, payload, options)
     },
     [tabState],
   )
 
   const origin = tabState?.origin ?? ''
+  const activeEntry = profiles.activeEntry
   const activeProfile = profiles.activeProfile
   const available = activeProfile?.available
+  const remote = useRemoteStatus({
+    entry: activeEntry,
+    call,
+    enabled: Boolean(tabState?.tab),
+  })
 
   async function runExport(kind, task) {
     setBusy(kind)
@@ -190,11 +198,33 @@ export default function App({
     })
   }
 
-  function importProfile(raw, fileName) {
-    const entry = profiles.importProfile(raw, {
-      name: profileLabel(raw, fileName),
+  function importProfiles(files) {
+    const imported = profiles.importProfiles(files)
+    if (imported.length === 0) return
+    setNotice({
+      color: 'green',
+      text:
+        imported.length === 1
+          ? `Imported "${imported[0].name}".`
+          : `Imported ${imported.length} profiles.`,
     })
-    setNotice({ color: 'green', text: `Imported "${entry.name}".` })
+  }
+
+  function exportProfile() {
+    if (!activeEntry) return
+    const snapshot = buildSnapshot(activeEntry, config)
+    if (!snapshot) return
+    downloadText(uploadFileName(activeEntry), JSON.stringify(snapshot, null, 2))
+  }
+
+  function handleSynced(source, warning) {
+    profiles.updateProfileSource(profiles.activeId, source)
+    setNotice({
+      color: warning ? 'yellow' : 'green',
+      text:
+        warning ??
+        `Synced ${source.issueKey} / ${source.filename}.`,
+    })
   }
 
   const activeTheme =
@@ -209,9 +239,15 @@ export default function App({
               items={profiles.items}
               activeId={profiles.activeId}
               activeProfile={activeProfile}
+              activeEntry={activeEntry}
+              remoteStatus={remote}
               onSelect={profiles.selectProfile}
-              onImport={importProfile}
+              onImport={() => setImportOpen(true)}
+              onExport={exportProfile}
               onRemove={profiles.removeProfile}
+              onSync={() => setSyncOpen(true)}
+              onRefreshStatus={remote.refresh}
+              canImport={Boolean(tabState?.tab)}
             />
           ) : null}
 
@@ -220,11 +256,11 @@ export default function App({
               <Loader size="sm" />
             </Center>
           ) : !activeProfile ? (
-            <Alert color="blue" variant="light" title="Import a profile">
+            <Alert color="blue" variant="light" title="Import from Jira">
               <Text size="xs">
                 A profile carries the filter lists, fetch fields, report
-                columns, and resources. Import the JSON exported by an earlier
-                version and it is migrated automatically.
+                columns, and resources. It is a JSON file attached to a Jira
+                ticket — import it with <strong>Import from Jira</strong> above.
               </Text>
             </Alert>
           ) : gate ? (
@@ -319,6 +355,22 @@ export default function App({
           </Menu.Dropdown>
         </Menu>
       </Group>
+
+      <RemoteImportModal
+        opened={importOpen}
+        onClose={() => setImportOpen(false)}
+        call={call}
+        onImport={importProfiles}
+      />
+
+      <SyncToJiraModal
+        opened={syncOpen}
+        onClose={() => setSyncOpen(false)}
+        entry={activeEntry}
+        snapshot={buildSnapshot(activeEntry, config)}
+        call={call}
+        onSynced={handleSynced}
+      />
     </Box>
   )
 }

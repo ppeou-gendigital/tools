@@ -1,6 +1,7 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { STORAGE_KEYS } from '../lib/jira/config.js'
 import { parseProfile } from '../lib/jira/profiles.js'
+import { pruneLocalProfiles } from '../lib/jira/remote.js'
 import { useChromeStorage } from '../hooks/useChromeStorage.js'
 import { removeKey } from '../runtime/storage.js'
 
@@ -14,14 +15,28 @@ function newId() {
 }
 
 // Profiles live in one storage key: { activeId, items: [{ id, name,
-// importedAt, profile }] }. Importing the same name replaces the entry, which
-// also drops its working config so the imported values take effect.
+// importedAt, profile, source }] }. Profiles can only come from a JSON
+// attachment on a Jira ticket, so entries without a Jira source are pruned on
+// load (including the local-file profiles from earlier builds).
 export function useProfiles() {
   const [index, setIndex, ready] = useChromeStorage(STORAGE_KEYS.profiles, EMPTY_INDEX)
 
-  const items = index?.items ?? []
-  const activeId = index?.activeId ?? ''
+  const pruned = useMemo(() => pruneLocalProfiles(index), [index])
+  const items = pruned.index.items
+  const activeId = pruned.index.activeId
   const activeEntry = items.find((item) => item.id === activeId) ?? null
+  const removedIds = pruned.removedIds
+
+  const needsPrune =
+    removedIds.length > 0 ||
+    (index?.items?.length ?? 0) !== items.length ||
+    (index?.activeId ?? '') !== activeId
+
+  useEffect(() => {
+    if (!ready || !needsPrune) return
+    for (const id of removedIds) removeKey(STORAGE_KEYS.working(id))
+    setIndex({ activeId, items })
+  }, [ready, needsPrune, removedIds, activeId, items, setIndex])
 
   const persist = useCallback(
     (nextItems, nextActiveId) => {
@@ -30,26 +45,51 @@ export function useProfiles() {
     [setIndex],
   )
 
-  const importProfile = useCallback(
-    (raw, { name } = {}) => {
-      const label = String(name ?? raw?.name ?? 'Imported profile').trim()
-      const profile = parseProfile(raw, { fallbackName: label })
-      const id = newId()
+  // Imports one or more attachments in a single storage write. Importing the
+  // same name replaces the entry, which also drops its working config so the
+  // imported values take effect.
+  const importProfiles = useCallback(
+    (files) => {
+      const prepared = (Array.isArray(files) ? files : []).map((file) => {
+        if (!file?.source) {
+          throw new Error('Profiles must come from a Jira attachment.')
+        }
+        const label =
+          String(file.name ?? file.raw?.name ?? 'Imported profile').trim() ||
+          'Imported profile'
+        return {
+          label,
+          source: file.source,
+          profile: parseProfile(file.raw, { fallbackName: label }),
+        }
+      })
 
-      const replaced = items.filter((item) => item.name === label)
-      for (const entry of replaced) removeKey(STORAGE_KEYS.working(entry.id))
+      let next = items
+      let nextActiveId = activeId
+      const imported = []
 
-      const entry = {
-        id,
-        name: label,
-        importedAt: new Date().toISOString(),
-        profile: { ...profile, name: label },
+      for (const entry of prepared) {
+        for (const replaced of next.filter((item) => item.name === entry.label)) {
+          removeKey(STORAGE_KEYS.working(replaced.id))
+        }
+
+        const item = {
+          id: newId(),
+          name: entry.label,
+          importedAt: new Date().toISOString(),
+          profile: { ...entry.profile, name: entry.label },
+          source: entry.source,
+        }
+
+        next = [item, ...next.filter((existing) => existing.name !== entry.label)]
+        nextActiveId = item.id
+        imported.push(item)
       }
 
-      persist([entry, ...items.filter((item) => item.name !== label)], id)
-      return entry
+      if (imported.length > 0) persist(next, nextActiveId)
+      return imported
     },
-    [items, persist],
+    [items, activeId, persist],
   )
 
   const removeProfile = useCallback(
@@ -71,8 +111,8 @@ export function useProfiles() {
     [items, persist],
   )
 
-  // Used by the field-list refresh: the catalog grows from Jira, while the
-  // working selection (and its storage key) stays untouched.
+  // Used by the field-list refresh and by a completed Jira sync: the working
+  // selection (and its storage key) stays untouched.
   const updateProfile = useCallback(
     (id, patch) => {
       persist(
@@ -87,15 +127,30 @@ export function useProfiles() {
     [activeId, items, persist],
   )
 
+  const updateProfileSource = useCallback(
+    (id, source) => {
+      persist(
+        items.map((item) =>
+          item.id === id
+            ? { ...item, source: { ...item.source, ...source } }
+            : item,
+        ),
+        activeId,
+      )
+    },
+    [activeId, items, persist],
+  )
+
   return {
     ready,
     items,
     activeId,
     activeEntry,
     activeProfile: activeEntry?.profile ?? null,
-    importProfile,
+    importProfiles,
     removeProfile,
     selectProfile,
     updateProfile,
+    updateProfileSource,
   }
 }

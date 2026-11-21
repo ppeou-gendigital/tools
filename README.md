@@ -58,6 +58,7 @@ src/lib/jira/          pure engine — no Chrome APIs, no network, tested
   jql.js               one JQL builder for both exports
   filters.js           ordered { id, name } selection helpers
   profiles.js          profile parsing, legacy migration, resource keys
+  remote.js            Jira attachment sharing, ticket keys, change detection
   order.js             move/remove for ordered lists
   export/
     parse-issueview.js  issue-view HTML table → rows + per-assignee seconds
@@ -76,9 +77,9 @@ src/runtime/           Chrome-facing glue
   chrome/messaging.js  request/response, timeout, inject-on-retry
   storage.js           chrome.storage.local + localStorage fallback
   clipboard.js         text/html clipboard write
-  download.js          profile JSON download
+  download.js          profile JSON export
 
-src/state/             useProfiles + per-profile working config
+src/state/             useProfiles, per-profile working config, remote status
 src/components/        popup pieces
 src/App.jsx            popup shell
 ```
@@ -98,7 +99,10 @@ the default is System. The choice is global — not per profile — and persists
 
 ## Profiles
 
-A profile is one importable JSON document:
+A profile is one JSON document attached to a Jira ticket. There is no local
+file import: **Import from Jira** asks for one or more ticket keys, lists their
+attachments, and imports every selected JSON file as its own profile. The same
+ticket can hold several profile files.
 
 ```json
 {
@@ -128,11 +132,24 @@ A profile is one importable JSON document:
   apart means an exported profile stays editable without losing choices that
   are not selected right now.
 - Edits live in `chrome.storage.local` under one key per profile entry, so the
-  imported document is never mutated. Export writes the current working copy.
+  imported document is never mutated. Export and sync both write the current
+  working copy, not the document that was originally imported.
+- Each entry also stores its `source` (`issueKey`, `attachmentId`, `filename`,
+  `remoteCreatedAt`). Entries without a Jira source are removed on load,
+  including profiles imported from local JSON files by earlier builds.
+- **Sync to Jira… is always manual.** It checks the ticket first, warns when the
+  attachment changed or disappeared, uploads the current profile, and only then
+  deletes the previously linked attachment. Other files on the ticket are never
+  touched. Editing a profile, exporting it, or switching profiles never writes
+  to Jira.
+- A badge next to the profile picker reports whether the ticket attachment is
+  up to date, changed, removed, or could not be checked. It refreshes when the
+  popup opens or the profile changes, and clicking it checks again.
 - Import accepts the JSON produced by the previous CRA build
   (`{ jira: { ..., lookupList: { ... } } }`) and migrates it: `lookupList.fields`
   becomes `fetchFields`, `jira.columns` becomes `reportFields`, `jira.users`
-  becomes resources, and `jira.status` becomes `statuses`.
+  becomes resources, and `jira.status` becomes `statuses`. This applies to files
+  attached to a ticket as well.
 - Resources are stored as `resource:<login>` so a person can never collide with
   a field id in the same row. Resource columns are matched to subtasks by
   **display name**, which is exactly what the issue-view assignee cell contains.

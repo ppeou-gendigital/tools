@@ -14,4 +14,8 @@ export const MESSAGE = {
   PICKER_STATUSES: 'picker.statuses',
   PICKER_RESOLUTIONS: 'picker.resolutions',
   PICKER_FIELDS: 'picker.fields',
+  ATTACHMENT_LIST: 'attachment.list',
+  ATTACHMENT_DOWNLOAD: 'attachment.download',
+  ATTACHMENT_UPLOAD: 'attachment.upload',
+  ATTACHMENT_DELETE: 'attachment.delete',
 }

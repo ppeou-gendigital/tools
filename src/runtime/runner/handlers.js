@@ -1,7 +1,7 @@
 // Request handlers executed inside the Jira tab. Each one returns plain data;
 // the popup owns rendering, parsing, and the clipboard.
 
-import { ENDPOINTS } from '../../lib/jira/config.js'
+import { ENDPOINTS, isJiraUrl } from '../../lib/jira/config.js'
 import { searchColumns } from '../../lib/jira/columnSearch.js'
 import { parseSuggestions } from '../../lib/jira/suggestions.js'
 import { parseProjectPicker, normalizeProjectQuery } from '../../lib/jira/projects.js'
@@ -235,9 +235,152 @@ export async function fieldsPicker({ query = '' } = {}) {
   return searchColumns(columns, query)
 }
 
+/* ----------------------------- attachments ----------------------------- */
+
+const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024
+
+function normalizeAttachment(issueKey, attachment) {
+  return {
+    id: String(attachment?.id ?? ''),
+    issueKey,
+    filename: String(attachment?.filename ?? ''),
+    size: Number(attachment?.size ?? 0),
+    mimeType: String(attachment?.mimeType ?? ''),
+    created: String(attachment?.created ?? ''),
+    author:
+      attachment?.author?.displayName ?? attachment?.author?.name ?? '',
+    content: String(attachment?.content ?? ''),
+  }
+}
+
+// Loads the attachment list for several tickets in parallel. A ticket that
+// fails (missing, no permission, or a signed-out session) reports its own error
+// instead of failing the whole batch.
+export async function listAttachments({ keys = [] } = {}) {
+  const unique = [...new Set(
+    (Array.isArray(keys) ? keys : [])
+      .map((key) => String(key ?? '').trim().toUpperCase())
+      .filter(Boolean),
+  )]
+
+  return Promise.all(
+    unique.map(async (key) => {
+      try {
+        const issue = await requestJson(
+          urlFor(`${ENDPOINTS.issue}/${encodeURIComponent(key)}`, {
+            fields: 'summary,attachment',
+          }),
+        )
+        const attachments = Array.isArray(issue?.fields?.attachment)
+          ? issue.fields.attachment
+          : []
+        return {
+          key,
+          summary: String(issue?.fields?.summary ?? ''),
+          attachments: attachments.map((attachment) =>
+            normalizeAttachment(key, attachment),
+          ),
+        }
+      } catch (error) {
+        return {
+          key,
+          summary: '',
+          attachments: [],
+          error: `${key}: ${error?.message ?? 'Jira could not read this ticket.'}`,
+        }
+      }
+    }),
+  )
+}
+
+export async function downloadAttachments({ items = [] } = {}) {
+  return Promise.all(
+    (Array.isArray(items) ? items : []).map(async (item) => {
+      const attachmentId = String(item?.attachmentId ?? '')
+      const filename = String(item?.filename ?? '')
+      try {
+        const raw = String(item?.content ?? '')
+        // Jira usually returns an absolute URL, but a relative one is valid too.
+        const content = raw ? new URL(raw, location.origin).toString() : ''
+        if (!isJiraUrl(content)) {
+          throw new HttpError('Attachment is not hosted on the Jira server.', {
+            code: 'bad-url',
+          })
+        }
+        const text = await requestText(content)
+        if (text.length > MAX_ATTACHMENT_BYTES) {
+          throw new HttpError('Attachment is larger than 2 MB.', {
+            code: 'too-large',
+          })
+        }
+        return {
+          issueKey: item?.issueKey,
+          attachmentId,
+          filename,
+          text,
+        }
+      } catch (error) {
+        return {
+          issueKey: item?.issueKey,
+          attachmentId,
+          filename,
+          error: error?.message ?? 'Attachment download failed.',
+        }
+      }
+    }),
+  )
+}
+
+export async function uploadAttachment({ issueKey, filename, text } = {}) {
+  if (!issueKey) {
+    throw new HttpError('Pick a Jira ticket before syncing.', { code: 'no-ticket' })
+  }
+  if (!filename) {
+    throw new HttpError('The profile needs a file name.', { code: 'no-filename' })
+  }
+
+  const form = new FormData()
+  form.append(
+    'file',
+    new Blob([String(text ?? '')], { type: 'application/json' }),
+    filename,
+  )
+
+  const data = await requestJson(
+    `${ENDPOINTS.issue}/${encodeURIComponent(issueKey)}/attachments`,
+    {
+      method: 'POST',
+      // Jira rejects XSRF-less multipart posts, and this header is how the web
+      // UI itself opts out.
+      headers: { 'X-Atlassian-Token': 'no-check' },
+      body: form,
+    },
+  )
+
+  const created = Array.isArray(data) ? data[0] : data
+  if (!created?.id) {
+    throw new HttpError('Jira did not return the uploaded attachment.', {
+      code: 'upload-failed',
+    })
+  }
+  return normalizeAttachment(issueKey, created)
+}
+
+export async function deleteAttachment({ id } = {}) {
+  if (!id) throw new HttpError('No attachment was selected.', { code: 'no-id' })
+  await requestOk(`${ENDPOINTS.attachment}/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  })
+  return { id: String(id) }
+}
+
 export const handlers = {
   'report.issueView': issueView,
   'issues.withComments': issuesWithComments,
+  'attachment.list': listAttachments,
+  'attachment.download': downloadAttachments,
+  'attachment.upload': uploadAttachment,
+  'attachment.delete': deleteAttachment,
   'picker.sprint': sprintPicker,
   'picker.user': userPicker,
   'picker.project': projectPicker,

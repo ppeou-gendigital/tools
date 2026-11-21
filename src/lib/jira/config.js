@@ -11,6 +11,7 @@ export const STORAGE_KEYS = {
   working: (profileId) => `jiraCapacity.working.${profileId}`,
   theme: 'jiraCapacity.theme',
   ui: 'jiraCapacity.ui',
+  recentTickets: 'jiraCapacity.recentTickets',
 }
 
 // Relative on purpose: the runner executes on the Jira origin, so the session
@@ -23,6 +24,8 @@ export const ENDPOINTS = {
   availableColumns: '/rest/gadget/1.0/availableColumns',
   userColumns: '/rest/api/2/user/columns',
   issueSearch: '/rest/api/2/search',
+  issue: '/rest/api/2/issue',
+  attachment: '/rest/api/2/attachment',
   issueView:
     '/sr/jira.issueviews:searchrequest-html-current-fields/temp/SearchRequest.html',
 }
