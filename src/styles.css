@@ -17,6 +17,18 @@ body {
   min-height: 120px;
 }
 
+/* Brand and theme switcher. It sits last in flow so at full scroll it clears
+   the panels, but sticks to the viewport bottom while the page scrolls. */
+.app-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  flex: none;
+  padding: 5px 10px;
+  border-top: 1px solid var(--mantine-color-default-border);
+  background: var(--mantine-color-body);
+}
+
 /* Three panels side by side in normal flow. The popup is 800px wide, so two
    columns fit and the horizontal scrollbar (or a trackpad swipe) reaches the
    third. The page itself scrolls vertically as usual. */

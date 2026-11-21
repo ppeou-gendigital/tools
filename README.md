@@ -88,6 +88,14 @@ loader chunk) and adds it to `web_accessible_resources`. When the popup finds
 no listener — typically a Jira tab that predates the extension install — it
 re-injects the manifest's first content-script file once and retries.
 
+The popup is 800 px wide and its height follows the content (Chrome caps it at
+600 px, so the page scrolls). The three panels sit in a plain flex row: two fit
+at once and the third is reached by horizontal scroll, and the Filters column
+ends with the two export actions. A sticky footer holds the app badge/name and
+a theme menu with Light, Dark, Sunrise/sunset (light 06:00–18:00), and System;
+the default is System. The choice is global — not per profile — and persists in
+`jiraCapacity.theme` through `chrome.storage.local`.
+
 ## Profiles
 
 A profile is one importable JSON document:

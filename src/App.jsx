@@ -1,17 +1,25 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
+  ActionIcon,
   Alert,
   Box,
   Center,
   Divider,
   Group,
   Loader,
+  Menu,
   Stack,
   Text,
   ThemeIcon,
-  Title,
 } from '@mantine/core'
-import { IconLinkCode } from '@tabler/icons-react'
+import {
+  IconCheck,
+  IconDeviceDesktop,
+  IconLinkCode,
+  IconMoon,
+  IconSun,
+  IconSunrise,
+} from '@tabler/icons-react'
 import {
   COMMENT_EXPORT_FIELDS,
   COMMENT_EXPORT_FIELD_IDS,
@@ -41,7 +49,17 @@ function profileLabel(raw, fileName) {
   return name || fileName
 }
 
-export default function App() {
+const THEMES = [
+  { value: 'light', label: 'Light', Icon: IconSun },
+  { value: 'dark', label: 'Dark', Icon: IconMoon },
+  { value: 'sunrise', label: 'Sunrise/sunset', Icon: IconSunrise },
+  { value: 'system', label: 'System', Icon: IconDeviceDesktop },
+]
+
+export default function App({
+  colorScheme = 'system',
+  onColorSchemeChange = () => {},
+}) {
   const profiles = useProfiles()
   const { config, update, ready: configReady } = useConfig(profiles.activeEntry)
 
@@ -179,82 +197,128 @@ export default function App() {
     setNotice({ color: 'green', text: `Imported "${entry.name}".` })
   }
 
+  const activeTheme =
+    THEMES.find((item) => item.value === colorScheme) ?? THEMES[3]
+
   return (
-    <Box className="app" p="sm" py={8}>
-      <Stack gap="xs">
-        <Group gap={6} wrap="nowrap">
-          <ThemeIcon size={22} radius="md" variant="light">
-            <IconLinkCode size={14} />
+    <Box className="app">
+      <Box p="sm" py={8}>
+        <Stack gap="xs">
+          {profiles.ready ? (
+            <ProfileBar
+              items={profiles.items}
+              activeId={profiles.activeId}
+              activeProfile={activeProfile}
+              onSelect={profiles.selectProfile}
+              onImport={importProfile}
+              onRemove={profiles.removeProfile}
+            />
+          ) : null}
+
+          {!profiles.ready || checking ? (
+            <Center py="md">
+              <Loader size="sm" />
+            </Center>
+          ) : !activeProfile ? (
+            <Alert color="blue" variant="light" title="Import a profile">
+              <Text size="xs">
+                A profile carries the filter lists, fetch fields, report
+                columns, and resources. Import the JSON exported by an earlier
+                version and it is migrated automatically.
+              </Text>
+            </Alert>
+          ) : gate ? (
+            <TabGate gate={gate} onRetry={checkTab} />
+          ) : (
+            <>
+              <Panels>
+                <Stack gap="xs">
+                  <Divider label="Filters" labelPosition="left" />
+                  <FilterSection
+                    call={call}
+                    available={available}
+                    filters={config.filters}
+                    onChange={(filters) => update({ filters })}
+                  />
+                  <ExportBar
+                    onReport={generateReport}
+                    onComments={exportComments}
+                    busy={busy}
+                    disabled={Boolean(busy) || !configReady}
+                    notice={notice}
+                  />
+                </Stack>
+
+                <Stack gap="xs">
+                  <Divider label="Fields" labelPosition="left" />
+                  <FieldSection
+                    call={call}
+                    config={config}
+                    onChange={update}
+                  />
+                </Stack>
+
+                <Stack gap="xs">
+                  <Divider label="Resources" labelPosition="left" />
+                  <ResourceSection
+                    call={call}
+                    resources={config.resources}
+                    onChange={(resources) => update({ resources })}
+                  />
+                </Stack>
+              </Panels>
+            </>
+          )}
+        </Stack>
+      </Box>
+
+      {/* Brand and theme live at the bottom so the top starts with the profile
+          picker. The footer is sticky but last in flow: it never permanently
+          covers the panels or their horizontal scrollbar. */}
+      <Group className="app-footer" justify="space-between" wrap="nowrap">
+        <Group gap={5} wrap="nowrap" title="Jira Capacity">
+          <ThemeIcon
+            variant="filled"
+            size={18}
+            radius="xl"
+            style={{ backgroundColor: '#5F3DC4', color: '#ffffff' }}
+          >
+            <IconLinkCode size={11} stroke={2.2} />
           </ThemeIcon>
-          <Title order={5}>Jira Capacity</Title>
+          <Text size="xs" fw={600} lh={1}>
+            Jira Capacity
+          </Text>
         </Group>
 
-        {profiles.ready ? (
-          <ProfileBar
-            items={profiles.items}
-            activeId={profiles.activeId}
-            activeProfile={activeProfile}
-            onSelect={profiles.selectProfile}
-            onImport={importProfile}
-            onRemove={profiles.removeProfile}
-          />
-        ) : null}
+        <Menu position="top-end" width={180} withinPortal shadow="md">
+          <Menu.Target>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="md"
+              aria-label={`Theme: ${activeTheme.label}`}
+            >
+              <activeTheme.Icon size={16} stroke={1.8} />
+            </ActionIcon>
+          </Menu.Target>
 
-        {!profiles.ready || checking ? (
-          <Center py="md">
-            <Loader size="sm" />
-          </Center>
-        ) : !activeProfile ? (
-          <Alert color="blue" variant="light" title="Import a profile">
-            <Text size="xs">
-              A profile carries the filter lists, fetch fields, report columns,
-              and resources. Import the JSON exported by an earlier version and
-              it is migrated automatically.
-            </Text>
-          </Alert>
-        ) : gate ? (
-          <TabGate gate={gate} onRetry={checkTab} />
-        ) : (
-          <>
-            <Panels>
-              <Stack gap="xs">
-                <Divider label="Filters" labelPosition="left" />
-                <FilterSection
-                  call={call}
-                  available={available}
-                  filters={config.filters}
-                  onChange={(filters) => update({ filters })}
-                />
-                <ExportBar
-                  onReport={generateReport}
-                  onComments={exportComments}
-                  busy={busy}
-                  disabled={Boolean(busy) || !configReady}
-                  notice={notice}
-                />
-              </Stack>
-
-              <Stack gap="xs">
-                <Divider label="Fields" labelPosition="left" />
-                <FieldSection
-                  call={call}
-                  config={config}
-                  onChange={update}
-                />
-              </Stack>
-
-              <Stack gap="xs">
-                <Divider label="Resources" labelPosition="left" />
-                <ResourceSection
-                  call={call}
-                  resources={config.resources}
-                  onChange={(resources) => update({ resources })}
-                />
-              </Stack>
-            </Panels>
-          </>
-        )}
-      </Stack>
+          <Menu.Dropdown>
+            <Menu.Label>Theme</Menu.Label>
+            {THEMES.map(({ value, label, Icon }) => (
+              <Menu.Item
+                key={value}
+                leftSection={<Icon size={14} stroke={1.8} />}
+                rightSection={
+                  colorScheme === value ? <IconCheck size={14} /> : null
+                }
+                onClick={() => onColorSchemeChange(value)}
+              >
+                {label}
+              </Menu.Item>
+            ))}
+          </Menu.Dropdown>
+        </Menu>
+      </Group>
     </Box>
   )
 }

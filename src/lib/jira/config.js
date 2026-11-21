@@ -9,6 +9,7 @@ export const SCHEMA_VERSION = 1
 export const STORAGE_KEYS = {
   profiles: 'jiraCapacity.profiles',
   working: (profileId) => `jiraCapacity.working.${profileId}`,
+  theme: 'jiraCapacity.theme',
   ui: 'jiraCapacity.ui',
 }
 
