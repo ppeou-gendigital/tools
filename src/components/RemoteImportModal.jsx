@@ -12,13 +12,16 @@ import {
   Stack,
   TagsInput,
   Text,
+  TextInput,
 } from '@mantine/core'
-import { IconCloudDownload, IconRefresh } from '@tabler/icons-react'
+import { IconCloudDownload, IconPlus, IconRefresh } from '@tabler/icons-react'
 import { STORAGE_KEYS } from '../lib/jira/config.js'
+import { createBlankProfile, toExport } from '../lib/jira/profiles.js'
 import {
   isJsonAttachment,
   mergeRecentTickets,
   parseTicketKeys,
+  profileFileName,
 } from '../lib/jira/remote.js'
 import { useChromeStorage } from '../hooks/useChromeStorage.js'
 import { MESSAGE } from '../runtime/protocol.js'
@@ -41,23 +44,28 @@ function formatDate(value) {
   return date.toLocaleDateString()
 }
 
-// Imports one profile per selected JSON attachment. Multiple tickets and
-// multiple files are supported; nothing is written back to Jira here.
-export function RemoteImportModal({ opened, onClose, call, onImport }) {
+// Opens profiles from Jira: existing JSON attachments are imported, and a
+// ticket with no profile can get a freshly created one. Nothing is written to
+// Jira except the explicit "Create" action.
+export function RemoteImportModal({ opened, onClose, call, onImport, onCreate }) {
   const [tickets, setTickets] = useState([])
   const [recent, setRecent] = useChromeStorage(STORAGE_KEYS.recentTickets, [])
   const [results, setResults] = useState([])
   const [selected, setSelected] = useState({})
+  const [names, setNames] = useState({})
   const [loading, setLoading] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [creatingKey, setCreatingKey] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (opened) return
     setResults([])
     setSelected({})
+    setNames({})
     setLoading(false)
     setImporting(false)
+    setCreatingKey('')
     setError('')
   }, [opened])
 
@@ -144,10 +152,10 @@ export function RemoteImportModal({ opened, onClose, call, onImport }) {
         { timeout: 30_000 },
       )
 
-      const createdByKey = new Map(
+      const metaByKey = new Map(
         picked.map((attachment) => [
           attachmentKey(attachment.issueKey, attachment.id),
-          attachment.created,
+          { created: attachment.created, author: attachment.author },
         ]),
       )
 
@@ -162,6 +170,15 @@ export function RemoteImportModal({ opened, onClose, call, onImport }) {
 
         try {
           const raw = JSON.parse(download.text)
+          // Older files have no metadata; Jira knows when and by whom the
+          // attachment was uploaded, so use that instead of "now".
+          const meta = metaByKey.get(
+            attachmentKey(download.issueKey, download.attachmentId),
+          )
+          if (meta) {
+            if (!raw.createdAt && meta.created) raw.createdAt = meta.created
+            if (!raw.createdBy && meta.author) raw.createdBy = meta.author
+          }
           files.push({
             raw,
             name: raw?.name || download.filename,
@@ -171,9 +188,7 @@ export function RemoteImportModal({ opened, onClose, call, onImport }) {
               attachmentId: String(download.attachmentId),
               filename: download.filename,
               remoteCreatedAt:
-                createdByKey.get(
-                  attachmentKey(download.issueKey, download.attachmentId),
-                ) ?? '',
+                meta?.created ?? '',
             },
           })
         } catch {
@@ -195,11 +210,64 @@ export function RemoteImportModal({ opened, onClose, call, onImport }) {
     }
   }
 
+  // Creates a valid starter profile (defaults, no filters) directly on a ticket
+  // and records it as the active profile. This is the only way to get a first
+  // profile when the ticket has no JSON attachment.
+  async function createOnTicket(ticket) {
+    const name = String(names[ticket.key] ?? '').trim()
+    if (!name) {
+      setError('Enter a profile name first.')
+      return
+    }
+
+    setCreatingKey(ticket.key)
+    setError('')
+    try {
+      const user = await call(MESSAGE.USER_SELF, {}, { timeout: 15_000 }).catch(
+        () => null,
+      )
+      const profile = createBlankProfile({
+        name,
+        createdBy: user?.displayName ?? '',
+      })
+      const filename = profileFileName(profile.name, profile.id)
+      const uploaded = await call(
+        MESSAGE.ATTACHMENT_UPLOAD,
+        {
+          issueKey: ticket.key,
+          filename,
+          text: JSON.stringify(toExport(profile), null, 2),
+        },
+        { timeout: 30_000 },
+      )
+
+      onCreate({
+        name,
+        profile,
+        source: {
+          type: 'jira',
+          issueKey: ticket.key,
+          attachmentId: String(uploaded.id),
+          filename: uploaded.filename || filename,
+          remoteCreatedAt: uploaded.created || '',
+        },
+      })
+      onClose()
+    } catch (createError) {
+      setError(
+        createError?.message ??
+          'Could not create the profile. Check that you can attach files to this ticket.',
+      )
+    } finally {
+      setCreatingKey('')
+    }
+  }
+
   return (
     <Modal
       opened={opened}
       onClose={onClose}
-      title="Import from Jira"
+      title="Open from Jira"
       size="lg"
       centered
     >
@@ -208,7 +276,7 @@ export function RemoteImportModal({ opened, onClose, call, onImport }) {
           <TagsInput
             style={{ flex: 1 }}
             label="Jira tickets"
-            description="Profiles come from JSON files attached to one or more tickets."
+            description="Find an existing profile on a ticket, or create one there."
             placeholder="e.g. WEBEXP-123"
             data={Array.isArray(recent) ? recent : []}
             value={tickets}
@@ -322,6 +390,41 @@ export function RemoteImportModal({ opened, onClose, call, onImport }) {
                           )
                         })}
                       </Stack>
+                    ) : null}
+
+                    {!ticket.error ? (
+                      <Group align="flex-end" gap="xs" wrap="nowrap" mt={8}>
+                        <TextInput
+                          style={{ flex: 1 }}
+                          size="xs"
+                          label="New profile"
+                          description="Creates a starter file on this ticket."
+                          placeholder="Team or report name, e.g. WebExp"
+                          value={names[ticket.key] ?? ''}
+                          onChange={(event) => {
+                            const value = event.currentTarget.value
+                            setNames((previous) => ({
+                              ...previous,
+                              [ticket.key]: value,
+                            }))
+                          }}
+                          disabled={Boolean(creatingKey)}
+                          maxLength={80}
+                        />
+                        <Button
+                          size="compact-sm"
+                          variant="light"
+                          leftSection={<IconPlus size={14} />}
+                          onClick={() => createOnTicket(ticket)}
+                          loading={creatingKey === ticket.key}
+                          disabled={
+                            Boolean(creatingKey) ||
+                            !String(names[ticket.key] ?? '').trim()
+                          }
+                        >
+                          Create
+                        </Button>
+                      </Group>
                     ) : null}
                   </Box>
                 )

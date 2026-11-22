@@ -130,19 +130,40 @@ export function safeFileName(value, fallback = 'profile.json') {
   return /\.json$/i.test(name) ? name : `${name}.json`
 }
 
+// New profiles are named after the profile plus its stable id, e.g.
+// WebExp_9f1c2a7e-1b2c-4d5e-8f90-123456789abc.json. The id makes the file
+// unique without a timestamp; the readable prefix keeps the ticket's
+// attachment list human-friendly.
+export function profileFileName(name, id) {
+  const base =
+    String(name ?? '')
+      .replace(/[^\w.-]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .replace(/\.json$/i, '')
+      .slice(0, 80) || 'profile'
+  const suffix =
+    String(id ?? '')
+      .replace(/[^\w.-]+/g, '_')
+      .replace(/^_+|_+$/g, '') || 'profile'
+  return `${base}_${suffix}.json`
+}
+
 // Keep the file name stable across syncs so a ticket keeps one file per profile.
 export function uploadFileName(entry) {
   const fromSource = entry?.source?.filename
   if (fromSource) return safeFileName(fromSource)
+  const id = entry?.profile?.id
+  if (id) return profileFileName(entry?.name, id)
   return safeFileName(`${entry?.name ?? 'profile'}.json`)
 }
 
-export function buildSnapshot(entry, selection) {
+export function buildSnapshot(entry, selection, meta = {}) {
   if (!entry?.profile) return null
   return toExport({
     ...entry.profile,
     name: entry.name ?? entry.profile.name,
     selection: selection ?? entry.profile.selection,
+    ...meta,
   })
 }
 

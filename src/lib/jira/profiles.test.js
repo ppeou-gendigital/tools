@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { parseProfile, toExport, isLegacyProfile } from './profiles.js'
+import { createBlankProfile, parseProfile, toExport, isLegacyProfile } from './profiles.js'
 import { SCHEMA_VERSION } from './config.js'
 
 const LEGACY_EXPORT = {
@@ -40,11 +40,6 @@ test('migrates a legacy profile', () => {
 
   assert.equal(profile.schemaVersion, SCHEMA_VERSION)
   assert.equal(profile.name, 'old.json')
-  assert.deepEqual(profile.available.projects, [{ id: 'WEBEXP', name: 'WEBEXP' }])
-  assert.deepEqual(profile.available.types, [
-    { id: 'Bug', name: 'Bug' },
-    { id: 'User Story', name: 'User Story' },
-  ])
   assert.deepEqual(
     profile.selection.filters.sprints,
     [{ id: '264165', name: 'WebExp2025-S11' }],
@@ -57,9 +52,14 @@ test('migrates a legacy profile', () => {
     profile.selection.fetchFields.map((field) => field.id),
     ['issuekey', 'summary', 'timeestimate'],
   )
+  assert.deepEqual(
+    profile.selection.fetchFields.find((field) => field.id === 'timeestimate'),
+    { id: 'timeestimate', name: 'Remaining Estimate' },
+  )
   assert.deepEqual(profile.selection.resources, [
     { id: 'resource:mkaplan', name: 'Michael Kaplan' },
   ])
+  assert.equal('available' in profile, false)
 })
 
 test('normalizes a modern profile and survives a round trip', () => {
@@ -67,7 +67,6 @@ test('normalizes a modern profile and survives a round trip', () => {
     schemaVersion: 1,
     name: 'WebExp',
     origin: 'https://jira.example.com',
-    available: { fields: [{ id: 'issuekey', name: 'Key' }] },
     selection: {
       filters: { projects: ['WEBEXP'] },
       fetchFields: ['issuekey', 'summary'],
@@ -87,18 +86,22 @@ test('normalizes a modern profile and survives a round trip', () => {
   assert.deepEqual(parseProfile(exported), profile)
 })
 
-test('drops the preloaded field catalog after resolving labels', () => {
-  const profile = parseProfile(LEGACY_EXPORT)
+test('does not persist an option catalog', () => {
+  const profile = parseProfile({
+    available: {
+      projects: [{ id: 'WEBEXP', name: 'Web Experience' }],
+      fields: [{ id: 'summary', name: 'Summary' }],
+    },
+    selection: {
+      filters: { projects: [{ id: 'WEBEXP', name: 'Web Experience' }] },
+    },
+  })
 
-  assert.deepEqual(profile.available.fields, [])
-  assert.deepEqual(
-    profile.selection.fetchFields.find((field) => field.id === 'timeestimate'),
-    { id: 'timeestimate', name: 'Remaining Estimate' },
-  )
-
-  const roundTripped = parseProfile(toExport(profile))
-  assert.deepEqual(roundTripped.available.fields, [])
-  assert.deepEqual(roundTripped.selection.fetchFields, profile.selection.fetchFields)
+  const exported = toExport(profile)
+  assert.equal('available' in exported, false)
+  assert.deepEqual(exported.selection.filters.projects, [
+    { id: 'WEBEXP', name: 'Web Experience' },
+  ])
 })
 
 test('rejects junk and future schemas', () => {
@@ -108,6 +111,44 @@ test('rejects junk and future schemas', () => {
     () => parseProfile({ schemaVersion: SCHEMA_VERSION + 1 }),
     /newer than this extension/,
   )
+})
+
+test('stamps identity and lifecycle metadata', () => {
+  const profile = parseProfile({ name: 'WebExp' })
+
+  assert.match(profile.id, /^[0-9a-f-]{36}$/)
+  assert.ok(profile.createdAt)
+  assert.equal(profile.updatedAt, profile.createdAt)
+  assert.equal(profile.createdBy, '')
+  assert.equal(profile.schemaVersion, SCHEMA_VERSION)
+
+  const supplied = parseProfile({
+    name: 'Shared',
+    id: 'fixed-id',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    createdBy: 'Jane Doe',
+    updatedAt: '2026-02-01T00:00:00.000Z',
+    updatedBy: 'John Doe',
+  })
+  assert.equal(supplied.id, 'fixed-id')
+  assert.equal(supplied.createdBy, 'Jane Doe')
+  assert.equal(supplied.updatedBy, 'John Doe')
+
+  const roundTripped = parseProfile(toExport(supplied))
+  assert.equal(roundTripped.id, 'fixed-id')
+  assert.equal(roundTripped.createdAt, '2026-01-01T00:00:00.000Z')
+  assert.equal(roundTripped.updatedAt, '2026-02-01T00:00:00.000Z')
+  assert.equal(roundTripped.updatedBy, 'John Doe')
+})
+
+test('a profile created from scratch starts empty', () => {
+  const profile = createBlankProfile({ name: 'WebExp' })
+
+  assert.deepEqual(profile.selection.fetchFields, [])
+  assert.deepEqual(profile.selection.reportFields, [])
+  assert.deepEqual(profile.selection.resources, [])
+  assert.deepEqual(profile.selection.filters.projects, [])
+  assert.equal(profile.name, 'WebExp')
 })
 
 test('resources never collide with field ids', () => {

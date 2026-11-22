@@ -18,4 +18,5 @@ export const MESSAGE = {
   ATTACHMENT_DOWNLOAD: 'attachment.download',
   ATTACHMENT_UPLOAD: 'attachment.upload',
   ATTACHMENT_DELETE: 'attachment.delete',
+  USER_SELF: 'user.myself',
 }

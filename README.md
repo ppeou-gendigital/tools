@@ -112,20 +112,26 @@ Drag a row by its left grip to reorder it; the grip also moves the row with
 
 ## Profiles
 
-A profile is one JSON document attached to a Jira ticket. There is no local
-file import: **Import from Jira** asks for one or more ticket keys, lists their
-attachments, and imports every selected JSON file as its own profile. The same
-ticket can hold several profile files.
+A profile is one JSON document attached to a Jira ticket. **Open from Jira** asks
+for one or more ticket keys, lists their attachments, and imports every selected
+JSON file as its own profile. The same ticket can hold several profile files.
+
+A ticket with no profile can get one from the same dialog: type a name and press
+**Create**. The extension uploads a starter document with no fields and no
+filters, then opens it. This is the only way to start with no existing file;
+read-only users who can import can still run reports, they just cannot create or
+sync.
 
 ```json
 {
   "schemaVersion": 1,
+  "id": "9f1c2a7e-1b2c-4d5e-8f90-123456789abc",
   "name": "WebExp",
   "origin": "https://jira.corp.nortonlifelock.com",
-  "available": {
-    "projects": [{ "id": "WEBEXP", "name": "WEBEXP" }],
-    "types": [], "statuses": [], "resolutions": []
-  },
+  "createdAt": "2026-11-21T14:30:05.123Z",
+  "createdBy": "Michael Kaplan",
+  "updatedAt": "2026-11-21T15:02:11.940Z",
+  "updatedBy": "Michael Kaplan",
   "selection": {
     "filters": {
       "projects": [], "resolutions": [], "sprints": [],
@@ -139,22 +145,32 @@ ticket can hold several profile files.
 }
 ```
 
-- `available` seeds the filter dropdowns (projects, types, statuses,
-  resolutions) so imported selections keep their labels; each dropdown then
-  searches Jira live. `selection` is what is currently picked. Keeping them
-  apart means an exported profile stays editable without losing choices that
-  are not selected right now.
+- `schemaVersion` stays 1 until a breaking change; the metadata fields above are
+  additive.
+- `id` is the logical profile identity. It survives renames, re-syncs, and
+  copies to another ticket. A new attachment is named `<sanitized name>_<id>.json`,
+  so two people creating "WebExp" on the same ticket cannot collide and the
+  ticket list still reads sensibly. Later syncs replace that same file.
+- `createdAt`/`createdBy` are stamped once. `updatedAt`/`updatedBy` are stamped
+  on each upload; `createdBy` is also backfilled from the Jira attachment author
+  when importing an older file that lacks it.
+- **No option catalog is stored.** Every filter, field, and people picker
+  searches Jira live, and each selected item carries its own `{ id, name }`, so
+  labels survive without persisting hundreds of options. Older profiles may
+  contain an `available` block; it is read once to resolve bare-id labels during
+  import, then never written again.
 - Edits live in `chrome.storage.local` under one key per profile entry, so the
   imported document is never mutated. Export and sync both write the current
   working copy, not the document that was originally imported.
 - Each entry also stores its `source` (`issueKey`, `attachmentId`, `filename`,
   `remoteCreatedAt`). Entries without a Jira source are removed on load,
-  including profiles imported from local JSON files by earlier builds.
+  including profiles imported from local JSON files by earlier builds. A profile
+  that was just created on a ticket is linked immediately.
 - **Sync to Jira… is always manual.** It checks the ticket first, warns when the
   attachment changed or disappeared, uploads the current profile, and only then
   deletes the previously linked attachment. Other files on the ticket are never
   touched. Editing a profile, exporting it, or switching profiles never writes
-  to Jira.
+  to Jira; the only other write is the explicit **Create** action.
 - A badge next to the profile picker reports whether the ticket attachment is
   up to date, changed, removed, or could not be checked. It refreshes when the
   popup opens or the profile changes, and clicking it checks again.
@@ -199,8 +215,8 @@ ticket can hold several profile files.
   the full list), so the runner fetches the catalog once per Jira tab while the
   tab is idle, caches it, and ranks matches locally — exact, then prefix, then
   word-start, then substring — before returning the best 50.
-- `available.fields` from older profiles is used once to resolve the imported
-  selection's labels, then dropped; selected fields carry their own labels.
+- A legacy `available` block is read once during import to resolve bare ids into
+  labels; it is never persisted. Selected items carry their own labels.
 
 ## Field kinds
 

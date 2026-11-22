@@ -32,7 +32,7 @@ import { applyResourceHours, countRows } from './lib/jira/export/rows.js'
 import { buildTableHtml } from './lib/jira/export/table.js'
 import { buildSnapshot, uploadFileName } from './lib/jira/remote.js'
 import { callRunner } from './runtime/chrome/messaging.js'
-import { resolveJiraTab } from './runtime/chrome/tab.js'
+import { pingRunner, resolveJiraTab } from './runtime/chrome/tab.js'
 import { copyHtml } from './runtime/clipboard.js'
 import { downloadText } from './runtime/download.js'
 import { MESSAGE } from './runtime/protocol.js'
@@ -81,6 +81,9 @@ export default function App({
       } else {
         setTabState(result)
         setGate(null)
+        // Wake the content script while the user types the first ticket key,
+        // so the first real request does not pay for injection.
+        pingRunner(result.tab.id).catch(() => {})
       }
     } catch (error) {
       setTabState(null)
@@ -113,7 +116,6 @@ export default function App({
   const origin = tabState?.origin ?? ''
   const activeEntry = profiles.activeEntry
   const activeProfile = profiles.activeProfile
-  const available = activeProfile?.available
   const remote = useRemoteStatus({
     entry: activeEntry,
     call,
@@ -211,6 +213,14 @@ export default function App({
     })
   }
 
+  function createProfileOnTicket({ name, profile, source }) {
+    profiles.addProfile({ name, profile, source })
+    setNotice({
+      color: 'green',
+      text: `Created "${name}" on ${source.issueKey}.`,
+    })
+  }
+
   function exportProfile() {
     if (!activeEntry) return
     const snapshot = buildSnapshot(activeEntry, config)
@@ -218,8 +228,8 @@ export default function App({
     downloadText(uploadFileName(activeEntry), JSON.stringify(snapshot, null, 2))
   }
 
-  function handleSynced(source, warning) {
-    profiles.updateProfileSource(profiles.activeId, source)
+  function handleSynced(source, warning, meta) {
+    profiles.updateProfileSync(profiles.activeId, { source, meta })
     setNotice({
       color: warning ? 'yellow' : 'green',
       text:
@@ -257,11 +267,12 @@ export default function App({
               <Loader size="sm" />
             </Center>
           ) : !activeProfile ? (
-            <Alert color="blue" variant="light" title="Import from Jira">
+            <Alert color="blue" variant="light" title="Start from a Jira ticket">
               <Text size="xs">
                 A profile carries the filter lists, fetch fields, report
-                columns, and resources. It is a JSON file attached to a Jira
-                ticket — import it with <strong>Import from Jira</strong> above.
+                columns, and resources. Open it from a JSON file attached to a
+                Jira ticket — or create a starter profile on a ticket with{' '}
+                <strong>Open from Jira</strong> above.
               </Text>
             </Alert>
           ) : gate ? (
@@ -273,7 +284,6 @@ export default function App({
                   <Divider label="Filters" labelPosition="left" />
                   <FilterSection
                     call={call}
-                    available={available}
                     filters={config.filters}
                     onChange={(filters) => update({ filters })}
                   />
@@ -362,13 +372,14 @@ export default function App({
         onClose={() => setImportOpen(false)}
         call={call}
         onImport={importProfiles}
+        onCreate={createProfileOnTicket}
       />
 
       <SyncToJiraModal
         opened={syncOpen}
         onClose={() => setSyncOpen(false)}
         entry={activeEntry}
-        snapshot={buildSnapshot(activeEntry, config)}
+        selection={config}
         call={call}
         onSynced={handleSynced}
       />

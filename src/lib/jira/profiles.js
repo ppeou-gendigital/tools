@@ -1,6 +1,7 @@
-// Profile documents: the importable JSON that carries the option catalog plus
-// the current selection. Parsing is strict enough to reject junk and forgiving
-// enough to read files exported by the previous CRA build.
+// Profile documents: the importable JSON that carries the current selection.
+// Parsing is strict enough to reject junk and forgiving enough to read files
+// exported by the previous CRA build. Option catalogs are never stored: every
+// picker searches Jira live, and selected items carry their own labels.
 
 import { JIRA_ORIGIN, SCHEMA_VERSION } from './config.js'
 import { alignFieldOrder } from './fieldSelection.js'
@@ -11,14 +12,6 @@ import {
   resolveFields,
 } from './fields.js'
 import { emptyFilters, FILTER_KEYS, idsOf, itemsForIds, normalizeItems } from './filters.js'
-
-export const EMPTY_AVAILABLE = {
-  projects: [],
-  types: [],
-  statuses: [],
-  resolutions: [],
-  fields: [],
-}
 
 export function createSelection(overrides = {}) {
   const { filters, ...rest } = overrides
@@ -32,18 +25,47 @@ export function createSelection(overrides = {}) {
   }
 }
 
+// Stable identity for a logical profile. It survives renames, re-syncs, and
+// copies to another ticket, and is what the attachment file name is built on.
+export function newProfileId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  return `profile-${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2, 10)}`
+}
+
 export function createProfile(overrides = {}) {
+  const now = new Date().toISOString()
+  const createdAt = overrides.createdAt || now
   return {
-    schemaVersion: SCHEMA_VERSION,
     name: 'Default',
     origin: JIRA_ORIGIN,
-    available: { ...EMPTY_AVAILABLE },
     selection: createSelection(),
     ...overrides,
+    schemaVersion: SCHEMA_VERSION,
+    id: overrides.id || newProfileId(),
+    createdAt,
+    createdBy: overrides.createdBy ?? '',
+    updatedAt: overrides.updatedAt || createdAt,
+    updatedBy: overrides.updatedBy ?? overrides.createdBy ?? '',
   }
 }
 
-export function normalizeAvailable(available = {}) {
+// A profile created from scratch starts with no fields selected. The default
+// fetch/report fields stay as the fallback for imported documents that omit a
+// selection.
+export function createBlankProfile(overrides = {}) {
+  return createProfile({
+    ...overrides,
+    selection: createSelection({ fetchFields: [], reportFields: [] }),
+  })
+}
+
+// Only the legacy CRA export needs a catalog, and only to turn its bare ids
+// into display names. The result is folded into `selection` and never stored.
+function legacyCatalog(available = {}) {
   return {
     projects: normalizeItems(available.projects),
     types: normalizeItems(available.types),
@@ -51,13 +73,6 @@ export function normalizeAvailable(available = {}) {
     resolutions: normalizeItems(available.resolutions),
     fields: normalizeItems(available.fields),
   }
-}
-
-// Old profiles stored every Jira column in `available.fields`. That catalog is
-// no longer preloaded (fields are searched live), so keep it only long enough
-// to resolve the imported selection's labels, then drop it before persisting.
-function withoutFieldCatalog(available) {
-  return { ...available, fields: [] }
 }
 
 // Pools only supply display names for ids that were stored bare; anything the
@@ -106,25 +121,22 @@ export function normalizeResources(resources = []) {
   return result
 }
 
-// Normalizes a selection against an option catalog. Imported profiles already
-// pass through this, but working configs live in storage on their own, so the
-// same function is used when they are read back.
-export function normalizeSelection(selection = {}, available = EMPTY_AVAILABLE) {
+// Working configs live in storage on their own, so the same function is used
+// when they are read back as when a profile document is imported.
+export function normalizeSelection(selection = {}) {
   const fetchFields = itemsForIds(
     idsOf(selection.fetchFields),
     ISSUE_FIELDS,
     selection.fetchFields,
-    available.fields,
   )
   const reportFields = itemsForIds(
     idsOf(selection.reportFields),
     ISSUE_FIELDS,
     selection.reportFields,
-    available.fields,
   )
 
   return createSelection({
-    filters: normalizeFilters(selection.filters, available),
+    filters: normalizeFilters(selection.filters),
     // The Fields column renders one list, so the fetched order must agree with
     // the report order (and contain every report column).
     fetchFields: alignFieldOrder(fetchFields, reportFields),
@@ -146,7 +158,7 @@ function fromLegacy(raw, fallbackName) {
   const legacy = raw.jira ?? {}
   const lookup = legacy.lookupList ?? {}
 
-  const available = normalizeAvailable({
+  const catalog = legacyCatalog({
     projects: lookup.projects ?? legacy.projects,
     types: lookup.issueType ?? legacy.types,
     statuses: lookup.issueStatus ?? legacy.status,
@@ -160,19 +172,18 @@ function fromLegacy(raw, fallbackName) {
     idsOf(lookup.fields ?? legacy.columns),
     ISSUE_FIELDS,
     lookup.fields ?? legacy.columns,
-    available.fields,
+    catalog.fields,
   )
   const reportFields = itemsForIds(
     idsOf(legacy.columns),
     ISSUE_FIELDS,
     legacy.columns,
-    available.fields,
+    catalog.fields,
   )
 
   return createProfile({
     name: raw.name ?? fallbackName ?? 'Imported profile',
     origin: JIRA_ORIGIN,
-    available: withoutFieldCatalog(available),
     selection: createSelection({
       filters: normalizeFilters(
         {
@@ -182,7 +193,7 @@ function fromLegacy(raw, fallbackName) {
           types: legacy.types,
           statuses: legacy.status,
         },
-        available,
+        catalog,
       ),
       fetchFields,
       reportFields,
@@ -193,14 +204,17 @@ function fromLegacy(raw, fallbackName) {
 }
 
 export function normalizeProfile(raw) {
-  const available = normalizeAvailable(raw.available)
   const selection = raw.selection ?? {}
 
   return createProfile({
+    id: raw.id,
     name: String(raw.name ?? 'Default'),
     origin: String(raw.origin ?? raw.jiraOrigin ?? JIRA_ORIGIN),
-    available: withoutFieldCatalog(available),
-    selection: normalizeSelection(selection, available),
+    createdAt: raw.createdAt,
+    createdBy: raw.createdBy,
+    updatedAt: raw.updatedAt,
+    updatedBy: raw.updatedBy,
+    selection: normalizeSelection(selection),
   })
 }
 
@@ -225,9 +239,13 @@ export function toExport(profile) {
   return JSON.parse(
     JSON.stringify({
       schemaVersion: SCHEMA_VERSION,
+      id: profile.id,
       name: profile.name,
       origin: profile.origin,
-      available: profile.available,
+      createdAt: profile.createdAt,
+      createdBy: profile.createdBy,
+      updatedAt: profile.updatedAt,
+      updatedBy: profile.updatedBy,
       selection: profile.selection,
     }),
   )

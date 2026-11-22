@@ -45,9 +45,29 @@ export function useProfiles() {
     [setIndex],
   )
 
-  // Imports one or more attachments in a single storage write. Importing the
-  // same name replaces the entry, which also drops its working config so the
-  // imported values take effect.
+  // Adds a profile that was just created on a ticket. The caller has already
+  // uploaded the document; this only records the local entry and its source.
+  const addProfile = useCallback(
+    ({ name, profile, source }) => {
+      const label =
+        String(name ?? profile?.name ?? 'Profile').trim() || 'Profile'
+      const item = {
+        id: newId(),
+        name: label,
+        importedAt: new Date().toISOString(),
+        profile: { ...profile, name: label },
+        source,
+      }
+      persist([item, ...items], item.id)
+      return item
+    },
+    [items, persist],
+  )
+
+  // Imports one or more attachments in a single storage write. A newer copy of
+  // the same logical profile (same `id`) replaces its entry; files without an
+  // id fall back to the old name match. Replaced working configs are dropped so
+  // the imported values take effect.
   const importProfiles = useCallback(
     (files) => {
       const prepared = (Array.isArray(files) ? files : []).map((file) => {
@@ -69,8 +89,15 @@ export function useProfiles() {
       const imported = []
 
       for (const entry of prepared) {
-        for (const replaced of next.filter((item) => item.name === entry.label)) {
-          removeKey(STORAGE_KEYS.working(replaced.id))
+        const profileId = entry.profile?.id
+        const replaced = next.filter(
+          (item) =>
+            (profileId && item.profile?.id === profileId) ||
+            item.name === entry.label,
+        )
+
+        for (const item of replaced) {
+          removeKey(STORAGE_KEYS.working(item.id))
         }
 
         const item = {
@@ -81,7 +108,7 @@ export function useProfiles() {
           source: entry.source,
         }
 
-        next = [item, ...next.filter((existing) => existing.name !== entry.label)]
+        next = [item, ...next.filter((existing) => !replaced.includes(existing))]
         nextActiveId = item.id
         imported.push(item)
       }
@@ -111,30 +138,20 @@ export function useProfiles() {
     [items, persist],
   )
 
-  // Used by the field-list refresh and by a completed Jira sync: the working
-  // selection (and its storage key) stays untouched.
-  const updateProfile = useCallback(
-    (id, patch) => {
+  // A completed upload writes the new attachment link and the document's
+  // lifecycle metadata in one pass; two separate calls would overwrite each
+  // other because both start from the same `items` snapshot.
+  const updateProfileSync = useCallback(
+    (id, { source, meta }) => {
       persist(
-        items.map((item) =>
-          item.id === id
-            ? { ...item, profile: { ...item.profile, ...patch } }
-            : item,
-        ),
-        activeId,
-      )
-    },
-    [activeId, items, persist],
-  )
-
-  const updateProfileSource = useCallback(
-    (id, source) => {
-      persist(
-        items.map((item) =>
-          item.id === id
-            ? { ...item, source: { ...item.source, ...source } }
-            : item,
-        ),
+        items.map((item) => {
+          if (item.id !== id) return item
+          return {
+            ...item,
+            source: { ...item.source, ...source },
+            profile: meta ? { ...item.profile, ...meta } : item.profile,
+          }
+        }),
         activeId,
       )
     },
@@ -147,10 +164,10 @@ export function useProfiles() {
     activeId,
     activeEntry,
     activeProfile: activeEntry?.profile ?? null,
+    addProfile,
     importProfiles,
     removeProfile,
     selectProfile,
-    updateProfile,
-    updateProfileSource,
+    updateProfileSync,
   }
 }

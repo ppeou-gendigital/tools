@@ -38,6 +38,30 @@ function withTimeout(promise, timeout, type) {
   return Promise.race([promise, guard]).finally(() => clearTimeout(timer))
 }
 
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// The content script is a crxjs loader chunk: injecting it returns before the
+// real module has registered its listener. Poll briefly instead of failing on
+// the first "receiving end does not exist".
+async function requestWithRetry(tabId, type, payload) {
+  let lastError
+  for (const delay of [0, 100, 250, 500, 1000, 1500]) {
+    if (delay > 0) await wait(delay)
+    try {
+      return await request(tabId, type, payload)
+    } catch (error) {
+      if (error.code !== 'no-connection') throw error
+      lastError = error
+    }
+  }
+  throw new RunnerError(
+    'Could not reach the Jira helper. Reload the Jira tab and try again.',
+    'no-connection',
+  )
+}
+
 async function request(tabId, type, payload) {
   const response = await send(tabId, {
     source: RUNNER_SOURCE,
@@ -108,6 +132,10 @@ export async function callRunner(
     if (error.code !== 'no-connection') throw error
 
     await injectRunner(tabId)
-    return withTimeout(request(tabId, type, payload), timeout, type)
+    return withTimeout(
+      requestWithRetry(tabId, type, payload),
+      timeout,
+      type,
+    )
   }
 }

@@ -237,6 +237,29 @@ export async function fieldsPicker({ query = '' } = {}) {
 
 /* ----------------------------- attachments ----------------------------- */
 
+// The signed-in Jira user, cached per tab. Used to stamp createdBy/updatedBy
+// into profile files; failures are not cached so a re-login recovers.
+let currentUserCache = null
+let currentUserRequest = null
+
+export function currentUser() {
+  if (currentUserCache) return Promise.resolve(currentUserCache)
+  if (!currentUserRequest) {
+    currentUserRequest = requestJson(ENDPOINTS.myself)
+      .then((user) => {
+        currentUserCache = {
+          name: String(user?.name ?? ''),
+          displayName: String(user?.displayName ?? user?.name ?? ''),
+        }
+        return currentUserCache
+      })
+      .finally(() => {
+        currentUserRequest = null
+      })
+  }
+  return currentUserRequest
+}
+
 const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024
 
 function normalizeAttachment(issueKey, attachment) {
@@ -381,6 +404,7 @@ export const handlers = {
   'attachment.download': downloadAttachments,
   'attachment.upload': uploadAttachment,
   'attachment.delete': deleteAttachment,
+  'user.myself': currentUser,
   'picker.sprint': sprintPicker,
   'picker.user': userPicker,
   'picker.project': projectPicker,

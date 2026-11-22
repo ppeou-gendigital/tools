@@ -7,6 +7,7 @@ import {
   isTicketKey,
   mergeRecentTickets,
   parseTicketKeys,
+  profileFileName,
   pruneLocalProfiles,
   remoteState,
   safeFileName,
@@ -111,6 +112,24 @@ test('keeps the attachment file name on sync and export', () => {
   assert.equal(safeFileName('profile'), 'profile.json')
   assert.equal(uploadFileName({ source: { filename: 'team-profile.json' } }), 'team-profile.json')
   assert.equal(uploadFileName({ name: 'Web Exp' }), 'Web_Exp.json')
+})
+
+test('new profile files pair the readable name with the profile id', () => {
+  assert.equal(
+    profileFileName('Web Exp', '9f1c2a7e-1b2c-4d5e-8f90-123456789abc'),
+    'Web_Exp_9f1c2a7e-1b2c-4d5e-8f90-123456789abc.json',
+  )
+  assert.equal(profileFileName('', 'abc'), 'profile_abc.json')
+  // A long name is capped; the id is never truncated.
+  const long = profileFileName('x'.repeat(200), 'abc')
+  assert.equal(long, `${'x'.repeat(80)}_abc.json`)
+  assert.equal(
+    uploadFileName({
+      name: 'Web Exp',
+      profile: { id: '9f1c2a7e-1b2c-4d5e-8f90-123456789abc' },
+    }),
+    'Web_Exp_9f1c2a7e-1b2c-4d5e-8f90-123456789abc.json',
+  )
 })
 
 test('snapshot uses the current selection instead of the imported one', () => {

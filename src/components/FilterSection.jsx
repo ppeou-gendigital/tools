@@ -8,21 +8,18 @@ const LIVE_FILTERS = [
   {
     key: 'types',
     label: 'Issue types',
-    catalog: 'types',
     type: MESSAGE.PICKER_TYPES,
     description: 'Searched live across every issue type on this Jira instance.',
   },
   {
     key: 'statuses',
     label: 'Statuses',
-    catalog: 'statuses',
     type: MESSAGE.PICKER_STATUSES,
     description: 'Searched live across every status on this Jira instance.',
   },
   {
     key: 'resolutions',
     label: 'Resolutions',
-    catalog: 'resolutions',
     type: MESSAGE.PICKER_RESOLUTIONS,
     description: 'Searched live across every resolution on this Jira instance.',
   },
@@ -32,7 +29,7 @@ function toOption({ id, name }) {
   return { value: id, label: name }
 }
 
-export function FilterSection({ call, available, filters, onChange }) {
+export function FilterSection({ call, filters, onChange }) {
   return (
     <Stack gap="xs">
       <RemoteMultiSelect
@@ -43,7 +40,6 @@ export function FilterSection({ call, available, filters, onChange }) {
         call={call}
         mapResults={(items) => items.map(toProjectOption)}
         value={idsOf(filters.projects)}
-        options={mergeItems(available?.projects).map(toProjectOption)}
         selectedOptions={mergeItems(filters.projects).map(toProjectOption)}
         onChange={(values, pool) =>
           onChange(
@@ -57,7 +53,7 @@ export function FilterSection({ call, available, filters, onChange }) {
         }
       />
 
-      {LIVE_FILTERS.map(({ key, label, catalog, type, description }) => (
+      {LIVE_FILTERS.map(({ key, label, type, description }) => (
         <RemoteMultiSelect
           key={key}
           label={label}
@@ -66,7 +62,6 @@ export function FilterSection({ call, available, filters, onChange }) {
           type={type}
           call={call}
           value={idsOf(filters[key])}
-          options={mergeItems(available?.[catalog]).map(toOption)}
           selectedOptions={mergeItems(filters[key]).map(toOption)}
           onChange={(values, pool) =>
             onChange(

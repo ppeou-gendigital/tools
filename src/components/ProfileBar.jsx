@@ -114,7 +114,7 @@ export function ProfileBar({
           description={
             source
               ? sourceLabel(source)
-              : 'Profiles are imported from a Jira ticket attachment.'
+              : 'Open a profile from a Jira ticket.'
           }
           placeholder={
             items.length === 0 ? 'No profiles yet' : 'Select a profile'
@@ -146,7 +146,7 @@ export function ProfileBar({
               onClick={onImport}
               disabled={!canImport}
             >
-              Import from Jira…
+              Open from Jira…
             </Menu.Item>
             <Menu.Item
               leftSection={<IconCloudUpload size={14} />}
@@ -182,7 +182,7 @@ export function ProfileBar({
             disabled={!canImport}
             title={!canImport ? 'Open the extension on a Jira tab' : undefined}
           >
-            Import from Jira
+            Open from Jira
           </Button>
         ) : null}
       </Group>

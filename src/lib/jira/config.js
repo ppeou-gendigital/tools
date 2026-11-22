@@ -26,6 +26,7 @@ export const ENDPOINTS = {
   issueSearch: '/rest/api/2/search',
   issue: '/rest/api/2/issue',
   attachment: '/rest/api/2/attachment',
+  myself: '/rest/api/2/myself',
   issueView:
     '/sr/jira.issueviews:searchrequest-html-current-fields/temp/SearchRequest.html',
 }

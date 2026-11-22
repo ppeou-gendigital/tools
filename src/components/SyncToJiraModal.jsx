@@ -11,6 +11,7 @@ import {
 import { IconCloudUpload } from '@tabler/icons-react'
 import {
   REMOTE_STATE,
+  buildSnapshot,
   remoteState,
   uploadFileName,
 } from '../lib/jira/remote.js'
@@ -45,7 +46,7 @@ export function SyncToJiraModal({
   opened,
   onClose,
   entry,
-  snapshot,
+  selection,
   call,
   onSynced,
 }) {
@@ -107,10 +108,23 @@ export function SyncToJiraModal({
   const statusText = STATUS_TEXT[status]
 
   async function sync() {
-    if (!source || !snapshot) return
+    if (!source || !entry?.profile) return
 
     setBusy(true)
     setError('')
+
+    // Stamp the document at upload time; the filename stays stable.
+    let user = null
+    try {
+      user = await call(MESSAGE.USER_SELF, {}, { timeout: 15_000 })
+    } catch {
+      user = null
+    }
+    const meta = {
+      updatedAt: new Date().toISOString(),
+      updatedBy: user?.displayName || entry.profile.updatedBy || '',
+    }
+    const snapshot = buildSnapshot(entry, selection, meta)
 
     let uploaded
     try {
@@ -158,6 +172,7 @@ export function SyncToJiraModal({
         syncedAt: new Date().toISOString(),
       },
       warning,
+      meta,
     )
 
     setBusy(false)
@@ -212,7 +227,7 @@ export function SyncToJiraModal({
             leftSection={<IconCloudUpload size={14} />}
             onClick={sync}
             loading={busy}
-            disabled={!snapshot || checking}
+            disabled={!entry?.profile || checking}
           >
             {replaceTargets.length > 0 ? 'Upload and replace' : 'Upload to ticket'}
           </Button>
