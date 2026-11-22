@@ -3,6 +3,7 @@
 // enough to read files exported by the previous CRA build.
 
 import { JIRA_ORIGIN, SCHEMA_VERSION } from './config.js'
+import { alignFieldOrder } from './fieldSelection.js'
 import {
   DEFAULT_FETCH_FIELD_IDS,
   DEFAULT_REPORT_FIELD_IDS,
@@ -109,20 +110,25 @@ export function normalizeResources(resources = []) {
 // pass through this, but working configs live in storage on their own, so the
 // same function is used when they are read back.
 export function normalizeSelection(selection = {}, available = EMPTY_AVAILABLE) {
+  const fetchFields = itemsForIds(
+    idsOf(selection.fetchFields),
+    ISSUE_FIELDS,
+    selection.fetchFields,
+    available.fields,
+  )
+  const reportFields = itemsForIds(
+    idsOf(selection.reportFields),
+    ISSUE_FIELDS,
+    selection.reportFields,
+    available.fields,
+  )
+
   return createSelection({
     filters: normalizeFilters(selection.filters, available),
-    fetchFields: itemsForIds(
-      idsOf(selection.fetchFields),
-      ISSUE_FIELDS,
-      selection.fetchFields,
-      available.fields,
-    ),
-    reportFields: itemsForIds(
-      idsOf(selection.reportFields),
-      ISSUE_FIELDS,
-      selection.reportFields,
-      available.fields,
-    ),
+    // The Fields column renders one list, so the fetched order must agree with
+    // the report order (and contain every report column).
+    fetchFields: alignFieldOrder(fetchFields, reportFields),
+    reportFields,
     resources: normalizeResources(selection.resources),
     orderBy: normalizeOrderBy(selection.orderBy),
   })

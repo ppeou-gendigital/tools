@@ -97,6 +97,19 @@ a theme menu with Light, Dark, Sunrise/sunset (light 06:00–18:00), and System;
 the default is System. The choice is global — not per profile — and persists in
 `jiraCapacity.theme` through `chrome.storage.local`.
 
+Every picker is a live search: nothing is preloaded, and results are found by
+key, id, or name. In the Fields and Resources columns, picking a result appends
+it to the ordered list below and clears the field for the next pick, so a
+selection is rendered once (no chips above a duplicate list). Filters keep
+their chip multi-selects because they have no ordered list.
+
+Fields is a single ordered list: every row is fetched from Jira, and the eye
+toggles whether that row becomes a column in the capacity report. Hidden rows
+stay fetched, which keeps `assignee` and `timeestimate` available for the
+subtask roll-up. A new pick lands at the bottom and is visible by default.
+Drag a row by its left grip to reorder it; the grip also moves the row with
+↑/↓ when focused. People is reordered the same way.
+
 ## Profiles
 
 A profile is one JSON document attached to a Jira ticket. There is no local

@@ -24,7 +24,7 @@ import {
   COMMENT_EXPORT_FIELDS,
   COMMENT_EXPORT_FIELD_IDS,
 } from './lib/jira/fields.js'
-import { idsOf } from './lib/jira/filters.js'
+import { idsOf, mergeItems } from './lib/jira/filters.js'
 import { buildJql, hasFilters } from './lib/jira/jql.js'
 import { parseIssues } from './lib/jira/export/parse-issues.js'
 import { parseIssueView } from './lib/jira/export/parse-issueview.js'
@@ -140,7 +140,7 @@ export default function App({
   }
 
   function requireFetchFields() {
-    if (config.fetchFields.length === 0) {
+    if (config.fetchFields.length === 0 && config.reportFields.length === 0) {
       throw new Error('Pick at least one fetch field before exporting.')
     }
   }
@@ -152,7 +152,8 @@ export default function App({
 
       const { html } = await call(MESSAGE.REPORT_ISSUE_VIEW, {
         jql: buildJql(config),
-        columns: idsOf(config.fetchFields).filter((id) => id !== 'subtask'),
+        columns: idsOf(mergeItems(config.fetchFields, config.reportFields))
+          .filter((id) => id !== 'subtask'),
       })
 
       const doc = new DOMParser().parseFromString(html, 'text/html')

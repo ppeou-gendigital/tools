@@ -66,8 +66,49 @@ body {
 .ordered-row {
   padding: 2px 4px;
   border-radius: var(--mantine-radius-sm);
+  user-select: none;
 }
 
 .ordered-row:hover {
   background: var(--mantine-color-default-hover);
+}
+
+/* Reordering is native HTML5 drag from the grip so the eye and remove buttons
+   keep their click behaviour. The row itself is the drop target. */
+.drag-handle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 18px;
+  border-radius: var(--mantine-radius-sm);
+  color: var(--mantine-color-dimmed);
+  cursor: grab;
+}
+
+.drag-handle:hover,
+.drag-handle:focus-visible {
+  color: var(--mantine-color-text);
+}
+
+.drag-handle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--mantine-color-blue-6);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.ordered-row.is-dragging {
+  opacity: 0.4;
+}
+
+.ordered-row.drop-before {
+  box-shadow: inset 0 2px 0 0 var(--mantine-color-blue-6);
+}
+
+.ordered-row.drop-after {
+  box-shadow: inset 0 -2px 0 0 var(--mantine-color-blue-6);
 }

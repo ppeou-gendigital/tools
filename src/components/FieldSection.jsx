@@ -1,9 +1,13 @@
-import { Divider, MultiSelect, Stack, Text } from '@mantine/core'
+import { Stack, Text } from '@mantine/core'
+import {
+  applyFieldRows,
+  toggleReportVisibility,
+} from '../lib/jira/fieldSelection.js'
 import { ISSUE_FIELDS } from '../lib/jira/fields.js'
-import { idsOf, itemsForIds, mergeItems } from '../lib/jira/filters.js'
+import { idsOf } from '../lib/jira/filters.js'
 import { MESSAGE } from '../runtime/protocol.js'
 import { OrderedItems } from './OrderedItems.jsx'
-import { RemoteMultiSelect } from './RemoteMultiSelect.jsx'
+import { RemoteSelect } from './RemoteSelect.jsx'
 
 // `subtask` is a synthetic column that only exists in the REST export, so it
 // must never be sent to Jira as a column id.
@@ -12,57 +16,52 @@ const FETCHABLE_FIELDS = ISSUE_FIELDS.filter((field) => field.id !== 'subtask')
 const toOption = ({ id, name }) => ({ value: id, label: name })
 
 export function FieldSection({ call, config, onChange }) {
-  const reportSelected = new Set(idsOf(config.reportFields))
-  const addable = mergeItems(config.fetchFields)
-    .filter((field) => !reportSelected.has(field.id))
-    .map(toOption)
+  // One ordered list: everything is fetched, the eye marks report columns.
+  // `normalizeSelection` keeps the fetch order aligned with the report order.
+  const rows = config.fetchFields
+  const reportIds = idsOf(config.reportFields)
+  const visible = new Set(reportIds)
+  const hiddenIds = rows
+    .filter((row) => !visible.has(row.id))
+    .map((row) => row.id)
 
-  function addReportFields(values) {
-    if (values.length === 0) return
-    const picked = itemsForIds(values, config.fetchFields, config.reportFields)
-    onChange({ reportFields: [...config.reportFields, ...picked] })
+  function commit(nextRows, nextVisible = visible) {
+    onChange(applyFieldRows(nextRows, nextVisible))
+  }
+
+  function addField(field) {
+    commit([...rows, field], new Set([...reportIds, field.id]))
   }
 
   return (
     <Stack gap="xs">
-      <RemoteMultiSelect
+      <RemoteSelect
         label="Fetch fields"
-        description="Columns Jira returns for the capacity report. Type to search the full Jira field list."
+        description="Columns Jira returns for the capacity report. The eye chooses which appear in the export."
         placeholder="Search fields"
         type={MESSAGE.PICKER_FIELDS}
         call={call}
-        value={idsOf(config.fetchFields)}
         options={FETCHABLE_FIELDS.map(toOption)}
-        selectedOptions={config.fetchFields.map(toOption)}
-        onChange={(values, pool) =>
-          onChange({ fetchFields: itemsForIds(values, pool, config.fetchFields) })
-        }
+        excludeIds={rows.map((row) => row.id)}
+        onPick={addField}
       />
 
-      <Divider label="Report columns" labelPosition="left" />
+      {rows.length > 0 ? (
+        <Text size="xs" c="dimmed">
+          {rows.length - hiddenIds.length} of {rows.length} fields in the report
+        </Text>
+      ) : null}
 
       <OrderedItems
-        items={config.reportFields}
-        onChange={(items) => onChange({ reportFields: items })}
-        emptyLabel="No columns yet — add one below."
-        removeLabel="Remove column"
+        items={rows}
+        onChange={(nextRows) => commit(nextRows)}
+        emptyLabel="No fields yet — search above to add one."
+        removeLabel="Remove field"
+        hiddenIds={hiddenIds}
+        onToggleHidden={(item) =>
+          commit(rows, toggleReportVisibility(reportIds, item.id))
+        }
       />
-
-      {addable.length > 0 ? (
-        <MultiSelect
-          placeholder="Add a report column"
-          data={addable}
-          value={[]}
-          onChange={addReportFields}
-          searchable
-          hidePickedOptions
-          nothingFoundMessage="Every fetched field is already a column"
-        />
-      ) : (
-        <Text size="xs" c="dimmed">
-          Every fetched field is already a column.
-        </Text>
-      )}
     </Stack>
   )
 }
