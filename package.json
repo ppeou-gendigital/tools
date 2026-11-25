@@ -1,6 +1,6 @@
 {
   "name": "jira-capacity-browser-ext",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "description": "Chrome extension that exports Jira capacity reports from the logged-in Jira tab.",
@@ -9,7 +9,13 @@
     "build": "vite build",
     "watch": "vite build --watch",
     "test": "node --test \"src/lib/**/*.test.js\"",
-    "icons": "node scripts/make-icons.mjs"
+    "test:cli": "node --test \"cli/test/**/*.test.mjs\"",
+    "test:all": "npm test && npm run test:cli",
+    "cli": "node cli/src/index.mjs",
+    "cli:build": "node cli/build.mjs",
+    "icons": "node scripts/make-icons.mjs",
+    "zip": "node scripts/package.mjs",
+    "cli:zip": "node cli/package.mjs"
   },
   "dependencies": {
     "@mantine/core": "^9.8.1",
@@ -21,6 +27,7 @@
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.7.1",
     "@vitejs/plugin-react": "^6.0.3",
+    "esbuild": "^0.28.2",
     "linkedom": "^0.18.11",
     "postcss": "^8.5.6",
     "postcss-preset-mantine": "^1.18.0",

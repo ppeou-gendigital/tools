@@ -27,11 +27,19 @@ popup refuses to export and explains why.
 npm install     # .npmrc sets legacy-peer-deps=true, see below
 npm run dev     # Vite dev server (popup renders in a normal tab)
 npm test        # node:test suite for the pure report engine
+npm run test:cli # CLI adapter, clipboard, store, and args tests
+npm run cli:build # single-file CLI bundle into release/
 npm run build   # production build into dist/
+npm run zip     # build + package release/jira-capacity-<version>.zip for sharing
 ```
 
+The zip version comes from `package.json` (also injected into the built
+`manifest.json`), so bump `package.json` to cut a new release.
+
 Load `dist/` via **chrome://extensions → Developer mode → Load unpacked**, then
-open the popup while a Jira tab is focused.
+open the popup while a Jira tab is focused. To share a build, send
+`release/jira-capacity-<version>.zip`; recipients extract it and load the
+extracted folder unpacked.
 
 `.npmrc` disables peer resolution because `@vitejs/plugin-react` declares
 optional Babel and React Compiler peers that npm 11 resolves to conflicting
@@ -82,6 +90,18 @@ src/runtime/           Chrome-facing glue
 src/state/             useProfiles, per-profile working config, remote status
 src/components/        popup pieces
 src/App.jsx            popup shell
+
+cli/                    PAT-driven companion CLI
+  src/index.mjs         command dispatch
+  src/commands/         profiles, report, lookup, auth
+  src/report.mjs        REST search → shared table renderer
+  src/clipboard.mjs     HTML clipboard per OS + CF_HTML wrapper
+  src/store.mjs         local profiles + sources.json
+  build.mjs             esbuild bundle
+  package.mjs           reproducible zip for the Confluence page
+  test/                 CLI tests (node:test)
+skill/SKILL.md          agent playbook
+install.sh, install.ps1 per-user installers
 ```
 
 The runner is a content script, so `@crxjs/vite-plugin` bundles it (with a
@@ -217,6 +237,128 @@ sync.
   word-start, then substring — before returning the best 50.
 - A legacy `available` block is read once during import to resolve bare ids into
   labels; it is never persisted. Selected items carry their own labels.
+
+## Command-line companion
+
+`cli/` bundles the same report engine into a PAT-driven CLI for developers who
+would rather ask an agent than open the popup. It is a companion, not a
+replacement — the extension keeps working, and both clients read and write the
+same profile JSON.
+
+```bash
+npm run cli:build          # release/jira-capacity.mjs (single file, ~112 KB)
+npm run cli:zip            # release/jira-capacity-cli-<version>.zip for the page
+./release/jira-capacity.mjs version
+```
+
+`cli:zip` is reproducible: it stamps a fixed mtime on the four files, so the
+same version always produces the same SHA-256. The version comes from
+`package.json` and is baked into the bundle, so `jira-capacity version` matches
+the extension.
+
+Install for the current user with `./install.sh` (macOS/Linux) or
+`powershell -ExecutionPolicy Bypass -File .\install.ps1` (Windows). Both accept
+a checkout layout (`release/jira-capacity.mjs`) or the unzipped artefacts
+folder (`jira-capacity.mjs` beside the installer), so the same files can be
+downloaded from the Confluence guide.
+
+### First-time setup
+
+```bash
+jira-capacity setup
+```
+
+Asks for the Jira URL — pre-filled with the corporate host, and a pasted
+browse link is reduced to its origin — then the PAT, without echo. It calls
+`/rest/api/2/myself` **before writing anything** and shows the identity that
+answered, so a wrong host or an expired token fails immediately and leaves any
+previous config untouched. Confluence is optional and only needed for profile
+sync.
+
+Running a command that needs Jira with no token offers the same flow inline on
+a terminal and continues afterwards. Without a terminal (an agent, CI) the
+command fails with `no-token` and points at `jira-capacity setup`.
+
+### Auth
+
+```bash
+jira-capacity auth set --jira -            # scripted path; paste the PAT on stdin
+jira-capacity auth set --confluence -      # optional, for profile sync
+jira-capacity auth status                  # source + live identity, no token echo
+```
+
+A token is resolved from `JIRA_PAT` / `CONFLUENCE_PAT`, then `config.json`
+(0600), then the macOS Keychain. Base URLs default to the corporate hosts and
+can be overridden with `--jira-base` / `--confluence-base` or the matching
+environment variables. `--json` makes every command emit one machine-readable
+document on stdout.
+
+### Commands
+
+| Command | Purpose |
+| --- | --- |
+| `setup` | First-time URL + PAT, verified and confirmed before writing |
+| `profiles list` / `show` | Local profiles, filters, fields, people, sync history |
+| `profiles diff <name>` | Missing or renamed fields and people vs live Jira |
+| `profiles pull [name] --from jira:KEY\|confluence:PAGE` | Import shared profile JSON |
+| `profiles push <name> --to jira:KEY\|confluence:PAGE` | Publish to one target |
+| `profiles set <name> --sprint/--add-field/…` | Local edits; `--dry-run` to preview |
+| `sprints [--project KEY] [--board ID] [--state future\|active\|all]` | Sprint ids, names, dates |
+| `fields search` / `people search` / `projects search` | Live pickers |
+| `report --profile <name> [--sprint S] [--save] [--dry-run] [--copy\|--out F]` | Capacity sheet |
+| `comments --profile <name> [--sprint S] [--save] [--dry-run] [--copy\|--out F]` | Tickets + comments |
+
+The capacity path issues one REST search with the profile's field set plus
+`parent`, rolls subtask remaining estimates into their assignee, and feeds the
+result through the extension's own `applyResourceHours` → `buildTableHtml`
+chain. `--dry-run` counts matches and parent issues without copying.
+
+`sprints` reads the project's scrum board through the Agile REST API, so a
+future sprint that has no issues yet is still listed. On instances that do not
+expose that API it falls back to a JQL search (`source: "jql"` in `--json`),
+which cannot see empty sprints.
+
+### Profiles and sync
+
+Profiles live in `~/.config/jira-capacity/profiles/`
+(`%APPDATA%\jira-capacity\profiles` on Windows) as the same documents the
+extension writes. `sources.json` records one publication per target — kind,
+ticket/page, filename, attachment id, version, timestamp — so a profile can be
+published to Jira and Confluence independently. Every command names exactly one
+target; nothing is pushed implicitly.
+
+- **Jira** has no attachment versions. A push uploads the new file and deletes
+  the previous same-name attachment and the previously linked attachment id.
+- **Confluence** posts a new version of the same attachment via
+  `/child/attachment/{id}/data`.
+- A profile whose stored sprint or fields were changed during a report is
+  marked **local changes** until pushed; `profiles list` shows that status.
+- `--save` persists the resolved sprint along with any field/people edits. It
+  never publishes. Without it, a `--sprint` argument is per-run only.
+- The extension only sees profiles attached to **Jira tickets**. A
+  Confluence-only profile is usable by the CLI but invisible to the popup.
+
+### Clipboard
+
+`report` and `comments` copy HTML by default:
+
+| Platform | Mechanism |
+| --- | --- |
+| macOS | `osascript`/JXA, `public.html` on `NSPasteboard` |
+| Windows | PowerShell + `System.Windows.Forms.Clipboard` with a CF_HTML header |
+| Linux | `wl-copy` (Wayland) or `xclip` (X11) |
+
+Excel rebuilds cells from that flavour. On a remote/headless agent the clipboard
+belongs to the wrong machine, so use `--out report.xls`, which writes the same
+table as an Excel-openable HTML file.
+
+### Skill
+
+`skill/SKILL.md` is the agent playbook: pick the profile, resolve the upcoming
+sprint, diff the profile, preview with `--dry-run`, confirm once, then copy and
+report row/issue counts. It also pins the hard rules — never echo a PAT, never
+print issue rows, never publish without an explicit single target, and never
+`--save` unless the user wants the change to persist.
 
 ## Field kinds
 
